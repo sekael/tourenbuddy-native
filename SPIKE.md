@@ -10,6 +10,8 @@ cd <tourenbuddy_frontend_vue>/worktrees/tourenbuddy-native
 rm -rf node_modules && npm install        # container installed Linux binaries
 npx expo run:ios --device                 # pick the iPhone; first run asks for a signing team (free Apple ID is fine)
 npx expo run:ios --device --configuration Release   # use this build for every smoothness measurement
+# pick the physical iPhone in the prompt: a simulator build ("Release-iphonesimulator") measures the Mac, not the phone
+# after a new native dep: `rm -rf ios` first; `ls node_modules/@shopify/react-native-skia/libs/ios` must list xcframeworks
 npx expo run:android --device             # Android phone, USB debugging on
 ```
 
