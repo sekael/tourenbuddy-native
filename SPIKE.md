@@ -52,7 +52,11 @@ What is on the map screen now:
 |---|---|---|
 | `Base` / `Aerial` / `Light` / `Classic` chip | cycles the four base maps (Classic = WMTS raster) | `map-layers-panel` |
 | `Hiking`, `Ski` | WMTS trail overlays; Ski also adds the self-hosted route halo + Skia-drawn difficulty badges (z ≥ 11) | `trail-layers.ts`, `ski-badge.ts` |
-| (always) | 1,000 fixture tours, native clusters, Skia-drawn pie images | `tours-marker-layer.ts` |
+| (always) | 1,000 fixture tours, native clusters; cluster pie = 7 rotated wedge layers | `tours-marker-layer.ts` |
+
+Every map image is drawn with Skia **once at start** (`images: … drawn up front`): a native map asks
+for a missing image synchronously and never re-asks, so the PWA's draw-on-`styleimagemissing` does
+not port. A `missing image:` status line means an id slipped through: report it.
 | tap (Draw off) | hit test: cluster → zooms to expansion zoom; tour → its name; ski route → id + grade | marker / trail lookup |
 | `Draw`, `Undo`, `Clear` | tap-to-add track along the ways (A*, ported TS); drag a point, drop re-snaps | `use-track-drawing.ts` |
 | `↓ View`, `↓ CH`, `Reset offline` | offline pack of the current view / all of CH, z0–14, incl. ski routes | offline map download |
@@ -67,16 +71,18 @@ Status lines under the chips carry the numbers to report.
    Android, same gesture: `adb shell dumpsys gfxinfo ch.tourenbuddy.spike reset`, pan 20 s,
    `adb shell dumpsys gfxinfo ch.tourenbuddy.spike` → note "Janky frames" (record only).
 3. **Hit testing:** tap a cluster (zooms in), a single tour, a ski route halo. Pass = right status line each time.
-4. **Snapping:** Draw on, Ski on, z14 above Zermatt; tap along a ski route, then hiking only.
-   The line must follow the route. Note `snap: build + route` for 3 taps **inside tiles already
-   loaded** (the first tap in an area loads tiles, that is `tiles` ms). Pass = build + route < 100 ms.
+4. **Snapping:** Draw on, Ski on, z14 above Zermatt; tap along a ski route for ~10 taps spread
+   over 2–3 km, then the same with hiking only. The line must follow the route. `build 0` = the leg
+   reused the last network; `slowest build` keeps the worst real one (tile download is `tiles`, not
+   counted). Pass = slowest build + typical route < 100 ms.
    *Risk to watch:* Node (JIT) needs ~120 ms to build a new tile set's network, Hermes has no JIT.
 5. **Drawing lag:** drag a point around for 5 s. Pass = point and its two straight legs follow the
    finger with no visible lag; on drop the legs snap back onto the ways.
 6. **Offline labels:** `Reset offline`, frame the Zermatt area at z11, `↓ View`, wait for `complete`.
    Airplane mode, force-quit, relaunch on `Base`. Pass = map, labels, ski routes and badges render
    at Zermatt (WMTS overlays are not in the pack, same as the PWA).
-7. **Whole CH (Wi-Fi):** `↓ CH`. Pass = tile count climbs past 6,000 with no limit error.
+7. **Whole CH (Wi-Fi):** `Reset offline` first (a running `↓ View` pack competes), then `↓ CH`.
+   Pass = tile count climbs past 6,000 with no limit error (~2 min at the rate seen so far).
    Let it finish if you can and note MB and time (≈ 37k tiles per vector source).
 8. **No Referer:** already checked from the container (curl, no Referer, HTTP 200 on vectortiles,
    wmts and api3; 2026-11-05); tiles rendering on the device covers the native client.

@@ -5,17 +5,23 @@ import { PixelRatio, Platform } from 'react-native';
 import { skiDifficultyGrade } from './vendor/ski-difficulty';
 
 /**
- * RN has no <canvas>: Skia draws offscreen → PNG data URI → MapLibre `Images` (asked for on demand
- * via `onImageMissing`, like `styleimagemissing` on the web). The web build keeps the canvas code.
+ * RN has no <canvas>: Skia draws offscreen → PNG data URI → MapLibre `Images`. Unlike the web's
+ * `styleimagemissing`, a native map asks for a missing image synchronously and never asks again,
+ * so an id JS adds later stays blank until its tile reloads. Every id a layer can ask for is
+ * therefore drawn up front: a finite, known set (`registeredImages`). The web keeps the canvas code.
  */
 
 /** Colour buckets of TOUR_TYPE_COLORS (types sharing a colour share a bucket); last = untyped. */
 export const BUCKET_COLORS = ['#0284C7', '#4338CA', '#D97706', '#E11D48', '#9A3412', '#86198F', '#78716C'];
-/** Cluster pies quantize each bucket's share to 24ths so the image ids stay a small set. */
+/** A cluster pie is 24 steps of 15°: one wedge image per bucket and size, rotated into place by its layer. */
 export const PIE_STEPS = 24;
 export const PIE_PREFIX = 'pie|';
-export const CLUSTER_PREFIX = 'cluster|';
+export const WEDGE_PREFIX = 'wedge|';
+export const CLUSTER_SHADOW = 'cluster-shadow';
+export const CLUSTER_FACE = 'cluster-face';
 export const SKI_BADGE_PREFIX = 'ski-badge|';
+const CLUSTER_RADIUS = 18;
+const CLUSTER_SIZE = CLUSTER_RADIUS * 2 + 4; // room for the shadow
 
 const RATIO = Math.max(2, Math.ceil(PixelRatio.get()));
 export const drawStats = { count: 0, totalMs: 0, maxMs: 0 };
@@ -42,20 +48,11 @@ const fill = (color: string) => {
   return paint;
 };
 
-/** Slices clockwise from 12 o'clock, weighted by bucket; a cluster gets the white count backdrop. */
-function drawPie(weights: number[], radius: number, cluster: boolean): ImageEntry {
+/** A tour of several colours: equal slices clockwise from 12 o'clock (`weights` 0/1 per bucket). */
+function drawPie(weights: number[], radius: number): ImageEntry {
   const total = weights.reduce((a, b) => a + b, 0) || 1;
-  const pad = cluster ? 2 : 0;
-  const size = radius * 2 + pad * 2;
-  return render(size, size, (canvas) => {
-    const c = size / 2;
-    const oval = Skia.XYWHRect(pad, pad, radius * 2, radius * 2);
-    if (cluster) {
-      const shadow = fill('#000000');
-      shadow.setAlphaf(0.35);
-      shadow.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, 1.5, true));
-      canvas.drawCircle(c, c + 1, radius, shadow);
-    }
+  return render(radius * 2, radius * 2, (canvas) => {
+    const oval = Skia.XYWHRect(0, 0, radius * 2, radius * 2);
     let angle = -90;
     weights.forEach((w, i) => {
       if (!w) return;
@@ -63,15 +60,37 @@ function drawPie(weights: number[], radius: number, cluster: boolean): ImageEntr
       canvas.drawArc(oval, angle, sweep, true, fill(BUCKET_COLORS[i]!));
       angle += sweep;
     });
-    if (cluster) {
-      const ring = fill('#ffffff');
-      ring.setStyle(PaintStyle.Stroke);
-      ring.setStrokeWidth(2);
-      canvas.drawCircle(c, c, radius - 1, ring);
-      const backdrop = fill('#ffffff');
-      backdrop.setAlphaf(0.95);
-      canvas.drawCircle(c, c, 9, backdrop);
+  });
+}
+
+/** One bucket's wedge: `steps` × 15° clockwise from 12 o'clock, apex at the image centre. */
+function drawWedge(bucket: number, steps: number): ImageEntry {
+  return render(CLUSTER_SIZE, CLUSTER_SIZE, (canvas) => {
+    const c = CLUSTER_SIZE / 2;
+    const oval = Skia.XYWHRect(c - CLUSTER_RADIUS, c - CLUSTER_RADIUS, CLUSTER_RADIUS * 2, CLUSTER_RADIUS * 2);
+    // 1° under the next wedge (a layer above) hides the anti-aliased seam between the two.
+    canvas.drawArc(oval, -90, Math.min(360, (steps * 360) / PIE_STEPS + 1), true, fill(BUCKET_COLORS[bucket]!));
+  });
+}
+
+/** Below the wedges the soft shadow; above them the white ring and the count's backdrop. */
+function drawClusterFrame(face: boolean): ImageEntry {
+  return render(CLUSTER_SIZE, CLUSTER_SIZE, (canvas) => {
+    const c = CLUSTER_SIZE / 2;
+    if (!face) {
+      const shadow = fill('#000000');
+      shadow.setAlphaf(0.35);
+      shadow.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, 1.5, true));
+      canvas.drawCircle(c, c + 1, CLUSTER_RADIUS, shadow);
+      return;
     }
+    const ring = fill('#ffffff');
+    ring.setStyle(PaintStyle.Stroke);
+    ring.setStrokeWidth(2);
+    canvas.drawCircle(c, c, CLUSTER_RADIUS - 1, ring);
+    const backdrop = fill('#ffffff');
+    backdrop.setAlphaf(0.95);
+    canvas.drawCircle(c, c, 9, backdrop);
   });
 }
 
@@ -146,17 +165,20 @@ function drawBadge(label: string, color: string): ImageEntry {
   });
 }
 
-/** Draws any image id the layers below can ask for; null = not ours. */
-export function imageFor(id: string): ImageEntry | null {
-  if (id.startsWith(SKI_BADGE_PREFIX)) {
-    const raw = id.slice(SKI_BADGE_PREFIX.length);
-    const grade = skiDifficultyGrade(raw || null);
-    return drawBadge(grade === null ? '' : raw, gradeColor(grade));
-  }
-  const cluster = id.startsWith(CLUSTER_PREFIX);
-  if (cluster || id.startsWith(PIE_PREFIX)) {
-    const weights = id.slice((cluster ? CLUSTER_PREFIX : PIE_PREFIX).length).split(',').map(Number);
-    return drawPie(weights, cluster ? 18 : 14, cluster);
-  }
-  return null;
+/** The whole SAC ski-touring scale (German letters, as `difficulty_de`), modifiers included. */
+const SAC_GRADES = ['L', 'WS', 'ZS', 'S', 'SS', 'AS', 'EX'].flatMap(g => [`${g}-`, g, `${g}+`]);
+
+/** Every image the layers can ask for: cluster wedges + frame, all ski badges, the given tour pies. */
+export function registeredImages(pieIds: Iterable<string>): Record<string, ImageEntry> {
+  const images: Record<string, ImageEntry> = {
+    [CLUSTER_SHADOW]: drawClusterFrame(false),
+    [CLUSTER_FACE]: drawClusterFrame(true),
+  };
+  BUCKET_COLORS.forEach((_, b) => {
+    for (let n = 1; n <= PIE_STEPS; n++) images[`${WEDGE_PREFIX}${b}|${n}`] = drawWedge(b, n);
+  });
+  for (const label of ['', ...SAC_GRADES])
+    images[SKI_BADGE_PREFIX + label] = drawBadge(label, gradeColor(skiDifficultyGrade(label || null)));
+  for (const id of pieIds) images[id] = drawPie(id.slice(PIE_PREFIX.length).split(',').map(Number), 14);
+  return images;
 }

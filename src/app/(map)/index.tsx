@@ -2,7 +2,6 @@ import {
   Camera,
   type CameraRef,
   type GeoJSONSourceRef,
-  type ImageEntry,
   Images,
   Map,
   type MapRef,
@@ -17,9 +16,9 @@ import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tapSnapM } from '@/spike/leg-router';
-import { drawStats, imageFor } from '@/spike/marker-images';
+import { drawStats, registeredImages } from '@/spike/marker-images';
 import { basemapStyle, downloadPack, resetOffline, SWITZERLAND } from '@/spike/offline';
-import { CLUSTER_LAYER, S3Layers, SKI_HALO_LAYER, TOUR_LAYERS } from '@/spike/s3-layers';
+import { CLUSTER_LAYER, S3Layers, SKI_HALO_LAYER, TOUR_LAYERS, TOURS } from '@/spike/s3-layers';
 import { useTrackDrawing } from '@/spike/use-track-drawing';
 import type { LngLat } from '@/spike/vendor/trail';
 
@@ -55,15 +54,25 @@ export default function MapScreen() {
   const [hiking, setHiking] = useState(false);
   const [ski, setSki] = useState(true);
   const [drawing, setDrawing] = useState(false);
-  const [images, setImages] = useState<Record<string, ImageEntry>>({});
-  const known = useRef(new Set<string>());
-  const pending = useRef<Record<string, ImageEntry>>({});
+  // Drawn once, before the map can ask for any of them (see marker-images.ts).
+  const [images] = useState(() => {
+    const all = registeredImages(new Set(TOURS.features.flatMap(f => f.properties?.pie ?? [])));
+    const { count, totalMs, maxMs } = drawStats;
+    setTimeout(() => report('images', `images: ${count} drawn up front in ${totalMs.toFixed(0)} ms (max ${maxMs.toFixed(1)})`));
+    return all;
+  });
+  const slowestBuild = useRef(0);
   const [status, setStatus] = useState<Record<string, string>>({});
   const report = (key: string, line: string) => setStatus(s => ({ ...s, [key]: line }));
 
   const track = useTrackDrawing(
     () => (ski ? 'ski' : hiking ? 'hiking' : null),
-    t => report('snap', `snap: build ${t.buildMs.toFixed(0)} + route ${t.routeMs.toFixed(0)} ms (tiles ${t.loadMs.toFixed(0)} ms)`),
+    (t) => {
+      // build = 0 when the leg reuses the last network; keep the slowest real build in view.
+      slowestBuild.current = Math.max(slowestBuild.current, t.buildMs);
+      report('snap', `snap: build ${t.buildMs.toFixed(0)} + route ${t.routeMs.toFixed(0)} ms (tiles ${t.loadMs.toFixed(0)} ms)`);
+      report('build', `slowest build: ${slowestBuild.current.toFixed(0)} ms`);
+    },
   );
   const snapRadius = () => tapSnapM(view.current?.center[1] ?? 46, view.current?.zoom ?? 13);
 
@@ -93,25 +102,6 @@ export default function MapScreen() {
     else report('tap', `tap: nothing (query ${ms} ms)`);
   }
 
-  // One React update per frame, however many images a pan asks for: each update resends every
-  // data URI to native, so per-image updates would add hitches that aren't MapLibre's.
-  function onImageMissing(id: string) {
-    if (known.current.has(id)) return;
-    const entry = imageFor(id);
-    if (!entry) return;
-    known.current.add(id);
-    const flush = Object.keys(pending.current).length === 0;
-    pending.current[id] = entry;
-    if (!flush) return;
-    requestAnimationFrame(() => {
-      const batch = pending.current;
-      pending.current = {};
-      setImages(prev => ({ ...prev, ...batch }));
-      const { count, totalMs, maxMs } = drawStats;
-      report('images', `images: ${count} drawn, avg ${(totalMs / count).toFixed(1)} / max ${maxMs.toFixed(0)} ms`);
-    });
-  }
-
   function download(name: string, bounds: ViewState['bounds'] | undefined) {
     if (!bounds) return;
     downloadPack(name, bounds, line => report('offline', line)).catch(err => report('offline', `${name}: ${err}`));
@@ -129,7 +119,7 @@ export default function MapScreen() {
         onRegionDidChange={e => { view.current = e.nativeEvent; }}
       >
         <Camera ref={cameraRef} initialViewState={ZERMATT} />
-        <Images images={images} onImageMissing={e => onImageMissing(e.nativeEvent.image)} />
+        <Images images={images} onImageMissing={e => report('missing', `missing image: ${e.nativeEvent.image}`)} />
         <S3Layers hiking={hiking} ski={ski} dimmed={drawing} track={track.line} toursRef={toursRef} />
         {drawing && track.points.map((point, i) => (
           <ViewAnnotation
