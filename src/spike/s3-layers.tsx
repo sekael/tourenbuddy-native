@@ -104,7 +104,12 @@ export function S3Layers({ hiking, ski, dimmed, track, toursRef }: S3LayerProps)
         data={TOURS}
         cluster
         clusterRadius={50}
-        clusterProperties={Object.fromEntries(BUCKET_COLORS.map((_, i) => [`w${i}`, ['+', ['get', `w${i}`]]]))}
+        // Full reduce form: iOS turns each array element into an NSExpression, so GL JS's shorthand
+        // `['+', ['get', 'w0']]` arrives as the string "+" and the clusters never get their sums.
+        clusterProperties={Object.fromEntries(BUCKET_COLORS.map((_, i) => [
+          `w${i}`,
+          [['+', ['accumulated'], ['get', `w${i}`]], ['get', `w${i}`]],
+        ]))}
       >
         <Layer
           id="tour-circles"
