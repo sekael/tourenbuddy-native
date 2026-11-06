@@ -1,0 +1,8 @@
+schema: spec-driven
+
+context: |
+  Specs in openspec/specs were copied unchanged from sekael/tourenbuddy_frontend_vue at the parity
+  baseline tag tourenbuddy-frontend-v0.52.0. Until a change ports a capability and rewrites its
+  spec, that spec describes the Vue PWA (Vue, Pinia, CSS, localStorage, service worker): treat it
+  as the product behavior to match, not as implementation instructions. A port change MODIFIES or
+  REMOVES+ADDS the affected requirements. Specs avoid library names; designs name them.
