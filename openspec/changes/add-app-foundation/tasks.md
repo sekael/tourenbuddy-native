@@ -22,7 +22,7 @@
 ## 4. Shell and launch
 
 - [x] 4.1 Add the root layout and the empty shell screen (app name, localized tagline); verify a component test renders the tagline in `en` and `de-CH`
-- [x] 4.2 Generate the icon, adaptive icon, launch image and favicon from the winter PWA icon; verify sizes and that `icon.png` has no alpha channel
+- [x] 4.2 Generate the icon, adaptive icon, launch image and favicon from the 2048 px winter master `assets/images/winter-original.png`; verify sizes and that `icon.png` has no alpha channel
 
 ## 5. CI
 
@@ -35,7 +35,7 @@
 ## 7. Verification
 
 - [x] 7.1 Run `npm run check` and `npx expo export --platform web`; verify both pass
-- [ ] 7.2 Owner: dev build on iPhone and Android device plus web; verify launch on white without a flash, app name "TourenBuddy Dev", German tagline after switching the app language in system settings, dark status bar icons on white also when the device is in dark mode
+- [ ] 7.2 Owner: dev build in the iOS Simulator plus web (Android optional while iOS is the focus); verify launch on white without a flash, app name "TourenBuddy Dev", German tagline after switching the app language in system settings, dark status bar icons on white also when the device is in dark mode
 
 ## Workflow follow-up
 

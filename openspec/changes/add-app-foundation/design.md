@@ -117,8 +117,9 @@ Node and browsers, and nothing here needs its reporters.
   appearance gives dark status bar content on both platforms, so no status bar component is needed
   yet. The launch screen is the icon on white, the same white as the first screen, and hides as
   soon as the first frame renders: nothing loads asynchronously before it.
-- Icons come from the live winter PWA icon (a full-bleed photo), with the image generator's corner
-  mark filled in from the surrounding background: `icon.png` 1024 px without alpha,
+- Icons come from the owner's 2048 px winter master `assets/images/winter-original.png` (a
+  full-bleed photo, kept unchanged and never bundled because nothing imports it), downscaled, with
+  the image generator's corner mark filled in from the surrounding background: `icon.png` 1024 px without alpha,
   the Android adaptive foreground at full bleed (launcher masks keep the goggles), a rounded copy
   for the launch screen (Android 12+ masks it to a circle, which keeps the goggles), and a 48 px favicon. Icon Composer, a themed Android icon and the seasonal
   swap (D14) are follow-ups.
@@ -138,8 +139,6 @@ does so for `project-scaffolding` and `i18n`. `openspec/config.yaml` states this
 
 ## Risks / Trade-offs
 
-- [Only a 512 px winter icon exists; the 1024 px store icon is upscaled and slightly soft] → The
-  owner supplies a 1024 px master before the first store upload (`add-release-pipeline`).
 - [Copied specs read like requirements for this repo but describe the PWA] → `config.yaml`
   context; each port change rewrites its capability.
 - [`dev` default means a release build without `APP_VARIANT=prod` ships the dev identity] → The

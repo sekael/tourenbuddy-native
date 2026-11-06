@@ -111,6 +111,9 @@ npx expo-doctor                # dependency and config check
   `tourenbuddy-frontend-v0.52.0`. Until the change that ports a capability rewrites its spec, the
   spec describes the Vue PWA: read it as the product behavior to match, not as implementation
   instructions.
+- Focus is the iOS app. The owner tests mostly in iOS Simulators and checks on a real iPhone 15
+  before releases. Android is not prioritized for now: keep it building and correct, but polish
+  and device checks wait. Write device instructions for the Simulator first.
 - Supabase free tier: expect higher auth latency.
 - Backlog: https://github.com/users/sekael/projects/1
 - Values: thoughtful development, understand before changing, small reviewable PRs.

@@ -33,7 +33,7 @@ Phase 1 (#368) is split into five changes, each its own pull request into `main`
 - `app.config.ts` with two variants: `dev` (default, `ch.tourenbuddy.app.dev`, "TourenBuddy Dev")
   and `prod` (`APP_VARIANT=prod`, `ch.tourenbuddy.app`), installable side by side. iOS 26 minimum
   (D7), light appearance only (D12), Android predictive back, encryption export declaration.
-- Launch screen and app icon from the current winter PWA icon.
+- Launch screen and app icon from the 2048 px winter icon master.
 - Tooling: ESLint with Prettier at zero warnings, `tsc`, Jest with the Expo preset and React Native
   Testing Library. One `npm run check` runs all of them.
 - GitHub Actions PR checks: lint, type check, tests (including the locale checks) and a web export.
