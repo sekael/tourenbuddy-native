@@ -44,6 +44,16 @@ const STYLE_NAMES = ['Base', 'Aerial', 'Light', 'Classic'];
 const ZERMATT = { center: [7.75, 46.02] as [number, number], zoom: 11 };
 const HIT_PX = 12;
 
+/** Top feature under a tap, and how long the native query took. */
+async function hitAt(map: MapRef, x: number, y: number) {
+  const t0 = performance.now();
+  const [hit] = await map.queryRenderedFeatures(
+    [[x - HIT_PX, y - HIT_PX], [x + HIT_PX, y + HIT_PX]],
+    { layers: [CLUSTER_LAYER, ...TOUR_LAYERS, SKI_HALO_LAYER] },
+  );
+  return { hit, ms: (performance.now() - t0).toFixed(0) };
+}
+
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapRef>(null);
@@ -53,7 +63,10 @@ export default function MapScreen() {
   const [styleIndex, setStyleIndex] = useState(0);
   const [hiking, setHiking] = useState(false);
   const [ski, setSki] = useState(true);
+  const [tours, setTours] = useState(true);
   const [drawing, setDrawing] = useState(false);
+  const [status, setStatus] = useState<Record<string, string>>({});
+  const report = (key: string, line: string) => setStatus(s => ({ ...s, [key]: line }));
   // Drawn once, before the map can ask for any of them (see marker-images.ts).
   const [images] = useState(() => {
     const all = registeredImages(new Set(TOURS.features.flatMap(f => f.properties?.pie ?? [])));
@@ -62,8 +75,6 @@ export default function MapScreen() {
     return all;
   });
   const slowestBuild = useRef(0);
-  const [status, setStatus] = useState<Record<string, string>>({});
-  const report = (key: string, line: string) => setStatus(s => ({ ...s, [key]: line }));
 
   const track = useTrackDrawing(
     () => (ski ? 'ski' : hiking ? 'hiking' : null),
@@ -85,12 +96,7 @@ export default function MapScreen() {
 
   async function onPress(lngLat: LngLat, [x, y]: [number, number]) {
     if (drawing) return track.add(lngLat, snapRadius());
-    const t0 = performance.now();
-    const [hit] = await mapRef.current!.queryRenderedFeatures(
-      [[x - HIT_PX, y - HIT_PX], [x + HIT_PX, y + HIT_PX]],
-      { layers: [CLUSTER_LAYER, ...TOUR_LAYERS, SKI_HALO_LAYER] },
-    );
-    const ms = (performance.now() - t0).toFixed(0);
+    const { hit, ms } = await hitAt(mapRef.current!, x, y);
     const p = hit?.properties ?? {};
     if (p.cluster_id != null) {
       const zoom = await toursRef.current!.getClusterExpansionZoom(p.cluster_id);
@@ -104,7 +110,8 @@ export default function MapScreen() {
 
   function download(name: string, bounds: ViewState['bounds'] | undefined) {
     if (!bounds) return;
-    downloadPack(name, bounds, line => report('offline', line)).catch(err => report('offline', `${name}: ${err}`));
+    downloadPack(name, bounds, (line, error) => report(error ? 'offline-error' : 'offline', line))
+      .catch(err => report('offline-error', `${name}: ${err}`));
   }
 
   const cycleStyle = () => setStyleIndex(i => (i + 1) % STYLES.length);
@@ -120,7 +127,7 @@ export default function MapScreen() {
       >
         <Camera ref={cameraRef} initialViewState={ZERMATT} />
         <Images images={images} onImageMissing={e => report('missing', `missing image: ${e.nativeEvent.image}`)} />
-        <S3Layers hiking={hiking} ski={ski} dimmed={drawing} track={track.line} toursRef={toursRef} />
+        <S3Layers hiking={hiking} ski={ski} tours={tours} dimmed={drawing} track={track.line} toursRef={toursRef} />
         {drawing && track.points.map((point, i) => (
           <ViewAnnotation
             key={i}
@@ -164,6 +171,7 @@ export default function MapScreen() {
           <Chip label={STYLE_NAMES[styleIndex]!} onPress={cycleStyle} />
           <Chip label="Hiking" on={hiking} onPress={() => setHiking(v => !v)} />
           <Chip label="Ski" on={ski} onPress={() => setSki(v => !v)} />
+          <Chip label="Tours" on={tours} onPress={() => setTours(v => !v)} />
           <Chip label="Draw" on={drawing} onPress={() => setDrawing(v => !v)} />
           {drawing && <Chip label="Undo" onPress={track.undo} />}
           {drawing && <Chip label="Clear" onPress={track.clear} />}

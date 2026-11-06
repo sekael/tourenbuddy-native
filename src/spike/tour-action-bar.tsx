@@ -8,7 +8,7 @@ export function TourActionBar() {
   const inline = NativeTabs.BottomAccessory.usePlacement() === 'inline';
   return (
     <View style={styles.bar}>
-      {!inline && <Text style={styles.title} numberOfLines={1}>Pigne d'Arolla</Text>}
+      {!inline && <Text style={styles.title} numberOfLines={1}>Pigne d’Arolla</Text>}
       <Action icon="pencil" label="Edit" />
       <Action icon="square.and.arrow.up" label="Share" />
       <Action icon="checkmark.circle" label="Done" />

@@ -56,16 +56,16 @@ What is on the map screen now:
 |---|---|---|
 | `Base` / `Aerial` / `Light` / `Classic` chip | cycles the four base maps (Classic = WMTS raster) | `map-layers-panel` |
 | `Hiking`, `Ski` | WMTS trail overlays; Ski also adds the self-hosted route halo + Skia-drawn difficulty badges (z ≥ 11) | `trail-layers.ts`, `ski-badge.ts` |
-| (always) | 1,000 fixture tours, native clusters; cluster pie = 7 rotated wedge layers | `tours-marker-layer.ts` |
-
-Every map image is drawn with Skia **once at start** (`images: … drawn up front`): a native map asks
-for a missing image synchronously and never re-asks, so the PWA's draw-on-`styleimagemissing` does
-not port. A `missing image:` status line means an id slipped through: report it.
+| `Tours` | 1,000 fixture tours, native clusters; cluster pie = 7 rotated wedge layers (off: hitch A/B only) | `tours-marker-layer.ts` |
 | tap (Draw off) | hit test: cluster → zooms to expansion zoom; tour → its name; ski route → id + grade | marker / trail lookup |
 | `Draw`, `Undo`, `Clear` | tap-to-add track along the ways (A*, ported TS); drag a point, drop re-snaps | `use-track-drawing.ts` |
 | `↓ View`, `↓ CH`, `Reset offline` | offline pack of the current view / all of CH, z0–14, incl. ski routes | offline map download |
 
 Status lines under the chips carry the numbers to report.
+
+Every map image is drawn with Skia **once at start** (`images: … drawn up front`): a native map asks
+for a missing image synchronously and never re-asks, so the PWA's draw-on-`styleimagemissing` does
+not port. A `missing image:` status line means an id slipped through: report it.
 
 1. **Look:** at Zermatt z12–14 with Ski on, compare against the PWA on the same spot, each base map.
    Pass = same layers, same order (badges above routes, tours on top), labels in Frutiger.

@@ -5,7 +5,7 @@ import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
 export default function TourSheet() {
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <Text style={styles.title} accessibilityRole="header">Pigne d'Arolla</Text>
+      <Text style={styles.title} accessibilityRole="header">Pigne d’Arolla</Text>
       <Text style={styles.meta}>Ski tour · 3796 m · 1450 m ascent</Text>
       {['Planned for', 'Partners', 'Notes', 'GPX', 'Attachments'].map(row => (
         <View key={row} style={styles.row}>

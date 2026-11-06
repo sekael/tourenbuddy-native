@@ -24,9 +24,10 @@ async function writeMergedStyle(): Promise<string> {
 export async function downloadPack(
   name: string,
   bounds: LngLatBounds,
-  onStatus: (line: string) => void,
+  onStatus: (line: string, error?: boolean) => void,
 ): Promise<void> {
   const started = Date.now();
+  onStatus(`${name}: starting`);
   const mapStyle = await writeMergedStyle();
   // Whole CH ≈ 37k tiles per vector source (z14 alone 27.5k); the default cap is 6,000.
   OfflineManager.setTileCountLimit(200_000);
@@ -37,7 +38,8 @@ export async function downloadPack(
       + `${s.completedResourceCount}/${s.requiredResourceCount} res · `
       + `${(s.completedResourceSize / 1e6).toFixed(1)} MB · ${Math.round((Date.now() - started) / 1000)} s`,
     ),
-    (_pack, error) => onStatus(`${name}: error ${error.message}`),
+    // Own status line: the next progress event would overwrite it.
+    (_pack, error) => onStatus(`${name}: error ${error.message} · ${Math.round((Date.now() - started) / 1000)} s`, true),
   );
 }
 

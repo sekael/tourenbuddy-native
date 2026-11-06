@@ -43,6 +43,8 @@ function before(i: number): ExpressionSpecification | number {
 export interface S3LayerProps {
   hiking: boolean;
   ski: boolean;
+  /** Hitch A/B only: unmounts the 1,000 tours (top of the stack, so the order survives). */
+  tours: boolean;
   /** Trails step back while a track is drawn (same as the PWA). */
   dimmed: boolean;
   track: LngLat[];
@@ -53,7 +55,7 @@ export interface S3LayerProps {
  * The PWA's layer stack, bottom → top: hiking raster → ski halo → ski raster → ski badges → drawn
  * track → tours. Overlays toggle `visibility` and are never unmounted, so the order never changes.
  */
-export function S3Layers({ hiking, ski, dimmed, track, toursRef }: S3LayerProps) {
+export function S3Layers({ hiking, ski, tours, dimmed, track, toursRef }: S3LayerProps) {
   const raster = { 'raster-opacity': dimmed ? 0.4 : 1 };
   const skiVisibility = ski ? 'visible' : 'none';
   return (
@@ -98,7 +100,7 @@ export function S3Layers({ hiking, ski, dimmed, track, toursRef }: S3LayerProps)
         <Layer id="track-line" type="line" layout={LINE} paint={{ 'line-color': '#E11D48', 'line-width': 4 }} />
       </GeoJSONSource>
 
-      <GeoJSONSource
+      {tours && <GeoJSONSource
         ref={toursRef}
         id="tours"
         data={TOURS}
@@ -162,7 +164,7 @@ export function S3Layers({ hiking, ski, dimmed, track, toursRef }: S3LayerProps)
           }}
           paint={{ 'text-color': '#1c1917' }}
         />
-      </GeoJSONSource>
+      </GeoJSONSource>}
     </>
   );
 }
