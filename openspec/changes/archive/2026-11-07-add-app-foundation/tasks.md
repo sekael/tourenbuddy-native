@@ -35,7 +35,7 @@
 ## 7. Verification
 
 - [x] 7.1 Run `npm run check` and `npx expo export --platform web`; verify both pass
-- [ ] 7.2 Owner: dev build in the iOS Simulator plus web (Android optional while iOS is the focus); verify launch on white without a flash, app name "TourenBuddy Dev", German tagline after switching the app language in system settings, dark status bar icons on white also when the device is in dark mode
+- [x] 7.2 Owner: dev build in the iOS Simulator plus web (Android optional while iOS is the focus); verify launch on white without a flash, app name "TourenBuddy Dev", German tagline after switching the app language in system settings, dark status bar icons on white also when the device is in dark mode
 
 ## Workflow follow-up
 
