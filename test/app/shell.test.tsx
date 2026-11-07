@@ -25,12 +25,17 @@ jest.mock('expo-localization', () => {
 const { setDeviceLocales } = jest.requireMock('expo-localization');
 
 describe('shell', () => {
-  it('should switch to German when the device language changes while running', async () => {
+  it('should switch to German, dock included, when the device language changes while running', async () => {
     await renderRouter(routes);
     expect(await screen.findByText('Plan your outdoor tours')).toBeVisible();
 
     await act(() => setDeviceLocales([{ languageTag: 'de-AT' }, { languageTag: 'en-US' }]));
 
     expect(await screen.findByText('Plane deine Touren')).toBeVisible();
+    // The dock's labels are SwiftUI text, rendered under Jest as a `text` prop.
+    const dockLabels = screen.container
+      .queryAll((node) => typeof node.props.text === 'string')
+      .map((node) => node.props.text);
+    expect(dockLabels).toEqual(['Karte', 'Kalender']);
   });
 });

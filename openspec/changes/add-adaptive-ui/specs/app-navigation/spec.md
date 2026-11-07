@@ -7,10 +7,11 @@ reach, and how the menu's destinations open and close.
 
 ### Requirement: Map and Calendar tabs
 
-The app SHALL offer two top-level places, Map and Calendar, in the platform's tab bar on iOS and
-Android, and SHALL open on the Map. On web, windows narrower than 600 px SHALL show a navigation bar
-at the bottom, and wider windows a navigation rail at the leading edge. The selected place SHALL be
-marked, and the tab labels SHALL follow the app language.
+The app SHALL offer two top-level places, Map and Calendar, and SHALL open on the Map. On iOS they
+SHALL sit in a Liquid Glass capsule at the bottom, on Android in the system navigation bar. On web,
+windows narrower than 600 px SHALL show a navigation bar at the bottom, wider ones a navigation rail
+at the leading edge. The selected place SHALL be marked, also for assistive technology, and the
+labels SHALL follow the app language.
 
 #### Scenario: App opens on the map
 
@@ -21,6 +22,16 @@ marked, and the tab labels SHALL follow the app language.
 
 - **WHEN** the user selects Calendar
 - **THEN** the calendar is shown and Calendar is marked as selected, Map no longer
+
+#### Scenario: Opening on the calendar from a link
+
+- **WHEN** the app is opened at the calendar's address
+- **THEN** the calendar is shown and Calendar, not Map, is marked as selected
+
+#### Scenario: Selecting the current place again
+
+- **WHEN** the user selects the place that is already shown
+- **THEN** it stays shown and selected
 
 #### Scenario: Desktop window
 
@@ -34,21 +45,28 @@ marked, and the tab labels SHALL follow the app language.
 
 ### Requirement: Main menu within thumb reach
 
-Both tabs SHALL show a menu button in the bottom-trailing corner, above the tab bar, so it can be
-reached with the thumb of the hand holding the phone. It SHALL open a menu of Inbox, Contacts,
-Profile and Feedback, the first item nearest the button. Choosing an item SHALL close the menu and
-open that destination. The button SHALL tell assistive technology whether the menu is open.
+Both tabs SHALL show a menu button in the bottom-trailing corner, within thumb reach: on iOS level
+with the places, as tall as their capsule; on Android and web above the navigation bar. It SHALL
+open a menu of Inbox, Contacts, Profile, Offline maps, Map layers and Feedback, the first nearest
+the button; offline maps and map layers on the Map only. Choosing an item SHALL close the menu and
+open it. On Android and web the button SHALL tell assistive technology whether the menu is open.
 
 #### Scenario: Opening the menu one-handed
 
-- **WHEN** the user taps the menu button on the Map or the Calendar tab
-- **THEN** the menu opens above the button with Inbox nearest to it, then Contacts, Profile and
-  Feedback
+- **WHEN** the user taps the menu button on the Map tab
+- **THEN** the menu opens above the button with Inbox nearest to it, then Contacts, Profile,
+  Offline maps, Map layers and Feedback
+
+#### Scenario: The map's own entries stay on the map
+
+- **WHEN** the user opens the menu on the Calendar tab
+- **THEN** it lists Inbox, Contacts, Profile and Feedback, without Offline maps and Map layers
 
 #### Scenario: Liquid Glass on iOS
 
 - **WHEN** the menu button is shown on iOS
-- **THEN** it is a Liquid Glass button and opens the system menu out of it
+- **THEN** it is a Liquid Glass circle at the trailing end of the places' row, as tall as their
+  capsule, and opens the system menu out of it with icons in the text color
 
 #### Scenario: FAB menu on Android and web
 
@@ -83,7 +101,7 @@ open that destination. The button SHALL tell assistive technology whether the me
 
 ### Requirement: Destinations open as sheets above the tabs
 
-A menu destination SHALL open as a sheet above the current tab and its tab bar. Closing it SHALL
+A menu destination SHALL open as a sheet above the current tab and its bottom bar. Closing it SHALL
 return to the tab it was opened from. Each destination SHALL have its own address; opened from a
 link, it SHALL have the map beneath it, and closing it SHALL show the map.
 

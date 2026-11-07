@@ -4,5 +4,11 @@ import { PlaceholderScreen } from '@/features/shell/presentation/placeholder-scr
 
 export default function CalendarTab() {
   const { t } = useTranslation();
-  return <PlaceholderScreen title={t('shell.tabs.calendar')} subtitle={t('shell.comingSoon')} />;
+  return (
+    <PlaceholderScreen
+      tab="calendar"
+      title={t('shell.tabs.calendar')}
+      subtitle={t('shell.comingSoon')}
+    />
+  );
 }

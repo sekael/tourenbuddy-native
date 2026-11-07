@@ -9,7 +9,7 @@ import { color } from '@/core/theme/tokens';
 // A deep link straight to a sheet still has the tabs beneath it to return to.
 export const unstable_settings = { anchor: '(tabs)' };
 
-/** The tabs, with the menu destinations presented as sheets above them (and the tab bar). */
+/** The tabs, with the menu destinations presented as sheets above them (and their bottom bar). */
 export default function RootLayout() {
   useDeviceLocale();
 
@@ -21,6 +21,8 @@ export default function RootLayout() {
       <Stack.Screen name="inbox" options={sheetOptions} />
       <Stack.Screen name="contacts" options={sheetOptions} />
       <Stack.Screen name="profile" options={sheetOptions} />
+      <Stack.Screen name="offline-maps" options={sheetOptions} />
+      <Stack.Screen name="map-layers" options={sheetOptions} />
       <Stack.Screen name="feedback" options={sheetOptions} />
     </Stack>
   );

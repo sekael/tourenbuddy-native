@@ -26,38 +26,60 @@ native projects are what can be checked here.
 
 ## Decisions
 
-### Tabs: `NativeTabs` on iOS and Android, headless tabs on web
+### Tabs: a glass dock on iOS, `NativeTabs` on Android, headless tabs on web
 
-`(tabs)/_layout.tsx` uses `NativeTabs` (stable in SDK 58): the system tab bar, Liquid Glass on
-iOS 26, the Material 3 navigation bar on Android. Web has no system tab bar and the `NativeTabs`
-fallback is a basic iPad-like layout, so `(tabs)/_layout.web.tsx` uses the headless tabs from
-`expo-router/ui` with our own Material 3 navigation bar below 600 px and a navigation rail from
-600 px (Material's medium window class; the Vue app switched to desktop at 600 px too).
+- **iOS:** `(tabs)/_layout.ios.tsx` runs the headless tabs from `expo-router/ui` under
+  `GlassDock`: one row in the thumb zone with Map and Calendar in a Liquid Glass capsule at the
+  leading edge and the menu as a 60 pt glass circle at the trailing edge, level with it. A selection
+  pill glides between the places (none with Reduce Motion). The capsule is a VoiceOver tab bar
+  whose places carry the selected trait. Labels use the `caption2` text style, so they grow with
+  Dynamic Type up to the largest non-accessibility size, the most the pill holds. The row sits where the system tab bar would, 12 pt into
+  the home indicator's inset. The owner's first Simulator round (2026-11-07) replaced `NativeTabs`
+  here: after Reduce Transparency was toggled, the system bar showed ghost copies of the selected
+  tab's icon and label until it was toggled again, and the menu button floated detached above the
+  bar and read small.
+- **Android:** `(tabs)/_layout.tsx` uses `NativeTabs` (stable in SDK 58): the Material 3
+  navigation bar, with the FAB menu above it.
+- **Web:** no system tab bar, and the `NativeTabs` fallback is a basic iPad-like layout, so
+  `(tabs)/_layout.web.tsx` uses the headless tabs with our own Material 3 navigation bar below
+  600 px and a navigation rail from 600 px (Material's medium window class; the Vue app switched to
+  desktop at 600 px too).
 
 - **Alternative: the current sheet flow without tabs.** Rejected by the owner (2026-11-07): the
   calendar stays hidden behind an icon in the tours sheet, and the app forgoes the system tab bar.
 - **Alternative: four tabs (Map, Calendar, Contacts, Inbox).** Rejected by the owner: contacts and
   inbox would become full screens instead of sheets over the map, more port work and spec changes.
+- **Alternative on iOS: the system tab bar with the menu in its search slot.** iOS 26.1 places a
+  search tab as a separate circle beside the bar, but a tab cannot open a menu (it would open a
+  sheet), VoiceOver would announce a tab, the search tab truncates the other titles on first
+  appearance (react-native-screens #5015), and the ghosting stays. Rejected by the owner.
+- **Alternative on iOS: the system tab bar with a larger menu button above it.** Keeps the
+  arrangement the owner found unintuitive. Rejected.
 
 ### Root stack above the tabs
 
 The root layout is a `Stack` holding `(tabs)` and the destination routes (`inbox`, `contacts`,
-`profile`, `feedback`) presented as sheets. A sheet opened from either tab therefore covers the
-tab bar too, and `router.back()` returns to the tab it came from. `unstable_settings.anchor =
+`profile`, `offline-maps`, `map-layers`, `feedback`) presented as sheets. A sheet opened from
+either tab therefore covers the dock or navigation bar too, and `router.back()` returns to the tab it came from. `unstable_settings.anchor =
 '(tabs)'` puts the tabs beneath a destination opened straight from a link, so closing it lands on
 the map instead of nowhere.
 
 ### Main menu: the system menu on iOS, a FAB menu on Android and web
 
-The owner asked for a menu that is easy to reach one-handed. `FloatingMenu` is a full-screen layer
-with its button in the bottom-trailing corner, above the tab bar, on both tabs. The first item
-sits nearest the button.
+The owner asked for a menu that is easy to reach one-handed, with the Vue app's entries: Inbox,
+Contacts, Profile, Offline maps, Map layers and Feedback, the first nearest the thumb. Offline maps
+and map layers belong to the map, so they show on the Map tab only. `useMainMenuItems(tab)` in the
+shell feature builds the list for both menus below.
 
-- **iOS:** `@expo/ui` SwiftUI `Menu` with `buttonStyle('glass')`, a circle shape and the
-  `line.3.horizontal` symbol. The menu morphs out of the glass button, with system haptics and
-  VoiceOver; on a bottom button the system puts the first item nearest it. Expo's docs warn that
+- **iOS:** the dock's circle is an `@expo/ui` SwiftUI `Menu` with `buttonStyle('glass')`, a circle
+  shape and the `line.3.horizontal` symbol, framed to 60 pt with a label that grows to fill it, so
+  the circle matches the capsule beside it. The menu morphs out of the glass, with system haptics
+  and VoiceOver; on a bottom button the system puts the first item nearest it. Its icons stay in
+  the label color as in system menus (a tint on the menu turned them blue). Expo's docs warn that
   `glassEffect()` on a menu label leaves a halo on dismiss, so the style comes from `buttonStyle`.
-- **Android and web:** Expo UI has FABs but no FAB menu (#346 R12), so the Material 3 Expressive
+- **Android and web:** `FloatingMenu`, a full-screen layer with its button in the bottom-trailing
+  corner, above the navigation bar, on both tabs.
+- **The FAB menu:** Expo UI has FABs but no FAB menu (#346 R12), so the Material 3 Expressive
   FAB menu is built in React Native: brand FAB, tonal pill items that unfold upwards one after
   another (opacity, 12 dp travel, 0.9 → 1 scale, 40 ms stagger, one animation timeline), the icon
   turning into a close mark. Tap outside, Back (Android) or Escape (web) folds it away. Android and
@@ -127,25 +149,36 @@ web-only behavior with the DOM Testing Library, because react-native-web renders
 React Native Testing Library cannot query. Both platforms' `Animated` finish at once under test, so
 the menu test holds `Animated.timing` to check an interrupted fold. The navigation test replaces
 `NativeTabs` with a `Slot`, because Jest's native tab bar keeps every tab mounted and visible.
+Jest renders SwiftUI views as bare native views that keep their props, so the iOS dock test
+(`test/app/tabs.test.tsx`) finds its buttons by accessibility label and presses them through
+`onButtonPress`; how the glass looks is checked in the Simulator.
 
 ## Risks / Trade-offs
 
-- [Glass menu button size and tint differ from the spike's look] → The owner checks the
-  Simulator; size (`controlSize`) and tint are one modifier each.
+- [The dock stands in for a system component] → It mimics the system tab bar's place and height;
+  if a later iOS moves its bar, ours does not follow. It also forgoes the bar's minimize-on-scroll
+  and overlays content: scrolling screens add its height to their bottom inset when they arrive,
+  and the iPad keeps it at the bottom instead of the system's top bar. `TabSlot` detaches the
+  hidden tab's screen like `NativeTabs` does; the map port checks that a MapLibre view survives a
+  round trip to the calendar (else `detachInactiveScreens={false}` on the slot). The owner checks the row
+  in the Simulator, including Reduce Transparency and VoiceOver.
+- [Whether the glass button style fills the 60 pt frame] → If the Simulator shows a smaller circle,
+  the label's frame is the one value to adjust.
 - [The JavaScript FAB menu misses Material 3 Expressive details on a device] → Android is not the
   focus; Phase 4 can swap in a Compose module behind the same props.
 - [Web sheets close without exit animation on the browser's back button] → The route unmounts at
   once; acceptable, the in-app close paths animate.
 - [The menu button covers content in the bottom-trailing corner] → Feature ports keep that corner
   free (map controls sit top-trailing, as in the spike).
-- [The web tab bar builds on `expo-router/ui` headless tabs, marked experimental in SDK 58] → One
-  file (`(tabs)/_layout.web.tsx`); if the API changes, the JavaScript `Tabs` navigator with a custom
-  tab bar is the fallback.
+- [The iOS and web tabs build on `expo-router/ui` headless tabs, marked experimental in SDK 58] →
+  Two layout files (`(tabs)/_layout.ios.tsx`, `(tabs)/_layout.web.tsx`); if the API changes, the
+  JavaScript `Tabs` navigator with a custom tab bar is the fallback.
 - [The web dialog has no focus trap and no scroll container yet] → Fine for the placeholders; the
   first destination with real content adds scrolling, and keeping Tab inside the dialog (`inert`
   on the app beneath) comes with it.
-- [Web first load grows] → About 416 KB gzipped JavaScript to a usable shell, under the 700 KB budget
-  (#346 R3); the catalogs dominate and are unchanged.
+- [Web first load grows] → About 404 KB gzipped JavaScript to a usable shell, under the 700 KB budget
+  (#346 R3); the catalogs dominate and are unchanged. The export also holds the iOS and Android tab
+  layouts as chunks a browser never loads.
 
 ## Migration Plan
 

@@ -7,6 +7,7 @@ export default function MapTab() {
   const { t } = useTranslation();
   return (
     <PlaceholderScreen
+      tab="map"
       title="TourenBuddy"
       subtitle={t('shell.tagline')}
       tint={color.surfaceVariant}

@@ -26,10 +26,12 @@ Decided or default in #346. Versions come from `npx expo install`; `package-lock
   Swisstopo tiles (free, no API key)
 - **UI:** small in-house adaptive component layer (D5) in `src/core/adaptive/`: one iOS
   (`*.ios.tsx`) and one Material implementation per component, the Material one shared by Android
-  and web, plus `*.web.tsx` where web differs. iOS: system tabs and sheets first, `@expo/ui`
-  SwiftUI for glass controls and menus, `expo-glass-effect` for floating map controls. iOS 26
-  minimum, so no non-glass fallback. Navigation: Map · Calendar tabs, the main menu in the thumb
-  zone, destinations as sheet routes
+  and web, plus `*.web.tsx` where web differs. iOS: system sheets first, `@expo/ui` SwiftUI for
+  glass controls and menus (glass on a `Menu` via `buttonStyle('glass')`, never `glassEffect()`),
+  `expo-glass-effect` for floating map controls. iOS 26 minimum, so no non-glass fallback.
+  Navigation: Map · Calendar tabs (iOS: our glass dock with the menu circle beside the places,
+  not the system tab bar; Android: the system bar), the main menu in the thumb zone, destinations
+  as sheet routes
 - **Fonts and icons:** iOS system font and SF Symbols; Android embedded Inter, web a bundled Inter
   subset; Material Symbols drawn as SVG on Android and web. Icons come from the registry in
   `src/core/adaptive/icons.ts`. No runtime font downloads from third parties

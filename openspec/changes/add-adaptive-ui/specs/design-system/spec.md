@@ -107,10 +107,10 @@ a blur imitation, and on Android and web a brand-colored surface with a shadow. 
 the control layer: content stays opaque and glass never sits on glass. The system's Reduce
 Transparency and Increase Contrast settings SHALL apply to the glass.
 
-#### Scenario: Menu button on iOS
+#### Scenario: Bottom row on iOS
 
-- **WHEN** the menu button floats over a tab on iOS
-- **THEN** it is Liquid Glass and the content beneath shows through it
+- **WHEN** the places' capsule and the menu button float over a tab on iOS
+- **THEN** both are Liquid Glass and the content beneath shows through them
 
 #### Scenario: Menu button on Android and web
 
@@ -119,8 +119,9 @@ Transparency and Increase Contrast settings SHALL apply to the glass.
 
 #### Scenario: Reduce Transparency
 
-- **WHEN** Reduce Transparency is on in iOS settings
-- **THEN** the glass controls turn opaque and stay readable
+- **WHEN** Reduce Transparency is switched on or off in iOS settings while the app runs
+- **THEN** the glass controls turn opaque or clear again and stay readable, without ghost copies
+  of their icons or labels
 
 ## MODIFIED Requirements
 

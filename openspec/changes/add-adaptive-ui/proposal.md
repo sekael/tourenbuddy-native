@@ -10,15 +10,16 @@ that is easy to reach with the thumb when the phone is used one-handed.
 
 ## What Changes
 
-- **App navigation:** a system tab bar with Map and Calendar (Liquid Glass on iOS, the Material 3
-  navigation bar on Android). Web has no system tab bar, so it gets a Material 3 navigation bar on
-  phones and a navigation rail from 600 px, which gives desktop windows a side layout instead of a
-  stretched phone (D8).
-- **Main menu in the thumb zone:** a floating button in the bottom-trailing corner of both tabs. iOS
-  shows the system menu out of a Liquid Glass button; Android and web show a Material 3 Expressive
-  FAB menu whose items unfold one after another. Its entries (Inbox, Contacts, Profile, Feedback)
-  open their destination as a sheet above the tabs. Map layers and offline maps join the menu with
-  the map port.
+- **App navigation:** Map and Calendar. iOS gets one Liquid Glass row at the bottom: the places in
+  a capsule, the menu as a glass circle of the same height beside it (the owner's first Simulator
+  round replaced the system tab bar). Android uses the Material 3 navigation bar. Web has no system
+  tab bar, so it gets a Material 3 navigation bar on phones and a navigation rail from 600 px, which
+  gives desktop windows a side layout instead of a stretched phone (D8).
+- **Main menu in the thumb zone:** on iOS the circle in that row opens the system menu out of its
+  glass; Android and web show a Material 3 Expressive FAB menu above the navigation bar whose items
+  unfold one after another. Its entries match the Vue app (Inbox, Contacts, Profile, Offline maps,
+  Map layers, Feedback; the two map entries on the Map tab only) and open their destination as a
+  sheet above the tabs.
 - **Sheets:** the system sheet sized to its content on iOS (Liquid Glass at partial height) and
   Android (Material bottom sheet). Web: a bottom sheet on phones, a content-sized dialog hanging
   from the top from 600 px. Closing returns to the tab it was opened from; a link straight to a
@@ -30,7 +31,7 @@ that is easy to reach with the thumb when the phone is used one-handed.
   Inter subset from its own origin. No runtime font downloads from third parties.
 - **Icons (D11):** one registry maps each icon to an SF Symbol (iOS) and a Material Symbols path
   (Android and web, drawn as SVG), so icons render in the first frame without loading a font.
-- **Placeholders:** the Map and Calendar tabs and the four menu destinations show placeholders until
+- **Placeholders:** the Map and Calendar tabs and the six menu destinations show placeholders until
   their features are ported in Phase 3.
 - **Tests:** Jest runs as iOS by default, Material components and navigation as Android, and
   web-only behavior in a browser environment.

@@ -6,6 +6,8 @@ import * as RootLayout from '@/app/_layout';
 import ContactsSheet from '@/app/contacts';
 import FeedbackSheet from '@/app/feedback';
 import InboxSheet from '@/app/inbox';
+import MapLayersSheet from '@/app/map-layers';
+import OfflineMapsSheet from '@/app/offline-maps';
 import ProfileSheet from '@/app/profile';
 
 /** The app's real route tree for `renderRouter` (platform files resolve per test project). */
@@ -17,5 +19,7 @@ export const routes = {
   inbox: InboxSheet,
   contacts: ContactsSheet,
   profile: ProfileSheet,
+  'offline-maps': OfflineMapsSheet,
+  'map-layers': MapLayersSheet,
   feedback: FeedbackSheet,
 };

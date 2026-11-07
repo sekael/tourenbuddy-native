@@ -67,6 +67,8 @@ export const size = {
   /** Minimum touch target (Apple 44 pt, Material 48 dp). */
   touch: 48,
   fab: 56,
+  /** iOS bottom row: the places capsule and the menu circle, as tall as the system tab bar. */
+  dock: 60,
 } as const;
 
 /** Calm and unhurried. Durations in ms; Material and web use them, iOS animates natively. */

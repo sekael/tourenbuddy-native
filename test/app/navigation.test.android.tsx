@@ -46,6 +46,8 @@ describe('app navigation', () => {
     ['Inbox', '/inbox'],
     ['Contacts', '/contacts'],
     ['Profile', '/profile'],
+    ['Offline maps', '/offline-maps'],
+    ['Map layers', '/map-layers'],
     ['Feedback', '/feedback'],
   ])('should route the %s menu item to %s', async (item, path) => {
     await renderRouter(routes);
@@ -53,6 +55,17 @@ describe('app navigation', () => {
     await openFromMenu(item);
 
     expect(screen).toHavePathname(path);
+  });
+
+  it("should leave the map's own entries out of the menu on the calendar", async () => {
+    await renderRouter(routes, { initialUrl: '/calendar' });
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Menu' }));
+    await settle();
+
+    expect(screen.getByRole('button', { name: 'Inbox' })).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Offline maps' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Map layers' })).toBeNull();
   });
 
   it('should fold the menu away when a sheet opens over its tab', async () => {
