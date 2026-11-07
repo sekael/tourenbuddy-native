@@ -1,8 +1,7 @@
 import { act, screen } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 
-import RootLayout from '@/app/_layout';
-import ShellScreen from '@/app/index';
+import { routes } from './routes';
 
 // Device locales as an external store, so the test can change them the way the OS does.
 jest.mock('expo-localization', () => {
@@ -26,12 +25,17 @@ jest.mock('expo-localization', () => {
 const { setDeviceLocales } = jest.requireMock('expo-localization');
 
 describe('shell', () => {
-  it('should switch to German when the device language changes while running', async () => {
-    await renderRouter({ _layout: RootLayout, index: ShellScreen });
+  it('should switch to German, tab bar included, when the device language changes while running', async () => {
+    await renderRouter(routes);
     expect(await screen.findByText('Plan your outdoor tours')).toBeVisible();
 
     await act(() => setDeviceLocales([{ languageTag: 'de-AT' }, { languageTag: 'en-US' }]));
 
     expect(await screen.findByText('Plane deine Touren')).toBeVisible();
+    // The tab bar is native: each tab screen hands its label to it as `title`.
+    const tabLabels = screen.container
+      .queryAll((node) => typeof node.props.screenKey === 'string')
+      .map((node) => node.props.title);
+    expect(tabLabels).toEqual(['Karte', 'Kalender', 'Kontakte', 'Profil']);
   });
 });

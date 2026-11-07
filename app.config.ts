@@ -7,6 +7,17 @@ import { version } from './package.json';
 const prod = process.env.APP_VARIANT === 'prod';
 const id = prod ? 'ch.tourenbuddy.app' : 'ch.tourenbuddy.app.dev';
 
+const interFaces = (
+  [
+    ['400Regular', 400],
+    ['500Medium', 500],
+    ['600SemiBold', 600],
+  ] as const
+).map(([face, weight]) => ({
+  path: `./node_modules/@expo-google-fonts/inter/${face}/Inter_${face}.ttf`,
+  weight,
+}));
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: prod ? 'TourenBuddy' : 'TourenBuddy Dev',
@@ -43,6 +54,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // Per-app language in system settings. "de" covers every German region; the app maps it to de-CH.
     ['expo-localization', { supportedLocales: ['en', 'de'] }],
     ['expo-build-properties', { ios: { deploymentTarget: '26.0' } }],
+    // D11: Inter on Android, embedded at build time so the first frame already uses it. iOS uses
+    // the system font; web loads Inter at startup (src/core/theme/load-fonts.web.ts).
+    ['expo-font', { android: { fonts: [{ fontFamily: 'Inter', fontDefinitions: interFaces }] } }],
   ],
   experiments: {
     typedRoutes: true,

@@ -4,82 +4,6 @@ Shared visual language: design tokens (spacing, radius, shadows, colors), typogr
 
 ## Requirements
 
-### Requirement: Blueish-grey color palette tokens
-
-The system SHALL define CSS custom properties for a blueish-grey (slate) color palette in `tokens.css`. The palette SHALL include primary (#475569), primary-light (#64748b), primary-dark (#334155), surface (#f8fafc), on-surface (#0f172a), surface-variant (#e2e8f0), background (#ffffff), outline (#94a3b8), outline-variant (#cbd5e1), error (#dc2626), error-container (#fef2f2), and corresponding on-\* text colors. An accent color (#3b82f6) SHALL be added for interactive highlights.
-
-#### Scenario: Color tokens are available
-
-- **WHEN** any component references `var(--color-primary)`
-- **THEN** it resolves to the slate blue value `#475569`
-
-#### Scenario: Accent color is available
-
-- **WHEN** a component references `var(--color-accent)`
-- **THEN** it resolves to `#3b82f6`
-
-### Requirement: Inter font typography
-
-The system SHALL bundle the Inter font (weights 400, 500, 600) as self-hosted assets, precached by the service worker, with no dependency on an external font CDN. The `--font-family-base` token SHALL use `'Inter'` as the primary font with system fonts as fallback. Heading weights SHALL use `--font-weight-medium` (500) instead of bold (700) for a sleeker appearance.
-
-#### Scenario: Inter font loads from bundle
-
-- **WHEN** the app loads
-- **THEN** text renders in the Inter font family served from the app's own bundle, without any request to a third-party font origin
-
-#### Scenario: Inter available offline
-
-- **WHEN** the app is opened offline
-- **THEN** text still renders in Inter from the precached font assets
-
-#### Scenario: Font fallback
-
-- **WHEN** the bundled Inter font fails to load for any reason
-- **THEN** text falls back to the system font stack
-
-### Requirement: Material Symbols icon font
-
-The system SHALL render icons as bundled SVGs (using the Material Symbols Outlined glyph set), tree-shaken at build time, with no dependency on an external font CDN. Where the Material set has no glyph for a needed subject, the app SHALL use its own SVG glyph instead of a loosely related Material one, drawn to the same grid and stroke weight and bundled the same way. Icons SHALL be rendered through a shared `Icon` component that exposes the glyph name and token-driven sizing, backed by a central icon registry that maps each icon name to its SVG. An icon's rendered box SHALL be independent of any text content, so that font-load state, network conditions, or a missing asset can never let icon markup affect the layout of a containing element.
-
-#### Scenario: Icon renders via the component
-
-- **WHEN** a component renders `<Icon name="map" />`
-- **THEN** the map icon renders as an inline SVG vector with the standard size
-
-#### Scenario: Icon sizing is token-driven
-
-- **WHEN** an `Icon` is rendered at a given size
-- **THEN** its dimensions derive from design tokens rather than per-instance literal font sizes
-
-#### Scenario: Dynamically named icon resolves
-
-- **WHEN** a component passes an icon name chosen at runtime (e.g. from the tour-type lookup or a prop)
-- **THEN** the shared component resolves it through the icon registry and renders the corresponding SVG
-
-#### Scenario: Fixed-position icon bar keeps its intrinsic width at app start
-
-- **WHEN** the tour action-bar pill mounts at app start under any network condition (slow, offline, cold PWA)
-- **THEN** the pill sizes to its content (label + fixed-size icon boxes) and does not span the full viewport width, because the SVG icons have no text content that could widen it
-
-#### Scenario: Ski-touring types have their own glyphs
-
-- **WHEN** a ski tour or a splitboard tour is shown anywhere the tour type icon appears (type picker, tour list, tour detail, calendar)
-- **THEN** a ski tour SHALL show an uphill skier on skins and a splitboard tour a matching uphill splitboarder
-- **AND** neither SHALL show the walking/hiking glyph
-- **AND** both SHALL render offline, without any network request
-
-#### Scenario: Equipment reads as gear by its icon
-
-- **WHEN** a tour with equipment is shown in the detail view
-- **THEN** the equipment row SHALL lead with an ice axe glyph, a subject the Material set lacks
-- **AND** it SHALL NOT use a generic backpack, box or tools glyph
-
-#### Scenario: Climbing and mountaineering types have their own glyphs
-
-- **WHEN** a climbing, a mountaineering or a ski-mountaineering tour is shown anywhere the tour type icon appears
-- **THEN** a climbing tour SHALL show a climber on a rock overhang, a mountaineering tour a figure scrambling up a rock step, and a ski-mountaineering tour that figure with skis strapped to its pack
-- **AND** the three SHALL differ from each other and from the hiking and ski-touring glyphs, and none SHALL show a generic landscape or mountains glyph
-
 ### Requirement: Layered shadow tokens
 
 The system SHALL define CSS custom properties for layered soft shadows: `--shadow-sm`, `--shadow-md`, and `--shadow-lg`. Shadows SHALL use multiple layers for a natural depth effect.
@@ -88,15 +12,6 @@ The system SHALL define CSS custom properties for layered soft shadows: `--shado
 
 - **WHEN** a component references `var(--shadow-md)`
 - **THEN** it resolves to a multi-layer shadow value
-
-### Requirement: Glassmorphism utility styles
-
-The system SHALL define one shared glass surface for map overlays — a semi-transparent brand fill with `backdrop-filter: blur()`, a hairline border, and a medium shadow — applied through a single shared class. Every control floating over the map SHALL use it, and it SHALL only be applied to map overlay components.
-
-#### Scenario: Glass effect on map controls
-
-- **WHEN** a map overlay component uses the glass style
-- **THEN** the background is semi-transparent with a blur effect behind it, identical to every other map control
 
 ### Requirement: Button styling conventions
 
@@ -210,23 +125,27 @@ Application code SHALL reference safe-area insets through the semantic tokens `v
 
 ### Requirement: Two-tier token structure with overridable semantic layer
 
-Design tokens SHALL be authored directly in CSS (`tokens.css`/`typography.css`) and organized in two tiers: a **primitive** tier (raw palette ramps, spacing scale, radius scale, font sizes/weights/line-heights, raw shadows — context-free values) and a **semantic** tier (e.g. `--color-surface`, `--color-on-surface`, `--color-primary`) whose values reference primitive tokens via `var()`. Application code SHALL reference semantic tokens; primitive palette colors SHALL be referenced only by semantic tokens. An alternate theme (e.g. dark mode) SHALL be expressible by overriding the semantic tier alone.
+Design tokens SHALL be typed values in the app's theme module, in two tiers: a **primitive** tier
+(the raw palette) and a **semantic** tier (color roles such as surface and primary) whose values
+reference primitives. Spacing, radius, type, motion and sizes are scales used directly. App code
+SHALL use semantic roles and scales; only the semantic tier SHALL read the palette. A theme (such as
+dark mode) SHALL be expressible by reassigning the semantic tier alone.
 
 #### Scenario: Semantic token resolves through a primitive
 
-- **WHEN** a component uses `var(--color-surface)`
-- **THEN** the semantic token resolves to a value defined by a primitive palette token, not a raw literal in the component
+- **WHEN** a component uses the surface role
+- **THEN** its value comes from a primitive palette color, not a literal in the component
 
 #### Scenario: Alternate theme overrides only the semantic tier
 
 - **WHEN** a theme is added
-- **THEN** it can be expressed by reassigning semantic tokens to different primitives
+- **THEN** it can be expressed by reassigning semantic roles to different primitives
 - **AND** no component or palette primitive needs to change
 
 #### Scenario: Restructuring preserves values
 
-- **WHEN** the tokens are restructured into two tiers
-- **THEN** the resolved value of each existing semantic token is unchanged from before
+- **WHEN** the tokens moved from the Vue app's CSS into the app's theme module
+- **THEN** every semantic role the app defines kept the value it had in the Vue app
 
 ### Requirement: Runtime CSS functions are not design tokens
 
@@ -679,3 +598,126 @@ The tour detail view SHALL open with a compact hero line led by the tour's goal:
 
 - **WHEN** the user opens a hike & fly tour on a phone and the sheet rests at its opening height
 - **THEN** the climb and the flight SHALL read in the hero beside the date, not in a fact row further down
+
+### Requirement: Brand color roles
+
+The app SHALL define its colors as semantic roles (such as primary, surface, on-surface, secondary
+container and floating control) over a palette of primitive colors taken from the Vue app. Screens
+and components SHALL use the roles only. The app SHALL appear in its light colors only. Every text
+or icon role SHALL reach a contrast of at least 4.5:1 on the surface it is drawn on.
+
+#### Scenario: Brand primary
+
+- **WHEN** a control uses the primary role
+- **THEN** it is drawn in the brand blue `#2563eb`
+
+#### Scenario: Text roles meet WCAG AA
+
+- **WHEN** secondary text is drawn on the tinted map placeholder, or a label on a tonal control
+- **THEN** it reads at 4.5:1 or more
+
+#### Scenario: Device in dark mode
+
+- **WHEN** the device is set to dark mode
+- **THEN** the app keeps its light colors
+
+### Requirement: Platform typography
+
+iOS SHALL use the system font. Android and web SHALL use Inter in weights 400, 500 and 600, bundled
+with the app and served from its own origin, never from a third-party font service. Headings SHALL
+use weight 500. On Android the first frame SHALL already be in Inter. On web, text SHALL show in the
+system font while Inter loads and SHALL NOT switch font after a long wait or if it fails to load.
+
+#### Scenario: iOS
+
+- **WHEN** the app runs on iOS
+- **THEN** text renders in the system font
+
+#### Scenario: Android first frame
+
+- **WHEN** the app starts on Android
+- **THEN** the first frame's text is already in Inter
+
+#### Scenario: Web font from the app's origin
+
+- **WHEN** the web app loads
+- **THEN** Inter is requested from the app's own origin only
+
+#### Scenario: Web font fails
+
+- **WHEN** Inter cannot be loaded on web
+- **THEN** text stays in the system font
+
+### Requirement: Platform icons
+
+Icons SHALL come from one registry that names each icon once and maps it to an SF Symbol on iOS and
+a Material Symbols Outlined glyph on Android and web. Icons SHALL render in the first frame without
+loading a font, so an icon's box never depends on network or font state. Icons inside a control
+SHALL be hidden from assistive technology; the control carries the name.
+
+#### Scenario: Same icon on each platform
+
+- **WHEN** the menu shows its Inbox item
+- **THEN** iOS shows the `bell` SF Symbol and Android and web the Material `notifications` glyph
+
+#### Scenario: No icon pops in
+
+- **WHEN** a screen with icons opens for the first time, offline or on a slow network
+- **THEN** its icons are drawn in the first frame
+
+#### Scenario: Decorative icons stay silent
+
+- **WHEN** a screen reader focuses the menu button
+- **THEN** it announces the button's name only, not its icon
+
+### Requirement: Activity types have their own glyphs
+
+Where the icon set has no glyph for a needed subject, the app SHALL use its own glyph, drawn to the
+same grid and weight and registered like any other icon, on every platform and offline.
+
+#### Scenario: Ski-touring types have their own glyphs
+
+- **WHEN** a ski tour or a splitboard tour is shown anywhere the tour type icon appears (type picker,
+  tour list, tour detail, calendar)
+- **THEN** a ski tour SHALL show an uphill skier on skins and a splitboard tour a matching uphill
+  splitboarder
+- **AND** neither SHALL show the walking/hiking glyph
+- **AND** both SHALL render offline, without any network request
+
+#### Scenario: Equipment reads as gear by its icon
+
+- **WHEN** a tour with equipment is shown in the detail view
+- **THEN** the equipment row SHALL lead with an ice axe glyph, a subject the Material set lacks
+- **AND** it SHALL NOT use a generic backpack, box or tools glyph
+
+#### Scenario: Climbing and mountaineering types have their own glyphs
+
+- **WHEN** a climbing, a mountaineering or a ski-mountaineering tour is shown anywhere the tour type
+  icon appears
+- **THEN** a climbing tour SHALL show a climber on a rock overhang, a mountaineering tour a figure
+  scrambling up a rock step, and a ski-mountaineering tour that figure with skis strapped to its pack
+- **AND** the three SHALL differ from each other and from the hiking and ski-touring glyphs, and none
+  SHALL show a generic landscape or mountains glyph
+
+### Requirement: Floating controls use the platform material
+
+Controls that float over content SHALL use Liquid Glass on iOS, the system's own material and never
+a blur imitation, and on Android and web a brand-colored surface with a shadow. Glass SHALL stay on
+the control layer: content stays opaque and glass never sits on glass. The system's Reduce
+Transparency and Increase Contrast settings SHALL apply to the glass.
+
+#### Scenario: Bottom row on iOS
+
+- **WHEN** the places' capsule and the menu button float over a tab on iOS
+- **THEN** both are Liquid Glass and the content beneath shows through them
+
+#### Scenario: Menu button on Android and web
+
+- **WHEN** the menu button floats over a tab on Android or web
+- **THEN** it is a brand blue button with a white glyph and a soft shadow
+
+#### Scenario: Reduce Transparency
+
+- **WHEN** Reduce Transparency is switched on or off in iOS settings while the app runs
+- **THEN** the glass controls turn opaque or clear again and stay readable, without ghost copies
+  of their icons or labels

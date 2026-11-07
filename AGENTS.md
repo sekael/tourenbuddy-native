@@ -9,7 +9,7 @@ contacts, and pick planned dates. This repository holds the iOS, Android and web
 React Native and Expo. They replace the Vue PWA in `sekael/tourenbuddy_frontend_vue`.
 
 The plan lives in that repo's issues: epic sekael/tourenbuddy_frontend_vue#346 (decision IDs
-D1–D18, risks, architecture) and one issue per phase, #367 (Phase 0, done) to #374 in the same repo.
+D1–D19, risks, architecture) and one issue per phase, #367 (Phase 0, done) to #374 in the same repo.
 Issue numbers in this file refer to that repo. Read the phase issue before proposing work in it.
 
 ## Stack
@@ -24,14 +24,21 @@ Decided or default in #346. Versions come from `npx expo install`; `package-lock
   migrations and the Cloudflare Worker stay in the Vue repo (D3): no `supabase/` folder here
 - **Map:** `@maplibre/maplibre-react-native` on iOS and Android, `maplibre-gl` on web (`.web.tsx`),
   Swisstopo tiles (free, no API key)
-- **UI:** small in-house adaptive component layer (D5), one iOS and one Material implementation per
-  component. iOS: system bars, tabs and sheets first, `expo-glass-effect` for floating controls,
-  `@expo/ui` where needed. iOS 26 minimum, so no non-glass fallback
-- **Fonts and icons:** iOS system font and SF Symbols; Android and web bundled Inter and Material
-  Symbols. No runtime font downloads
+- **UI:** small in-house adaptive component layer (D5) in `src/core/adaptive/`: one iOS
+  (`*.ios.tsx`) and one Material implementation per component, the Material one shared by Android
+  and web, plus `*.web.tsx` where web differs. iOS: system components first (tab bar, sheets,
+  menus), `@expo/ui` SwiftUI for glass controls and menus (glass on a `Menu` via
+  `buttonStyle('glass')`: `glassEffect()` leaves a halo as it closes), `expo-glass-effect` for
+  floating map controls (D6). iOS 26 minimum, so no non-glass fallback. Navigation: Map · Calendar ·
+  Contacts · Profile in the system tab bar (`NativeTabs` on iOS and Android), the map's menu
+  (offline maps, map layers) in the thumb zone right above it, on the Map tab only (iOS: a glass
+  circle opening the system menu; Android and web: a FAB menu), other destinations as sheet routes
+- **Fonts and icons:** iOS system font and SF Symbols; Android embedded Inter, web a bundled Inter
+  subset; Material Symbols drawn as SVG on Android and web. Icons come from the registry in
+  `src/core/adaptive/icons.ts`. No runtime font downloads from third parties
 - **Validation:** Zod. **i18n:** `i18next` + `react-i18next`, locale from `expo-localization`
 - **Tooling:** ESLint (`eslint-config-expo`) with Prettier, Jest (`jest-expo`) with React Native
-  Testing Library
+  Testing Library (DOM Testing Library for web-only tests)
 - **Builds and releases:** EAS Build and EAS Submit, release-please
 
 ## Structure
@@ -39,11 +46,11 @@ Decided or default in #346. Versions come from `npx expo install`; `package-lock
 ```text
 src/
   app/          Expo Router routes and layouts only; screens come from features/ and core/
-  core/         shared infrastructure (i18n/, logging/, later adaptive/, offline/, realtime/)
+  core/         shared infrastructure (adaptive/, i18n/, logging/, theme/, later offline/, realtime/)
   features/     <feature>/data, domain, presentation
   locales/      en.json, de-CH.json
 test/           Jest tests, mirroring src/ (src/core/i18n/detect.ts → test/core/i18n/detect.test.ts)
-assets/images/  app icon, launch image, favicon
+assets/         images/ (app icon, launch image, favicon), fonts/ (web Inter subset)
 openspec/       specs and changes
 ```
 
@@ -81,7 +88,20 @@ Switching changes the bundle identifier: run `npx expo prebuild --clean` afterwa
   differently), called by the base key with `count`. Keys are typed against `en.json`.
 - No `console` calls; use `createLogger('<tag>')` from `@/core/logging/logger` (lint enforces it).
 - Tests cover edge cases and failures, not the happy path. Ported Vitest tests: `vi.` → `jest.`, drop
-  the `vitest` import. React Native Testing Library v14 renders asynchronously: `await render(...)`.
+  the `vitest` import. React Native Testing Library v14 is async: `await render(...)`,
+  `await fireEvent.press(...)`.
+- Jest runs tests as iOS. `*.test.android.tsx` runs the Material components (`*.tsx`, shared with
+  web) with React Native Testing Library; `*.test.web.tsx` runs web-only behavior (`*.web.tsx`)
+  with the DOM Testing Library. `Animated` finishes at once under test: hold `Animated.timing` to
+  test an interrupted animation. Jest renders SwiftUI as inert views carrying their props: press
+  them with `fireEvent(node, 'buttonPress')` and read their modifiers (see
+  `test/app/navigation.test.tsx`); how they look and feel is checked in the Simulator.
+- Jest compiles with the React Compiler, as Metro does, so its memoization runs under test. A
+  layout that renders `NavigationContent` from `expo-router/ui` hooks opts out with
+  `'use no memo'`, or its tabs never update.
+- Colors, spacing, type and motion come from `@/core/theme/tokens` (semantic roles, never the
+  palette or literals); text uses `Text` from `@/core/adaptive/text`. Honor Reduce Motion
+  (`useReducedMotion`): no travel, overshoot or press scaling.
 - Run `npm run check` (lint, type check, tests) before declaring a task done.
 - Agents cannot build or run the iOS and Android apps; the owner builds and measures on a Mac and
   devices. Give exact commands and what to look for.
