@@ -1,4 +1,4 @@
-import { Button, Host, Image, Menu, Section } from '@expo/ui/swift-ui';
+import { Button, Host, Image, Menu } from '@expo/ui/swift-ui';
 import {
   accessibilityLabel,
   buttonBorderShape,
@@ -10,11 +10,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { color, size, space } from '@/core/theme/tokens';
 
-import type { FloatingMenuItem, FloatingMenuProps } from './floating-menu';
+import type { FloatingMenuProps } from './floating-menu';
 import { icons } from './icons';
 
 /**
- * The app menu on iOS: a Liquid Glass circle in the bottom-trailing corner, right above the system
+ * The menu on iOS: a Liquid Glass circle in the bottom-trailing corner, right above the system
  * tab bar. The system menu morphs out of the glass; opening upwards, it puts the first item nearest
  * the circle. It closes itself on a tap outside or the VoiceOver escape gesture, and follows
  * Reduce Motion and Reduce Transparency.
@@ -49,33 +49,19 @@ export function FloatingMenu({ label, items }: Pick<FloatingMenuProps, 'label' |
             ]}
           >
             {/* No tint: the system draws the entries monochrome. */}
-            {sections(items).map((section) => (
-              <Section key={section[0].id}>
-                {section.map((item) => (
-                  <Button
-                    key={item.id}
-                    label={item.label}
-                    systemImage={icons[item.icon].sf}
-                    onPress={item.onPress}
-                  />
-                ))}
-              </Section>
+            {items.map((item) => (
+              <Button
+                key={item.id}
+                label={item.label}
+                systemImage={icons[item.icon].sf}
+                onPress={item.onPress}
+              />
             ))}
           </Menu>
         </Host>
       </SafeAreaView>
     </View>
   );
-}
-
-/** Neighbours with the same `section` form one group. */
-function sections(items: FloatingMenuItem[]) {
-  const groups: FloatingMenuItem[][] = [];
-  items.forEach((item, index) => {
-    if (index > 0 && item.section === items[index - 1].section) groups.at(-1)!.push(item);
-    else groups.push([item]);
-  });
-  return groups;
 }
 
 const styles = StyleSheet.create({

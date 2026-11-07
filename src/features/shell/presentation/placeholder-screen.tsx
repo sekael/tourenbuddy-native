@@ -1,19 +1,22 @@
+import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/core/adaptive/text';
 import { color, space } from '@/core/theme/tokens';
 
-import { MainMenu } from './main-menu';
-import type { ShellTab } from './use-main-menu-items';
-
-type PlaceholderScreenProps = { tab: ShellTab; title: string; subtitle: string; tint?: string };
+type PlaceholderScreenProps = {
+  title: string;
+  subtitle: string;
+  tint?: string;
+  children?: ReactNode;
+};
 
 /** Stands in for a tab's screen until its feature is ported. */
 export function PlaceholderScreen({
-  tab,
   title,
   subtitle,
   tint = color.background,
+  children,
 }: PlaceholderScreenProps) {
   return (
     <View style={[styles.screen, { backgroundColor: tint }]}>
@@ -21,7 +24,7 @@ export function PlaceholderScreen({
         {title}
       </Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
-      <MainMenu tab={tab} />
+      {children}
     </View>
   );
 }

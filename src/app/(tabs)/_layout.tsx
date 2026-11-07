@@ -26,6 +26,14 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label>{t('shell.tabs.calendar')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={icons.calendar.sf} md="calendar_month" />
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="contacts">
+        <NativeTabs.Trigger.Label>{t('shell.tabs.contacts')}</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={icons.contacts.sf} md="group" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="profile">
+        <NativeTabs.Trigger.Label>{t('shell.tabs.profile')}</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={icons.profile.sf} md="account_circle" />
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }

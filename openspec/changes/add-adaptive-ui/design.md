@@ -48,8 +48,11 @@ native projects are what can be checked here.
 
 - **Alternative: the current sheet flow without tabs.** Rejected by the owner (2026-11-07): the
   calendar stays hidden behind an icon in the tours sheet, and the app forgoes the system tab bar.
-- **Alternative: four tabs (Map, Calendar, Contacts, Inbox).** Rejected by the owner: contacts and
-  inbox would become full screens instead of sheets over the map, more port work and spec changes.
+- **Contacts and Profile as tabs** (owner, 2026-11-07, after round 4): they move from the menu
+  into the bar beside Map and Calendar, so their ports become full screens instead of sheets over
+  the map. Earlier the owner had rejected four tabs with Contacts and Inbox for that cost. Inbox and
+  Feedback then became part of the profile (owner, same day): they stay sheets with their own
+  address, and the profile port adds their entries to the Profile tab.
 - **Alternative on iOS: our own glass row** (the places centred in a capsule, the menu circle level
   beside it; rounds 2 to 4). Needs the headless tabs and a React Compiler opt-out, times the
   selection and the menu in our code instead of the system's, and gives up the bar's
@@ -64,30 +67,28 @@ native projects are what can be checked here.
 
 ### Root stack above the tabs
 
-The root layout is a `Stack` holding `(tabs)` and the destination routes (`inbox`, `contacts`,
-`profile`, `offline-maps`, `map-layers`, `feedback`) presented as sheets. A sheet opened from
-either tab therefore covers the tab bar too, and `router.back()` returns to the tab it came from.
+The root layout is a `Stack` holding `(tabs)` and the destination routes (`inbox`,
+`offline-maps`, `map-layers`, `feedback`) presented as sheets. A sheet opened from any tab
+therefore covers the tab bar too, and `router.back()` returns to the tab it came from.
 `unstable_settings.anchor = '(tabs)'` puts the tabs beneath a destination opened straight from a
 link, so closing it lands on the map instead of nowhere.
 
-### Main menu: the system menu on iOS, a FAB menu on Android and web
+### The map's menu: the system menu on iOS, a FAB menu on Android and web
 
-The owner asked for a menu that is easy to reach one-handed, with the Vue app's entries: Inbox,
-Contacts, Profile, Offline maps, Map layers and Feedback, the first nearest the thumb. Offline maps
-and map layers belong to the map, so they show on the Map tab only. `useMainMenuItems(tab)` in the
-shell feature builds the list for both menus below; each tab's screen shows the menu.
+The owner asked for a menu that is easy to reach one-handed. With the other places in the tab bar
+and inbox and feedback in the profile, it holds the Vue app's map entries, Offline maps and Map
+layers, the first nearest the thumb, and only the Map tab shows it (owner, 2026-11-07). `MapMenu`
+in the shell feature gives both menus below their items; the Map tab's screen renders it.
 
 - **iOS:** `floating-menu.ios.tsx` is an `@expo/ui` SwiftUI `Menu` in a Liquid Glass circle in the
   bottom-trailing corner, right above the tab bar: a tab's native safe area ends at the bar.
   `buttonStyle('glass')` with a circle shape, framed to 60 pt, FAB-sized and as tall as the bar
   (round 1's circle read small). The system menu morphs out of the glass with system haptics and
-  VoiceOver, and opening upwards it lists the first item nearest the circle. The map's entries carry
-  `section: 'map'`; neighbours with the same section become one SwiftUI `Section`, so the system
-  draws separators around the map's group and none on the Calendar tab. No tint: the icons stay in
-  the label color as in system menus. Expo's docs warn that `glassEffect()` on a menu label leaves
+  VoiceOver, and opening upwards it lists the first item nearest the circle. No tint: the icons
+  stay in the label color as in system menus. Expo's docs warn that `glassEffect()` on a menu label leaves
   a halo on dismiss, so the glass comes from `buttonStyle`.
 - **Android and web:** `FloatingMenu`, a full-screen layer with its button in the bottom-trailing
-  corner, above the navigation bar, on both tabs.
+  corner, above the navigation bar.
 - **The FAB menu:** Expo UI has FABs but no FAB menu (#346 R12), so the Material 3 Expressive
   FAB menu is built in React Native: brand FAB, tonal pill items that unfold upwards one after
   another (opacity, 12 dp travel, 0.9 → 1 scale, 40 ms stagger, one animation timeline), the icon
@@ -156,16 +157,16 @@ surface it is drawn on for WCAG AA 4.5:1, so a later palette edit cannot lower c
 ### Tests in three runtimes
 
 Jest runs as iOS by default (`jest-expo`'s iOS preset). `*.test.android.tsx` runs the Material
-components and the navigation flow with React Native Testing Library. `*.test.web.tsx` runs
-web-only behavior with the DOM Testing Library, because react-native-web renders DOM elements that
-React Native Testing Library cannot query. Both platforms' `Animated` finish at once under test, so
-the menu test holds `Animated.timing` to check an interrupted fold. The navigation tests (iOS and
+components and the navigation flow with React Native Testing Library. `*.test.web.tsx` runs web-only
+behavior with the DOM Testing Library, because react-native-web renders DOM elements that React
+Native Testing Library cannot query. Both platforms' `Animated` finish at once under test, so the
+menu test holds `Animated.timing` to check an interrupted fold. The navigation tests (iOS and
 Android) replace `NativeTabs` with a `Slot`, because Jest's native tab bar keeps every tab mounted
 and visible. Jest compiles with the React Compiler, as Metro does for the app, so memoization runs
 under test (uncompiled, Jest passed the custom row whose tabs froze on the device). Jest renders
 SwiftUI views as inert native views carrying their props, so the iOS navigation test presses the
-menu's entries through `onButtonPress` and reads their groups and the circle's label; how the menu
-looks and moves is only checked in the Simulator.
+menu's entries through `onButtonPress` and reads their labels and the circle's; how the menu looks
+and moves is only checked in the Simulator.
 
 ## Risks / Trade-offs
 
@@ -175,12 +176,8 @@ looks and moves is only checked in the Simulator.
 - [The menu circle sits above the tab bar, not level with it as the owner first wanted] → iOS gives
   a menu no place in the tab bar, and a row of our own (rounds 2 to 4) never moved like the system
   bar. The circle is FAB-sized and right above the bar's trailing end.
-- [The iOS tab bar minimizes when a screen scrolls] → The tabs scroll nothing yet. When the calendar
-  gets its list (Phase 3), the safe area below the circle shrinks with the bar; that port checks the
-  circle follows smoothly, or sets the bar's `minimizeBehavior` to `never`.
 - [The menu tests read `@expo/ui` props] → An `@expo/ui` update that renames `onButtonPress`, a
-  modifier's fields or how a `Section` nests its buttons fails the tests loudly; the helpers at the
-  top of the test file then change.
+  modifier's fields fails the tests loudly; the helpers at the top of the test file then change.
 - [The JavaScript FAB menu misses Material 3 Expressive details on a device] → Android is not the
   focus; Phase 4 can swap in a Compose module behind the same props.
 - [Web sheets close without exit animation on the browser's back button] → The route unmounts at

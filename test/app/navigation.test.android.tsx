@@ -28,27 +28,23 @@ describe('app navigation', () => {
     expect(screen.getByText('Plan your outdoor tours')).toBeOnTheScreen();
   });
 
-  it('should open a menu destination as a sheet and close back to the same tab', async () => {
-    await renderRouter(routes, { initialUrl: '/calendar' });
+  it('should open a menu destination as a sheet and close back to the map', async () => {
+    await renderRouter(routes);
 
-    await openFromMenu('Inbox');
+    await openFromMenu('Map layers');
 
-    expect(screen).toHavePathname('/inbox');
-    expect(screen.getByRole('heading', { name: 'Inbox' })).toBeOnTheScreen();
+    expect(screen).toHavePathname('/map-layers');
+    expect(screen.getByRole('heading', { name: 'Map layers' })).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
     await settle();
 
-    expect(screen).toHavePathname('/calendar');
+    expect(screen).toHavePathname('/');
   });
 
   it.each([
-    ['Inbox', '/inbox'],
-    ['Contacts', '/contacts'],
-    ['Profile', '/profile'],
     ['Offline maps', '/offline-maps'],
     ['Map layers', '/map-layers'],
-    ['Feedback', '/feedback'],
   ])('should route the %s menu item to %s', async (item, path) => {
     await renderRouter(routes);
 
@@ -57,15 +53,10 @@ describe('app navigation', () => {
     expect(screen).toHavePathname(path);
   });
 
-  it("should leave the map's own entries out of the menu on the calendar", async () => {
-    await renderRouter(routes, { initialUrl: '/calendar' });
+  it.each(['/calendar', '/contacts', '/profile'])('should show no menu on %s', async (url) => {
+    await renderRouter(routes, { initialUrl: url });
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Menu' }));
-    await settle();
-
-    expect(screen.getByRole('button', { name: 'Inbox' })).toBeOnTheScreen();
-    expect(screen.queryByRole('button', { name: 'Offline maps' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Map layers' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Menu' })).toBeNull();
   });
 
   it('should fold the menu away when a sheet opens over its tab', async () => {
@@ -78,12 +69,12 @@ describe('app navigation', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
     await settle();
 
-    expect(screen.queryByRole('button', { name: 'Inbox' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Map layers' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Menu' })).toBeCollapsed();
   });
 
   it('should put the map beneath a sheet opened from a link', async () => {
-    await renderRouter(routes, { initialUrl: '/profile' });
+    await renderRouter(routes, { initialUrl: '/inbox' });
 
     await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
     await settle();

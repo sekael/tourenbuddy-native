@@ -29,10 +29,10 @@ Decided or default in #346. Versions come from `npx expo install`; `package-lock
   and web, plus `*.web.tsx` where web differs. iOS: system components first (tab bar, sheets,
   menus), `@expo/ui` SwiftUI for glass controls and menus (glass on a `Menu` via
   `buttonStyle('glass')`: `glassEffect()` leaves a halo as it closes), `expo-glass-effect` for
-  floating map controls (D6). iOS 26 minimum, so no non-glass fallback. Navigation: Map · Calendar
-  in the system tab bar (`NativeTabs` on iOS and Android), the main menu in the thumb zone right
-  above it (iOS: a glass circle opening the system menu; Android and web: a FAB menu),
-  destinations as sheet routes
+  floating map controls (D6). iOS 26 minimum, so no non-glass fallback. Navigation: Map · Calendar ·
+  Contacts · Profile in the system tab bar (`NativeTabs` on iOS and Android), the map's menu
+  (offline maps, map layers) in the thumb zone right above it, on the Map tab only (iOS: a glass
+  circle opening the system menu; Android and web: a FAB menu), other destinations as sheet routes
 - **Fonts and icons:** iOS system font and SF Symbols; Android embedded Inter, web a bundled Inter
   subset; Material Symbols drawn as SVG on Android and web. Icons come from the registry in
   `src/core/adaptive/icons.ts`. No runtime font downloads from third parties

@@ -5,21 +5,23 @@
 `add-app-foundation` left one empty screen. Every feature port needs the app's frame first: how
 the user moves between places, the platform design language (M2 in sekael/tourenbuddy_frontend_vue#346),
 the brand colors and type, icons, and a sheet to present each destination in. The owner decided
-the app navigation on 2026-11-07: a **Map · Calendar** tab bar, with everything else behind a menu
-that is easy to reach with the thumb when the phone is used one-handed.
+the app navigation on 2026-11-07: a **Map · Calendar · Contacts · Profile** tab bar, the map's
+own tools behind a menu that is easy to reach with the thumb when the phone is used one-handed, and
+inbox and feedback as part of the profile.
 
 ## What Changes
 
-- **App navigation:** Map and Calendar in the system tab bar on iOS (Liquid Glass) and Android
-  (Material 3 navigation bar). Web has no system tab bar, so it gets a Material 3 navigation bar on
-  phones and a navigation rail from 600 px, which gives desktop windows a side layout instead of a
-  stretched phone (D8).
-- **Main menu in the thumb zone:** a button in the bottom-trailing corner, right above the tab bar.
-  On iOS a 60 pt Liquid Glass circle opens the system menu, which morphs out of the glass; Android
-  and web show a Material 3 Expressive FAB menu whose items unfold one after another. Its entries
-  match the Vue app (Inbox, Contacts, Profile, Offline maps, Map layers, Feedback; the two map
-  entries on the Map tab only, as a group of their own) and open their destination as a sheet
-  above the tabs.
+- **App navigation:** Map, Calendar, Contacts and Profile in the system tab bar on iOS (Liquid
+  Glass) and Android (Material 3 navigation bar). Web has no system tab bar, so it gets a Material 3
+  navigation bar on phones and a navigation rail from 600 px, which gives desktop windows a side
+  layout instead of a stretched phone (D8).
+- **The map's menu in the thumb zone:** on the Map tab only, a button in the bottom-trailing
+  corner, right above the tab bar. On iOS a 60 pt Liquid Glass circle opens the system menu, which
+  morphs out of the glass; Android and web show a Material 3 Expressive FAB menu whose items unfold
+  one after another. It holds the Vue app's map entries, Offline maps and Map layers, and opens each
+  as a sheet above the tabs.
+- **Inbox and feedback:** sheets with their own address, opened from the profile once it is ported;
+  until then a link opens them.
 - **Sheets:** the system sheet sized to its content on iOS (Liquid Glass at partial height) and
   Android (Material bottom sheet). Web: a bottom sheet on phones, a content-sized dialog hanging
   from the top from 600 px. Closing returns to the tab it was opened from; a link straight to a
@@ -31,14 +33,15 @@ that is easy to reach with the thumb when the phone is used one-handed.
   Inter subset from its own origin. No runtime font downloads from third parties.
 - **Icons (D11):** one registry maps each icon to an SF Symbol (iOS) and a Material Symbols path
   (Android and web, drawn as SVG), so icons render in the first frame without loading a font.
-- **Placeholders:** the Map and Calendar tabs and the six menu destinations show placeholders until
-  their features are ported in Phase 3.
+- **Placeholders:** the four tabs and the four sheets show placeholders until their features are
+  ported in Phase 3.
 - **Tests:** Jest runs as iOS by default, Material components and navigation as Android, and
   web-only behavior in a browser environment.
 
 Deferred to the change that first needs them (D5: only components the app uses):
 
 - Text buttons and the confirm dialog: `add-auth-session` (sign-in) and the profile port.
+- The entries to Inbox and Feedback on the Profile tab: the profile port.
 - The desktop side panel for browse sheets (`side-drawer`, D8): the tours port, with the tour list.
 - A native Compose FAB menu (#346 R12): Android polish in Phase 4, if the JavaScript menu falls
   short of Material 3 Expressive on a device.
@@ -48,7 +51,7 @@ Deferred to the change that first needs them (D5: only components the app uses):
 
 ### New Capabilities
 
-- `app-navigation`: the tabs, the main menu and how menu destinations open and close.
+- `app-navigation`: the tabs, the map's menu and how the sheets beyond the tabs open and close.
 
 ### Modified Capabilities
 

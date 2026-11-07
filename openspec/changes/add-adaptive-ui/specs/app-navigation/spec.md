@@ -1,17 +1,17 @@
 ## Purpose
 
-How the user moves between the app's places: the Map and Calendar tabs, the main menu within thumb
-reach, and how the menu's destinations open and close.
+How the user moves between the app's places: the Map, Calendar, Contacts and Profile tabs, the
+map's menu within thumb reach, and how the destinations beyond the tabs open and close.
 
 ## ADDED Requirements
 
-### Requirement: Map and Calendar tabs
+### Requirement: Map, Calendar, Contacts and Profile tabs
 
-The app SHALL offer two top-level places, Map and Calendar, and SHALL open on the Map. On iOS and
-Android they SHALL sit in the system tab bar: Liquid Glass on iOS, the Material 3 navigation bar on
-Android. On web, windows narrower than 600 px SHALL show a navigation bar at the bottom, wider ones
-a navigation rail at the leading edge. The selected place SHALL be marked, also for assistive
-technology, and the labels SHALL follow the app language.
+The app SHALL offer four top-level places, Map, Calendar, Contacts and Profile, and SHALL open on
+the Map. On iOS and Android they SHALL sit in the system tab bar: Liquid Glass on iOS, the Material
+3 navigation bar on Android. On web, windows narrower than 600 px SHALL show a navigation bar at the
+bottom, wider ones a navigation rail at the leading edge. The selected place SHALL be marked, also
+for assistive technology, and the labels SHALL follow the app language.
 
 #### Scenario: App opens on the map
 
@@ -33,6 +33,11 @@ technology, and the labels SHALL follow the app language.
 - **WHEN** the user selects the place that is already shown
 - **THEN** it stays shown and selected
 
+#### Scenario: Contacts and profile are places
+
+- **WHEN** the user selects Profile
+- **THEN** the profile is shown as a tab, with the tab bar still visible, not as a sheet
+
 #### Scenario: Desktop window
 
 - **WHEN** the web app runs in a window 600 px or wider
@@ -41,32 +46,30 @@ technology, and the labels SHALL follow the app language.
 #### Scenario: Labels follow the language
 
 - **WHEN** the app language changes to German
-- **THEN** the tabs read "Karte" and "Kalender"
+- **THEN** the tabs read "Karte", "Kalender", "Kontakte" and "Profil"
 
-### Requirement: Main menu within thumb reach
+### Requirement: Map menu within thumb reach
 
-Both tabs SHALL show a menu button in the bottom-trailing corner, within thumb reach, right above
-the tab bar. It SHALL open a menu of Inbox, Contacts, Profile, Offline maps, Map layers and
-Feedback, the first nearest the button; offline maps and map layers on the Map only, set apart as a
-group of their own on iOS. Choosing an item SHALL close the menu and open its destination as a
+The Map tab SHALL show a menu button in the bottom-trailing corner, within thumb reach, right above
+the tab bar; the other tabs SHALL show none. It SHALL open a menu of Offline maps and Map layers,
+the first nearest the button. Choosing an item SHALL close the menu and open its destination as a
 sheet. On Android and web the button SHALL tell assistive technology whether the menu is open.
 
 #### Scenario: Opening the menu one-handed
 
 - **WHEN** the user taps the menu button on the Map tab
-- **THEN** the menu opens above the button with Inbox nearest to it, then Contacts, Profile,
-  Offline maps, Map layers and Feedback
+- **THEN** the menu opens above the button with Offline maps nearest to it, then Map layers
 
-#### Scenario: The map's own entries stay on the map
+#### Scenario: Only the map has a menu
 
-- **WHEN** the user opens the menu on the Calendar tab
-- **THEN** it lists Inbox, Contacts, Profile and Feedback, without Offline maps and Map layers
+- **WHEN** the Calendar, Contacts or Profile tab is shown
+- **THEN** there is no menu button
 
 #### Scenario: Liquid Glass on iOS
 
 - **WHEN** the menu button is shown on iOS
 - **THEN** it is a Liquid Glass circle as tall as the tab bar, and it opens the system menu out of
-  its glass, with icons in the text color and the map's own entries between separators
+  its glass, with icons in the text color
 
 #### Scenario: FAB menu on Android and web
 
@@ -75,8 +78,8 @@ sheet. On Android and web the button SHALL tell assistive technology whether the
 
 #### Scenario: Choosing a destination
 
-- **WHEN** the user chooses Profile in the open menu
-- **THEN** the menu closes and the profile opens
+- **WHEN** the user chooses Map layers in the open menu
+- **THEN** the menu closes and the map layers sheet opens
 
 #### Scenario: Dismissing the menu
 
@@ -92,8 +95,8 @@ sheet. On Android and web the button SHALL tell assistive technology whether the
 
 #### Scenario: Leaving the tab closes the menu
 
-- **WHEN** the menu is open and the user switches tabs, or a destination opens over the tab
-- **THEN** the menu is closed when the user comes back to that tab
+- **WHEN** the menu is open and the user switches tabs, or a destination opens over the map
+- **THEN** the menu is closed when the user comes back to the map
 
 #### Scenario: Reduced motion
 
@@ -102,16 +105,16 @@ sheet. On Android and web the button SHALL tell assistive technology whether the
 
 ### Requirement: Destinations open as sheets above the tabs
 
-A menu destination SHALL open as a sheet above the current tab and its bottom bar. Closing it SHALL
-return to the tab it was opened from. Each destination SHALL have its own address; opened from a
-link, it SHALL have the map beneath it, and closing it SHALL show the map.
+Inbox, Feedback, Offline maps and Map layers SHALL each open as a sheet above the current tab and
+its bottom bar. Closing one SHALL return to the tab it was opened from. Each SHALL have its own
+address; opened from a link, it SHALL have the map beneath it, and closing it SHALL show the map.
 
 #### Scenario: Closing returns to the tab
 
-- **WHEN** the user opens Inbox from the menu on the Calendar tab and closes it
-- **THEN** the Calendar tab is shown again
+- **WHEN** the user opens Map layers from the menu and closes it
+- **THEN** the map is shown again
 
 #### Scenario: Opening from a link
 
-- **WHEN** the app is opened at the profile's address and the user closes the profile
+- **WHEN** the app is opened at the inbox's address and the user closes the inbox
 - **THEN** the map is shown

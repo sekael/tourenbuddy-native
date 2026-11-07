@@ -36,6 +36,6 @@ describe('shell', () => {
     const tabLabels = screen.container
       .queryAll((node) => typeof node.props.screenKey === 'string')
       .map((node) => node.props.title);
-    expect(tabLabels).toEqual(['Karte', 'Kalender']);
+    expect(tabLabels).toEqual(['Karte', 'Kalender', 'Kontakte', 'Profil']);
   });
 });

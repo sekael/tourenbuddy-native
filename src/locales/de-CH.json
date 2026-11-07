@@ -1412,7 +1412,9 @@
     "comingSoon": "Folgt bald",
     "tabs": {
       "map": "Karte",
-      "calendar": "Kalender"
+      "calendar": "Kalender",
+      "contacts": "Kontakte",
+      "profile": "Profil"
     }
   }
 }

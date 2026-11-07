@@ -27,6 +27,12 @@ export default function TabsLayout() {
           <TabTrigger name="calendar" href="/calendar" asChild>
             <NavItem icon="calendar" label={t('shell.tabs.calendar')} />
           </TabTrigger>
+          <TabTrigger name="contacts" href="/contacts" asChild>
+            <NavItem icon="contacts" label={t('shell.tabs.contacts')} />
+          </TabTrigger>
+          <TabTrigger name="profile" href="/profile" asChild>
+            <NavItem icon="profile" label={t('shell.tabs.profile')} />
+          </TabTrigger>
         </View>
       </TabList>
     </SafeAreaView>
@@ -77,8 +83,7 @@ const styles = StyleSheet.create({
   bar: { backgroundColor: color.surface, borderTopWidth: 1, borderTopColor: color.divider },
   barItems: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: space.xxl,
+    justifyContent: 'space-around',
     paddingVertical: space.sm,
   },
   rail: {

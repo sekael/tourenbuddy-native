@@ -7,7 +7,7 @@ import { routes as appRoutes } from './routes';
 // iOS menu and routing. A slot stands in for the `NativeTabs` layout, which Jest renders with every
 // tab mounted; the tab bar itself is native UI, checked in the Simulator. The menu is SwiftUI, which
 // Jest renders as inert native views carrying their props: its entries are the buttons with an SF
-// Symbol, grouped under one parent per section.
+// Symbol.
 const routes = { ...appRoutes, '(tabs)/_layout': Slot };
 
 type Node = ReturnType<typeof screen.container.queryAll>[number];
@@ -17,15 +17,7 @@ const nodes = (match: (props: Props) => boolean) =>
   screen.container.queryAll((node) => match(node.props as Props));
 
 const entries = () => nodes((p) => !!p.onButtonPress && !!p.systemImage);
-
-/** The menu's entries by label, in the groups the system menu separates. */
-function menuGroups() {
-  const groups = new Map<Node | null, string[]>();
-  for (const entry of entries()) {
-    groups.set(entry.parent, [...(groups.get(entry.parent) ?? []), entry.props.label]);
-  }
-  return [...groups.values()];
-}
+const entryLabels = () => entries().map((entry) => entry.props.label);
 
 /** A SwiftUI view announced as `label` (the menu circle, a sheet's close button). */
 const labelled = (label: string) =>
@@ -36,36 +28,35 @@ async function press(node: Node) {
 }
 
 describe('app navigation (iOS menu)', () => {
-  it("should group the map's own entries apart from the rest", async () => {
+  it("should hold the map's own entries only, nearest the circle first", async () => {
     await renderRouter(routes);
 
-    expect(menuGroups()).toEqual([
-      ['Inbox', 'Contacts', 'Profile'],
-      ['Offline maps', 'Map layers'],
-      ['Feedback'],
-    ]);
-  });
-
-  it("should close the gap the map's entries leave on the calendar", async () => {
-    await renderRouter(routes, { initialUrl: '/calendar' });
-
-    expect(menuGroups()).toEqual([['Inbox', 'Contacts', 'Profile', 'Feedback']]);
-  });
-
-  it('should name the circle, which shows only a glyph', async () => {
-    await renderRouter(routes);
-
+    expect(entryLabels()).toEqual(['Offline maps', 'Map layers']);
     expect(labelled('Menu')).toHaveLength(1);
   });
 
-  it('should open an entry as a sheet and close back to the same tab', async () => {
-    await renderRouter(routes, { initialUrl: '/calendar' });
+  it.each(['/calendar', '/contacts', '/profile'])('should show no menu on %s', async (url) => {
+    await renderRouter(routes, { initialUrl: url });
 
-    await press(entries().find((entry) => entry.props.label === 'Inbox')!);
-    expect(screen).toHavePathname('/inbox');
+    expect(labelled('Menu')).toEqual([]);
+    expect(entries()).toEqual([]);
+  });
+
+  it('should open Profile as a place, not as a sheet', async () => {
+    await renderRouter(routes, { initialUrl: '/profile' });
+
+    expect(screen.getByRole('heading', { name: 'Profile' })).toBeOnTheScreen();
+    expect(labelled('Close')).toEqual([]);
+  });
+
+  it('should open an entry as a sheet and close back to the map', async () => {
+    await renderRouter(routes);
+
+    await press(entries().find((entry) => entry.props.label === 'Map layers')!);
+    expect(screen).toHavePathname('/map-layers');
 
     await press(labelled('Close')[0]);
 
-    expect(screen).toHavePathname('/calendar');
+    expect(screen).toHavePathname('/');
   });
 });

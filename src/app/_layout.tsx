@@ -19,8 +19,6 @@ export default function RootLayout() {
     >
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="inbox" options={sheetOptions} />
-      <Stack.Screen name="contacts" options={sheetOptions} />
-      <Stack.Screen name="profile" options={sheetOptions} />
       <Stack.Screen name="offline-maps" options={sheetOptions} />
       <Stack.Screen name="map-layers" options={sheetOptions} />
       <Stack.Screen name="feedback" options={sheetOptions} />
