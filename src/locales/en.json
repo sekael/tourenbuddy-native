@@ -1,0 +1,1412 @@
+{
+  "calendar": {
+    "title": "Planned Tours",
+    "subtitle": "Adventure Planner",
+    "back": "Back to map",
+    "openAriaLabel": "Open calendar",
+    "featureNotice": {
+      "title": "New: Calendar planning",
+      "body": "You can now plan tours by date, share availability, and see a seasonal overview. Open My Tours, then tap the calendar button to try it.",
+      "cta": "Got it"
+    },
+    "nav": {
+      "planned": "Calendar",
+      "seasons": "Seasons"
+    },
+    "planned": {
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "tourCount": "{{count}} tours",
+      "dayCounter": "{{day}}/{{total}}",
+      "dayCounterLabel": "Day {{day}} of {{total}}",
+      "friendCount": "{{count}} friends",
+      "toursHeading": "Tours",
+      "friendsHeading": "Available friends"
+    },
+    "availability": {
+      "edit": "Edit availability",
+      "save": "Save",
+      "cancel": "Cancel",
+      "disclaimer": "Your availability will be visible to your friends.",
+      "calendarNote": "Days are pre-filled from your calendar. Days you change here override it permanently."
+    },
+    "seasons": {
+      "title": "Seasonal Planner",
+      "empty": "No seasons scheduled",
+      "emptyState": "No tours yet — add some to see your seasonal overview",
+      "scrollHint": "Scroll to view full year",
+      "range": {
+        "winter": "DEC – FEB",
+        "spring": "MAR – MAY",
+        "summer": "JUN – AUG",
+        "autumn": "SEP – NOV"
+      }
+    },
+    "tour": {
+      "welcome": {
+        "title": "Get to know your calendar",
+        "body": "A quick tour of your days, sharing availability and the seasonal overview. Tap anywhere to continue, or use the controls at the top."
+      },
+      "todayNav": {
+        "title": "Jump back to today",
+        "body": "Tap the calendar tab anytime to scroll straight back to today."
+      },
+      "availability": {
+        "title": "Share your availability",
+        "body": "Tap here to mark the days you're free. Friends see them and can plan tours with you — or connect your calendar in your profile to fill them in automatically."
+      },
+      "dayChips": {
+        "title": "Tours and friends at a glance",
+        "body": "Each day shows your planned tours and which friends are available."
+      },
+      "seasons": {
+        "title": "Seasonal overview",
+        "body": "See which seasons your tours fall in, so you always know where to find the goodies."
+      },
+      "labels": {
+        "todayNav": "Today",
+        "availability": "Availability",
+        "dayChips": "Day chips",
+        "seasons": "Seasons"
+      },
+      "nav": {
+        "seasons": "Open seasons",
+        "dayDetails": "Open day details"
+      },
+      "demo": {
+        "tourName": "Matterhorn",
+        "friendName": "Alex",
+        "seasonTourName": "Piz Palü"
+      },
+      "replay": "Replay calendar tour"
+    },
+    "sync": {
+      "title": "Calendar sync",
+      "hint": "Connect the private iCal address of your work or personal calendar. Days with a long enough free block inside your time window are marked available. Your calendar's contents are never stored.",
+      "urlPlaceholder": "Secret iCal address (https:// or webcal://)",
+      "help": {
+        "summary": "Where do I find the address?",
+        "google": "Google",
+        "outlook": "Outlook",
+        "icloud": "iCloud",
+        "googleStep1": "Open Google Calendar in a browser on a computer. The app doesn't show the address.",
+        "googleStep2": "Settings (gear) → under \"Settings for my calendars\" on the left, pick your calendar.",
+        "googleStep3": "Scroll to \"Integrate calendar\" and copy the \"Secret address in iCal format\" (not the public address or the embed code).",
+        "googleStep4": "No secret address? For work accounts, your admin may have turned it off.",
+        "outlookStep1": "Open Outlook in a browser → Settings → Calendar → Shared calendars.",
+        "outlookStep2": "Under \"Publish a calendar\", pick your calendar and \"Can view when I'm busy\" (that's all TourenBuddy needs), then \"Publish\".",
+        "outlookStep3": "Copy the ICS link.",
+        "icloudStep1": "Open the Calendar app on your iPhone or iPad and tap \"Calendars\".",
+        "icloudStep2": "Tap ⓘ next to the calendar and turn on \"Public Calendar\".",
+        "icloudStep3": "Tap \"Share Link…\" → \"Copy\". Anyone with the link can see the calendar."
+      },
+      "label": "Label",
+      "labelPlaceholder": "Label (e.g. Work)",
+      "labelAria": "Label for {{host}}",
+      "addFeed": "Connect calendar",
+      "removeFeed": "Disconnect {{host}}",
+      "lastSynced": "Synced {{when}}",
+      "neverSynced": "Not synced yet",
+      "syncNow": "Sync now",
+      "syncing": "Syncing…",
+      "windowTitle": "When does a day count as free?",
+      "coreStart": "From",
+      "coreEnd": "Until",
+      "minFree": "Free block of at least",
+      "hours": "{{n}} h",
+      "saveWindow": "Save",
+      "savingWindow": "Saving…",
+      "savedWindow": "Saved",
+      "outboundTitle": "Your tours in your calendar",
+      "outboundHint": "Subscribe to this link in your calendar app to see your planned tours. Anyone with the link can see your tours, so don't share it.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "regenerate": "Reset link",
+      "regenerateHint": "Shared the link by accident? Reset it: you get a new link and the old one stops showing your tours.",
+      "regenerateConfirm": "The old link stops working immediately. Subscribe to the new link in your calendar app afterwards.",
+      "errors": {
+        "limit": "You can connect at most 5 calendars.",
+        "duplicate": "This calendar is already connected.",
+        "invalid_url": "Enter a valid https:// or webcal:// address.",
+        "not_ical": "That's the calendar's web link, not its iCal address. In Google Calendar: Settings → your calendar → \"Secret address in iCal format\".",
+        "invalid_window": "The free block must fit inside the time window, and the window must end after it starts.",
+        "sync_failed": "Sync could not be started. Your calendars will still sync automatically.",
+        "unknown": "Something went wrong. Please try again."
+      },
+      "feedError": {
+        "http": "Access denied or not found (error {{status}}). Use the secret iCal address, not a share or embed link.",
+        "httpServer": "The calendar service reported an error ({{status}}). We'll retry automatically.",
+        "timeout": "Calendar did not respond in time.",
+        "network": "Calendar could not be reached.",
+        "too_large": "Calendar is too large to sync (over 2 MB).",
+        "unparseable": "This address does not return a calendar.",
+        "too_complex": "A repeating event is too complex to process.",
+        "unknown": "Last sync failed."
+      },
+      "feedsTitle": "Your calendars"
+    }
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidType": "Invalid value",
+    "tooSmall": "Value is too small",
+    "tooBig": "Value is too large",
+    "invalidString": "Invalid format",
+    "invalidEnum": "Invalid option",
+    "invalid": "Invalid value"
+  },
+  "core": {
+    "pwa": {
+      "banner": {
+        "message": "Install TourenBuddy for the best experience",
+        "dismiss": "Not now",
+        "install": "Install"
+      },
+      "update": {
+        "message": "A new version is available",
+        "action": "Reload",
+        "dismiss": "Later"
+      }
+    },
+    "feedback": {
+      "sheet": {
+        "title": "Feedback",
+        "openBugReport": "Report a Bug on GitHub",
+        "openIssue": "Provide Feedback on GitHub",
+        "noGitHub": "No GitHub account? Reach out at",
+        "errorOpening": "Could not open the GitHub page. Please email us at {{email}}"
+      }
+    },
+    "drawer": {
+      "close": "Close",
+      "back": "Back"
+    },
+    "bottomSheet": {
+      "resizeHandle": "Resize panel"
+    }
+  },
+  "auth": {
+    "emailEntry": {
+      "title": "Enter your email",
+      "subtitle": "We'll send you a sign-in code",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "you@example.com",
+      "invalidEmail": "Please enter a valid email address",
+      "sendCodeBtn": "Send Code",
+      "sendError": "Failed to send code. Please try again."
+    },
+    "shared": {
+      "sendingBtn": "Sending...",
+      "backBtn": "Back"
+    },
+    "verifyOtp": {
+      "title": "Enter your code",
+      "subtitlePrefix": "We sent a 6-digit sign-in code to",
+      "inputLabel": "Sign-in code",
+      "inputPlaceholder": "123456",
+      "verifyBtn": "Verify",
+      "verifyError": "Invalid or expired code. Please try again.",
+      "resendBtn": "Resend code",
+      "resendCountdown": "Resend in {{seconds}}s",
+      "resendSuccess": "Code resent! Check your email.",
+      "resendError": "Failed to resend code. Please try again.",
+      "backBtn": "Back"
+    }
+  },
+  "user": {
+    "onboarding": {
+      "title": "Set up your profile",
+      "subtitle": "A complete profile helps your tour partners recognize and contact you. You can always update this later.",
+      "firstNameRequired": "First name is required",
+      "lastNameRequired": "Last name is required",
+      "continueBtn": "Continue",
+      "skipBtn": "Skip for now"
+    },
+    "profile": {
+      "title": "Profile",
+      "verifiedTooltip": "Verified",
+      "addPhoneBtn": "Add phone number",
+      "editBtn": "Edit profile",
+      "signOutBtn": "Sign out",
+      "nameRequired": "First and last name are required",
+      "saveFailed": "Failed to save profile",
+      "languageLabel": "Language",
+      "removePhoneBtn": "Remove phone number",
+      "removePhoneConfirmTitle": "Remove phone number",
+      "removePhoneDisclaimer": "Your phone number will be removed. If you add this number again, you will need to verify it once more.",
+      "removePhoneConfirmBtn": "Remove",
+      "removePhoneCancelBtn": "Cancel",
+      "removePhoneFailed": "Failed to remove phone number",
+      "removePhonePendingWarning": "You have pending friend requests. Removing your phone number will cancel all pending requests.",
+      "removePhoneFriendshipWarning": "You have active friendships. Removing your phone number will remove all friendship connections.",
+      "removePhoneBothWarning": "You have active friendships and pending friend requests. Removing your phone number will remove all friendship connections and cancel all pending requests.",
+      "notVerified": "Not verified",
+      "notificationsSummary": {
+        "pushAndEmail": "Push and email",
+        "push": "Push only",
+        "email": "Email only",
+        "off": "Off"
+      },
+      "calendarSummary_zero": "Not connected",
+      "calendarSummary_one": "{{count}} calendar",
+      "calendarSummary_other": "{{count}} calendars",
+      "calendarProblem": "Sync problem",
+      "version": "Version {{version}}"
+    },
+    "phoneVerification": {
+      "title": "Verify your phone",
+      "subtitlePrefix": "We sent a code to",
+      "codeLabel": "Verification code",
+      "codePlaceholder": "000000",
+      "incompleteCode": "Please enter the full 6-digit code",
+      "invalidCode": "Invalid code. Please try again.",
+      "resendSuccess": "Code resent!",
+      "verifyingBtn": "Verifying...",
+      "verifyBtn": "Verify",
+      "resendError": "Failed to resend code.",
+      "resendCountdown": "Resend in",
+      "sendingBtn": "Sending...",
+      "resendBtn": "Resend code",
+      "verifiedMsg": "Phone verified!",
+      "alreadyRegisteredError": "This phone number is already registered on TourenBuddy. If you believe you have another account with this number, contact feedback@tourenbuddy.ch."
+    },
+    "shared": {
+      "firstNameLabel": "First name",
+      "firstNamePlaceholder": "Max",
+      "lastNameLabel": "Last name",
+      "lastNamePlaceholder": "Mustermann",
+      "phoneLabel": "Phone number",
+      "phonePlaceholder": "+41 79 012 34 56",
+      "optional": "(optional)",
+      "required": "*",
+      "savingBtn": "Saving...",
+      "cancelBtn": "Cancel",
+      "saveBtn": "Save"
+    }
+  },
+  "contacts": {
+    "errors": {
+      "duplicateMethod": "This phone number is already saved for this contact.",
+      "duplicateAcrossContacts": "This value already exists on another contact."
+    },
+    "list": {
+      "title": "Contacts",
+      "addBtn": "Add contact",
+      "loading": "Loading…",
+      "imported": "contact imported",
+      "importedLabel": "imported",
+      "skipped": "contact skipped",
+      "skippedLabel": "skipped",
+      "addManuallyBtn": "Add contacts manually",
+      "emptyTitle": "No contacts yet.",
+      "emptySubtitle": "Add contacts to use them as tour partners.",
+      "noMatchesTitle": "No contacts match your search.",
+      "clearFiltersBtn": "Clear filters",
+      "searchPlaceholder": "Search contacts…",
+      "invalidPhoneWarning": "Could not add invalid phone number"
+    },
+    "form": {
+      "firstNameLabel": "First Name",
+      "firstNamePlaceholder": "First name",
+      "firstNameRequired": "First name is required",
+      "lastNameLabel": "Last Name",
+      "lastNamePlaceholder": "Last name (optional)",
+      "displayNameLabel": "Display Name",
+      "displayNamePlaceholder": "Nickname (optional)",
+      "phonesLabel": "Phone Numbers",
+      "primaryPhoneTooltip": "Primary phone",
+      "setAsPrimaryTooltip": "Set as primary",
+      "phonePlaceholder": "+41 79 012 34 56 (optional)",
+      "invalidPhone": "Invalid phone number",
+      "labelPlaceholder": "Label (e.g. Mobile)",
+      "removePhoneTooltip": "Remove phone",
+      "addPhoneBtn": "Add phone",
+      "primaryPhoneRequired": "Select one primary phone when multiple phones are entered"
+    },
+    "addDialog": {
+      "title": "Add Contact",
+      "importedBadge": "imported",
+      "skippedBadge": "skipped",
+      "importedLabel": "Imported",
+      "skippedLabel": "Skipped",
+      "addManuallyBtn": "Add another manually",
+      "doneBtn": "Done",
+      "importFileBtn": "Import from file",
+      "importContactsBtn": "Import from contacts",
+      "importError": "Import failed",
+      "fileImportError": "File import failed",
+      "addError": "Failed to add contact",
+      "summaryImported": "{{count}} imported",
+      "summaryPhoneDuplicate": "{{count}} already on another contact",
+      "summaryPhoneDuplicateBadge": "Duplicate",
+      "summaryNameDuplicate": "{{count}} already in contacts",
+      "summaryUnparseable": "{{count}} unparseable",
+      "extraPhones": "+{{count}} more",
+      "unparseableTooltip": "Could not read: {{values}}",
+      "discardedPhones": "Number not added",
+      "fileError": {
+        "emptyFile": "That file is empty. Export your contacts again and pick the new file.",
+        "notVCard": "That is not a vCard file. Export a .vcf from your contacts app and try again.",
+        "noContacts": "That vCard holds no usable contact — every entry is missing a name and a phone number. Export the contact again, then try that file."
+      },
+      "help": {
+        "formatHint": "Accepts one vCard file (.vcf or .vcard). A single file can hold multiple contacts.",
+        "summary": "How do I export my contacts?",
+        "tabIos": "iPhone / iPad",
+        "tabAndroid": "Android",
+        "tabDesktop": "Computer",
+        "iosStep1": "Open the Contacts app and select the contacts you want to import.",
+        "iosStep2": "Scroll down and tap \"Share Contact\".",
+        "iosStep3": "Choose \"Save to Files\" and save the contact on your device.",
+        "iosStep4": "In Tourenbuddy, tap \"Import from file\" and select the previously saved file.",
+        "androidStep1": "If you see an \"Import from contacts\" button above, click it to select contacts directly.",
+        "androidStep2": "Otherwise open the Contacts app and select the contact you want.",
+        "androidStep3": "Tap the menu, then \"Share\" or \"Export\", and save the file on your device.",
+        "androidStep4": "In Tourenbuddy, tap \"Import from file\" and select the previously saved file.",
+        "desktopStep1": "macOS Contacts: select the contacts, then File → Export → Export vCard.",
+        "desktopStep2": "Google Contacts: select the contacts, then Export and choose the vCard format.",
+        "desktopStep3": "Outlook: open the contact, then File → Save As and choose vCard.",
+        "desktopStep4": "Open TourenBuddy in your browser and import the saved file there."
+      }
+    },
+    "detailView": {
+      "title": "Contact details",
+      "nameSection": "Name",
+      "savingBtn": "Saving...",
+      "saveNameBtn": "Save name",
+      "methodsSection": "Contact methods",
+      "noMethods": "No contact methods yet.",
+      "primaryPhoneTooltip": "Primary phone",
+      "setAsPrimaryTooltip": "Set as primary",
+      "invalidPhoneHint": "Invalid number — enter a valid phone to fix",
+      "phonePlaceholder": "+41 79 012 34 56",
+      "labelPlaceholder": "Label (optional)",
+      "invalidPhone": "Invalid phone number",
+      "valueRequired": "Value is required",
+      "firstNameRequired": "First name is required",
+      "addError": "Failed to add",
+      "addMethodBtn": "Add method",
+      "phoneTypeBtn": "Phone",
+      "emailTypeBtn": "Email",
+      "emailPlaceholder": "email@example.com",
+      "labelExamplePlaceholder": "Label (optional, e.g. Mobile)",
+      "addingBtn": "Adding...",
+      "addBtn": "Add",
+      "editBtn": "Edit",
+      "cancelBtn": "Cancel",
+      "saveBtn": "Save",
+      "saveFailed": "Could not save changes",
+      "deleteConfirm": "Delete this contact?",
+      "deleteFriendWarning": "This contact is linked to a TourenBuddy friend. Deleting it will also remove your friendship connection.",
+      "deletePendingWarning": "You have a pending friend request with this contact. Deleting it will cancel the pending request.",
+      "deleteFriendAndPendingWarning": "This contact is linked to a TourenBuddy friend. Deleting it will remove your friendship connection and cancel the pending request.",
+      "deleteBtn": "Delete contact",
+      "deletingBtn": "Deleting...",
+      "removeMethodConfirm": "Remove this contact method?",
+      "removeMethodFriendWarning": "This phone number is linked to a TourenBuddy friend. Removing it will also terminate the friendship connection.",
+      "removeMethodPendingWarning": "You have a pending friend request linked to this phone number. Removing it will cancel the pending request.",
+      "removeMethodFriendAndPendingWarning": "This phone number is linked to a TourenBuddy friend and has a pending request. Removing it will terminate the friendship and cancel the pending request.",
+      "removeBtn": "Remove",
+      "removingMethodBtn": "Removing...",
+      "editEvictFriendWarning": "Saving this change will remove your friendship with the previously linked contact.",
+      "editEvictPendingWarning": "Saving this change will cancel the pending friend request linked to the previous number.",
+      "editEvictFriendAndPendingWarning": "Saving this change will remove your friendship and cancel the pending friend request linked to the previous number.",
+      "confirmSaveBtn": "Save anyway",
+      "showToursBtn": "Tours",
+      "callAction": "Call",
+      "whatsAppAction": "WhatsApp",
+      "deleteAction": "Delete",
+      "deleteFailed": "Couldn't delete the contact."
+    },
+    "actionMenu": {
+      "noMethods": "No contact method available. Edit contact to add one.",
+      "editBtn": "Edit contact"
+    },
+    "shared": {
+      "savingBtn": "Saving...",
+      "cancelBtn": "Cancel",
+      "duplicateTitle": "Contact already exists",
+      "duplicateText": "{{name}} already has this value.",
+      "duplicateGenericText": "This value already exists on another contact.",
+      "editExistingBtn": "Edit existing",
+      "discardBtn": "Discard"
+    }
+  },
+  "tours": {
+    "list": {
+      "title": "Tours",
+      "addTourAriaLabel": "Add tour",
+      "searchPlaceholder": "Search tours…",
+      "filtersBtn": "Filters",
+      "loading": "Loading…",
+      "emptyTitle": "No tours yet.",
+      "emptySubtitle": "Create one from the map.",
+      "noMatchesTitle": "No tours match your filters.",
+      "clearFiltersBtn": "Clear filters",
+      "tabOwned": "My Tours",
+      "tabFriends": "Friends",
+      "friendsEmptyTitle": "No friend tours yet.",
+      "friendsEmptySubtitle": "Tours your friends share will appear here.",
+      "ownedByLabel": "by {{name}}",
+      "aFriend": "a friend",
+      "viewBackfillCollisionsBtn": "Review tour overlaps",
+      "friendsOnMap_zero": "None of these on the map – you're a partner on none",
+      "friendsOnMap_one": "Only 1 of these on the map – the one you're a partner on",
+      "friendsOnMap_other": "Only {{count}} of these on the map – the ones you're a partner on"
+    },
+    "duplicate": {
+      "title": "Tour already here",
+      "body": "{{owner}} already has a tour “{{tour}}” at this spot, and you're a partner on it.",
+      "hint": "Save your own copy anyway, or let them know you're interested instead.",
+      "confirmBtn": "Save my copy",
+      "declineBtn": "Just show interest",
+      "cancelBtn": "Cancel"
+    },
+    "form": {
+      "nameLabel": "Tour Name",
+      "namePlaceholder": "e.g. Rigi Kulm",
+      "nameRequired": "Tour name is required.",
+      "goalLabel": "Goal",
+      "changeGoalBtn": "Change",
+      "elevationLabel": "Elevation (m)",
+      "elevationPlaceholder": "Elevation in meters",
+      "startPointLabel": "Start Point",
+      "endPointLabel": "End Point",
+      "pointNotSet": "Not set",
+      "sameAsEnd": "same as end",
+      "pickBtn": "Pick",
+      "removeStartBtn": "Remove start point",
+      "removeEndBtn": "Remove end point",
+      "roundTrip": "round trip",
+      "addEndPointBtn": "Add end point",
+      "roundTripBtn": "Round Trip",
+      "pointNameLabel": "Name",
+      "pointElevationLabel": "Elevation (m)",
+      "partnersLabel": "Tour Partners",
+      "visibilityLabel": "Visibility",
+      "visibilityFriends": "Friends",
+      "visibilityPrivate": "Private",
+      "visibilityFriendsHint": "Friends can see this tour. Partners you mark see full details.",
+      "visibilityPrivateHint": "Only you can see this tour — hidden from everyone, including marked partners.",
+      "activityLabel": "Activities",
+      "seasonLabel": "Season",
+      "gpxTooLarge": "File too large (max 2 MB)",
+      "gpxInvalid": "Invalid GPX file",
+      "gpxReadError": "Failed to read file",
+      "cancelBtn": "Cancel",
+      "detailSectionLabel": "Details",
+      "gpxSectionLabel": "GPX track",
+      "plannedDateLabel": "Start date",
+      "endDateLabel": "End date (optional)",
+      "endDateBeforeStartError": "The end date cannot be before the start date",
+      "descriptionLabel": "Description / Guide",
+      "descriptionPlaceholder": "Route description, links, notes…",
+      "equipmentLabel": "Equipment",
+      "equipmentPlaceholder": "Gear list...",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Any other info...",
+      "gpxLabel": "Track",
+      "gpxUploadBtn": "Upload GPX track",
+      "gpxReplaceBtn": "Replace",
+      "gpxReplaceTooltip": "Replace GPX track",
+      "gpxRemoveBtn": "Remove",
+      "gpxRemoveTooltip": "Remove GPX track",
+      "gpxUploading": "Uploading…",
+      "gpxUploadFailed": "Upload failed. Try again.",
+      "gpxRetry": "Retry",
+      "gpxExistingTrack": "Existing track",
+      "attachmentsSectionLabel": "Attachments",
+      "swisstopo": {
+        "loading": "Loading value…",
+        "failed": "Not available - enter manually"
+      },
+      "whenSectionLabel": "When",
+      "startTimeLabel": "Start time (optional)",
+      "multiDayHint": "Staying overnight? After saving, split it into daily stages from the tour details.",
+      "gradeLabel": "Grade (optional)",
+      "gradePlaceholder": "e.g. {{example}}",
+      "gradePlaceholderClimbing": "e.g. 5c or V+",
+      "gradeOptional": "Optional",
+      "gradeScale": "{{activity}} scale",
+      "suggestions": {
+        "label": "Suggestions",
+        "history": "{{name}} – as on your last tour here",
+        "stop": "{{name}} – public transport stop"
+      },
+      "legs": {
+        "label": "Way up and down",
+        "up": "Up",
+        "both": "Both",
+        "down": "Down",
+        "hint": "Up: from the start to the goal. Down: from the goal to the end. Both: the whole way.",
+        "needsOne": "Each way needs at least one activity.",
+        "soloHint": "Down: on foot or by lift to the launch at the goal. Both: flown from the start, in thermals."
+      },
+      "landingLabel": "Landing",
+      "fromGoal": "{{distance}} from the goal",
+      "farFromGoal": "{{distance}} from the goal – right place?",
+      "addLandingBtn": "Add landing",
+      "gpxDrawBtn": "Draw on map",
+      "gpxEditBtn": "Edit on map",
+      "gpxDrawn": "Drawn track",
+      "routeSectionLabel": "Route",
+      "pointsFromTrack": "Start and end come from the track.",
+      "pointsByHandBtn": "Set by hand",
+      "fromTrack": "from the track",
+      "gpxDrawnFile": "Drawn track · {{distance}}",
+      "gpxPreparing": "Adding heights to the track…",
+      "nextDayBtn": "Next day",
+      "nextDayHint": "Staying overnight? The next stage starts where this one ends.",
+      "splitDaysBtn": "Split into daily stages",
+      "splitDaysHint": "{{count}} days: plan each day as its own stage – this one keeps the first.",
+      "trackFromGoal": "At the goal, where the track begins"
+    },
+    "creation": {
+      "title": "New Tour",
+      "pickingTitle": "New Tour: {{name}}",
+      "saveBtn": "Save Tour",
+      "alreadyThere": "You already have this tour planned.",
+      "day": "Day {{n}}",
+      "dayOf": "Day {{n}} of {{count}}",
+      "daysLabel": "Days of the tour",
+      "saveDays": "Save {{count}} days",
+      "removeDay": "Remove {{day}}",
+      "splitTitle": "Stages",
+      "savedDays": "Saved: {{count}} days as one outing.",
+      "discard": "Discard this tour? The route you planned will be lost.",
+      "discardDays": "Discard all {{count}} days? The routes you planned will be lost.",
+      "keepEditing": "Keep editing",
+      "dayMissing": "{{day}} isn’t planned yet.",
+      "planDay": "Plan {{day}}",
+      "dayGoal": "Day {{n}} goal"
+    },
+    "infoSheet": {
+      "editTitlePrefix": "Edit",
+      "editTitle": "Edit: {{name}}",
+      "unnamedTour": "Unnamed tour",
+      "createdByLabel": "Created by {{name}}",
+      "completedBtn": "Completed",
+      "completeTourBtn": "Complete Tour",
+      "visibilityMakeFriends": "Make visible",
+      "visibilityMakePrivate": "Make private",
+      "roundTrip": "Round trip",
+      "oneWayToGoalIndicator": "One-way to goal",
+      "gpxTrackAvailable": "Track available",
+      "partnerSelf": "Me",
+      "morePartners": "and {{count}} more",
+      "editBtn": "Edit",
+      "deleteConfirmText": "Delete this tour?",
+      "cancelBtn": "Cancel",
+      "deleteBtn": "Delete",
+      "deletingBtn": "Deleting…",
+      "saveFailed": "Failed to save",
+      "deleteFailed": "Failed to delete",
+      "backToTours": "Tours",
+      "saveLabel": "Save",
+      "iconTooltipType": "Tour type",
+      "iconTooltipElevation": "Elevation",
+      "iconTooltipSeasons": "Seasons",
+      "iconTooltipDescription": "Description",
+      "iconTooltipEquipment": "Equipment",
+      "iconTooltipNotes": "Notes",
+      "iconTooltipPartners": "Partners",
+      "downloadGpxBtn": "Download GPX",
+      "startShort": "Start",
+      "endShort": "End",
+      "landingShort": "Landing",
+      "wayUp": "Way up",
+      "wayDown": "Way down",
+      "landingOpen": "not set yet"
+    },
+    "filters": {
+      "partnerLabel": "Partner",
+      "activityLabel": "Activity type",
+      "completionAll": "All",
+      "completionOpen": "Open",
+      "completionDone": "Done",
+      "dateFromLabel": "From",
+      "dateToLabel": "To",
+      "seasonLabel": "Season",
+      "plannedDateLabel": "Planned date",
+      "statusLabel": "Status",
+      "panelAriaLabel": "Tour filters",
+      "ownerLabel": "Recorded by",
+      "gradeLabel": "Grade",
+      "gradeScale": "Grades for {{activities}}",
+      "resetBtn": "Reset",
+      "showResultsBtn_zero": "Show {{count}} tours",
+      "showResultsBtn_one": "Show {{count}} tour",
+      "showResultsBtn_other": "Show {{count}} tours"
+    },
+    "type": {
+      "skiing": "Skiing",
+      "snowboarding": "Snowboarding",
+      "skitour": "Ski Tour",
+      "splitboarding": "Splitboarding",
+      "skiMountaineering": "Ski Mountaineering",
+      "paragliding": "Paragliding",
+      "hiking": "Hiking",
+      "mountaineering": "Mountaineering",
+      "climbing": "Climbing",
+      "mountainBiking": "Mountain Biking",
+      "trailrunning": "Trail Running"
+    },
+    "season": {
+      "winter": "Winter",
+      "spring": "Spring",
+      "summer": "Summer",
+      "autumn": "Autumn"
+    },
+    "picker": {
+      "cancelBtn": "Cancel",
+      "confirmBtn": "Confirm",
+      "goalTitle": "Tour Goal",
+      "startTitle": "Start Point",
+      "endTitle": "End Point",
+      "search": {
+        "placeholder": "Search summit, place or address",
+        "placeholderAccess": "Search stop, village or hut",
+        "label": "Search location",
+        "clear": "Clear search",
+        "noResults": "No places found",
+        "error": "Search unavailable. Pan the map to pick the spot instead.",
+        "origin": {
+          "gazetteer": "Place",
+          "zipcode": "Postcode",
+          "gg25": "Municipality",
+          "address": "Address",
+          "stop": "Public transport stop"
+        }
+      },
+      "routeHint": "Or tap a marked ski route to plan it with its track."
+    },
+    "attachments": {
+      "add": "Add file",
+      "delete": "Delete",
+      "deleteConfirm": {
+        "title": "Delete attachment?",
+        "body": "This file will be permanently removed and cannot be recovered."
+      },
+      "limitReached": "Maximum of 5 files per tour reached.",
+      "limitRemaining": "Only {{remaining}} more file(s) may be added; you selected {{selected}}.",
+      "invalidType": "File type not supported. Allowed: PNG, JPEG, PDF.",
+      "heicUnsupported": "HEIC is not supported. Please share your photo as JPEG.",
+      "tooLarge": "File exceeds the 10 MB limit.",
+      "download": "Download",
+      "viewer": {
+        "next": "Next",
+        "previous": "Previous",
+        "page": "Page {{page}} of {{total}}"
+      },
+      "uploadFailed": "Upload failed. Try again.",
+      "uploading": "Uploading…",
+      "cancelUpload": "Cancel upload",
+      "retryUpload": "Retry upload",
+      "dismissUpload": "Remove file",
+      "loadFailed": "Could not load the files for this tour.",
+      "reorderHandle": "Move {{name}}"
+    },
+    "suggestions": {
+      "suggestBtn": "Suggest changes",
+      "suggestTitlePrefix": "Suggest",
+      "submitBtn": "Suggest changes",
+      "reviewTitle": "Suggested changes",
+      "historyTitle": "Suggestion history",
+      "historyBtn": "Suggestion history",
+      "historyEmpty": "No suggestions have been resolved on this tour yet.",
+      "pendingCount_zero": "{{count}} suggested change",
+      "pendingCount_one": "{{count}} suggested change",
+      "pendingCount_other": "{{count}} suggested changes",
+      "yourPendingCount_zero": "Your proposal ({{count}})",
+      "yourPendingCount_one": "Your proposal ({{count}} change)",
+      "yourPendingCount_other": "Your proposal ({{count}} changes)",
+      "fieldCount_zero": "{{count}} field",
+      "fieldCount_one": "{{count}} field",
+      "fieldCount_other": "{{count}} fields",
+      "byAuthor": "Suggested by {{name}}",
+      "yourProposal": "Your proposal",
+      "aPartner": "a partner",
+      "acceptBtn": "Accept",
+      "declineBtn": "Decline",
+      "acceptAllBtn": "Accept all",
+      "withdrawBtn": "Withdraw",
+      "reviseBtn": "Revise",
+      "stale": "You changed this since",
+      "currentValue": "Current",
+      "baseValue": "They saw",
+      "originalValue": "Current",
+      "suggestedValue": "Suggested",
+      "emptyValue": "—",
+      "emptyOwner": "No open suggestions on this tour.",
+      "emptyAuthor": "You have no open suggestions on this tour.",
+      "capHint": "This tour already holds the maximum number of attachments. Accept a removal first, or use Accept all.",
+      "capHintBlocked": "This tour already holds the maximum number of attachments and this proposal removes none. Delete an attachment yourself, or decline this addition.",
+      "capHintBatch": "Accepting everything would leave more than {{max}} attachments. Decline an addition, or free a slot first.",
+      "capHintSuggester": "This tour can hold {{max}} attachments and is full. Propose removing one above to make room for another.",
+      "capOverflow": "This proposal would leave the tour {{count}} attachment(s) over the limit. Propose a removal, or drop one of your files.",
+      "removalPropose": "Propose removal",
+      "removalMarked": "Removal proposed",
+      "offline": "Suggestions need a connection.",
+      "status": {
+        "accepted": "Accepted",
+        "declined": "Declined",
+        "withdrawn": "Withdrawn",
+        "pending": "Pending"
+      },
+      "fields": {
+        "name": "Name",
+        "dates": "Dates",
+        "goal": "Goal",
+        "tour_type": "Activity",
+        "elevation": "Elevation",
+        "description": "Description",
+        "seasons": "Seasons",
+        "equipment": "Equipment",
+        "notes": "Notes",
+        "start_point": "Start point",
+        "end_point": "End point",
+        "gpx": "GPX track",
+        "attachment_add": "New attachment",
+        "attachment_remove": "Remove attachment",
+        "grade": "Grade"
+      },
+      "gpxNew": "New GPX track",
+      "gpxExisting": "Existing GPX track",
+      "anAttachment": "An attachment",
+      "byYou": "Suggested by you"
+    },
+    "outing": {
+      "segmentCount_one": "{{count}} segment",
+      "segmentCount_other": "{{count}} segments",
+      "segmentOf": "Segment {{n}} of {{count}}",
+      "segmentsHeader": "Segments",
+      "addSegment": "Add segment",
+      "addTitle": "Add a segment",
+      "addNew": "New segment on the map",
+      "addNewHint": "Pick its goal — it starts the next day, where the last segment ends.",
+      "addExistingHeader": "Or add one of your tours",
+      "addExistingEmpty": "No other tours to add.",
+      "edit": "Edit",
+      "done": "Done",
+      "nameLabel": "Outing name",
+      "namePlaceholder": "e.g. Haute Route",
+      "remove": "Remove from outing",
+      "gapHint": "Starts away from where segment {{n}} ends",
+      "dateBeforeHint": "Dated before segment {{n}}",
+      "previous": "Previous segment",
+      "next": "Next segment",
+      "openOverview": "Show the whole outing",
+      "backToOuting": "Back to outing",
+      "saveFailed": "Couldn't update the outing. Please try again.",
+      "dayCount_one": "{{count}} day",
+      "dayCount_other": "{{count}} days",
+      "night": "Overnight",
+      "reorderHandle": "Move segment {{n}}",
+      "ruleHint": "One day, one tour – even with several summits, or walking up and flying down. After a night, the next segment begins.",
+      "connect": "Connect",
+      "connectLabel": "End segment {{n}} at {{place}}"
+    },
+    "route": {
+      "ascent": "Ascent",
+      "descent": "Descent",
+      "distance": "Distance",
+      "flight": "Flight",
+      "flightUp": "Flight up",
+      "ascentPartFlown": "Ascent, partly flown",
+      "descentPartFlown": "Descent, partly flown",
+      "time": "Estimated time",
+      "minutes": "{{m}} min",
+      "hours": "{{h}}:{{m}} h",
+      "pace": "Pace"
+    }
+  },
+  "map": {
+    "actionBar": {
+      "myTours": "My Tours",
+      "addTourAriaLabel": "Add tour"
+    },
+    "overlay": {
+      "compassTooltip": "Orient map north",
+      "feedbackTooltip": "Feedback",
+      "profileTooltip": "Profile",
+      "contactsTooltip": "Contacts",
+      "toursTooltip": "Tours",
+      "addTourTooltip": "Add tour",
+      "signInToAddToursTooltip": "Sign in to add tours",
+      "menuOpen": "Menu",
+      "menuClose": "Close menu",
+      "addTour": "Add tour",
+      "tours": "Tours",
+      "contacts": "Contacts",
+      "profile": "Profile",
+      "mapLayers": "Map layers",
+      "feedback": "Feedback",
+      "offlineMap": "Offline maps",
+      "inbox": "Inbox",
+      "profileUpdateAvailable": "Profile, update available"
+    },
+    "styles": {
+      "base": "Base",
+      "classic": "Classic"
+    },
+    "layers": {
+      "baseMap": "Base map",
+      "needsConnection": "Needs a connection",
+      "overlays": {
+        "title": "Overlays",
+        "hiking": "Hiking trails",
+        "ski": "Ski routes"
+      }
+    },
+    "trail": {
+      "skiRoute": "Ski route",
+      "listTitle": "{{count}} ski routes",
+      "target": "{{name}} · {{altitude}}m",
+      "metres": "{{value}}\u00a0m",
+      "more": "+{{count}} more — zoom in",
+      "backToList": "Ski routes",
+      "openSac": "Open in SAC route portal",
+      "noInfo": "No route information available",
+      "offline": "Route details need a connection",
+      "lookupError": "Couldn't load route info",
+      "planTour": "Plan as tour"
+    },
+    "cluster": {
+      "label": "Cluster of {{count}} tours",
+      "planned": "{{count}} planned",
+      "undated": "{{count}} without a date",
+      "done": "{{count}} done"
+    },
+    "marker": {
+      "done": "Done",
+      "noDate": "No date",
+      "stackTitle": "{{count}} tours at this spot",
+      "close": "Close list",
+      "stage": "Stage {{n}}/{{total}}",
+      "stackMore": "{{count}} more tours at this spot — show list"
+    },
+    "legend": {
+      "title": "Legend",
+      "multi": "Several activities",
+      "none": "No activity",
+      "done": "Done",
+      "friend": "A friend's tour you're on",
+      "linked": "Linked with a friend's tour",
+      "cluster": "Several tours — tap to zoom in or list them",
+      "chain": "Segments of a multi-day tour",
+      "open": "Show legend"
+    },
+    "draw": {
+      "title": "Draw track",
+      "followLabel": "The line follows",
+      "status": {
+        "hiking": "The line follows hiking trails, then roads and paths.",
+        "ski": "The line follows ski routes, then roads and paths.",
+        "byActivity": "(matches the tour’s activity)",
+        "ways": "The line follows roads and paths.",
+        "unavailable": "Couldn’t load the trails (offline?), so this part is drawn straight."
+      },
+      "hint": {
+        "start": "Tap the map to set the start.",
+        "next": "Tap along the way to add points. Drag a point to move it.",
+        "profileLoading": "Loading the elevation profile…",
+        "profileOffline": "The elevation profile needs a connection."
+      },
+      "pace": {
+        "open": "Set your pace"
+      },
+      "undo": "Undo",
+      "redo": "Redo",
+      "done": "Done",
+      "returnToStart": "To start",
+      "returnToStartHint": "Back to the start the same way"
+    },
+    "plan": {
+      "stepsLabel": "Route points",
+      "hint": {
+        "start": "Where do you set off? Tap the map or search.",
+        "goal": "Where to? Tap your goal on the map or search.",
+        "end": "Where do you finish? Tap the map – or continue without.",
+        "move": "Tap or drag point on the map.",
+        "shape": "Drag a line’s middle dot to change the way.",
+        "via": "Tap a point you pulled out to remove it again."
+      },
+      "required": "Required",
+      "optional": "Optional",
+      "unnamed": "No name",
+      "skip": "Skip",
+      "roundTrip": "Round trip",
+      "remove": "Remove",
+      "continue": "Continue",
+      "done": "Done",
+      "step": {
+        "start": "Start",
+        "goal": "Goal",
+        "end": "End"
+      },
+      "removeStep": "Remove {{step}}",
+      "measuring": "Working out the route…",
+      "nextDay": "Next day",
+      "follow": {
+        "label": "Follow the trails",
+        "hiking": "Follows the hiking trails",
+        "ski": "Follows the ski routes",
+        "ways": "Follows roads and paths",
+        "straight": "Straight lines between the points",
+        "unavailable": "Trails couldn’t load (offline?), so it’s straight",
+        "fixed": "Your uploaded track stays as it is",
+        "gap": "No path for part of it – a straight line there",
+        "finding": "Finding the way…"
+      },
+      "back": "Back to the details, without these changes",
+      "fold": "Fold the route points away",
+      "unfold": "Show the route points"
+    }
+  },
+  "i18n": {
+    "languageLabel": "Language",
+    "en": "English",
+    "de-CH": "Deutsch"
+  },
+  "friendships": {
+    "prompt": {
+      "title": "This phone belongs to a TourenBuddy — connect as friends?",
+      "securityNote": "Sending a friend request reveals your identity to the recipient, including your phone number, first and last name. The recipient may deny your request."
+    },
+    "sendRequest": "Send request",
+    "justSaveContact": "Save contact only",
+    "requestSent": "Request sent",
+    "nowFriends": "You are now friends",
+    "sendFailedRetry": "Couldn't send — please try again.",
+    "learnMore": "Learn more",
+    "inboxEmpty": "No pending friend requests.",
+    "inboxDenyRightsNote": "You are free to deny any request without justification. Denying has no penalty and does not reveal your identity beyond the act of declining.",
+    "accept": "Accept",
+    "deny": "Deny",
+    "cancel": "Cancel",
+    "requestFrom": "Request from",
+    "requestTo": "Request to",
+    "verifyPhoneHint": "Verify your phone to connect with other users.",
+    "friendsListLink": "Friend requests",
+    "requestsTab": "Requests",
+    "contactCreated": "Contact created for new friend",
+    "tooltip": "Friend on TourenBuddy",
+    "acceptConfirm": "Accept this friend request?",
+    "acceptWarning": "Accepted friendships cannot be deleted. To remove this friend, you must delete the linked contact.",
+    "acceptingBtn": "Accepting...",
+    "verificationNotice": {
+      "title": "Phone discoverability notice",
+      "body": "Once verified, other verified TourenBuddy users who add this number to their contacts will know an account exists for it and can send a friend request. Your identity is not revealed beyond this. Unverified phones are never discoverable. You can deny any incoming request.",
+      "acknowledge": "I understand the conditions on phone discoverability.",
+      "sendCodeBtn": "Send verification code"
+    }
+  },
+  "blocks": {
+    "tabLabel": "Blocked",
+    "blockAction": "Block",
+    "unblockAction": "Unblock",
+    "tooltip": "Blocked",
+    "emptyState": "You haven't blocked anyone.",
+    "blockedSince": "Blocked since {{date}}",
+    "confirm": {
+      "title": "Block this user?",
+      "bodyWithFriend": "This will remove your friendship and prevent this user from sending you friend requests.",
+      "bodyWithoutFriend": "This will prevent this user from sending you friend requests.",
+      "cooldownNotice": "You will only be able to unblock this user after 48 hours.",
+      "reportToggle": "Also report this user",
+      "reportPlaceholder": "Optional: describe the issue (max 1000 characters)",
+      "cancelBtn": "Cancel",
+      "confirmBtn": "Block"
+    },
+    "snackbar": {
+      "blockSuccess": "User blocked",
+      "unblockSuccess": "User unblocked",
+      "reportSuccess": "Report submitted",
+      "cooldownError": "Cannot unblock yet — available again in {{hours}} h",
+      "sendRequestFailed": "Could not send request"
+    },
+    "cooldown": {
+      "remaining": "Available again in {{hours}} h"
+    }
+  },
+  "notifications": {
+    "sectionTitle": "Notifications",
+    "pushLabel": "Push notifications",
+    "pushDescription": "Receive alerts on this device",
+    "emailLabel": "Email notifications",
+    "emailDescription": "Receive alerts by email",
+    "typesLabel": "Alert me about",
+    "typesHint": "Muting stops push and email only — everything still shows up in your inbox.",
+    "type": {
+      "friend_requests": "Friend requests",
+      "tour_updates": "Shared tour changes",
+      "tour_interest": "Same-tour collaboration suggestions",
+      "tour_suggestions": "Tour change suggestions",
+      "availability": "Friends free this week",
+      "tour_reminders": "Tour reminders"
+    },
+    "typeDescription": {
+      "tour_interest": "Notifies when a friend plans the same tour, requests linking a tour, and tours overlap after a new friendship.",
+      "tour_suggestions": "Notifies when a tour partner suggests changes to your tour, and when your own suggestions are decided.",
+      "availability": "Every Monday: friends you share a tour with who are free on days you are free.",
+      "tour_reminders": "Five days before a planned tour — yours, or a friend’s you are a partner on."
+    },
+    "allOffDisclaimer": "You won't be alerted outside the app. Updates still collect in your inbox.",
+    "pushUnavailable": "Not available",
+    "installHint": "To enable push notifications, add TourenBuddy to your home screen first.",
+    "deniedHint": "Push notifications are blocked. Enable them in your browser or device settings."
+  },
+  "common": {
+    "loading": "Loading…"
+  },
+  "tourLinks": {
+    "linkedWithHeader": "Linked with",
+    "moreLinked": "+{{count}} more",
+    "unknownPartner": "Unknown buddy",
+    "collisionNoticeTitle": "Same tour planned",
+    "collisionNoticeBody": "Friends planning the same tour: {{names}}. Link your tours to collaborate.",
+    "requestToLinkBtn": "Request to link with {{name}}",
+    "requestToLinkShortBtn": "Request to link",
+    "requestingBtn": "Requesting…",
+    "bannerIncoming": "{{name}} wants to link “{{tour}}” with this tour.",
+    "bannerOutgoing": "Link request sent to {{name}} for “{{tour}}”.",
+    "acceptBtn": "Accept",
+    "declineBtn": "Decline",
+    "withdrawBtn": "Withdraw",
+    "editWarningTitle": "This will unlink the tour",
+    "editWarningBody": "This change will unlink this tour from {{count}} friend tour(s) it is currently grouped with.",
+    "editWarningPendingTitle": "This will cancel pending link request(s)",
+    "editWarningPendingBody": "This change breaks the location match for {{count}} pending link request(s) you sent. The request(s) will be cancelled.",
+    "editWarningIncomingTitle": "Pending link requests will be withdrawn",
+    "editWarningIncomingBody": "There are {{count}} outstanding link request(s) for this tour. Applying these changes will automatically withdraw them.",
+    "editWarningHint": "You can re-request a link later if the tours still match.",
+    "editWarningProceedBtn": "Save & unlink",
+    "editWarningProceedPendingBtn": "Save & cancel request",
+    "deleteUnlinkWarning": "This tour is linked with {{count}} friend tour(s). Deleting will unlink them.",
+    "backfillPageTitle": "Tour overlaps with this friend",
+    "backfillEmpty": "No tour overlaps to review.",
+    "backfillAllEmpty": "No tour overlaps with friends to review.",
+    "backfillFriendLabel": "with {{name}}",
+    "backfillYourTourLabel": "Your tour",
+    "backfillFriendTourLabel": "Friend's tour",
+    "backfillFriendNameLabel": "Friend",
+    "mergeBlockedTitle": "Another friend group plans the same tour",
+    "mergeBlockedBody": "Friends already in their own linked group: {{names}}. You can reach out to them directly to coordinate — joining their group from yours isn't possible.",
+    "dismissBtn": "Got it",
+    "doNotShowAgain": "Don't show again"
+  },
+  "onboarding": {
+    "tour": {
+      "phone": {
+        "title": "Add your phone number",
+        "body": "Tap your profile card to add and verify your phone number, so friends can find and connect with you to plan shared tours."
+      },
+      "notifications": {
+        "title": "Stay in the loop",
+        "body": "Choose here which notifications you get: friend requests, tour updates and suggestions, tour reminders, and friends who are free when you are."
+      },
+      "addContact": {
+        "title": "Your contacts",
+        "body": "Add people from your phone book or by hand and link them to your tours. Everyone you add shows up in this list."
+      },
+      "friendRequests": {
+        "title": "Friend requests",
+        "body": "Send and accept friend requests here. Friends can see each other's tours and get notified about shared plans."
+      },
+      "tours": {
+        "title": "Your tours & friends' tours",
+        "body": "Switch between your own tours and your friends' tours with these tabs to plan and enjoy tours together."
+      },
+      "addLocation": {
+        "title": "Plan a tour",
+        "body": "Tap here, then tap your start, goal and end on the map — or search for them. The route follows the trails and becomes your track; staying overnight, tap “Next day” to plan the next stage right away."
+      },
+      "mapLayers": {
+        "title": "Map layers",
+        "body": "Pick a base map and add hiking trails or ski routes on top, in any combination. With ski routes on, zoom in until the routes show difficulty badges, then tap one for its details — or plan it as a tour right away. The ⓘ button at the bottom left explains the marker colours and symbols."
+      },
+      "welcome": {
+        "title": "Welcome to TourenBuddy",
+        "body": "A quick tour of the essentials: planning tours, maps, friends and the calendar. Tap anywhere to continue, or use the controls at the top.",
+        "start": "Start tour",
+        "skip": "Skip for now",
+        "dismiss": "Don't show again"
+      },
+      "labels": {
+        "phone": "Verify phone number",
+        "notifications": "Notification settings",
+        "addContact": "Contacts",
+        "friendRequests": "Friend requests",
+        "tours": "Your tours",
+        "addLocation": "Plan a tour",
+        "mapLayers": "Map layers",
+        "openCalendar": "Open calendar",
+        "offlineMap": "Offline maps",
+        "calendarSync": "Calendar sync",
+        "inbox": "Inbox"
+      },
+      "nav": {
+        "openMenu": "Open menu",
+        "profile": "Open profile",
+        "contacts": "Open contacts",
+        "mapLayers": "Open map layers",
+        "friendRequests": "Open friend requests",
+        "tours": "Open your tours"
+      },
+      "bannerLabel": "Guided tour",
+      "controls": {
+        "next": "Next",
+        "previous": "Back",
+        "done": "Done",
+        "finish": "Finish tour",
+        "reopen": "Show app tour"
+      },
+      "openCalendar": {
+        "title": "Open the calendar",
+        "body": "Plan tours by date, share when you're free, and see when friends are available. Continue to take a look."
+      },
+      "offlineMap": {
+        "title": "Take maps offline",
+        "body": "No signal up there? Download a region — or all of Switzerland — before you head out. Your tours and contacts stay available offline too."
+      },
+      "calendarSync": {
+        "title": "Sync your calendar",
+        "body": "Connect your work or personal calendar and your free days are marked as available automatically. Its contents are never stored."
+      },
+      "inbox": {
+        "title": "Everything in one place",
+        "body": "Friend requests, shared-tour changes, suggestions and tour reminders collect in your inbox — even with push and email off. The badge counts what still needs you."
+      }
+    }
+  },
+  "offlineMap": {
+    "draw": {
+      "hintStart": "Tap on the map to start drawing",
+      "hintExpand": "Tap again to select the region for download",
+      "hintMobile": "Move the map to frame your region · {{size}}",
+      "redraw": "Redraw",
+      "cancel": "Cancel",
+      "confirm": "Next"
+    },
+    "download": {
+      "title": "Download offline map",
+      "nameLabel": "Region name",
+      "estimate": "Estimated size: {{size}}",
+      "tooLarge": "Not enough free storage for this region.",
+      "nearQuota": "This will use most of your remaining storage.",
+      "start": "Download",
+      "cancel": "Cancel",
+      "untitled": "Offline region"
+    },
+    "manage": {
+      "title": "Offline maps",
+      "installHint": "Install the app to keep offline maps from being cleared by the browser.",
+      "usage": "{{used}} of {{total}} used",
+      "delete": "Delete region",
+      "empty": "No offline maps downloaded yet.",
+      "tip": "Tip: download several smaller regions rather than one very large one.",
+      "drawRegion": "Download a region",
+      "wholeMap": "Download all of Switzerland"
+    },
+    "errors": {
+      "load": "Could not load offline maps.",
+      "delete": "Could not delete this region.",
+      "quota": "Not enough storage to download this region.",
+      "download": "Download failed. Please try again."
+    }
+  },
+  "offline": {
+    "bar": {
+      "offline": "Offline · showing saved data",
+      "unverified": "Signed in offline · data may be out of date",
+      "waiting_one": "Offline · {{count}} change waiting to sync",
+      "waiting_other": "Offline · {{count}} changes waiting to sync"
+    },
+    "actionUnavailable": "This action isn't available offline",
+    "writeError": {
+      "generic": "Couldn't save your change offline — please try again",
+      "storageFull": "Couldn't save offline — device storage is full. Free up space and try again"
+    }
+  },
+  "offlineSync": {
+    "pendingCount_one": "{{count}} change waiting to sync",
+    "pendingCount_other": "{{count}} changes waiting to sync",
+    "synced_one": "{{count}} change synced",
+    "synced_other": "{{count}} changes synced",
+    "conflictLost": "Changed on another device — your offline edit was not applied",
+    "attachmentsOnlineOnly": "Attachments are available online only",
+    "friendshipsOnlineOnly": "Friend requests are available online only",
+    "deadLetter": {
+      "title": "Changes that couldn't sync",
+      "banner_one": "{{count}} change couldn't sync",
+      "banner_other": "{{count}} changes couldn't sync",
+      "review": "Review",
+      "retry": "Retry",
+      "discard": "Discard",
+      "empty": "No more edits that haven't been synchronized",
+      "op": {
+        "create": "Create {{entity}}",
+        "update": "Update {{entity}}",
+        "delete": "Delete {{entity}}"
+      },
+      "kind": {
+        "tour": "tour",
+        "contact": "contact"
+      },
+      "permanentReason": "This change couldn't be applied and was not saved",
+      "transientReason": "The server couldn't be reached — you can try again"
+    }
+  },
+  "inbox": {
+    "title": "Inbox",
+    "empty": "Nothing new yet. Friend requests, shared tours and suggestions show up here.",
+    "loadError": "Couldn't load your inbox.",
+    "markAllRead": "Mark all read",
+    "loadMore": "Load more",
+    "clearAll": "Clear inbox",
+    "clearConfirm": "Delete all entries?",
+    "clearAllConfirm": "Delete all",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "unavailable": "This is no longer available.",
+    "someone": "Someone",
+    "aTour": "a tour",
+    "occurrences": "{{count}}×",
+    "state": {
+      "unread": "Unread"
+    },
+    "stale": {
+      "answered": "Answered",
+      "resolved": "No longer pending",
+      "tourGone": "No longer available"
+    },
+    "entry": {
+      "received": "{{actor}} sent you a friend request",
+      "responded": "{{actor}} responded to your friend request",
+      "created": "{{actor}} shared “{{tour}}” with you",
+      "updated": "{{actor}} updated “{{tour}}”",
+      "deleted": "{{actor}} removed “{{tour}}”",
+      "collision": "{{actor}} planned the same tour as “{{tour}}”",
+      "backfill": "You and {{actor}} planned {{count}} of the same tours",
+      "link_created": "{{actor}} wants to link “{{tour}}” with their tour",
+      "link_declined": "{{actor}} declined your link request for “{{tour}}”",
+      "group_joined": "{{actor}} added a tour to your link for “{{tour}}”",
+      "group_evicted_external": "A tour was removed from the link for “{{tour}}”",
+      "group_dissolved": "The link for “{{tour}}” was dissolved",
+      "suggestion_submitted": "{{actor}} suggested changes to “{{tour}}”",
+      "suggestion_revised": "{{actor}} revised their suggestions for “{{tour}}”",
+      "suggestion_resolved": "{{actor}} decided on your suggestions for “{{tour}}”",
+      "unknown": "New update from {{actor}}",
+      "weekly": "{{actor}} is free on days you’re free this week",
+      "weeklyMore": "{{actor}} and {{count}} more are free on days you’re free this week",
+      "upcoming": "“{{tour}}” is in 5 days",
+      "published": "What’s new: {{title}}",
+      "publishedUnknown": "What’s new"
+    },
+    "releaseNote": {
+      "heading": "What’s new",
+      "eyebrow": "New in TourenBuddy",
+      "settingsAction": "Notification settings",
+      "settingsHint": "Both also arrive by push and email. You decide which ones."
+    }
+  },
+  "releaseNotes": {
+    "2026-10-availability-reminders": {
+      "title": "Free days and tour reminders",
+      "intro": "Two small additions that make it easier to turn plans into actual days out.",
+      "features": {
+        "availability": {
+          "title": "Who’s free this week",
+          "body": "Every Monday your inbox shows which friends you share a tour with are free on days you are free too."
+        },
+        "reminders": {
+          "title": "Reminder five days ahead",
+          "body": "Everyone on a planned tour gets a nudge five days before — time to check conditions, gear and partners."
+        }
+      }
+    },
+    "2026-10-trail-overlays": {
+      "title": "Hiking trails and ski routes on the map",
+      "intro": "Switzerland’s marked trail network, right on your map. Switch it on under Map layers in the menu.",
+      "features": {
+        "hiking": {
+          "title": "Hiking trails",
+          "body": "All official hiking, mountain and alpine trails on top of any base map, in any combination with ski routes."
+        },
+        "ski": {
+          "title": "Ski routes with difficulty",
+          "body": "The SAC ski-touring routes. Zoom in and every route gets a badge with its difficulty, coloured from easy to extreme."
+        },
+        "details": {
+          "title": "Route details with one tap",
+          "body": "Tap a marked route for summit, ascent time, elevation gain and difficulty, plus a link to the SAC route portal. Where routes overlap, pick one from the list."
+        }
+      }
+    },
+    "2026-10-multi-activity-search": {
+      "title": "Hike & fly in one tour, multi-day outings and smarter planning",
+      "intro": "Plan the whole endeavour the way you do it — up on foot, down by air, over several days.",
+      "features": {
+        "hikefly": {
+          "title": "Hike & fly in one tour",
+          "body": "Pick hiking and paragliding and the tour goes up on foot and down by air to your landing. Set each activity to up, down or both — for climb & fly, ski & fly, hike & bike or a thermal flight from the valley. The details show each way's climb and descent, flown ways marked."
+        },
+        "outings": {
+          "title": "Multi-day tours in segments",
+          "body": "A night starts a new segment: valley to hut, hut to summit. The next segment starts the following day where the last one ends, a gap offers to connect them, and the map shows the whole route with numbered markers and every track. Climb and descent show per segment and for the whole outing."
+        },
+        "search": {
+          "title": "Plan from where you start",
+          "body": "Placing a point? Search summits, huts, places and addresses — and for a start or landing, public-transport stops and cable-car stations too. Once the goal is set, one tap picks your earlier start or the nearest stops. Any ski route on the map can be planned as a tour."
+        },
+        "grade": {
+          "title": "Grade, start time and more activities",
+          "body": "Add a grade on the activity's own scale — T1–T6, L–EX, S0–S5 — and when you leave. Pick every activity a tour can be done as: the marker and the GPX track show all their colours, and the activity filter finds the tour under each of them."
+        }
+      }
+    },
+    "2026-11-track-drawing": {
+      "title": "Draw your track on the map, timed at your pace",
+      "intro": "No GPX file at hand? Draw the way you'll go and see how long it takes you.",
+      "features": {
+        "draw": {
+          "title": "Draw a track on the map",
+          "body": "In the tour form, tap “Draw on map” and set points along the way: the line follows hiking trails or ski routes, then roads and paths. Distance, time, climb, descent and the elevation profile update as you draw, and “Done” saves the line as the tour's GPX track — offline too. “Edit on map” changes it later."
+        },
+        "pace": {
+          "title": "Times at your pace",
+          "body": "Tap the time while drawing and slide from slow to fast. Every estimated time — drawn tracks, tour details, ski routes — follows your pace, kept on your account for every device."
+        },
+        "filters": {
+          "title": "Filter by grade and friend",
+          "body": "Filter tours by grade — T1–T6, L–EX, S0–S5, a range in two taps — and friends' tours by who recorded them. While the list is open, the map shows only the tours it lists. On a friend's contact, “Tours” opens theirs."
+        },
+        "markers": {
+          "title": "A map you can read",
+          "body": "Zoom in and markers show the tour's name, height and date, with its activity inside. Tap a cluster to fit its tours into view, or a spot with several tours to list them. Multi-day segments are joined in order, and the ⓘ on the map explains every colour and symbol."
+        }
+      }
+    },
+    "2026-11-map-first-planning": {
+      "title": "Plan new tours on the map, day by day",
+      "intro": "Tap your way from start to summit and back: the route follows the trails and becomes your track.",
+      "features": {
+        "route": {
+          "title": "Start on the map",
+          "body": "Tap “+” and set start, goal and end on the map or by search. The route follows the trails as the points land, with climb and descent, and becomes the tour's track. “Continue” opens the form with names and heights filled in — on desktop right beside the map."
+        },
+        "shape": {
+          "title": "Shape the route",
+          "body": "Drag a point, or the handle halfway along a leg to take another way. “Round trip” brings you back to the start the way you came."
+        },
+        "days": {
+          "title": "Several days in one go",
+          "body": "Staying overnight? “Next day” plans the next stage from where this one ends, right on the map. Each day gets its own tab in the form, and all days save together as one multi-day tour."
+        }
+      }
+    }
+  },
+  "shell": {
+    "tagline": "Plan your outdoor tours"
+  }
+}

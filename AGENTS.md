@@ -14,7 +14,7 @@ Issue numbers in this file refer to that repo. Read the phase issue before propo
 
 ## Stack
 
-Decided or default in #346. Pin versions when a package is introduced.
+Decided or default in #346. Versions come from `npx expo install`; `package-lock.json` pins them.
 
 - **Framework:** React Native + Expo (SDK 58, React Native 0.88), TypeScript, Hermes
 - **Native projects:** Continuous Native Generation; `ios/` and `android/` are generated, never committed
@@ -29,8 +29,29 @@ Decided or default in #346. Pin versions when a package is introduced.
   `@expo/ui` where needed. iOS 26 minimum, so no non-glass fallback
 - **Fonts and icons:** iOS system font and SF Symbols; Android and web bundled Inter and Material
   Symbols. No runtime font downloads
-- **Validation:** Zod. **i18n:** `i18next` on the `en` and `de-CH` JSON
+- **Validation:** Zod. **i18n:** `i18next` + `react-i18next`, locale from `expo-localization`
+- **Tooling:** ESLint (`eslint-config-expo`) with Prettier, Jest (`jest-expo`) with React Native
+  Testing Library
 - **Builds and releases:** EAS Build and EAS Submit, release-please
+
+## Structure
+
+```text
+src/
+  app/          Expo Router routes and layouts only; screens come from features/ and core/
+  core/         shared infrastructure (i18n/, logging/, later adaptive/, offline/, realtime/)
+  features/     <feature>/data, domain, presentation
+  locales/      en.json, de-CH.json
+test/           Jest tests, mirroring src/ (src/core/i18n/detect.ts → test/core/i18n/detect.test.ts)
+assets/images/  app icon, launch image, favicon
+openspec/       specs and changes
+```
+
+## Variants
+
+`app.config.ts` builds the `dev` variant ("TourenBuddy Dev", `ch.tourenbuddy.app.dev`) unless
+`APP_VARIANT=prod` selects the store identity (`ch.tourenbuddy.app`). Both install side by side.
+Switching changes the bundle identifier: run `npx expo prebuild --clean` afterwards.
 
 ## Must Follow
 
@@ -55,21 +76,30 @@ Decided or default in #346. Pin versions when a package is introduced.
   Web-only files use the `.web.tsx` suffix.
 - Code ported from the Vue repo's `domain` and `data` layers stays plain TypeScript, so it and its
   tests move over nearly unchanged.
-- User-facing text goes through `i18next` and every locale file.
-- No `console.log()`; use the logging wrapper.
-- Run lint, type-check and tests before declaring a task done.
+- User-facing text goes through `i18next` and every locale file. Catalogs use i18next syntax:
+  `{{name}}` placeholders and plural keys `_one` / `_other` (plus `_zero` when 0 reads
+  differently), called by the base key with `count`. Keys are typed against `en.json`.
+- No `console` calls; use `createLogger('<tag>')` from `@/core/logging/logger` (lint enforces it).
+- Tests cover edge cases and failures, not the happy path. Ported Vitest tests: `vi.` → `jest.`, drop
+  the `vitest` import. React Native Testing Library v14 renders asynchronously: `await render(...)`.
+- Run `npm run check` (lint, type check, tests) before declaring a task done.
 - Agents cannot build or run the iOS and Android apps; the owner builds and measures on a Mac and
   devices. Give exact commands and what to look for.
 
 ## Commands
 
 ```bash
-npx expo start                 # dev server
-npx expo run:ios               # dev build on simulator or device (native modules need this)
-npx expo run:android
+npm start                      # dev server for an installed dev build
+npm run ios                    # build and run the dev app on a simulator or device
+npm run android
+npm run web
+npm run check                  # lint + type check + tests, as in CI
+npm run lint                   # zero warnings; `npx expo lint --fix` formats
+npm run typecheck              # generates route types first, then tsc
+npm test                       # Jest
+npx expo export --platform web # web build, as in CI
 npx expo install <package>     # add a dependency
-npx expo lint                  # lint
-npx tsc --noEmit               # type-check
+npx expo prebuild --clean      # regenerate ios/ and android/ after config or variant changes
 npx expo-doctor                # dependency and config check
 ```
 
@@ -77,7 +107,13 @@ npx expo-doctor                # dependency and config check
 
 - Phase 0 findings (native map images, cluster properties on iOS, measured limits):
   https://github.com/sekael/tourenbuddy_frontend_vue/issues/367#issuecomment-6683373291
-- Product specs come from the Vue repo's `openspec/specs`; Phase 1 copies them here (#368).
+- `openspec/specs` was copied unchanged from the Vue repo at its parity baseline
+  `tourenbuddy-frontend-v0.52.0`. Until the change that ports a capability rewrites its spec, the
+  spec describes the Vue PWA: read it as the product behavior to match, not as implementation
+  instructions.
+- Focus is the iOS app. The owner tests mostly in iOS Simulators and checks on a real iPhone 15
+  before releases. Android is not prioritized for now: keep it building and correct, but polish
+  and device checks wait. Write device instructions for the Simulator first.
 - Supabase free tier: expect higher auth latency.
 - Backlog: https://github.com/users/sekael/projects/1
 - Values: thoughtful development, understand before changing, small reviewable PRs.
