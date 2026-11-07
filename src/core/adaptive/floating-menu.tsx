@@ -10,7 +10,14 @@ import { Icon } from './icon';
 import type { IconName } from './icons';
 import { Text } from './text';
 
-export type FloatingMenuItem = { id: string; label: string; icon: IconName; onPress: () => void };
+export type FloatingMenuItem = {
+  id: string;
+  label: string;
+  icon: IconName;
+  onPress: () => void;
+  /** Neighbours with the same section form a group; the iOS menu draws a separator between groups. */
+  section?: string;
+};
 
 export type FloatingMenuProps = {
   /** Accessible name of the closed trigger, e.g. "Menu". */

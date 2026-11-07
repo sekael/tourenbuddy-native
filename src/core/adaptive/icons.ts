@@ -31,7 +31,7 @@ export const icons = {
     sf: 'square.3.layers.3d',
     md: 'm12 21.05l-9-7l1.65-1.25L12 18.5l7.35-5.7L21 14.05zM12 16L3 9l9-7l9 7zm0-2.55L17.75 9L12 4.55L6.25 9z',
   },
-  // Filled on iOS: the glyph of a place in the bottom row, which iOS draws filled whether selected or not.
+  // Filled on iOS: a tab's glyph, which the system tab bar shows filled whether selected or not.
   map: {
     sf: 'map.fill',
     md: 'm15 21l-6-2.1l-4.65 1.8q-.5.2-.925-.112T3 19.75v-14q0-.325.188-.575T3.7 4.8L9 3l6 2.1l4.65-1.8q.5-.2.925.113T21 4.25v14q0 .325-.187.575t-.513.375zm-1-2.45V6.85l-4-1.4v11.7zm2 0l3-1V5.7l-3 1.15zM5 18.3l3-1.15V5.45l-3 1zM16 6.85v11.7zm-8-1.4v11.7z',

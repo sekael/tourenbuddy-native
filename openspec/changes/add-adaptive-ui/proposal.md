@@ -10,16 +10,16 @@ that is easy to reach with the thumb when the phone is used one-handed.
 
 ## What Changes
 
-- **App navigation:** Map and Calendar. iOS gets one Liquid Glass row at the bottom: the places in
-  a capsule, the menu as a glass circle of the same height beside it (the owner's first Simulator
-  round replaced the system tab bar). Android uses the Material 3 navigation bar. Web has no system
-  tab bar, so it gets a Material 3 navigation bar on phones and a navigation rail from 600 px, which
-  gives desktop windows a side layout instead of a stretched phone (D8).
-- **Main menu in the thumb zone:** on iOS the circle in that row opens the system menu out of its
-  glass; Android and web show a Material 3 Expressive FAB menu above the navigation bar whose items
-  unfold one after another. Its entries match the Vue app (Inbox, Contacts, Profile, Offline maps,
-  Map layers, Feedback; the two map entries on the Map tab only) and open their destination as a
-  sheet above the tabs.
+- **App navigation:** Map and Calendar in the system tab bar on iOS (Liquid Glass) and Android
+  (Material 3 navigation bar). Web has no system tab bar, so it gets a Material 3 navigation bar on
+  phones and a navigation rail from 600 px, which gives desktop windows a side layout instead of a
+  stretched phone (D8).
+- **Main menu in the thumb zone:** a button in the bottom-trailing corner, right above the tab bar.
+  On iOS a 60 pt Liquid Glass circle opens the system menu, which morphs out of the glass; Android
+  and web show a Material 3 Expressive FAB menu whose items unfold one after another. Its entries
+  match the Vue app (Inbox, Contacts, Profile, Offline maps, Map layers, Feedback; the two map
+  entries on the Map tab only, as a group of their own) and open their destination as a sheet
+  above the tabs.
 - **Sheets:** the system sheet sized to its content on iOS (Liquid Glass at partial height) and
   Android (Material bottom sheet). Web: a bottom sheet on phones, a content-sized dialog hanging
   from the top from 600 px. Closing returns to the tab it was opened from; a link straight to a

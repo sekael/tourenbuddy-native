@@ -7,11 +7,11 @@ reach, and how the menu's destinations open and close.
 
 ### Requirement: Map and Calendar tabs
 
-The app SHALL offer two top-level places, Map and Calendar, and SHALL open on the Map. On iOS they
-SHALL sit in a Liquid Glass capsule at the bottom, on Android in the system navigation bar. On web,
-windows narrower than 600 px SHALL show a navigation bar at the bottom, wider ones a navigation rail
-at the leading edge. The selected place SHALL be marked, also for assistive technology, and the
-labels SHALL follow the app language.
+The app SHALL offer two top-level places, Map and Calendar, and SHALL open on the Map. On iOS and
+Android they SHALL sit in the system tab bar: Liquid Glass on iOS, the Material 3 navigation bar on
+Android. On web, windows narrower than 600 px SHALL show a navigation bar at the bottom, wider ones
+a navigation rail at the leading edge. The selected place SHALL be marked, also for assistive
+technology, and the labels SHALL follow the app language.
 
 #### Scenario: App opens on the map
 
@@ -45,11 +45,11 @@ labels SHALL follow the app language.
 
 ### Requirement: Main menu within thumb reach
 
-Both tabs SHALL show a menu button in the bottom-trailing corner, within thumb reach: on iOS level
-with the places, as tall as their capsule; on Android and web above the navigation bar. It SHALL
-open a menu of Inbox, Contacts, Profile, Offline maps, Map layers and Feedback, the first nearest
-the button; offline maps and map layers on the Map only. Choosing an item SHALL close the menu and
-open it. On Android and web the button SHALL tell assistive technology whether the menu is open.
+Both tabs SHALL show a menu button in the bottom-trailing corner, within thumb reach, right above
+the tab bar. It SHALL open a menu of Inbox, Contacts, Profile, Offline maps, Map layers and
+Feedback, the first nearest the button; offline maps and map layers on the Map only, set apart as a
+group of their own on iOS. Choosing an item SHALL close the menu and open its destination as a
+sheet. On Android and web the button SHALL tell assistive technology whether the menu is open.
 
 #### Scenario: Opening the menu one-handed
 
@@ -65,8 +65,8 @@ open it. On Android and web the button SHALL tell assistive technology whether t
 #### Scenario: Liquid Glass on iOS
 
 - **WHEN** the menu button is shown on iOS
-- **THEN** it is a Liquid Glass circle at the trailing end of the places' row, as tall as their
-  capsule, and opens the system menu out of it with icons in the text color
+- **THEN** it is a Liquid Glass circle as tall as the tab bar, and it opens the system menu out of
+  its glass, with icons in the text color and the map's own entries between separators
 
 #### Scenario: FAB menu on Android and web
 
@@ -80,13 +80,14 @@ open it. On Android and web the button SHALL tell assistive technology whether t
 
 #### Scenario: Dismissing the menu
 
-- **WHEN** the menu is open on Android or web and the user taps outside it, presses Back
-  (Android) or presses Escape (web)
+- **WHEN** the menu is open and the user taps outside it, presses Back (Android), presses Escape
+  (web) or uses the VoiceOver escape gesture (iOS)
 - **THEN** the menu closes without opening anything, and Back does not leave the screen
 
 #### Scenario: Reopening while it closes
 
-- **WHEN** the user taps the button again while the menu's items are still folding away
+- **WHEN** the user taps the button on Android or web again while the menu's items are still
+  folding away
 - **THEN** the menu opens again instead of disappearing
 
 #### Scenario: Leaving the tab closes the menu

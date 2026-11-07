@@ -6,11 +6,11 @@ import type { IconName } from '@/core/adaptive/icons';
 
 export type ShellTab = 'map' | 'calendar';
 
-type Entry = { id: string; label: string; icon: IconName; href: Href; mapOnly?: boolean };
+type Entry = { id: string; label: string; icon: IconName; href: Href; section?: 'map' };
 
 /**
  * The app menu, nearest the thumb first, with the Vue app's entries: the map's own (offline maps,
- * map layers) only on the Map tab. Each entry opens its feature as a sheet.
+ * map layers) only on the Map tab, as a section of their own. Each entry opens its feature as a sheet.
  */
 export function useMainMenuItems(tab: ShellTab): FloatingMenuItem[] {
   const { t } = useTranslation();
@@ -24,19 +24,19 @@ export function useMainMenuItems(tab: ShellTab): FloatingMenuItem[] {
       label: t('map.overlay.offlineMap'),
       icon: 'offline',
       href: '/offline-maps',
-      mapOnly: true,
+      section: 'map',
     },
     {
       id: 'map-layers',
       label: t('map.overlay.mapLayers'),
       icon: 'layers',
       href: '/map-layers',
-      mapOnly: true,
+      section: 'map',
     },
     { id: 'feedback', label: t('map.overlay.feedback'), icon: 'feedback', href: '/feedback' },
   ];
 
   return entries
-    .filter((entry) => tab === 'map' || !entry.mapOnly)
-    .map(({ id, label, icon, href }) => ({ id, label, icon, onPress: () => router.push(href) }));
+    .filter((entry) => tab === 'map' || entry.section !== 'map')
+    .map(({ href, ...item }) => ({ ...item, onPress: () => router.push(href) }));
 }

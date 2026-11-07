@@ -1,9 +1,21 @@
 const { getAndroidPreset, getIOSPreset, getWebPreset } = require('jest-expo/config');
 
+const scripts = '\\.[jt]sx?$';
+
 const withApp = (preset, moduleNameMapper = {}) => {
+  const [babelJest, babelOptions] = preset.transform[scripts];
   const project = {
     ...preset,
     roots: ['<rootDir>/test'],
+    // With the React Compiler, as Metro builds the app (`experiments.reactCompiler`), so the tests
+    // run the code the app runs: the compiler's memoization can change what re-renders.
+    transform: {
+      ...preset.transform,
+      [scripts]: [
+        babelJest,
+        { ...babelOptions, caller: { ...babelOptions.caller, supportsReactCompiler: true } },
+      ],
+    },
     moduleNameMapper: {
       ...preset.moduleNameMapper,
       ...moduleNameMapper,

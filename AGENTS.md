@@ -26,12 +26,13 @@ Decided or default in #346. Versions come from `npx expo install`; `package-lock
   Swisstopo tiles (free, no API key)
 - **UI:** small in-house adaptive component layer (D5) in `src/core/adaptive/`: one iOS
   (`*.ios.tsx`) and one Material implementation per component, the Material one shared by Android
-  and web, plus `*.web.tsx` where web differs. iOS: system sheets first, `@expo/ui` SwiftUI for
-  glass controls and menus (glass on a `Menu` via `buttonStyle('glass')`, never `glassEffect()`),
-  `expo-glass-effect` for floating map controls. iOS 26 minimum, so no non-glass fallback.
-  Navigation: Map · Calendar tabs (iOS: our glass dock with the menu circle beside the places,
-  not the system tab bar; Android: the system bar), the main menu in the thumb zone, destinations
-  as sheet routes
+  and web, plus `*.web.tsx` where web differs. iOS: system components first (tab bar, sheets,
+  menus), `@expo/ui` SwiftUI for glass controls and menus (glass on a `Menu` via
+  `buttonStyle('glass')`: `glassEffect()` leaves a halo as it closes), `expo-glass-effect` for
+  floating map controls (D6). iOS 26 minimum, so no non-glass fallback. Navigation: Map · Calendar
+  in the system tab bar (`NativeTabs` on iOS and Android), the main menu in the thumb zone right
+  above it (iOS: a glass circle opening the system menu; Android and web: a FAB menu),
+  destinations as sheet routes
 - **Fonts and icons:** iOS system font and SF Symbols; Android embedded Inter, web a bundled Inter
   subset; Material Symbols drawn as SVG on Android and web. Icons come from the registry in
   `src/core/adaptive/icons.ts`. No runtime font downloads from third parties
@@ -92,7 +93,12 @@ Switching changes the bundle identifier: run `npx expo prebuild --clean` afterwa
 - Jest runs tests as iOS. `*.test.android.tsx` runs the Material components (`*.tsx`, shared with
   web) with React Native Testing Library; `*.test.web.tsx` runs web-only behavior (`*.web.tsx`)
   with the DOM Testing Library. `Animated` finishes at once under test: hold `Animated.timing` to
-  test an interrupted animation.
+  test an interrupted animation. Jest renders SwiftUI as inert views carrying their props: press
+  them with `fireEvent(node, 'buttonPress')` and read their modifiers (see
+  `test/app/navigation.test.tsx`); how they look and feel is checked in the Simulator.
+- Jest compiles with the React Compiler, as Metro does, so its memoization runs under test. A
+  layout that renders `NavigationContent` from `expo-router/ui` hooks opts out with
+  `'use no memo'`, or its tabs never update.
 - Colors, spacing, type and motion come from `@/core/theme/tokens` (semantic roles, never the
   palette or literals); text uses `Text` from `@/core/adaptive/text`. Honor Reduce Motion
   (`useReducedMotion`): no travel, overshoot or press scaling.
