@@ -1057,7 +1057,8 @@
     "deniedHint": "Push notifications are blocked. Enable them in your browser or device settings."
   },
   "common": {
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "close": "Close"
   },
   "tourLinks": {
     "linkedWithHeader": "Linked with",
@@ -1407,6 +1408,11 @@
     }
   },
   "shell": {
-    "tagline": "Plan your outdoor tours"
+    "tagline": "Plan your outdoor tours",
+    "comingSoon": "Coming soon",
+    "tabs": {
+      "map": "Map",
+      "calendar": "Calendar"
+    }
   }
 }

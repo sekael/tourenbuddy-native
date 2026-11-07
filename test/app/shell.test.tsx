@@ -1,8 +1,7 @@
 import { act, screen } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 
-import RootLayout from '@/app/_layout';
-import ShellScreen from '@/app/index';
+import { routes } from './routes';
 
 // Device locales as an external store, so the test can change them the way the OS does.
 jest.mock('expo-localization', () => {
@@ -27,7 +26,7 @@ const { setDeviceLocales } = jest.requireMock('expo-localization');
 
 describe('shell', () => {
   it('should switch to German when the device language changes while running', async () => {
-    await renderRouter({ _layout: RootLayout, index: ShellScreen });
+    await renderRouter(routes);
     expect(await screen.findByText('Plan your outdoor tours')).toBeVisible();
 
     await act(() => setDeviceLocales([{ languageTag: 'de-AT' }, { languageTag: 'en-US' }]));

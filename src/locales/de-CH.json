@@ -1057,7 +1057,8 @@
     "deniedHint": "Push-Benachrichtigungen sind blockiert. Aktiviere sie in den Browser- oder Geräteeinstellungen."
   },
   "common": {
-    "loading": "Lädt…"
+    "loading": "Lädt…",
+    "close": "Schliessen"
   },
   "tourLinks": {
     "linkedWithHeader": "Verknüpft mit",
@@ -1407,6 +1408,11 @@
     }
   },
   "shell": {
-    "tagline": "Plane deine Touren"
+    "tagline": "Plane deine Touren",
+    "comingSoon": "Folgt bald",
+    "tabs": {
+      "map": "Karte",
+      "calendar": "Kalender"
+    }
   }
 }
