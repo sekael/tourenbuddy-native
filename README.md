@@ -42,10 +42,22 @@ EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon key>
 ```
 
-- **Local stack:** `supabase start` in `tourenbuddy_frontend_vue`; `supabase status` prints the anon key.
+- **Local stack:** `supabase start` in `tourenbuddy_frontend_vue` (up to date with its `main`).
+  Then, still there, write both variables for the Simulator into this repository's `.env.local`:
+
+  ```sh
+  supabase status -o env \
+    --override-name api.url=EXPO_PUBLIC_SUPABASE_URL \
+    --override-name auth.anon_key=EXPO_PUBLIC_SUPABASE_ANON_KEY \
+    | grep '^EXPO_PUBLIC_' > ../tourenbuddy-native/.env.local
+  ```
+
+  The path assumes both checkouts side by side. The `grep` keeps the service role key and the JWT secret out of the app's environment.
   Sign-in codes land in Mailpit at `http://127.0.0.1:54324`.
   The URL depends on where the app runs: iOS Simulator and web `http://127.0.0.1:54321`, Android emulator `http://10.0.2.2:54321`, a phone your Mac's address on the same Wi-Fi (`http://192.168.x.y:54321`).
 - **Hosted project:** the project URL and anon key from the Supabase dashboard (Project Settings → API).
+- **Passwords and passkeys** need the auth settings in the Vue repository's `supabase/config.toml` (email confirmations, minimum password length 8, passkeys for `tourenbuddy.ch`): [docs/publishing.md](./docs/publishing.md), "Supabase auth".
+  Passkeys also need the association file online at `https://tourenbuddy.ch/.well-known/`, even against the local stack, and Face ID in the Simulator: Features → Face ID → Enrolled, then Matching Face when the sheet asks.
 
 `EXPO_PUBLIC_*` values are compiled into the app, so restart the dev server with `npm start -- --clear` after changing them.
 Releases get them from EAS environment variables and GitHub secrets: see [docs/publishing.md](./docs/publishing.md).

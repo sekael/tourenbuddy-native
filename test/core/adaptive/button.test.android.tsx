@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { Button } from '@/core/adaptive/button';
 import { TextField } from '@/core/adaptive/text-field';
+import { color } from '@/core/theme/tokens';
 
 // The Material button and field (Android and web).
 describe('Button', () => {
@@ -22,6 +23,16 @@ describe('Button', () => {
 
     expect(onPress).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Verify' })).toBeDisabled();
+  });
+
+  it('should be a text button in the brand color for a plain one', async () => {
+    const onPress = jest.fn();
+    await render(<Button label="Create account" onPress={onPress} variant="plain" />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Create account' }));
+
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('Create account')).toHaveStyle({ color: color.primary });
   });
 });
 

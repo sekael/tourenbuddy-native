@@ -9,7 +9,7 @@ contacts, and pick planned dates. This repository holds the iOS, Android and web
 React Native and Expo. They replace the Vue PWA in `sekael/tourenbuddy_frontend_vue`.
 
 The plan lives in that repo's issues: epic sekael/tourenbuddy_frontend_vue#346 (decision IDs
-D1–D19, risks, architecture) and one issue per phase, #367 (Phase 0, done) to #374 in the same repo.
+D1–D20, risks, architecture) and one issue per phase, #367 (Phase 0, done) to #374 in the same repo.
 Issue numbers in this file refer to that repo. Read the phase issue before proposing work in it.
 
 ## Stack
@@ -115,6 +115,11 @@ Switching changes the bundle identifier: run `npx expo prebuild --clean` afterwa
   from a confirmed one.
 - The session lives in the Keychain and Keystore through `core/auth/auth-storage.ts` (web:
   `localStorage`). Nothing else reads or writes it; `core/supabase.ts` is the only client.
+- Sign-in: password, email code (the PWA's flow) and, on iOS only, passkeys (Face ID). Screens reach
+  the auth API and `features/auth/data/passkeys.ts` only through the store's actions; they may read
+  its `passkeysSupported` and `PasskeyError`. Create account sends the code first and sets the
+  password after it (`signUp`, `verifyOtp`), so it never tells whether an address has an account.
+  The relying party `tourenbuddy.ch` is permanent; the backend's auth settings: `docs/publishing.md`.
 - Routes follow the session in one place: the two `Stack.Protected` groups in
   `src/app/_layout.tsx`. A new signed-in route goes inside the first group, never behind its own
   redirect.

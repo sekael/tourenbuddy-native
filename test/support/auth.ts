@@ -7,7 +7,12 @@ import { fakeAuth, testSession } from './fake-supabase';
 export function resetAuth() {
   fakeAuth.reset();
   memory.clear();
-  useAuthStore.setState({ user: null, isLoading: true, restoring: undefined });
+  useAuthStore.setState({
+    user: null,
+    isLoading: true,
+    restoring: undefined,
+    pendingPassword: undefined,
+  });
 }
 
 /** A stored session that restore finds at launch, for tests about the signed-in app. */

@@ -14,6 +14,13 @@ overlap two verification requests. Every message the screen shows SHALL be in th
 - **THEN** the app SHALL verify the code as an email OTP for that address, the session SHALL arrive
   through the auth state listener, and the app SHALL leave the sign-in screens for the Map
 
+#### Scenario: Confirming a new account
+
+- **WHEN** the code screen was opened by account creation and the user enters the code from the
+  confirmation email
+- **THEN** the same verification SHALL confirm the address and sign the user in, and the account
+  SHALL keep the password chosen at creation
+
 #### Scenario: Invalid or expired code
 
 - **WHEN** verification is rejected (wrong code, expired, used)
@@ -59,8 +66,8 @@ overlap two verification requests. Every message the screen shows SHALL be in th
 #### Scenario: Back to email entry
 
 - **WHEN** the user goes back from the code screen (back button or the platform's back gesture)
-- **THEN** the app SHALL show the email screen with the address as entered and SHALL NOT call the
-  auth server
+- **THEN** the app SHALL show the screen that opened it (sign-in or account creation) with the
+  address as entered and SHALL NOT call the auth server
 
 #### Scenario: Code screen opened without an email
 
@@ -147,26 +154,29 @@ button.
 
 The app SHALL collect the user's email address on the first signed-out screen, presented
 immediately on arrival with no intermediate call-to-action screen. The form SHALL sit in the shared
-hero layout. The email field SHALL be marked as an email address, so that password managers,
-email-alias providers and the platform's autofill can classify it and offer addresses, SHALL bring
-up the email keyboard without capitalization or autocorrection, and SHALL submit from the
-keyboard's return key. Leading and trailing whitespace SHALL be ignored.
+hero layout and SHALL offer, besides the email code, sign-in with a password, sign-in with a
+passkey on iOS, and account creation. The email field SHALL be marked as
+the account's user name, so that password managers, email-alias providers and the platform's
+autofill can classify it and offer stored accounts, SHALL bring up the email keyboard without
+capitalization or autocorrection, and SHALL move on from the keyboard's return key. Leading and
+trailing whitespace SHALL be ignored.
 
 #### Scenario: Signed-out user arrives at the app
 
 - **WHEN** an unauthenticated user opens the app
-- **THEN** the email field and submit button are visible without any further navigation, and no
-  "Get Started" call-to-action step is presented
+- **THEN** the email field, the password field and the sign-in actions are visible without any
+  further navigation, and no "Get Started" call-to-action step is presented
 
 #### Scenario: Valid email submission
 
-- **WHEN** a user enters a valid email address and submits the form
+- **WHEN** a user enters a valid email address and asks for a code
 - **THEN** the app SHALL request an email OTP for that address with the user's language in the user
-  metadata and no redirect URL, and SHALL show the code screen for that email
+  metadata and no redirect URL, SHALL ignore the password field, and SHALL show the code screen
+  for that email
 
 #### Scenario: Invalid email submission
 
-- **WHEN** a user enters an invalid email address and submits the form
+- **WHEN** a user enters an invalid email address and asks for a code or signs in with a password
 - **THEN** the app SHALL display a localized validation error and SHALL NOT call the auth server
 
 #### Scenario: OTP dispatch fails
@@ -181,20 +191,88 @@ keyboard's return key. Leading and trailing whitespace SHALL be ignored.
 
 - **WHEN** a user focuses the email field with a password manager or the platform's credential
   provider active
-- **THEN** the field is classified as an email field, and a filled value is accepted by the form
-  exactly as a typed one is
+- **THEN** the field is classified as the account name of a sign-in form, a stored email and
+  password fill both fields, and a filled value is accepted by the form exactly as a typed one is
 
 #### Scenario: `/auth/email` no longer resolves
 
 - **WHEN** a stale link to `/auth/email` is opened
 - **THEN** the route does not exist and the app does not serve an email entry page there
 
+### Requirement: Locale captured in user metadata at sign-up
+
+When the auth store requests an email OTP, also to create an account with a password, the request
+SHALL include `locale` in the user metadata, set to the base language code (`en` or `de`) derived from
+the active i18n locale, so that the auth server stores it when it creates the user.
+
+#### Scenario: New user with German locale
+
+- **WHEN** a new user with active i18n locale `de-CH` requests an OTP
+- **THEN** the call SHALL pass `locale = 'de'` in the user metadata so Supabase persists it on user
+  creation in `user_metadata`
+
+#### Scenario: New user with English locale
+
+- **WHEN** a new user with active i18n locale `en` requests an OTP
+- **THEN** the call SHALL pass `locale = 'en'` in the user metadata
+
+#### Scenario: Account created with a password
+
+- **WHEN** a user with active i18n locale `de-CH` creates an account with a password
+- **THEN** the code request SHALL pass `locale = 'de'` in the user metadata, so a new account's
+  code email is written in German
+
 ### Requirement: Auth store exposes session state and OTP actions
 
-A shared auth store SHALL manage the current user session, exposing the signed-in user, whether the
-user is authenticated, and whether session restore is still loading; a `sendEmailOtp(email)` action
-that issues the OTP request; a `verifyOtp(email, token)` action that redeems the 6-digit code; and a
-`signOut()` action.
+A shared auth store SHALL manage the current user session: the signed-in user, whether the user is
+authenticated and whether session restore is still loading. It SHALL offer `sendEmailOtp(email)`,
+`resendEmailOtp(email)` for the code screen, `verifyOtp(email, token)`, the password and passkey
+actions and `signOut()`, and SHALL be the screens' only way to the auth server and the passkey
+module. The signed-in user SHALL still come only from session restore, the auth state listener and
+sign-out.
+
+#### Scenario: Password and passkey actions
+
+- **WHEN** a screen signs in with a password or a passkey, creates an account, sets the password or
+  manages passkeys
+- **THEN** it SHALL call `signInWithPassword(email, password)`, `signInWithPasskey()`,
+  `signUp(email, password)`, `setPassword(password)`, `listPasskeys()`, `addPasskey()` or
+  `deletePasskey(id)`, and the passkey list SHALL stay with the screen, not in the store
+
+#### Scenario: Password sign-in goes through the listener
+
+- **WHEN** `signInWithPassword` succeeds
+- **THEN** the user SHALL become authenticated through the auth state listener, not by the action
+  setting the user
+
+#### Scenario: Passkey sign-in goes through the listener
+
+- **WHEN** `signInWithPasskey` succeeds
+- **THEN** the user SHALL become authenticated through the auth state listener
+
+#### Scenario: signUp sets the password after the code
+
+- **WHEN** `signUp('user@example.com', password)` is followed by a successful
+  `verifyOtp('user@example.com', code)`
+- **THEN** the store SHALL have requested the code as `sendEmailOtp` does, and SHALL set the
+  password once the session has arrived, never before
+
+#### Scenario: Code verified for another address
+
+- **WHEN** `signUp` was called for one address and a code for a different address is verified
+- **THEN** the store SHALL NOT set the password
+
+#### Scenario: Code sign-in after signUp
+
+- **WHEN** `signUp('user@example.com', password)` is followed by `sendEmailOtp('user@example.com')`
+  and then a successful `verifyOtp('user@example.com', code)`
+- **THEN** the store SHALL NOT set the password
+
+#### Scenario: Resend keeps signUp going
+
+- **WHEN** `signUp('user@example.com', password)` is followed by `resendEmailOtp('user@example.com')`
+  and then a successful `verifyOtp('user@example.com', code)`
+- **THEN** the store SHALL set the password
 
 #### Scenario: Store initialization
 
@@ -413,6 +491,197 @@ with its history.
 
 - **WHEN** the auth client reports a sign-out while the user is on a sheet above the tabs
 - **THEN** the app shows the email screen, and going back does not return to the sheet or the tabs
+
+### Requirement: Sign in with a password
+
+The sign-in screen SHALL have a password field, marked as the current password of the account in
+the email field so that the platform's password manager fills and saves the pair, and a primary
+action that signs in with the email and the password. Every answer SHALL be localized.
+
+#### Scenario: Correct password
+
+- **WHEN** a user enters the email and the password of a confirmed account and signs in
+- **THEN** the user becomes authenticated and the app shows the Map
+
+#### Scenario: Missing password
+
+- **WHEN** the user signs in with an empty password field
+- **THEN** the screen asks for the password and SHALL NOT call the auth server
+
+#### Scenario: Wrong password or no password set
+
+- **WHEN** the auth server rejects the credentials, including for an account that has no password
+- **THEN** the screen says the email or the password is wrong, points at signing in with an email
+  code, keeps the email and stays on the sign-in screen
+
+#### Scenario: Account never confirmed
+
+- **WHEN** the auth server answers that the account's email address is not confirmed
+- **THEN** the screen says the address is not confirmed yet and points at signing in with an email
+  code, which confirms it
+
+#### Scenario: Too many attempts or no connection
+
+- **WHEN** the sign-in is rate limited or the device cannot reach the auth server
+- **THEN** the screen shows that the user has to wait, or that the action is not available offline
+
+#### Scenario: Password given to an address its owner had not confirmed
+
+- **WHEN** someone created an account for an address with a password through the auth API, and the
+  address's owner later confirms the address with an email code
+- **THEN** that password never signs in, neither before nor after the confirmation (enforced by
+  the backend in the Vue repository, not by the app)
+
+#### Scenario: Requests do not overlap
+
+- **WHEN** the user activates sign-in again while a sign-in request is in flight
+- **THEN** no second request is sent
+
+### Requirement: Account creation with a password
+
+The sign-in screen SHALL lead to an account creation screen with an email field and a new-password
+field of at least 8 characters, for which the platform suggests and saves a strong password.
+Creating an account SHALL send the email code as the code sign-in does, SHALL set the chosen
+password (kept in memory only) once that code is verified, and SHALL answer the same whether or
+not the address has an account. Answers SHALL be localized.
+
+#### Scenario: New address
+
+- **WHEN** a user enters a valid email address without an account and a password of at least 8
+  characters and creates the account
+- **THEN** the app requests an email code for the address with the user's language and shows the
+  code screen; verifying the code creates the account, signs the user in and sets the password
+
+#### Scenario: Address that already has an account
+
+- **WHEN** the address already belongs to an account, with or without a password
+- **THEN** the screen answers exactly as for a new address; verifying the code signs into that
+  account and sets the password just chosen, replacing an existing password, so a later password
+  sign-in with it succeeds
+
+#### Scenario: Password too short
+
+- **WHEN** the password has fewer than 8 characters
+- **THEN** the screen says the password needs at least 8 characters and SHALL NOT call the auth
+  server
+
+#### Scenario: Code cannot be sent
+
+- **WHEN** the code request is rate limited, rejected or the device cannot reach the auth server
+- **THEN** the screen shows the same answers as the code request on the sign-in screen and stays
+  open
+
+#### Scenario: Password cannot be set after the code
+
+- **WHEN** the code is verified but setting the password fails
+- **THEN** the user is signed in, and the app tells them that the password was not saved and that
+  they can set it in Profile
+
+#### Scenario: Abandoned account creation
+
+- **WHEN** the user leaves the code screen without verifying, and then asks for a code on the
+  sign-in screen (for that address or another), signs out, or creates an account for another
+  address, even if that request fails
+- **THEN** the chosen password is forgotten and never set
+
+#### Scenario: Code resent during account creation
+
+- **WHEN** the user resends the code on the code screen of an account creation and verifies the
+  new code
+- **THEN** the chosen password is set as without the resend
+
+### Requirement: Sign in with a passkey
+
+On iOS, where the system supports passkeys, the sign-in screen SHALL offer sign-in with a passkey
+through the system's passkey sheet (Face ID or Touch ID), without an email address. The app SHALL
+be associated with the relying party domain `tourenbuddy.ch`, which SHALL list the app. Android
+and web SHALL NOT offer passkeys.
+
+#### Scenario: Passkey sign-in
+
+- **WHEN** a user with a passkey for TourenBuddy on the device chooses sign-in with a passkey and
+  confirms with Face ID
+- **THEN** the user becomes authenticated as the passkey's account and the app shows the Map
+
+#### Scenario: User cancels the system sheet
+
+- **WHEN** the user dismisses the passkey sheet
+- **THEN** the screen shows no error and stays as it was
+
+#### Scenario: No passkey on the device
+
+- **WHEN** the device has no passkey for TourenBuddy
+- **THEN** the screen says that no passkey was found and suggests another way to sign in
+
+#### Scenario: Passkey deleted on the server
+
+- **WHEN** the user picks a passkey that the auth server no longer knows
+- **THEN** the screen says the passkey is no longer valid, and the app reports the credential to
+  the system as unknown so that it is no longer offered where the system supports that
+
+#### Scenario: Android and web
+
+- **WHEN** the sign-in screen shows on Android or in a browser
+- **THEN** it offers no passkey action
+
+### Requirement: Password set from the Profile tab
+
+The Profile tab SHALL let a signed-in user set a new password, also when the account had none, in
+a sheet that opens over the Profile tab and returns to it when closed, with the account's email
+as the account name and a new-password field with the rules of account creation. Every answer
+SHALL be localized.
+
+#### Scenario: Setting a password
+
+- **WHEN** the user enters a password of at least 8 characters and saves
+- **THEN** the account's password is set, the sheet closes, and later sign-ins with that password
+  succeed
+
+#### Scenario: Forgotten password
+
+- **WHEN** a user who forgot the password signs in with an email code and sets a new password in
+  the sheet
+- **THEN** the new password works from then on
+
+#### Scenario: Rejected password
+
+- **WHEN** the password is too short, the same as the current one, or rejected as weak, or the
+  device is offline
+- **THEN** the sheet says which, keeps the entry and stays open
+
+### Requirement: Passkeys managed from the Profile tab
+
+On iOS, the Profile tab SHALL let a signed-in user see their passkeys, add a passkey through the
+system's passkey sheet, and delete one after a confirmation, in a sheet that opens over the
+Profile tab and returns to it when closed. Each passkey SHALL show its name, or a generic name
+when it has none, and the date it was added. Every answer SHALL be localized.
+
+#### Scenario: Adding a passkey
+
+- **WHEN** the user adds a passkey and confirms with Face ID
+- **THEN** the passkey is registered for the account, appears in the list, and signs the user in
+  from then on
+
+#### Scenario: Adding is cancelled
+
+- **WHEN** the user dismisses the system sheet
+- **THEN** nothing changes and no error shows
+
+#### Scenario: Passkey already on this device
+
+- **WHEN** the device already holds a passkey for the account
+- **THEN** the sheet says so and the list stays as it was
+
+#### Scenario: Deleting a passkey
+
+- **WHEN** the user deletes a passkey and confirms
+- **THEN** the passkey is removed from the account and the list, and signing in with it is
+  answered as a passkey that is no longer valid
+
+#### Scenario: Offline
+
+- **WHEN** the list cannot be loaded, or adding or deleting fails, because the device is offline
+- **THEN** the sheet says the action is not available offline
 
 ## REMOVED Requirements
 

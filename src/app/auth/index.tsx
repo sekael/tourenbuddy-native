@@ -1,3 +1,3 @@
-import { EmailEntryScreen } from '@/features/auth/presentation/email-entry-screen';
+import { SignInScreen } from '@/features/auth/presentation/sign-in-screen';
 
-export default EmailEntryScreen;
+export default SignInScreen;

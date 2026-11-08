@@ -32,6 +32,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier: id,
     supportsTablet: true,
     config: { usesNonExemptEncryption: false },
+    // Passkeys for tourenbuddy.ch, which lists both apps in /.well-known/apple-app-site-association
+    // (public/). Dev builds read that file from the domain instead of Apple's day-long CDN cache.
+    associatedDomains: [`webcredentials:tourenbuddy.ch${prod ? '' : '?mode=developer'}`],
   },
   android: {
     package: id,

@@ -213,6 +213,60 @@
       "resendSuccess": "Code resent! Check your email.",
       "resendError": "Failed to resend code. Please try again.",
       "backBtn": "Back"
+    },
+    "signIn": {
+      "title": "Sign in",
+      "subtitle": "With your password, or with a code we email you",
+      "passwordLabel": "Password",
+      "passwordRequired": "Please enter your password",
+      "signInBtn": "Sign in",
+      "signingInBtn": "Signing in…",
+      "emailCodeBtn": "Email me a code",
+      "passkeyBtn": "Sign in with passkey",
+      "createAccountBtn": "Create account",
+      "wrongCredentials": "Wrong email or password. No password yet? Use “Email me a code”.",
+      "notConfirmed": "This address isn't confirmed yet. Use “Email me a code” to confirm it.",
+      "tooManyAttempts": "Too many attempts. Please wait a moment and try again.",
+      "signInError": "Sign-in failed. Please try again."
+    },
+    "signUp": {
+      "title": "Create account",
+      "subtitle": "We'll email you a code to confirm your address",
+      "createBtn": "Create account",
+      "passwordNotSavedTitle": "Password not saved",
+      "passwordNotSaved": "You're signed in, but your password couldn't be saved. Set it in Profile → Password."
+    },
+    "password": {
+      "entryBtn": "Password",
+      "title": "Password",
+      "subtitle": "From now on, sign in with your email address and this password.",
+      "newLabel": "New password",
+      "tooShort_one": "Use at least {{count}} character",
+      "tooShort_other": "Use at least {{count}} characters",
+      "same": "That's your current password. Choose a different one.",
+      "weak": "This password is too weak. Choose a stronger one.",
+      "saveBtn": "Save password",
+      "savingBtn": "Saving…",
+      "saveError": "The password couldn't be saved. Please try again."
+    },
+    "passkey": {
+      "entryBtn": "Passkeys",
+      "title": "Passkeys",
+      "subtitle": "Sign in with Face ID instead of a password. Passkeys are kept in your iCloud Keychain.",
+      "empty": "No passkeys yet.",
+      "defaultName": "Passkey",
+      "added": "Added on {{date}}",
+      "addBtn": "Add passkey",
+      "workingBtn": "Please wait…",
+      "deleteBtn": "Delete",
+      "cancelBtn": "Cancel",
+      "deleteTitle": "Delete passkey?",
+      "deleteMessage": "“{{name}}” will no longer sign you in. To remove it from this device too, delete it in the Passwords app.",
+      "noCredentials": "There's no passkey for TourenBuddy on this device. Sign in with your password or a code.",
+      "unknown": "This passkey is no longer valid. Sign in with your password or a code.",
+      "exists": "This device already has a passkey for your account.",
+      "tooMany": "Your account already has as many passkeys as allowed. Delete one first.",
+      "failed": "The passkey didn't work. Please try again."
     }
   },
   "user": {

@@ -8,15 +8,17 @@ import { Text } from './text';
 export type ButtonProps = {
   label: string;
   onPress: () => void;
-  /** `primary` for the screen's main action, `secondary` for the others. */
-  variant?: 'primary' | 'secondary';
+  /** `primary` for the screen's main action, `secondary` for the others, `plain` for a way elsewhere. */
+  variant?: 'primary' | 'secondary' | 'plain';
   disabled?: boolean;
 };
 
-/** Full-width Material 3 button (Android and web): filled for primary, tonal for secondary. */
+/**
+ * Full-width Material 3 button (Android and web): filled for primary, tonal for secondary, a text
+ * button for plain.
+ */
 export function Button({ label, onPress, variant = 'primary', disabled = false }: ButtonProps) {
   const reducedMotion = useReducedMotion();
-  const primary = variant === 'primary';
 
   return (
     <Pressable
@@ -26,18 +28,24 @@ export function Button({ label, onPress, variant = 'primary', disabled = false }
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
-        primary ? styles.primary : styles.secondary,
-        pressed && (primary ? styles.primaryPressed : styles.secondaryPressed),
+        styles[variant],
+        pressed && pressedStyles[variant],
         pressed && !reducedMotion && styles.scaled,
         disabled && styles.disabled,
       ]}
     >
-      <Text variant="label" style={{ color: primary ? color.onFab : color.onSecondaryContainer }}>
+      <Text variant="label" style={{ color: labelColor[variant] }}>
         {label}
       </Text>
     </Pressable>
   );
 }
+
+const labelColor = {
+  primary: color.onFab,
+  secondary: color.onSecondaryContainer,
+  plain: color.primary,
+} as const;
 
 const styles = StyleSheet.create({
   button: {
@@ -48,9 +56,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.xl,
   },
   primary: { backgroundColor: color.primary },
-  primaryPressed: { backgroundColor: color.fab },
   secondary: { backgroundColor: color.secondaryContainer },
-  secondaryPressed: { backgroundColor: color.secondaryContainerPressed },
+  plain: {},
   scaled: { transform: [{ scale: motion.pressScale }] },
   disabled: { opacity: opacity.disabled },
+});
+
+const pressedStyles = StyleSheet.create({
+  primary: { backgroundColor: color.fab },
+  secondary: { backgroundColor: color.secondaryContainerPressed },
+  plain: { backgroundColor: color.surfaceVariant },
 });

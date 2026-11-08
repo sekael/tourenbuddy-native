@@ -183,6 +183,175 @@ describe('auth store: sign-in', () => {
   });
 });
 
+describe('auth store: password and passkey', () => {
+  beforeEach(() => store().initialize());
+
+  it('should sign in with a password through the listener', async () => {
+    await store().signInWithPassword('anna@example.com', 'secret-123');
+
+    expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+      email: 'anna@example.com',
+      password: 'secret-123',
+    });
+    expect(store().user?.email).toBe('anna@example.com');
+  });
+
+  it('should leave the user to the listener', async () => {
+    // A session in the answer, but no event: the action itself never sets the user.
+    supabase.auth.signInWithPassword.mockResolvedValueOnce({ data: { session: testSession() }, error: null });
+
+    await store().signInWithPassword('anna@example.com', 'secret-123');
+
+    expect(store().user).toBeNull();
+  });
+
+  it('should hand a refused password to the screen', async () => {
+    const error = new AuthApiError('Invalid login credentials', 400, 'invalid_credentials');
+    supabase.auth.signInWithPassword.mockResolvedValueOnce({ data: { session: null }, error });
+
+    await expect(store().signInWithPassword('anna@example.com', 'wrong')).rejects.toBe(error);
+    expect(store().user).toBeNull();
+  });
+
+  it('should sign in with a passkey through the listener', async () => {
+    await store().signInWithPasskey();
+    expect(store().user?.email).toBe('anna@example.com');
+  });
+
+  it('should set a password and hand a refusal to the screen', async () => {
+    await store().setPassword('new-secret-123');
+    expect(supabase.auth.updateUser).toHaveBeenCalledWith({ password: 'new-secret-123' });
+
+    const error = new AuthApiError('same', 422, 'same_password');
+    supabase.auth.updateUser.mockResolvedValueOnce({ data: {}, error });
+    await expect(store().setPassword('new-secret-123')).rejects.toBe(error);
+  });
+});
+
+describe('auth store: account creation', () => {
+  beforeEach(() => store().initialize());
+
+  it('should send the code like a code sign-in, and keep the password for after it', async () => {
+    await i18n.changeLanguage('de-CH');
+    await store().signUp('anna@example.com', 'chosen-123');
+    await i18n.changeLanguage('en');
+
+    expect(supabase.auth.signInWithOtp).toHaveBeenCalledWith({
+      email: 'anna@example.com',
+      options: { data: { locale: 'de' } },
+    });
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+  });
+
+  it('should set the password once the code has signed in, never before', async () => {
+    await store().signUp('anna@example.com', 'chosen-123');
+    supabase.auth.updateUser.mockImplementationOnce(async () => {
+      // The session is there by then: the update changes the account the code proved.
+      expect(store().user?.email).toBe('anna@example.com');
+      return { data: {}, error: null };
+    });
+
+    expect(await store().verifyOtp('anna@example.com', '123456')).toBe('signedIn');
+    expect(supabase.auth.updateUser).toHaveBeenCalledWith({ password: 'chosen-123' });
+  });
+
+  it('should set it only once', async () => {
+    await store().signUp('anna@example.com', 'chosen-123');
+    await store().verifyOtp('anna@example.com', '123456');
+    await store().verifyOtp('anna@example.com', '654321');
+
+    expect(supabase.auth.updateUser).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not set it for a code verified for another address', async () => {
+    await store().signUp('anna@example.com', 'chosen-123');
+    await store().verifyOtp('ben@example.com', '123456');
+
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+  });
+
+  it('should take the password of the latest account creation', async () => {
+    await store().signUp('anna@example.com', 'first-123');
+    await store().signUp('anna@example.com', 'second-123');
+    await store().verifyOtp('anna@example.com', '123456');
+
+    expect(supabase.auth.updateUser).toHaveBeenCalledWith({ password: 'second-123' });
+  });
+
+  it('should forget the password on sign-out', async () => {
+    await store().signUp('anna@example.com', 'chosen-123');
+    await store().signOut();
+    await store().verifyOtp('anna@example.com', '123456');
+
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+  });
+
+  it('should keep it when the code screen resends the code', async () => {
+    await store().signUp('anna@example.com', 'chosen-123');
+    await store().resendEmailOtp('anna@example.com');
+    await store().verifyOtp('anna@example.com', '123456');
+
+    expect(supabase.auth.updateUser).toHaveBeenCalledWith({ password: 'chosen-123' });
+  });
+
+  it('should never set it after a code sign-in, even for the same address', async () => {
+    // Create account abandoned on the code screen; later a plain "Email me a code".
+    await store().signUp('anna@example.com', 'chosen-123');
+    await store().sendEmailOtp('anna@example.com');
+    await store().verifyOtp('anna@example.com', '123456');
+
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+  });
+
+  it('should forget an earlier password when the next account creation cannot send', async () => {
+    await store().signUp('anna@example.com', 'chosen-123');
+    supabase.auth.signInWithOtp.mockResolvedValueOnce({ data: {}, error: offline() });
+
+    await expect(store().signUp('ben@example.com', 'other-123')).rejects.toThrow();
+    await store().verifyOtp('anna@example.com', '123456');
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+  });
+
+  it('should keep nothing when the code cannot be sent', async () => {
+    const error = new AuthApiError('rate limited', 429, 'over_email_send_rate_limit');
+    supabase.auth.signInWithOtp.mockResolvedValueOnce({ data: {}, error });
+
+    await expect(store().signUp('anna@example.com', 'chosen-123')).rejects.toBe(error);
+    await store().verifyOtp('anna@example.com', '123456');
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+  });
+
+  it('should not set it when the code is rejected, and still after the next code', async () => {
+    await store().signUp('anna@example.com', 'chosen-123');
+    const rejected = new AuthApiError('Token has expired or is invalid', 403, 'otp_expired');
+    supabase.auth.verifyOtp.mockResolvedValueOnce({ data: { session: null }, error: rejected });
+
+    await expect(store().verifyOtp('anna@example.com', '000000')).rejects.toBe(rejected);
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+
+    await store().verifyOtp('anna@example.com', '123456');
+    expect(supabase.auth.updateUser).toHaveBeenCalledWith({ password: 'chosen-123' });
+  });
+
+  it('should count the same password as saved', async () => {
+    supabase.auth.updateUser.mockResolvedValueOnce({
+      data: {},
+      error: new AuthApiError('same', 422, 'same_password'),
+    });
+    await store().signUp('anna@example.com', 'chosen-123');
+
+    expect(await store().verifyOtp('anna@example.com', '123456')).toBe('signedIn');
+  });
+
+  it('should stay signed in and say so when the password does not stick', async () => {
+    supabase.auth.updateUser.mockResolvedValueOnce({ data: {}, error: offline() });
+    await store().signUp('anna@example.com', 'chosen-123');
+
+    expect(await store().verifyOtp('anna@example.com', '123456')).toBe('passwordNotSaved');
+    expect(store().user?.email).toBe('anna@example.com');
+  });
+});
+
 describe('auth store: sign-out', () => {
   beforeEach(async () => {
     storeSession();

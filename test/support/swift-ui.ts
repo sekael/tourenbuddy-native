@@ -6,7 +6,8 @@ type Node = ReturnType<typeof screen.container.queryAll>[number];
 type Modifier = { $type: string; disabled?: boolean };
 
 export function swiftButton(label: string): Node {
-  let node: Node | null = screen.container.queryAll((n) => n.props.text === label)[0] ?? null;
+  // The last match: a pushed screen renders after the screens it covers, which stay mounted.
+  let node: Node | null = screen.container.queryAll((n) => n.props.text === label).at(-1) ?? null;
   while (node && !node.props.onButtonPress) node = node.parent;
   if (!node) throw new Error(`No SwiftUI button "${label}"`);
   return node;

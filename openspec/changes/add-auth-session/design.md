@@ -17,12 +17,17 @@ with the live PWA (D3, M4): no backend change. Supabase's free tier makes auth c
   button) and the keyboard handled the way iOS apps handle it.
 - A session that survives offline launches, iOS prewarming and app updates, and does not survive a
   reinstall or move to another device.
+- Beyond the PWA (owner, 2026-11-08): account creation with a password, sign-in with the password
+  or a passkey (Face ID on iOS), and setting the password and managing passkeys in Profile.
 
 **Non-Goals:**
 
 - Profile, onboarding, push, offline caches, the outbox, account deletion (see the proposal).
-- Sign in with Apple or passkeys: no third-party login exists, so Apple 4.8 does not apply (#346
-  section 9).
+- Sign in with Apple: no third-party login exists (passwords and passkeys are the app's own), so
+  Apple 4.8 does not apply (#346 section 9).
+- A password reset email: a code sign-in followed by the Password sheet gets there with the flow
+  that exists.
+- The same methods in the PWA, and passkeys on web before Phase 7 (see below).
 - Keeping a deep link across sign-in: the PWA sends a signed-out user to sign-in and then to the
   map, and so does the app. Universal Links (B4) and notification taps can revisit this.
 
@@ -52,8 +57,9 @@ with the live PWA (D3, M4): no backend change. Supabase's free tier makes auth c
   marker is missing, the adapter deletes the stored session before its first read and then writes
   the marker. Every operation waits for this check. Android deletes Keystore data with the app, and
   the `expo-secure-store` plugin excludes the preferences from Auto Backup.
-- **Plugins:** `expo-secure-store` with `faceIDPermission: false` (no biometrics, so no usage
-  string). `expo-file-system`'s plugin adds `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`,
+- **Plugins:** `expo-secure-store` with `faceIDPermission: false` (the session is not behind
+  biometrics, so no usage string; passkeys use Face ID through the system sheet, which needs
+  none either). `expo-file-system`'s plugin adds `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`,
   which the app never uses (app-private files only): `android.blockedPermissions` removes them.
 - **Web:** `expo-secure-store` has no web implementation; the client uses `localStorage`. The key
   stays auth-js's default (`sb-<project-ref>-auth-token`), the PWA's key, so a PWA user is still
@@ -73,7 +79,8 @@ client, so a supabase-js change shows up as a failing test instead of a silent "
 ### Auth store: Zustand, the PWA store's logic
 
 `useAuthStore` (Zustand, D4) holds `user` and `isLoading` and has `initialize`, `sendEmailOtp`,
-`verifyOtp` and `signOut`. The logic is the PWA store's, minus what the browser needed:
+`verifyOtp` and `signOut`, plus `resendEmailOtp` and the password and passkey actions (below). The logic of the first
+four is the PWA store's, minus what the browser needed:
 
 - **`initialize`** waits for the adapter (prewarming, above), then races `getSession()` against
   4 s. A retryable failure (`AuthRetryableFetchError`) or the timeout adopts the stored user if it
@@ -122,8 +129,10 @@ client, so a supabase-js change shows up as a failing test instead of a silent "
 
 - **Fields:** React Native's `TextInput` is `UITextField` on iOS. `TextField` in
   `src/core/adaptive` takes a required `label` that becomes the field's accessible name (the
-  placeholder is not one). Email: `textContentType` `emailAddress`, `autoComplete` `email`, email
-  keyboard, no capitalization or correction, the return key sends; the value is trimmed (browsers
+  placeholder is not one). Email: `textContentType` and `autoComplete` `username` (the account's
+  name, paired with the password: see "Passwords, account creation and passkeys"), email
+  keyboard, no capitalization or correction, the return key moves to the password; the value is
+  trimmed (browsers
   strip email whitespace, `TextInput` does not) and checked with the PWA's pattern. Code:
   `oneTimeCode` (iOS offers the code from Mail), number pad, focused on arrival, no `maxLength` so a
   pasted `123 456` is normalized instead of cut; it is not a credential type, so nothing offers to
@@ -174,6 +183,164 @@ cleartext only in debug builds (the template's debug manifest). So no ATS or cle
 added. `.env.local` points at `http://127.0.0.1:54321` for the Simulator, at the Mac's address for
 a phone, and at `http://10.0.2.2:54321` for the Android emulator (README).
 
+### Passwords, account creation and passkeys (owner, 2026-11-08)
+
+The owner asked for account creation, password sign-in and Face ID sign-in on iOS, in the native
+app only, with the email code kept next to them. The code is the PWA's flow, the only way in for
+the PWA's users (none has a password) and the answer to a forgotten password.
+
+- **Face ID is a passkey** (owner's choice): a key in iCloud Keychain, unlocked with Face ID in the
+  system sheet. Nothing to phish or reuse, synced to the user's Apple devices, Apple's recommended
+  sign-in. Supabase Auth has passkeys (beta since 2026-05), and supabase-js 2.119 has the two-step
+  API: `auth.passkey.startAuthentication` and `verifyAuthentication`, `startRegistration` and
+  `verifyRegistration`, `list`, `delete`. It takes and returns WebAuthn JSON, so the native side
+  only runs the ceremony. `verifyAuthentication` saves the session and emits `SIGNED_IN`, so the
+  store's listener signs the user in exactly as for a code.
+  - **Alternative: password AutoFill as "Face ID".** Face ID then only fills a stored password; it
+    comes with the password fields anyway (below). Not a sign-in method of its own.
+  - **Alternative: an app lock** (Face ID before a stored session shows). Not a way to sign in.
+- **iOS only.** The owner asked for Face ID on iOS. Android and web get password, account creation
+  and code. Android passkeys would need Digital Asset Links and an origin per signing certificate;
+  web passkeys need the page's origin under the relying party, and the web app runs on
+  `tourenbuddy-native.pages.dev` and `localhost` until Phase 7.
+- **Native module: `react-native-passkey`** (3.6): `ASAuthorizationController`, WebAuthn JSON in and
+  out, normalized errors (`UserCancelled`, `NoCredentials`, `BadConfiguration`,
+  `CredentialAlreadyExists`, …) and the iOS 26 Signal API. It is a classic native module, which
+  React Native 0.88 runs through its interop layer; `native-build.yml` builds it on this pull
+  request because the dependencies change. `react-native.config.js` sets its Android platform to
+  `null`, so Expo's autolinking leaves it out of the Android app (no Credential Manager libraries
+  shipped for nothing). The JavaScript side only calls it on iOS.
+  - **Alternative: `react-native-passkeys`** (an Expo module). It fails to compile against
+    ExpoModulesCore since SDK 56 (its open issue #64). Rejected.
+  - **Alternative: our own Expo module.** A few hundred lines of Swift that no agent can build or
+    run. Rejected.
+- **Relying party `tourenbuddy.ch`.** Passkeys stay bound to the RP ID: changing it later makes
+  every passkey useless. The apex covers the PWA's origin `test.tourenbuddy.ch` and the planned
+  `tourenbuddy.ch`, should web passkeys come (web origins must be the RP ID or its subdomains). iOS
+  accepts the RP ID only with `webcredentials:tourenbuddy.ch` in the app's associated domains and an
+  `apple-app-site-association` file at `https://tourenbuddy.ch/.well-known/` listing both bundle
+  ids with the Team ID. The file lives in `public/.well-known/` (copied into the web export;
+  `public/_headers` serves it as JSON). The apex shows Hostinger's parked-domain page today
+  (checked 2026-11-08), nothing live; the owner attaches it to the `tourenbuddy-native` Pages
+  project, where the web app moves at the cutover anyway. The dev variant declares the domain with
+  `?mode=developer`, so Simulator and development builds read the file from the domain instead of
+  Apple's CDN, which caches it for up to a day.
+- **Backend** (Vue repository's `config.toml` for the local stack, the dashboard for the hosted
+  project; owner):
+  - `enable_confirmations = true`. Supabase's `/signup` endpoint takes a password from anyone
+    holding the public anon key, whatever the clients do; with confirmations off it hands out a
+    session for an address nobody proved (the PWA's backend does today). The app itself never calls
+    it (below). The PWA is unaffected: a code sign-in confirms a new address by the code.
+  - `minimum_password_length = 8` (6 is Supabase's floor). Leaked-password checks need the Pro plan.
+  - `[auth.passkey] enabled = true`; `[auth.webauthn]` display name TourenBuddy, RP ID
+    `tourenbuddy.ch`, origins `https://tourenbuddy.ch` and `https://test.tourenbuddy.ch` (iOS apps
+    sign as `https://<RP ID>`).
+  - The email hook Worker sends a code for every email type with a token, so nothing changes there.
+  - **An unconfirmed account never holds a password** (owner, 2026-11-08). `/signup` lets anyone
+    give a stranger's address a password; once the stranger confirms the address with a code, that
+    password would sign in. A trigger on `auth.users`, `before insert or update of
+    encrypted_password`, empties the password of any row with neither `email_confirmed_at` nor
+    `phone_confirmed_at`. No need to tell creation from a later change: every legitimate password
+    is set on a confirmed account (Create account and the Password sheet after the code, the seed's
+    confirmed demo users, the dashboard's auto-confirmed users), and `/signup` creates an
+    unconfirmed one. Confirming the address later brings nothing back. Supabase's
+    `before-user-created` hook cannot do this: its payload does not say whether a password was
+    given, and it does not run on updates. The migration, a pgTAP suite and the `config.toml`
+    settings go to the Vue repository as one patch (task 7.1).
+  - **Release order:** the Vue patch is a fix to the live backend, independent of this change: as
+    soon as it is merged there, the owner runs its audit query (who holds a password today), then
+    the migration goes to the hosted project together with "Confirm email" (the trigger alone
+    protects nothing while `/signup` confirms every address on its own). The same migration drops
+    every password that already exists: no client ever set one, so each came from `/signup` or the
+    dashboard, and every account keeps signing in with a code. Then the password length and
+    passkeys. Builds with the password screens for testers come after that, whenever they are ready
+    (task 7.6). The PWA verifies codes as type `email`, which also
+    redeems confirmation codes, so it keeps working.
+
+#### Sign-in screen (`/auth`)
+
+- Fields: email with `textContentType` `username` (iOS pairs the account name with the password
+  for AutoFill and for saving; `emailAddress` is for contact details) and the email keyboard;
+  password (`password`, secure entry), whose return key signs in.
+- Actions, top to bottom: **Sign in** (primary, `signInWithPassword`); **Email me a code**
+  (secondary, the PWA flow unchanged, the password ignored); **Sign in with passkey** (secondary,
+  iOS only; no email needed, the passkey names the account); **Create account** (plain).
+- Answers: an empty password asks for one without a call. Wrong email or password
+  (`invalid_credentials`, also what an account without a password gets) says so and points at the
+  code. `email_not_confirmed` (the password was right, but the account came from `/signup`
+  directly and was never confirmed; the app's own flows never leave one) points at the code, which
+  confirms the address. Too many attempts (429) and offline are localized. Passkeys: cancelling the
+  sheet is silent; no passkey on the device says so; a passkey the server no longer knows
+  (`webauthn_credential_not_found`) says so and is reported with `signalUnknownCredential`, so
+  iOS 26 stops offering it.
+
+#### Create account (`/auth/sign-up`): the code first, then the password
+
+- Pushed with the system back button. Email (`username`), new password (`newPassword` with
+  `passwordRules` `minlength: 8;`: iOS suggests a strong password and offers to save the pair when
+  the screen goes), **Create account**.
+- Shorter than 8 characters: an error without a call. Otherwise the store's `signUp` requests the
+  email code exactly as **Email me a code** does (`signInWithOtp` with the language: it creates the
+  account if there is none) and keeps the password in memory, then the code screen opens. When the
+  code for that address is verified, `verifyOtp` sets the password (`updateUser`) right after the
+  session arrives. New address, existing account (with or without a password) and an account that
+  `/signup` left unconfirmed all take this one path, and all end with the password just chosen,
+  which matches what iOS saved.
+- Owner's choice (2026-11-08): nothing tells whether the address already had an account; the
+  screen answers the same either way and nobody waits for a mail that never comes. Setting the
+  password of an existing account needs the code from its mailbox, which signs into that account
+  anyway.
+- **Alternative: Supabase's `signUp`.** It sends nothing for an address that has an account and
+  answers with a user without identities, so the screen would either reveal the account or leave
+  the user waiting; an unconfirmed account keeps its first password. Rejected.
+- The password stays in the store's memory only (never stored, never in a route parameter), for
+  that address, until a code for it is verified, the next `signUp` drops it (before its own request,
+  so a failed one leaves none), a code sign-in (`sendEmailOtp`, any address) drops it, or sign-out.
+  The code screen's Resend goes through `resendEmailOtp`, which keeps it. If
+  setting it fails after the code (offline in that second, rejected as weak), the user is signed in
+  without it, and an alert says to set it in Profile.
+- Resend on the code screen sends a code again; Back returns to this screen as typed. Abandoning
+  leaves what the code request created: an unconfirmed account without a password, as the PWA's
+  code flow does today.
+
+#### Profile: password and passkeys
+
+- The account section on the Profile tab gets **Password** and, on iOS, **Passkeys** above Sign
+  out. Each opens a sheet route (`/password`, `/passkeys`) in the signed-in group, over the Profile
+  tab; closing returns to it.
+- **Password sheet:** the email in a read-only `username` field (iOS saves the password for that
+  account), the new password (`newPassword`, the same rules) and **Save**, which calls
+  `updateUser({ password })` and closes the sheet, so iOS offers to save it. Supabase does not say
+  whether an account has a password, so the sheet sets it either way. Errors: too short (no call),
+  the same password (`same_password`), weak, offline. `secure_password_change` stays off, so no
+  reauthentication.
+- **Passkeys sheet:** the user's passkeys from `passkey.list`, each with its `friendly_name`
+  (Supabase derives it from the authenticator, such as "iCloud Keychain") or "Passkey" when it has
+  none, and the date added; **Add passkey** (`startRegistration`, system sheet,
+  `verifyRegistration`); Delete per passkey after a system alert. Cancelling is silent; a passkey
+  for this account already on the device (`CredentialAlreadyExists`, `webauthn_credential_exists`),
+  too many (`too_many_passkeys`) and offline are localized. Deleting removes the passkey on the
+  server; the copy in iCloud Keychain stays until the user deletes it in the Passwords app, and
+  using it is answered as an unknown passkey (above). The list carries no credential ids, so the
+  app cannot signal the remaining set after a delete.
+
+#### Where the code lives
+
+- `features/auth/data/passkeys.ts`: `passkeysSupported` (iOS with `Passkey.isSupported()`), the two
+  ceremonies (Supabase options, `Passkey.get` or `Passkey.create`, verify), list and delete, and a
+  `PasskeyError` with the reason the screens map: `cancelled`, `noCredentials`,
+  `unknownCredential`, `exists`, `tooMany`, `offline`, `failed`.
+- `useAuthStore` is the only caller of `data/passkeys.ts` and of the auth API: it gets
+  `signInWithPassword`, `signUp`, `signInWithPasskey`, `setPassword`, and `listPasskeys`,
+  `addPasskey`, `deletePasskey`, which hold no state (the sheet keeps the list it shows). The user
+  still comes only from the listener: `SIGNED_IN` after each sign-in, `USER_UPDATED` after a
+  password change.
+- `Button` gets a `plain` variant: a borderless SwiftUI button on iOS, a Material text button on
+  Android and web.
+- Tests replace `react-native-passkey` with a mock (`test/setup.ts`) and extend the Supabase fake.
+  Unit tests cannot prove that the module's JSON matches what Supabase verifies; the Simulator
+  checks do (task 7.4).
+
 ### Process: one pull request for the rest of Phase 1
 
 The owner asked (2026-11-07) for `add-auth-session`, `add-realtime-core` and
@@ -191,8 +358,23 @@ keeps one pull request per change as the rule; this is the recorded exception.
 - [The marker file is deleted by something other than a reinstall] → It lives in the document
   directory, which iOS and Android never purge; the cost is one more sign-in.
 - [supabase-js changes its key formula] → The tripwire test fails.
+- [Supabase passkeys are beta; the API may change] → The calls sit in `data/passkeys.ts`, and
+  password and code keep working without them.
+- [`react-native-passkey` breaks under a later React Native without the interop layer] → CI's native
+  build catches it; the fallback is an own Expo module behind the same `data/passkeys.ts`.
+- [The apex does not serve the association file] → Passkey sign-in and registration fail with
+  `BadConfiguration`, shown as a generic error; password and code are unaffected. Owner setup step.
+- [The RP ID turns out wrong] → Every passkey would have to be registered again. Decided before
+  anyone registers one.
+- [The trigger misses a path GoTrue uses to write a password] → The pgTAP suite covers insert and
+  update; GoTrue writes `auth.users` only through these. A Supabase upgrade that renames the
+  columns breaks the migration loudly, not silently.
+- [The Vue patch waits for this change] → It must not: task 7.6 ships it to hosted as soon as it
+  is merged; until then the PWA's backend has the gap it has today.
 
 ## Migration Plan
 
 New install only; no data moves. The owner adds `.env.local`, runs `npm install` and
-`npx expo prebuild --clean`, then the Simulator checks in the tasks.
+`npx expo prebuild --clean`, then the Simulator checks in the tasks. For passwords and passkeys,
+first the backend settings (local `config.toml`, then the hosted project) and the association file
+on the apex; existing accounts keep working and set a password or add a passkey in Profile.

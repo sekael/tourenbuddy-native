@@ -46,6 +46,8 @@ export default function RootLayout() {
         <Stack.Screen name="offline-maps" options={sheetOptions} />
         <Stack.Screen name="map-layers" options={sheetOptions} />
         <Stack.Screen name="feedback" options={sheetOptions} />
+        <Stack.Screen name="password" options={sheetOptions} />
+        <Stack.Screen name="passkeys" options={sheetOptions} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn} redirectTo="/">
         <Stack.Screen name="auth" options={{ animation: 'fade' }} />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ComponentRef, type Ref } from 'react';
 import { StyleSheet, TextInput, type TextInputProps } from 'react-native';
 
 import { color, fieldType, radius, size, space } from '@/core/theme/tokens';
@@ -6,7 +6,11 @@ import { color, fieldType, radius, size, space } from '@/core/theme/tokens';
 export type TextFieldProps = Omit<TextInputProps, 'aria-label' | 'accessibilityLabel'> & {
   /** The field's accessible name; the placeholder is not one. */
   label: string;
+  /** To move the focus here, as the return key of the field before does. */
+  ref?: Ref<TextFieldHandle>;
 };
+
+export type TextFieldHandle = ComponentRef<typeof TextInput>;
 
 /**
  * The system text field (`UITextField` on iOS, `EditText` on Android) on an opaque fill, so its

@@ -213,6 +213,60 @@
       "resendSuccess": "Code erneut gesendet! Prüfe Deine E-Mails.",
       "resendError": "Code konnte nicht erneut gesendet werden. Bitte versuche es erneut.",
       "backBtn": "Zurück"
+    },
+    "signIn": {
+      "title": "Anmelden",
+      "subtitle": "Mit Deinem Passwort oder einem Code per E-Mail",
+      "passwordLabel": "Passwort",
+      "passwordRequired": "Bitte gib Dein Passwort ein",
+      "signInBtn": "Anmelden",
+      "signingInBtn": "Wird angemeldet…",
+      "emailCodeBtn": "Code per E-Mail senden",
+      "passkeyBtn": "Mit Passkey anmelden",
+      "createAccountBtn": "Konto erstellen",
+      "wrongCredentials": "E-Mail-Adresse oder Passwort falsch. Noch kein Passwort? Wähle «Code per E-Mail senden».",
+      "notConfirmed": "Diese Adresse ist noch nicht bestätigt. Bestätige sie mit «Code per E-Mail senden».",
+      "tooManyAttempts": "Zu viele Versuche. Bitte warte einen Moment und versuche es erneut.",
+      "signInError": "Anmelden fehlgeschlagen. Bitte versuche es erneut."
+    },
+    "signUp": {
+      "title": "Konto erstellen",
+      "subtitle": "Wir senden Dir einen Code, um Deine Adresse zu bestätigen",
+      "createBtn": "Konto erstellen",
+      "passwordNotSavedTitle": "Passwort nicht gespeichert",
+      "passwordNotSaved": "Du bist angemeldet, aber Dein Passwort konnte nicht gespeichert werden. Lege es unter Profil → Passwort fest."
+    },
+    "password": {
+      "entryBtn": "Passwort",
+      "title": "Passwort",
+      "subtitle": "Melde Dich ab jetzt mit Deiner E-Mail-Adresse und diesem Passwort an.",
+      "newLabel": "Neues Passwort",
+      "tooShort_one": "Verwende mindestens {{count}} Zeichen",
+      "tooShort_other": "Verwende mindestens {{count}} Zeichen",
+      "same": "Das ist Dein aktuelles Passwort. Wähle ein anderes.",
+      "weak": "Dieses Passwort ist zu schwach. Wähle ein stärkeres.",
+      "saveBtn": "Passwort speichern",
+      "savingBtn": "Wird gespeichert…",
+      "saveError": "Das Passwort konnte nicht gespeichert werden. Bitte versuche es erneut."
+    },
+    "passkey": {
+      "entryBtn": "Passkeys",
+      "title": "Passkeys",
+      "subtitle": "Melde Dich mit Face ID statt mit einem Passwort an. Passkeys liegen in Deinem iCloud-Schlüsselbund.",
+      "empty": "Noch keine Passkeys.",
+      "defaultName": "Passkey",
+      "added": "Hinzugefügt am {{date}}",
+      "addBtn": "Passkey hinzufügen",
+      "workingBtn": "Bitte warten…",
+      "deleteBtn": "Löschen",
+      "cancelBtn": "Abbrechen",
+      "deleteTitle": "Passkey löschen?",
+      "deleteMessage": "Mit «{{name}}» kannst Du Dich nicht mehr anmelden. Um ihn auch von diesem Gerät zu entfernen, lösche ihn in der App «Passwörter».",
+      "noCredentials": "Auf diesem Gerät gibt es keinen Passkey für TourenBuddy. Melde Dich mit Passwort oder Code an.",
+      "unknown": "Dieser Passkey ist nicht mehr gültig. Melde Dich mit Passwort oder Code an.",
+      "exists": "Auf diesem Gerät gibt es schon einen Passkey für Dein Konto.",
+      "tooMany": "Dein Konto hat bereits so viele Passkeys wie erlaubt. Lösche zuerst einen.",
+      "failed": "Mit dem Passkey hat es nicht geklappt. Bitte versuche es erneut."
     }
   },
   "user": {

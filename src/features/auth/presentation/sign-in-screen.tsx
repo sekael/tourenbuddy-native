@@ -5,67 +5,132 @@ import { StyleSheet } from 'react-native';
 
 import { Button } from '@/core/adaptive/button';
 import { Text } from '@/core/adaptive/text';
-import { TextField } from '@/core/adaptive/text-field';
+import { TextField, type TextFieldHandle } from '@/core/adaptive/text-field';
 import { createLogger } from '@/core/logging/logger';
 import { color } from '@/core/theme/tokens';
 
+import { passkeysSupported } from '../data/passkeys';
+import { isEmail } from '../domain/credentials';
 import { AuthHero } from './auth-hero';
-import { sendErrorMessage } from './auth-errors';
+import { passkeyErrorMessage, sendErrorMessage, signInErrorMessage } from './auth-errors';
 import { useAuthStore } from './stores/auth-store';
 
-const log = createLogger('EmailEntry');
+const log = createLogger('SignIn');
 
-// The PWA's check: something@something.tld, no spaces.
-const EMAIL = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
+type Way = 'password' | 'code' | 'passkey';
 
-/** First sign-in step: the email address the code goes to. */
-export function EmailEntryScreen() {
+/**
+ * The first signed-out screen. The email and the password form one pair for AutoFill, which fills
+ * and saves both. The ways in: the password; an email code (the PWA's flow, and the way in without
+ * a password or after forgetting it); a passkey with Face ID (iOS); or creating an account.
+ */
+export function SignInScreen() {
   const { t } = useTranslation();
   const sendEmailOtp = useAuthStore((state) => state.sendEmailOtp);
+  const signInWithPassword = useAuthStore((state) => state.signInWithPassword);
+  const signInWithPasskey = useAuthStore((state) => state.signInWithPasskey);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
+  const [running, setRunning] = useState<Way | null>(null);
   // A ref, not state: a second tap in the same frame must already see the first request.
   const inFlight = useRef(false);
+  const passwordField = useRef<TextFieldHandle>(null);
 
-  async function submit() {
-    if (inFlight.current) return;
-    // Autofill and paste can bring whitespace along; a browser's email field drops it too.
-    const address = email.trim();
-    setError(null);
-    if (!EMAIL.test(address)) {
-      setError(t('auth.emailEntry.invalidEmail'));
-      return;
-    }
+  async function run(
+    way: Way,
+    request: () => Promise<void>,
+    explain: (err: unknown) => string | null,
+  ) {
     inFlight.current = true;
-    setSending(true);
+    setRunning(way);
     try {
-      await sendEmailOtp(address);
-      router.push({ pathname: '/auth/verify-otp', params: { email: address } });
+      await request();
     } catch (err) {
-      log.warn('Sending the code failed', err);
-      setError(sendErrorMessage(err, t));
+      log.warn(`Signing in (${way}) failed`, err);
+      setError(explain(err));
     } finally {
       inFlight.current = false;
-      setSending(false);
+      setRunning(null);
     }
   }
 
+  /** The typed address, or null after saying it is not one. */
+  function address() {
+    // Autofill and paste can bring whitespace along; a browser's email field drops it too.
+    const value = email.trim();
+    if (isEmail(value)) return value;
+    setError(t('auth.emailEntry.invalidEmail'));
+    return null;
+  }
+
+  function signIn() {
+    if (inFlight.current) return;
+    setError(null);
+    const value = address();
+    if (!value) return;
+    if (!password) {
+      setError(t('auth.signIn.passwordRequired'));
+      return;
+    }
+    void run(
+      'password',
+      () => signInWithPassword(value, password),
+      (err) => signInErrorMessage(err, t),
+    );
+  }
+
+  function sendCode() {
+    if (inFlight.current) return;
+    setError(null);
+    const value = address();
+    if (!value) return;
+    void run(
+      'code',
+      async () => {
+        await sendEmailOtp(value);
+        router.push({ pathname: '/auth/verify-otp', params: { email: value } });
+      },
+      (err) => sendErrorMessage(err, t),
+    );
+  }
+
+  function signInWithKey() {
+    if (inFlight.current) return;
+    setError(null);
+    void run('passkey', signInWithPasskey, (err) => passkeyErrorMessage(err, t));
+  }
+
   return (
-    <AuthHero title={t('auth.emailEntry.title')} subtitle={t('auth.emailEntry.subtitle')}>
+    <AuthHero title={t('auth.signIn.title')} subtitle={t('auth.signIn.subtitle')}>
       <TextField
         label={t('auth.emailEntry.emailLabel')}
         placeholder={t('auth.emailEntry.emailPlaceholder')}
         value={email}
         onChangeText={setEmail}
-        textContentType="emailAddress"
-        autoComplete="email"
+        // The account's name, so AutoFill pairs it with the password (an email address keyboard).
+        textContentType="username"
+        autoComplete="username"
         keyboardType="email-address"
         autoCapitalize="none"
         autoCorrect={false}
-        returnKeyType="send"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => passwordField.current?.focus()}
+      />
+      <TextField
+        ref={passwordField}
+        label={t('auth.signIn.passwordLabel')}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        textContentType="password"
+        autoComplete="current-password"
+        autoCapitalize="none"
+        autoCorrect={false}
+        returnKeyType="go"
         submitBehavior="blurAndSubmit"
-        onSubmitEditing={submit}
+        onSubmitEditing={signIn}
       />
       {error && (
         <Text role="alert" variant="caption" style={styles.error}>
@@ -73,9 +138,31 @@ export function EmailEntryScreen() {
         </Text>
       )}
       <Button
-        label={sending ? t('auth.shared.sendingBtn') : t('auth.emailEntry.sendCodeBtn')}
-        onPress={submit}
-        disabled={sending}
+        label={running === 'password' ? t('auth.signIn.signingInBtn') : t('auth.signIn.signInBtn')}
+        onPress={signIn}
+        disabled={running !== null}
+      />
+      <Button
+        variant="secondary"
+        label={running === 'code' ? t('auth.shared.sendingBtn') : t('auth.signIn.emailCodeBtn')}
+        onPress={sendCode}
+        disabled={running !== null}
+      />
+      {passkeysSupported && (
+        <Button
+          variant="secondary"
+          label={
+            running === 'passkey' ? t('auth.signIn.signingInBtn') : t('auth.signIn.passkeyBtn')
+          }
+          onPress={signInWithKey}
+          disabled={running !== null}
+        />
+      )}
+      <Button
+        variant="plain"
+        label={t('auth.signIn.createAccountBtn')}
+        onPress={() => router.push({ pathname: '/auth/sign-up', params: { email: email.trim() } })}
+        disabled={running !== null}
       />
     </AuthHero>
   );

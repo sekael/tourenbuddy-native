@@ -17,7 +17,7 @@ async function type(label: string, text: string) {
 
 async function signInWithCode() {
   await type('Email address', 'anna@example.com');
-  await press('Send Code');
+  await press('Email me a code');
   await type('Sign-in code', '123456');
 }
 
@@ -34,12 +34,12 @@ beforeEach(() => {
 });
 
 describe('signed out', () => {
-  it('should show the email screen at launch, without the tabs', async () => {
+  it('should show sign-in at launch, without the tabs', async () => {
     await renderRouter(routes);
 
     expect(screen).toHavePathname('/auth');
     expect(screen.getByRole('heading', { name: 'TourenBuddy' })).toBeOnTheScreen();
-    expect(screen.getByRole('heading', { name: 'Enter your email' })).toBeOnTheScreen();
+    expect(screen.getByRole('heading', { name: 'Sign in' })).toBeOnTheScreen();
     expect(screen.queryByText('Coming soon')).toBeNull();
   });
 
@@ -59,7 +59,7 @@ describe('signed out', () => {
     await renderRouter(routes);
 
     await type('Email address', '  anna@example.com ');
-    await press('Send Code');
+    await press('Email me a code');
 
     expect(screen).toHavePathname('/auth/verify-otp');
     expect(screen.getByText('anna@example.com')).toBeOnTheScreen();
@@ -78,10 +78,50 @@ describe('signed out', () => {
     expect(router.canGoBack()).toBe(false);
   });
 
+  it('should sign in with a password and leave no way back to sign-in', async () => {
+    await renderRouter(routes);
+
+    await type('Email address', 'anna@example.com');
+    await type('Password', 'secret-123');
+    await press('Sign in');
+
+    expect(screen).toHavePathname('/');
+    expect(router.canGoBack()).toBe(false);
+  });
+
+  it('should create an account through the code and set its password after it', async () => {
+    await renderRouter(routes);
+
+    await press('Create account');
+    await type('Email address', 'new@example.com');
+    await type('New password', 'chosen-123');
+    await press('Create account');
+    expect(screen).toHavePathname('/auth/verify-otp');
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+
+    await type('Sign-in code', '123456');
+
+    expect(supabase.auth.updateUser).toHaveBeenCalledWith({ password: 'chosen-123' });
+    expect(screen).toHavePathname('/');
+    expect(router.canGoBack()).toBe(false);
+  });
+
+  it('should go back from the code screen to account creation as typed', async () => {
+    await renderRouter(routes, { initialUrl: '/auth/sign-up' });
+    await type('Email address', 'new@example.com');
+    await type('New password', 'chosen-123');
+    await press('Create account');
+
+    await act(() => router.back());
+
+    expect(screen).toHavePathname('/auth/sign-up');
+    expect(screen.getByLabelText('New password')).toHaveDisplayValue('chosen-123');
+  });
+
   it('should go back to the email screen with the address as typed', async () => {
     await renderRouter(routes);
     await type('Email address', 'anna@example.com');
-    await press('Send Code');
+    await press('Email me a code');
 
     await act(() => router.back());
 
@@ -102,7 +142,7 @@ describe('signed in', () => {
     await renderRouter(routes, { initialUrl: '/auth' });
 
     expect(screen).toHavePathname('/');
-    expect(screen.queryByRole('heading', { name: 'Enter your email' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Sign in' })).toBeNull();
   });
 
   it('should keep the address the app was opened at', async () => {

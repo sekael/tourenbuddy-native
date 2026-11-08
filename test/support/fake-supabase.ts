@@ -3,6 +3,7 @@ import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 /**
  * Stands in for `@/core/supabase` in every test (`test/setup.ts`): auth with a session the test
  * sets, and an event emitter for the auth state listener. Realtime tests bring their own channels.
+ * Each sign-in succeeds by default, as auth-js does: it saves the session and emits `SIGNED_IN`.
  */
 type Listener = (event: AuthChangeEvent, session: Session | null) => void;
 
@@ -17,7 +18,9 @@ export const fakeAuth = {
   reset() {
     listeners.clear();
     fakeAuth.session = null;
-    Object.values(supabase.auth).forEach((fn) => fn.mockClear());
+    for (const fn of [...Object.values(supabase.auth), ...Object.values(supabase.auth.passkey)]) {
+      if (typeof fn === 'function') fn.mockClear();
+    }
   },
 };
 
@@ -38,6 +41,25 @@ export function testSession(email = 'anna@example.com'): Session {
   };
 }
 
+function signedIn() {
+  fakeAuth.session = testSession();
+  fakeAuth.emit('SIGNED_IN', fakeAuth.session);
+  return fakeAuth.session;
+}
+
+type Result<T> = Promise<{ data: T; error: unknown }>;
+
+/** What `auth.passkey` answers: a challenge, then the verification. */
+export const passkeyOptions = {
+  authentication: { challenge: 'Y2hhbGxlbmdl', rpId: 'tourenbuddy.ch', allowCredentials: [] },
+  registration: {
+    challenge: 'Y2hhbGxlbmdl',
+    rp: { id: 'tourenbuddy.ch', name: 'TourenBuddy' },
+    user: { id: 'dXNlci0x', name: 'anna@example.com', displayName: 'anna@example.com' },
+    pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+  },
+};
+
 export const supabase = {
   auth: {
     getSession: jest.fn(async () => ({ data: { session: fakeAuth.session }, error: null })),
@@ -47,12 +69,46 @@ export const supabase = {
     }),
     signInWithOtp: jest.fn(async (_: unknown) => ({ data: {}, error: null as unknown })),
     verifyOtp: jest.fn(
-      async (_: unknown): Promise<{ data: { session: Session | null }; error: unknown }> => {
-        fakeAuth.session = testSession();
-        fakeAuth.emit('SIGNED_IN', fakeAuth.session);
-        return { data: { session: fakeAuth.session }, error: null };
-      },
+      async (_: unknown): Result<{ session: Session | null }> => ({
+        data: { session: signedIn() },
+        error: null,
+      }),
     ),
+    signInWithPassword: jest.fn(
+      async (_: unknown): Result<{ session: Session | null }> => ({
+        data: { session: signedIn() },
+        error: null,
+      }),
+    ),
+    updateUser: jest.fn(async (_: unknown): Result<object> => ({ data: {}, error: null })),
+    passkey: {
+      startAuthentication: jest.fn(
+        async (): Result<{ challenge_id: string; options: object } | null> => ({
+          data: { challenge_id: 'challenge-1', options: passkeyOptions.authentication },
+          error: null,
+        }),
+      ),
+      verifyAuthentication: jest.fn(
+        async (_: unknown): Result<{ session: Session | null }> => ({
+          data: { session: signedIn() },
+          error: null,
+        }),
+      ),
+      startRegistration: jest.fn(
+        async (): Result<{ challenge_id: string; options: object } | null> => ({
+          data: { challenge_id: 'challenge-2', options: passkeyOptions.registration },
+          error: null,
+        }),
+      ),
+      verifyRegistration: jest.fn(async (_: unknown): Result<object | null> => ({ data: {}, error: null })),
+      list: jest.fn(
+        async (): Result<{ id: string; friendly_name?: string; created_at: string }[] | null> => ({
+          data: [],
+          error: null,
+        }),
+      ),
+      delete: jest.fn(async (_: unknown): Result<null> => ({ data: null, error: null })),
+    },
     signOut: jest.fn(async (_?: unknown) => {
       fakeAuth.session = null;
       fakeAuth.emit('SIGNED_OUT', null);

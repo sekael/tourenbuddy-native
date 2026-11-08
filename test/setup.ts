@@ -6,3 +6,5 @@ process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
 // tests of the real modules unmock.
 jest.mock('@/core/supabase', () => require('./support/fake-supabase'));
 jest.mock('@/core/auth/auth-storage', () => require('./support/fake-auth-storage'));
+// No system passkey sheet either.
+jest.mock('react-native-passkey', () => require('./support/fake-passkey'));

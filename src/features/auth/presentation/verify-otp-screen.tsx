@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, StyleSheet } from 'react-native';
 
+import { showAlert } from '@/core/adaptive/alert';
 import { Button } from '@/core/adaptive/button';
 import { Text } from '@/core/adaptive/text';
 import { TextField } from '@/core/adaptive/text-field';
@@ -23,13 +24,14 @@ const CODE_LENGTH = 6;
 export const RESEND_COOLDOWN_S = 60;
 
 /**
- * Second sign-in step: the code from the email. Leaving it is the navigation bar's back button or
- * the back gesture; signing in leaves it on its own (the routes follow the session).
+ * Second sign-in step: the code from the email, also the one that confirms a new account. Leaving
+ * it is the navigation bar's back button or the back gesture; signing in leaves it on its own (the
+ * routes follow the session).
  */
 export function VerifyOtpScreen({ email }: { email: string }) {
   const { t } = useTranslation();
   const verifyOtp = useAuthStore((state) => state.verifyOtp);
-  const sendEmailOtp = useAuthStore((state) => state.sendEmailOtp);
+  const resendEmailOtp = useAuthStore((state) => state.resendEmailOtp);
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
@@ -65,7 +67,10 @@ export function VerifyOtpScreen({ email }: { email: string }) {
     setError(null);
     setVerifying(true);
     try {
-      await verifyOtp(email, value);
+      // Signed in either way; the user is already on the map when this alert shows.
+      if ((await verifyOtp(email, value)) === 'passwordNotSaved') {
+        showAlert(t('auth.signUp.passwordNotSavedTitle'), t('auth.signUp.passwordNotSaved'));
+      }
     } catch (err) {
       log.warn('Verification failed', err);
       if (isOffline(err)) {
@@ -94,7 +99,7 @@ export function VerifyOtpScreen({ email }: { email: string }) {
     setResent(false);
     setResending(true);
     try {
-      await sendEmailOtp(email);
+      await resendEmailOtp(email);
       setResent(true);
       coolDown(RESEND_COOLDOWN_S);
       // A new code: even one equal to a rejected code submits on its own again.

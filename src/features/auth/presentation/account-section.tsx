@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useStore } from 'zustand';
@@ -7,11 +8,13 @@ import { Text } from '@/core/adaptive/text';
 import { sessionTrust } from '@/core/auth/session-trust';
 import { color, size, space } from '@/core/theme/tokens';
 
+import { passkeysSupported } from '../data/passkeys';
 import { useAuthStore } from './stores/auth-store';
 
 /**
- * The signed-in account and the way out, on the Profile tab until the profile port. While the
- * session is unverified it says so: the offline bar that carries this in the PWA is not ported yet.
+ * The signed-in account, its password and passkeys (sheets), and the way out, on the Profile tab
+ * until the profile port. While the session is unverified it says so: the offline bar that carries
+ * this in the PWA is not ported yet.
  */
 export function AccountSection() {
   const { t } = useTranslation();
@@ -27,6 +30,18 @@ export function AccountSection() {
         </Text>
       )}
       {email && <Text style={styles.muted}>{email}</Text>}
+      <Button
+        variant="secondary"
+        label={t('auth.password.entryBtn')}
+        onPress={() => router.push('/password')}
+      />
+      {passkeysSupported && (
+        <Button
+          variant="secondary"
+          label={t('auth.passkey.entryBtn')}
+          onPress={() => router.push('/passkeys')}
+        />
+      )}
       <Button
         variant="secondary"
         label={t('user.profile.signOutBtn')}
