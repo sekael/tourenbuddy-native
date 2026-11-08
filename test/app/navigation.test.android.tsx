@@ -2,13 +2,17 @@ import { act, fireEvent, screen } from '@testing-library/react-native';
 import { router, Slot } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
+import { signIn } from '../support/auth';
 import { routes as appRoutes } from './routes';
 
 // Routing only: Jest's native tab bar keeps every tab mounted and visible, so a plain slot shows
 // the active tab alone. The tab bar itself is native UI, checked on devices.
 const routes = { ...appRoutes, '(tabs)/_layout': Slot };
 
-beforeEach(() => jest.useFakeTimers());
+beforeEach(() => {
+  jest.useFakeTimers();
+  signIn();
+});
 afterEach(() => jest.useRealTimers());
 
 const settle = () => act(() => jest.runAllTimers());

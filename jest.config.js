@@ -21,6 +21,7 @@ const withApp = (preset, moduleNameMapper = {}) => {
       ...moduleNameMapper,
       '^@/(.*)$': '<rootDir>/src/$1',
     },
+    setupFiles: [...(preset.setupFiles ?? []), '<rootDir>/test/setup.ts'],
   };
   // Root-only options that jest-expo's presets carry; Jest rejects them inside a project.
   delete project.passWithNoTests;
@@ -43,7 +44,11 @@ module.exports = {
         '^@react-native/assets-registry/registry$': 'react-native-web/asset-registry',
       }),
       // First: the preset's setup already loads react-native-web, which reads `matchMedia` once.
-      setupFiles: ['<rootDir>/test/jsdom-setup.ts', ...(getWebPreset().setupFiles ?? [])],
+      setupFiles: [
+        '<rootDir>/test/jsdom-setup.ts',
+        ...(getWebPreset().setupFiles ?? []),
+        '<rootDir>/test/setup.ts',
+      ],
       testMatch: ['**/*.test.web.tsx'],
     },
   ],

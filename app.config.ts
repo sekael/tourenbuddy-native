@@ -40,6 +40,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: '#ffffff',
     },
     predictiveBackGestureEnabled: true,
+    // expo-file-system's plugin asks for these; the app only uses its own files. The template's
+    // "display over other apps" serves React Native's dev overlays, so only dev builds keep it.
+    // What release builds declare is reviewed against permissions.json.
+    blockedPermissions: [
+      'android.permission.READ_EXTERNAL_STORAGE',
+      'android.permission.WRITE_EXTERNAL_STORAGE',
+      ...(prod ? ['android.permission.SYSTEM_ALERT_WINDOW'] : []),
+    ],
   },
   web: {
     output: 'single',
@@ -54,6 +62,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // Per-app language in system settings. "de" covers every German region; the app maps it to de-CH.
     ['expo-localization', { supportedLocales: ['en', 'de'] }],
     ['expo-build-properties', { ios: { deploymentTarget: '26.0' } }],
+    // The session lives in the Keychain and Keystore; no biometrics, so no Face ID usage string.
+    ['expo-secure-store', { faceIDPermission: false }],
     // D11: Inter on Android, embedded at build time so the first frame already uses it. iOS uses
     // the system font; web loads Inter at startup (src/core/theme/load-fonts.web.ts).
     ['expo-font', { android: { fonts: [{ fontFamily: 'Inter', fontDefinitions: interFaces }] } }],

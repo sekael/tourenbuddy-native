@@ -5,6 +5,9 @@ import MapTab from '@/app/(tabs)/index';
 import ProfileTab from '@/app/(tabs)/profile';
 // The whole module, so `renderRouter` also reads its `unstable_settings` (the tabs anchor).
 import * as RootLayout from '@/app/_layout';
+import AuthLayout from '@/app/auth/_layout';
+import EmailEntryRoute from '@/app/auth/index';
+import VerifyOtpRoute from '@/app/auth/verify-otp';
 import FeedbackSheet from '@/app/feedback';
 import InboxSheet from '@/app/inbox';
 import MapLayersSheet from '@/app/map-layers';
@@ -22,4 +25,7 @@ export const routes = {
   'offline-maps': OfflineMapsSheet,
   'map-layers': MapLayersSheet,
   feedback: FeedbackSheet,
+  'auth/_layout': AuthLayout,
+  'auth/index': EmailEntryRoute,
+  'auth/verify-otp': VerifyOtpRoute,
 };

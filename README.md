@@ -8,7 +8,7 @@ They replace the Vue PWA in [`sekael/tourenbuddy_frontend_vue`](https://github.c
 
 ## Status
 
-Phase 1 (repo, CI and app foundation, [#368](https://github.com/sekael/tourenbuddy_frontend_vue/issues/368)) is in progress: `main` runs an empty shell.
+Phase 1 (repo, CI and app foundation, [#368](https://github.com/sekael/tourenbuddy_frontend_vue/issues/368)) is in progress: `main` signs in with an email code and shows the empty shell.
 `main` grows one reviewed change at a time: each pull request implements an approved OpenSpec change.
 The migration plan, its decisions and phases are in [#346](https://github.com/sekael/tourenbuddy_frontend_vue/issues/346).
 
@@ -30,6 +30,25 @@ Builds default to the `dev` variant ("TourenBuddy Dev", `ch.tourenbuddy.app.dev`
 `APP_VARIANT=prod` selects the store identity ("TourenBuddy", `ch.tourenbuddy.app`).
 The variant changes the bundle identifier, so regenerate the native projects when you switch: `npx expo prebuild --clean`.
 `ios/` and `android/` are generated from `app.config.ts` and never committed; change native settings there or in a config plugin.
+Releases, store builds and web previews run on GitHub Actions and EAS: see [docs/publishing.md](./docs/publishing.md).
+
+## Backend
+
+The app talks to Supabase. Schema, migrations and the local stack live in the Vue repository.
+Set two variables in `.env.local` (gitignored); the app refuses to start without them:
+
+```sh
+EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon key>
+```
+
+- **Local stack:** `supabase start` in `tourenbuddy_frontend_vue`; `supabase status` prints the anon key.
+  Sign-in codes land in Mailpit at `http://127.0.0.1:54324`.
+  The URL depends on where the app runs: iOS Simulator and web `http://127.0.0.1:54321`, Android emulator `http://10.0.2.2:54321`, a phone your Mac's address on the same Wi-Fi (`http://192.168.x.y:54321`).
+- **Hosted project:** the project URL and anon key from the Supabase dashboard (Project Settings → API).
+
+`EXPO_PUBLIC_*` values are compiled into the app, so restart the dev server with `npm start -- --clear` after changing them.
+Releases get them from EAS environment variables and GitHub secrets: see [docs/publishing.md](./docs/publishing.md).
 
 ## Platforms (target)
 

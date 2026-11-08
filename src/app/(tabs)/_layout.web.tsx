@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/core/adaptive/icon';
 import type { IconName } from '@/core/adaptive/icons';
 import { Text } from '@/core/adaptive/text';
-import { color, radius, space } from '@/core/theme/tokens';
+import { color, radius, space, strong } from '@/core/theme/tokens';
 import { useBreakpoint } from '@/core/theme/use-breakpoint';
 
 /**
@@ -106,5 +106,5 @@ const styles = StyleSheet.create({
   indicatorHover: { backgroundColor: color.neutralContainer },
   indicatorActive: { backgroundColor: color.secondaryContainer },
   label: { color: color.onSurfaceVariant },
-  labelActive: { color: color.onSurface, fontWeight: '600' },
+  labelActive: { color: color.onSurface, ...strong },
 });

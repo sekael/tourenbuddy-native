@@ -193,7 +193,9 @@
       "emailPlaceholder": "du@tourenbuddy.ch",
       "invalidEmail": "Bitte gib eine gültige E-Mail-Adresse ein",
       "sendCodeBtn": "Code senden",
-      "sendError": "Code konnte nicht gesendet werden. Bitte versuche es erneut."
+      "sendError": "Code konnte nicht gesendet werden. Bitte versuche es erneut.",
+      "rateLimited_one": "Bitte warte {{count}} Sekunde, bevor Du einen neuen Code anforderst.",
+      "rateLimited_other": "Bitte warte {{count}} Sekunden, bevor Du einen neuen Code anforderst."
     },
     "shared": {
       "sendingBtn": "Wird gesendet...",

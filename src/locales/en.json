@@ -193,7 +193,9 @@
       "emailPlaceholder": "you@example.com",
       "invalidEmail": "Please enter a valid email address",
       "sendCodeBtn": "Send Code",
-      "sendError": "Failed to send code. Please try again."
+      "sendError": "Failed to send code. Please try again.",
+      "rateLimited_one": "Please wait {{count}} second before requesting another code.",
+      "rateLimited_other": "Please wait {{count}} seconds before requesting another code."
     },
     "shared": {
       "sendingBtn": "Sending...",

@@ -106,6 +106,27 @@ Switching changes the bundle identifier: run `npx expo prebuild --clean` afterwa
 - Agents cannot build or run the iOS and Android apps; the owner builds and measures on a Mac and
   devices. Give exact commands and what to look for.
 
+## Session, Realtime and releases
+
+- The signed-in user comes from `useAuthStore` (`features/auth/presentation/stores`). Only the
+  store writes `user` (restore, its `onAuthStateChange` listener, sign-out); screens call its
+  actions and never set it. Read
+  `sessionTrust` (`core/auth/session-trust.ts`) to tell an unverified session (offline launch)
+  from a confirmed one.
+- The session lives in the Keychain and Keystore through `core/auth/auth-storage.ts` (web:
+  `localStorage`). Nothing else reads or writes it; `core/supabase.ts` is the only client.
+- Routes follow the session in one place: the two `Stack.Protected` groups in
+  `src/app/_layout.tsx`. A new signed-in route goes inside the first group, never behind its own
+  redirect.
+- Realtime only through `subscribeRealtime` (`@/core/realtime/subscribe`), and only to keep what
+  the app shows current, never for notifications. A store subscribes in an action and calls the
+  returned function in its `clear()` on sign-out.
+- Tests never reach Supabase or the Keychain: `test/setup.ts` swaps `@/core/supabase` and
+  `@/core/auth/auth-storage` for the fakes in `test/support/`. `signIn()` and `resetAuth()` from
+  `test/support/auth.ts` set the session.
+- Local backend and env variables: README, "Backend". Releases (release-please, EAS, Pages) and
+  their one-time setup: `docs/publishing.md`.
+
 ## Commands
 
 ```bash

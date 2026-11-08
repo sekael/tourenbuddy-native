@@ -1,0 +1,79 @@
+name: Preview
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  secrets:
+    # Forks get no secrets.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - id: check
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ] && [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Preview skipped: set CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, SUPABASE_URL and SUPABASE_ANON_KEY (docs/publishing.md)."
+          fi
+
+  deploy:
+    needs: secrets
+    if: needs.secrets.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: preview-${{ github.head_ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Web export
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: npx expo export --platform web
+      - name: Branch name for Pages
+        id: branch
+        # Through env, never `${{ }}` inside `run:`: a branch named `x$(cmd)` would run the command.
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          # Pages: lowercase letters, digits and dashes, at most 28 characters.
+          slug=$(echo "$HEAD_REF" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | cut -c1-28 | sed 's/-*$//')
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+      - name: Deploy to Cloudflare Pages
+        id: deploy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=tourenbuddy-native --branch=${{ steps.branch.outputs.slug }}
+      - uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: preview
+          message: |
+            ### Web preview
+
+            **URL:** ${{ steps.deploy.outputs.pages-deployment-alias-url }}
+
+            Connected to the **production** Supabase project: sign in with a throwaway account and clean up afterwards.
+
+            Commit: ${{ github.event.pull_request.head.sha }}

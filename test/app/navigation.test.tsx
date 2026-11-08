@@ -2,6 +2,7 @@ import { act, fireEvent, screen } from '@testing-library/react-native';
 import { Slot } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
+import { signIn } from '../support/auth';
 import { routes as appRoutes } from './routes';
 
 // iOS menu and routing. A slot stands in for the `NativeTabs` layout, which Jest renders with every
@@ -26,6 +27,9 @@ const labelled = (label: string) =>
 async function press(node: Node) {
   await act(() => fireEvent(node, 'buttonPress'));
 }
+
+// The tabs are for a signed-in user (`test/app/auth.test.tsx` covers signing in).
+beforeEach(() => signIn());
 
 describe('app navigation (iOS menu)', () => {
   it("should hold the map's own entries only, nearest the circle first", async () => {

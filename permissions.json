@@ -1,0 +1,8 @@
+{
+  "android": [
+    "android.permission.INTERNET",
+    "android.permission.VIBRATE",
+    "ch.tourenbuddy.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  ],
+  "ios": []
+}

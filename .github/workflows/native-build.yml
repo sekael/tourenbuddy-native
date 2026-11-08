@@ -1,0 +1,98 @@
+name: Native build
+
+# Release builds of the store identity, without signing, where a change can break the native
+# projects. Pure JavaScript changes cannot, and an iOS build takes about half an hour.
+on:
+  pull_request:
+    paths:
+      - package.json
+      - package-lock.json
+      - app.config.ts
+      - eas.json
+      - patches/**
+      - assets/images/**
+      - permissions.json
+      - scripts/check-permissions.js
+      - .github/workflows/native-build.yml
+  schedule:
+    # Weekly on main, to catch runner image updates.
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: native-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  APP_VARIANT: prod
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v6
+      - run: npm ci
+      - run: npx expo prebuild --platform android --no-install
+      # The 64-bit ABIs, which the 16 KB rule concerns; one less compile than all four.
+      - name: Release build
+        working-directory: android
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a,x86_64
+      - name: Latest build tools
+        run: echo "BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 | sort -V | tail -1)" >> "$GITHUB_ENV"
+      - name: Permission review
+        run: |
+          "$BUILD_TOOLS/aapt2" dump permissions android/app/build/outputs/apk/release/app-release.apk > "$RUNNER_TEMP/permissions.txt"
+          node scripts/check-permissions.js android "$RUNNER_TEMP/permissions.txt"
+      # Google Play requires 16 KB pages for native libraries: ELF segments aligned to 16 KB, and
+      # uncompressed libraries aligned to 16 KB in the APK.
+      - name: 16 KB alignment
+        run: |
+          set -euo pipefail
+          apk=android/app/build/outputs/apk/release/app-release.apk
+          "$BUILD_TOOLS/zipalign" -c -P 16 -v 4 "$apk"
+          objdump="$(ls "$ANDROID_NDK_LATEST_HOME"/toolchains/llvm/prebuilt/*/bin/llvm-objdump)"
+          unzip -q "$apk" 'lib/*' -d "$RUNNER_TEMP/apk"
+          unaligned=0
+          for so in "$RUNNER_TEMP"/apk/lib/*/*.so; do
+            if "$objdump" -p "$so" | awk '/LOAD/ { print $NF }' | grep -qvE '^2\*\*(1[4-9]|[2-9][0-9])$'; then
+              echo "::error::Not aligned to 16 KB: ${so#"$RUNNER_TEMP"/apk/}"
+              unaligned=1
+            fi
+          done
+          exit "$unaligned"
+
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx expo prebuild --platform ios
+      - name: Release build (Simulator)
+        run: >
+          xcodebuild -quiet
+          -workspace ios/TourenBuddy.xcworkspace -scheme TourenBuddy -configuration Release
+          -sdk iphonesimulator -destination 'generic/platform=iOS Simulator'
+          -derivedDataPath ios/build CODE_SIGNING_ALLOWED=NO build
+      # The built Info.plist: a build phase strips the dev launcher's local network keys from it.
+      - name: Permission review
+        run: |
+          plutil -convert json -o "$RUNNER_TEMP/info.json" ios/build/Build/Products/Release-iphonesimulator/TourenBuddy.app/Info.plist
+          node scripts/check-permissions.js ios "$RUNNER_TEMP/info.json"

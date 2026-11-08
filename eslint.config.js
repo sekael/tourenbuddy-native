@@ -11,7 +11,7 @@ module.exports = defineConfig([
     rules: { 'no-console': 'error' },
   },
   {
-    files: ['src/core/logging/logger.ts'],
+    files: ['src/core/logging/logger.ts', 'scripts/**'],
     rules: { 'no-console': 'off' },
   },
 ]);
