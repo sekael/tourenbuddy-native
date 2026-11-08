@@ -27,16 +27,16 @@ The marketing version comes from `package.json`, which only release-please chang
 ## Checks on pull requests
 
 - `checks.yml`: lint, type check, tests and a web export, on every pull request.
-- `native-build.yml`: release builds of the store identity (`APP_VARIANT=prod`) without signing,
-  Android on Ubuntu and iOS for the Simulator on `macos-26`, when a pull request changes native
-  inputs (dependencies, `app.config.ts`, `eas.json`, images, `permissions.json`), weekly on `main`
-  and on demand (Actions → Native build → Run workflow). It also runs:
-  - **Permission review:** the permissions in the built APK and the usage descriptions and
-    background modes in the built `Info.plist` must match `permissions.json`. A new entry is a
-    decision: block it in `app.config.ts`, or add it to `permissions.json` and update the App Store
-    privacy labels and the Play Data safety form in the same pull request.
-  - **16 KB pages:** every native library in the APK has 16 KB aligned ELF segments and zip
-    entries, as Google Play requires for updates from 2027-02-01.
+- `native-build.yml`: a release build of the store identity (`APP_VARIANT=prod`) without signing,
+  iOS for the Simulator on `macos-26`, when a pull request changes native inputs (dependencies,
+  `app.config.ts`, `eas.json`, images, `permissions.json`), weekly on `main` and on demand
+  (Actions → Native build → Run workflow). It also runs the **permission review:** the usage
+  descriptions and background modes in the built `Info.plist` must match `permissions.json`. A new
+  entry is a decision: block it in `app.config.ts`, or add it to `permissions.json` and update the
+  App Store privacy labels in the same pull request.
+- Android has no build check while it is not a priority. Its job (release APK, the same permission
+  review, and the 16 KB page alignment Google Play requires for updates from 2027-02-01) is in
+  commit d066a19 (this repository's PR #3): restore it before Android work resumes.
 - `preview.yml`: each pull request from this repository gets a web preview on Pages, linked in a
   sticky comment; `preview-cleanup.yml` deletes it when the pull request closes. Previews use the
   production Supabase project.
@@ -113,6 +113,33 @@ app, so it is not a secret.
 4. Google Play accepts API uploads only after a first manual one:
    `npx eas-cli build --platform android --profile production`, download the `.aab` and upload it
    to Internal testing in the Play Console. From then on, releases submit on their own.
+
+### Supabase auth: passwords and passkeys
+
+The auth settings live in the Vue repository: `supabase/config.toml` for the local stack, the
+dashboard for the hosted project. Its change `unconfirmed-accounts-hold-no-password` brings them
+with a migration.
+
+1. **The migration first, as soon as it is merged there** (it fixes the live backend, whatever this
+   app does): run the audit query from that change's design in the dashboard's SQL editor and look
+   at the list, then `supabase db push`, and right after it, in Authentication → Sign In /
+   Providers → Email, turn on **Confirm email**. The migration keeps every unconfirmed account
+   without a password and drops the passwords that exist (no client ever set one; every account
+   keeps signing in with a code).
+2. Same page: **Minimum password length** 8.
+3. Authentication → Passkeys: on, display name `TourenBuddy`, relying party ID `tourenbuddy.ch`,
+   origins `https://tourenbuddy.ch, https://test.tourenbuddy.ch`. Never change the relying party
+   ID once someone has a passkey: every passkey would stop working.
+4. **Association file:** put the Apple Team ID (developer.apple.com → Membership) in place of
+   `TEAMID` in `public/.well-known/apple-app-site-association`. The apex `tourenbuddy.ch` serves it
+   with the web app: check it still shows only the parked page, then add it as a custom domain of
+   the `tourenbuddy-native` Pages project. Check:
+   `curl -i https://tourenbuddy.ch/.well-known/apple-app-site-association` answers 200 with
+   `content-type: application/json`, without a redirect. The app ids need the Associated Domains
+   capability: EAS turns it on for store builds, Xcode's automatic signing for development builds
+   on a device.
+
+Builds with the password screens reach testers only after step 1.
 
 ### Turn on store builds
 

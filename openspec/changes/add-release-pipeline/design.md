@@ -32,9 +32,9 @@ build quota with a queue. The Vue repo's `release.yml`, `deploy-preview.yml` and
   key), builds with the image matching SDK 58 and submits with `--auto-submit`. Releases are rare,
   so the free quota suffices.
 - **GitHub runners** for the pull request smoke: unlimited for a public repo, no EAS quota, no
-  credentials. `npx expo prebuild` then a Release build: Android `assembleRelease` on Ubuntu (Java
-  17, the image's Android SDK), iOS `xcodebuild` for the Simulator on `macos-26` (Xcode 26.6 by
-  default) without code signing. Both build the `prod` variant, the identity that ships.
+  credentials. `npx expo prebuild` then a Release build: iOS `xcodebuild` for the Simulator on
+  `macos-26` (Xcode 26.6 by default) without code signing, of the `prod` variant, the identity that
+  ships. Android has no smoke for now (Risks).
 - **Only when native inputs change:** `package.json`, `package-lock.json`, `app.config.ts`,
   `eas.json`, `patches/**`, `assets/images/**`, `permissions.json`, the script and the workflow.
   Pure JavaScript changes cannot break the compile, and an iOS build takes about half an hour. Also
@@ -77,8 +77,8 @@ the Pages API on close. Previews use the production backend, as Vue's do; the co
 `scripts/check-permissions.js` (CommonJS, so Jest tests it without a transform) reads what the
 release builds declare and compares it with `permissions.json`:
 
-- **Android:** the `uses-permission` names in the built APK (`aapt2 dump permissions`): libraries
-  add their own, so the app's manifest is not enough.
+- **Android** (kept for the Android job's return): the `uses-permission` names in the built APK
+  (`aapt2 dump permissions`): libraries add their own, so the app's manifest is not enough.
 - **iOS:** the `NS…UsageDescription` keys and `UIBackgroundModes` in the built app's `Info.plist`
   (`plutil -convert json`), not the generated one: `expo-dev-client`'s plugin writes a local network
   usage description for the dev launcher, and a build phase strips it from Release builds.
@@ -92,11 +92,11 @@ other apps") serves React Native's dev overlays, so `prod` blocks it.
 
 ### 16 KB pages
 
-Play requires native libraries aligned to 16 KB for updates from 2027-02-01 (#346 section 9). The
-Android smoke checks both halves on the release APK: `zipalign -c -P 16 -v 4` for the zip entries,
-and the NDK's `llvm-objdump` for every library's `LOAD` segments (`2**14` or more), as Google's
-check script does. It builds the 64-bit ABIs only, which the rule concerns. A library that is not
-aligned shows up long before the deadline.
+Paused with the Android smoke (Risks). Play requires native libraries aligned to 16 KB for updates
+from 2027-02-01 (#346 section 9). The Android smoke checks both halves on the release APK:
+`zipalign -c -P 16 -v 4` for the zip entries, and the NDK's `llvm-objdump` for every library's
+`LOAD` segments (`2**14` or more), as Google's check script does. It builds the 64-bit ABIs only,
+which the rule concerns. A library that is not aligned shows up long before the deadline.
 
 ## Risks / Trade-offs
 
@@ -104,6 +104,11 @@ aligned shows up long before the deadline.
   working workflows; the smoke and the permission list are checked by the first PR that touches
   native inputs, this one included. `permissions.json` starts from the generated manifest, the
   libraries' manifests and AndroidX's known entry; the first CI run may name an entry to add.
+- [The Android smoke is dropped (2026-11-08): its first run failed on a GitHub 504 for the Gradle
+  9.4.1 download, and Android is not a priority] → No check catches Android compile breaks, new
+  Android permissions or 16 KB misalignment. The job is in this repository's PR #3 (commit
+  d066a19); restore it before Android work resumes, and before the first Play update after
+  2027-02-01.
 - [`macos-26` moves to a newer Xcode] → Weekly run on `main`; pin `xcode-select` if a release breaks
   the build.
 - [A release-please PR opened by `GITHUB_TOKEN` triggers no checks] → Same as the Vue repo; its

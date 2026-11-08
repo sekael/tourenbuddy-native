@@ -4,8 +4,8 @@
 
 Every pull request and every push to `main` SHALL run lint at zero warnings, the type check, all
 tests (including the locale checks) and a production web export. Pull requests that change native
-inputs (dependencies, app config, build config, patches or images) SHALL also build release apps
-for iOS and Android and review their permissions. A failing step SHALL fail the check.
+inputs (dependencies, app config, build config, patches or images) SHALL also build a release app
+for iOS and review its permissions. A failing step SHALL fail the check.
 
 #### Scenario: Missing translation in a pull request
 
@@ -19,7 +19,7 @@ for iOS and Android and review their permissions. A failing step SHALL fail the 
 
 #### Scenario: Native build breaks
 
-- **WHEN** a pull request adds a dependency whose native code does not compile for iOS or Android
+- **WHEN** a pull request adds a dependency whose native code does not compile for iOS
 - **THEN** the native build check fails
 
 #### Scenario: A library adds a permission
@@ -27,11 +27,6 @@ for iOS and Android and review their permissions. A failing step SHALL fail the 
 - **WHEN** a pull request adds a library that declares a permission the app has not recorded
 - **THEN** the native build check fails and names the permission and the file that records the
   reviewed permissions
-
-#### Scenario: Native libraries not aligned for 16 KB pages
-
-- **WHEN** a pull request adds an Android native library that is not aligned for 16 KB pages
-- **THEN** the native build check fails
 
 ## ADDED Requirements
 

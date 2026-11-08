@@ -21,12 +21,11 @@ through EAS (#346 section 4).
   linked in a PR comment and deleted when the PR closes, as in the Vue repo. Previews and store
   builds use the production backend, as Vue previews do.
 - **Native build smoke:** pull requests that change native inputs (dependencies, app config, EAS
-  config, patches, images) build release apps of the `prod` variant on GitHub runners: Android on
-  Linux, iOS on macOS 26 for the Simulator, without signing.
-- **Permission review:** the smoke compares the permissions in the release builds (Android's merged
-  manifest; iOS usage descriptions and background modes) with `permissions.json`, so a library
-  that adds a permission fails the check until someone reviews and records it. Android's native
-  libraries are checked for 16 KB page alignment, which Play requires for updates from 2027-02-01.
+  config, patches, images) build a release app of the `prod` variant on a GitHub runner: iOS on
+  macOS 26 for the Simulator, without signing.
+- **Permission review:** the smoke compares the iOS usage descriptions and background modes in the
+  release build with `permissions.json`, so a library that adds a permission fails the check until
+  someone reviews and records it.
 - **Setup without secrets is safe:** each job that needs an account skips with a notice until its
   secrets exist, so the pipeline can merge before the accounts are set up.
 - **Runbook:** `docs/publishing.md` covers the one-time setup (EAS project, App Store Connect API
@@ -35,7 +34,8 @@ through EAS (#346 section 4).
   publishing runbook (#346 section 13) follow in Phase 6.
 
 Not in this change: the forced-update gate (D15, with `app-update`), Firebase and push (B1),
-Universal Links (B4).
+Universal Links (B4), and the Android build smoke (release APK, permission review, 16 KB page
+alignment): written, then dropped on 2026-11-08 while Android is not a priority (design, Risks).
 
 ## Capabilities
 

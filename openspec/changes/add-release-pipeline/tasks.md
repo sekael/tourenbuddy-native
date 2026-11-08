@@ -9,7 +9,7 @@
 
 - [x] 2.1 `release.yml`: release-please; on a release, web deploy to Pages and EAS build with auto-submit, each skipping with a notice without its secrets
 - [x] 2.2 `preview.yml` and `preview-cleanup.yml`: Pages preview per PR with a sticky comment, deleted on close
-- [x] 2.3 `native-build.yml`: Android release build (Ubuntu) and iOS Simulator release build (`macos-26`) of `prod` on native inputs, weekly and on demand; permission review; 16 KB alignment (zip entries and ELF segments)
+- [x] 2.3 `native-build.yml`: iOS Simulator release build (`macos-26`) of `prod` on native inputs, weekly and on demand; permission review. The Android build (release APK, permission review, 16 KB alignment) is dropped while Android is not a priority (commit d066a19, this repository's PR #3)
 
 ## 3. Permission review
 
