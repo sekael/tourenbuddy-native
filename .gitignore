@@ -38,3 +38,5 @@ npm-debug.*
 
 # local agent settings
 .claude/settings.local.json
+
+tourenbuddy_frontend_vue
