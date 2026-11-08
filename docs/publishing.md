@@ -24,6 +24,16 @@ Follow the setup in order: `EXPO_TOKEN` comes last, because it turns the store b
 
 The marketing version comes from `package.json`, which only release-please changes.
 
+## Device checks before review
+
+On the iPhone 15, with the TestFlight build (the store identity: the association file comes through
+Apple's CDN, as for users), before submitting it for review. These need a real device:
+
+- Sign-in code: the code from Mail is offered above the keyboard and signs in on its own.
+- Restart the phone, wait a minute without unlocking, unlock and open the app: still signed in.
+- Create account with **Use Strong Password**: Passwords holds it for `tourenbuddy.ch`; after
+  signing out, the account is offered above the keyboard and Face ID fills both fields.
+
 ## Checks on pull requests
 
 - `checks.yml`: lint, type check, tests and a web export, on every pull request.
@@ -131,9 +141,12 @@ with a migration.
    origins `https://tourenbuddy.ch, https://test.tourenbuddy.ch`. Never change the relying party
    ID once someone has a passkey: every passkey would stop working.
 4. **Association file:** put the Apple Team ID (developer.apple.com → Membership) in place of
-   `TEAMID` in `public/.well-known/apple-app-site-association`. The apex `tourenbuddy.ch` serves it
-   with the web app: check it still shows only the parked page, then add it as a custom domain of
-   the `tourenbuddy-native` Pages project. Check:
+   `TEAMID` in `public/.well-known/apple-app-site-association`, and as `ios.appleTeamId` in
+   `app.config.ts`: without it a Simulator build carries no team and never matches the file. The
+   apex `tourenbuddy.ch` serves it with the web app: check it still shows only the parked page,
+   then add it as a custom domain of the `tourenbuddy-native` Pages project. Until the first
+   release deploys the web app there, deploy the file alone:
+   `npx wrangler pages deploy public --project-name tourenbuddy-native --branch main`. Check:
    `curl -i https://tourenbuddy.ch/.well-known/apple-app-site-association` answers 200 with
    `content-type: application/json`, without a redirect. The app ids need the Associated Domains
    capability: EAS turns it on for store builds, Xcode's automatic signing for development builds

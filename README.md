@@ -57,7 +57,16 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon key>
   The URL depends on where the app runs: iOS Simulator and web `http://127.0.0.1:54321`, Android emulator `http://10.0.2.2:54321`, a phone your Mac's address on the same Wi-Fi (`http://192.168.x.y:54321`).
 - **Hosted project:** the project URL and anon key from the Supabase dashboard (Project Settings → API).
 - **Passwords and passkeys** need the auth settings in the Vue repository's `supabase/config.toml` (email confirmations, minimum password length 8, passkeys for `tourenbuddy.ch`): [docs/publishing.md](./docs/publishing.md), "Supabase auth".
-  Passkeys also need the association file online at `https://tourenbuddy.ch/.well-known/`, even against the local stack, and Face ID in the Simulator: Features → Face ID → Enrolled, then Matching Face when the sheet asks.
+  Passkeys also need the association file online at `https://tourenbuddy.ch/.well-known/`, even against the local stack, and Face ID in the Simulator.
+  Xcode 27's Device Hub has no Face ID menu (Simulator.app had Features → Face ID); enroll once, then send a matching face each time the gray Face ID icon waits:
+
+  ```sh
+  xcrun simctl spawn booted notifyutil -s com.apple.BiometricKit.enrollmentChanged 1
+  xcrun simctl spawn booted notifyutil -p com.apple.BiometricKit.enrollmentChanged
+  xcrun simctl spawn booted notifyutil -p com.apple.BiometricKit_Sim.pearl.match   # nomatch: a failed scan
+  ```
+
+  The Simulator's password AutoFill only offers the Passwords list, never the account above the keyboard: check saving and AutoFill on a device ([docs/publishing.md](./docs/publishing.md), "Device checks before review").
 
 `EXPO_PUBLIC_*` values are compiled into the app, so restart the dev server with `npm start -- --clear` after changing them.
 Releases get them from EAS environment variables and GitHub secrets: see [docs/publishing.md](./docs/publishing.md).

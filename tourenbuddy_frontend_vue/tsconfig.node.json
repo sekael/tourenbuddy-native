@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    // Vite/workbox ship .d.ts that assume DOM + WebWorker libs this project doesn't load.
+    // Without this, checking vite.config.ts alone reports 223 errors from node_modules.
+    "skipLibCheck": true
+  },
+  "include": ["vite.config.ts"]
+}

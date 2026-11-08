@@ -1,0 +1,59 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write",
+      "Edit",
+      "MultiEdit",
+      "Glob",
+      "Grep",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/*.key)",
+      "Read(**/*.pem)",
+      "Edit(.env)",
+      "Edit(.env.*)",
+      "Bash(rm -rf *)",
+      "Bash(rm -r *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"$CLAUDE_FILE_PATHS\" | tr ',' '\\n' | while read -r file_path; do if echo \"$file_path\" | grep -qE '\\.(ts|tsx|vue|js|jsx|mjs|json|css|html)$'; then npx prettier --write \"$file_path\" 2>/dev/null || true; fi; done"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // empty' | { read cmd; if echo \"$cmd\" | grep -qE 'git\\s+push.*--force|git\\s+push\\s+-f'; then echo 'BLOCKED: Force push is not allowed. Use regular push.' >&2; exit 2; fi; if echo \"$cmd\" | grep -qE 'git\\s+push.*main|git\\s+push.*master'; then echo 'BLOCKED: Direct push to main/master is not allowed. Push to your feature branch.' >&2; exit 2; fi; exit 0; }"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {}
+}

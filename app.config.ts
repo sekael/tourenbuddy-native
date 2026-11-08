@@ -30,6 +30,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   backgroundColor: '#ffffff',
   ios: {
     bundleIdentifier: id,
+    // The team the association file names; without it a Simulator build has none and never matches.
+    appleTeamId: 'R26MV7TAH3',
     supportsTablet: true,
     config: { usesNonExemptEncryption: false },
     // Passkeys for tourenbuddy.ch, which lists both apps in /.well-known/apple-app-site-association

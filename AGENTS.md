@@ -51,6 +51,7 @@ src/
   locales/      en.json, de-CH.json
 test/           Jest tests, mirroring src/ (src/core/i18n/detect.ts → test/core/i18n/detect.test.ts)
 assets/         images/ (app icon, launch image, favicon), fonts/ (web Inter subset)
+modules/        local Expo modules (native code the app config cannot express)
 openspec/       specs and changes
 ```
 
