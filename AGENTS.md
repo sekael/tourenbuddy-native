@@ -9,7 +9,7 @@ contacts, and pick planned dates. This repository holds the iOS, Android and web
 React Native and Expo. They replace the Vue PWA in `sekael/tourenbuddy_frontend_vue`.
 
 The plan lives in that repo's issues: epic sekael/tourenbuddy_frontend_vue#346 (decision IDs
-D1–D19, risks, architecture) and one issue per phase, #367 (Phase 0, done) to #374 in the same repo.
+D1–D20, risks, architecture) and one issue per phase, #367 (Phase 0, done) to #374 in the same repo.
 Issue numbers in this file refer to that repo. Read the phase issue before proposing work in it.
 
 ## Stack
@@ -51,6 +51,7 @@ src/
   locales/      en.json, de-CH.json
 test/           Jest tests, mirroring src/ (src/core/i18n/detect.ts → test/core/i18n/detect.test.ts)
 assets/         images/ (app icon, launch image, favicon), fonts/ (web Inter subset)
+modules/        local Expo modules (native code the app config cannot express)
 openspec/       specs and changes
 ```
 
@@ -105,6 +106,32 @@ Switching changes the bundle identifier: run `npx expo prebuild --clean` afterwa
 - Run `npm run check` (lint, type check, tests) before declaring a task done.
 - Agents cannot build or run the iOS and Android apps; the owner builds and measures on a Mac and
   devices. Give exact commands and what to look for.
+
+## Session, Realtime and releases
+
+- The signed-in user comes from `useAuthStore` (`features/auth/presentation/stores`). Only the
+  store writes `user` (restore, its `onAuthStateChange` listener, sign-out); screens call its
+  actions and never set it. Read
+  `sessionTrust` (`core/auth/session-trust.ts`) to tell an unverified session (offline launch)
+  from a confirmed one.
+- The session lives in the Keychain and Keystore through `core/auth/auth-storage.ts` (web:
+  `localStorage`). Nothing else reads or writes it; `core/supabase.ts` is the only client.
+- Sign-in: password, email code (the PWA's flow) and, on iOS only, passkeys (Face ID). Screens reach
+  the auth API and `features/auth/data/passkeys.ts` only through the store's actions; they may read
+  its `passkeysSupported` and `PasskeyError`. Create account sends the code first and sets the
+  password after it (`signUp`, `verifyOtp`), so it never tells whether an address has an account.
+  The relying party `tourenbuddy.ch` is permanent; the backend's auth settings: `docs/publishing.md`.
+- Routes follow the session in one place: the two `Stack.Protected` groups in
+  `src/app/_layout.tsx`. A new signed-in route goes inside the first group, never behind its own
+  redirect.
+- Realtime only through `subscribeRealtime` (`@/core/realtime/subscribe`), and only to keep what
+  the app shows current, never for notifications. A store subscribes in an action and calls the
+  returned function in its `clear()` on sign-out.
+- Tests never reach Supabase or the Keychain: `test/setup.ts` swaps `@/core/supabase` and
+  `@/core/auth/auth-storage` for the fakes in `test/support/`. `signIn()` and `resetAuth()` from
+  `test/support/auth.ts` set the session.
+- Local backend and env variables: README, "Backend". Releases (release-please, EAS, Pages) and
+  their one-time setup: `docs/publishing.md`.
 
 ## Commands
 

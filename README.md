@@ -8,7 +8,7 @@ They replace the Vue PWA in [`sekael/tourenbuddy_frontend_vue`](https://github.c
 
 ## Status
 
-Phase 1 (repo, CI and app foundation, [#368](https://github.com/sekael/tourenbuddy_frontend_vue/issues/368)) is in progress: `main` runs an empty shell.
+Phase 1 (repo, CI and app foundation, [#368](https://github.com/sekael/tourenbuddy_frontend_vue/issues/368)) is in progress: `main` signs in with an email code and shows the empty shell.
 `main` grows one reviewed change at a time: each pull request implements an approved OpenSpec change.
 The migration plan, its decisions and phases are in [#346](https://github.com/sekael/tourenbuddy_frontend_vue/issues/346).
 
@@ -30,6 +30,46 @@ Builds default to the `dev` variant ("TourenBuddy Dev", `ch.tourenbuddy.app.dev`
 `APP_VARIANT=prod` selects the store identity ("TourenBuddy", `ch.tourenbuddy.app`).
 The variant changes the bundle identifier, so regenerate the native projects when you switch: `npx expo prebuild --clean`.
 `ios/` and `android/` are generated from `app.config.ts` and never committed; change native settings there or in a config plugin.
+Releases, store builds and web previews run on GitHub Actions and EAS: see [docs/publishing.md](./docs/publishing.md).
+
+## Backend
+
+The app talks to Supabase. Schema, migrations and the local stack live in the Vue repository.
+Set two variables in `.env.local` (gitignored); the app refuses to start without them:
+
+```sh
+EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon key>
+```
+
+- **Local stack:** `supabase start` in `tourenbuddy_frontend_vue` (up to date with its `main`).
+  Then, still there, write both variables for the Simulator into this repository's `.env.local`:
+
+  ```sh
+  supabase status -o env \
+    --override-name api.url=EXPO_PUBLIC_SUPABASE_URL \
+    --override-name auth.anon_key=EXPO_PUBLIC_SUPABASE_ANON_KEY \
+    | grep '^EXPO_PUBLIC_' > ../tourenbuddy-native/.env.local
+  ```
+
+  The path assumes both checkouts side by side. The `grep` keeps the service role key and the JWT secret out of the app's environment.
+  Sign-in codes land in Mailpit at `http://127.0.0.1:54324`.
+  The URL depends on where the app runs: iOS Simulator and web `http://127.0.0.1:54321`, Android emulator `http://10.0.2.2:54321`, a phone your Mac's address on the same Wi-Fi (`http://192.168.x.y:54321`).
+- **Hosted project:** the project URL and anon key from the Supabase dashboard (Project Settings → API).
+- **Passwords and passkeys** need the auth settings in the Vue repository's `supabase/config.toml` (email confirmations, minimum password length 8, passkeys for `tourenbuddy.ch`): [docs/publishing.md](./docs/publishing.md), "Supabase auth".
+  Passkeys also need the association file online at `https://tourenbuddy.ch/.well-known/`, even against the local stack, and Face ID in the Simulator.
+  Xcode 27's Device Hub has no Face ID menu (Simulator.app had Features → Face ID); enroll once, then send a matching face each time the gray Face ID icon waits:
+
+  ```sh
+  xcrun simctl spawn booted notifyutil -s com.apple.BiometricKit.enrollmentChanged 1
+  xcrun simctl spawn booted notifyutil -p com.apple.BiometricKit.enrollmentChanged
+  xcrun simctl spawn booted notifyutil -p com.apple.BiometricKit_Sim.pearl.match   # nomatch: a failed scan
+  ```
+
+  The Simulator's password AutoFill only offers the Passwords list, never the account above the keyboard: check saving and AutoFill on a device ([docs/publishing.md](./docs/publishing.md), "Device checks before review").
+
+`EXPO_PUBLIC_*` values are compiled into the app, so restart the dev server with `npm start -- --clear` after changing them.
+Releases get them from EAS environment variables and GitHub secrets: see [docs/publishing.md](./docs/publishing.md).
 
 ## Platforms (target)
 

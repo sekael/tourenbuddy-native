@@ -1,0 +1,60 @@
+name: Preview cleanup
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  cleanup:
+    # Forks never got a preview.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      HEAD_REF: ${{ github.event.pull_request.head.ref }}
+    steps:
+      - name: Delete the branch's preview deployments
+        id: delete
+        run: |
+          set -euo pipefail
+          if [ -z "$CF_API_TOKEN" ] || [ -z "$CF_ACCOUNT_ID" ]; then
+            echo "::notice::No Cloudflare secrets, so no preview to delete."
+            exit 0
+          fi
+          # The same slug as preview.yml.
+          slug=$(echo "$HEAD_REF" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | cut -c1-28 | sed 's/-*$//')
+          api="https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/tourenbuddy-native"
+
+          # Collect first, then delete, so deleting does not shift the pages being read.
+          ids=""
+          page=1
+          while :; do
+            resp=$(curl -sf -H "Authorization: Bearer $CF_API_TOKEN" "$api/deployments?env=preview&page=$page&per_page=25")
+            ids="$ids $(echo "$resp" | jq -r --arg slug "$slug" '.result[] | select(.deployment_trigger.metadata.branch == $slug) | .id')"
+            [ "$(echo "$resp" | jq '.result | length')" -lt 25 ] && break
+            page=$((page + 1))
+          done
+
+          deleted=0
+          for id in $ids; do
+            # force=true also removes the branch alias.
+            curl -sf -X DELETE -H "Authorization: Bearer $CF_API_TOKEN" "$api/deployments/$id?force=true" > /dev/null
+            deleted=$((deleted + 1))
+          done
+          echo "Deleted $deleted deployments of $slug."
+          echo "deleted=$deleted" >> "$GITHUB_OUTPUT"
+      - if: steps.delete.outputs.deleted > 0
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: preview
+          message: |
+            ### Web preview
+
+            Removed from Cloudflare Pages after the pull request closed.

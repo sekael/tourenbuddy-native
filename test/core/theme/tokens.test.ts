@@ -28,6 +28,8 @@ describe('color tokens', () => {
     ['onSecondaryContainer', 'secondaryContainerPressed'],
     ['onFab', 'fab'],
     ['primary', 'background'],
+    ['error', 'background'],
+    ['success', 'background'],
   ];
 
   it.each(pairs)('should give %s on %s at least 4.5:1 (WCAG AA)', (fg, bg) => {

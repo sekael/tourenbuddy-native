@@ -1,0 +1,25 @@
+{
+  "cli": {
+    "version": ">= 27.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "environment": "development",
+      "env": { "APP_VARIANT": "dev" }
+    },
+    "production": {
+      "environment": "production",
+      "env": { "APP_VARIANT": "prod" },
+      "autoIncrement": true
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {},
+      "android": { "track": "internal", "releaseStatus": "draft" }
+    }
+  }
+}

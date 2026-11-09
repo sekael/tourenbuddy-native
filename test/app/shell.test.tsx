@@ -1,6 +1,7 @@
 import { act, screen } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 
+import { signIn } from '../support/auth';
 import { routes } from './routes';
 
 // Device locales as an external store, so the test can change them the way the OS does.
@@ -23,6 +24,9 @@ jest.mock('expo-localization', () => {
 });
 
 const { setDeviceLocales } = jest.requireMock('expo-localization');
+
+// The tabs are for a signed-in user (`test/app/auth.test.tsx` covers signing in).
+beforeEach(() => signIn());
 
 describe('shell', () => {
   it('should switch to German, tab bar included, when the device language changes while running', async () => {

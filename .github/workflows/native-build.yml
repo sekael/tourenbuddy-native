@@ -1,0 +1,56 @@
+name: Native build
+
+# Release builds of the store identity, without signing, where a change can break the native
+# projects. Pure JavaScript changes cannot, and an iOS build takes about half an hour.
+# ponytail: iOS only while Android is not a priority. The Android job (release APK, permission
+# review, 16 KB alignment) is in commit d066a19 (PR #3 here); restore it with Android work.
+on:
+  pull_request:
+    paths:
+      - package.json
+      - package-lock.json
+      - app.config.ts
+      - eas.json
+      - patches/**
+      - assets/images/**
+      - permissions.json
+      - scripts/check-permissions.js
+      - .github/workflows/native-build.yml
+  schedule:
+    # Weekly on main, to catch runner image updates.
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: native-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  APP_VARIANT: prod
+
+jobs:
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx expo prebuild --platform ios
+      - name: Release build (Simulator)
+        run: >
+          xcodebuild -quiet
+          -workspace ios/TourenBuddy.xcworkspace -scheme TourenBuddy -configuration Release
+          -sdk iphonesimulator -destination 'generic/platform=iOS Simulator'
+          -derivedDataPath ios/build CODE_SIGNING_ALLOWED=NO build
+      # The built Info.plist: a build phase strips the dev launcher's local network keys from it.
+      - name: Permission review
+        run: |
+          plutil -convert json -o "$RUNNER_TEMP/info.json" ios/build/Build/Products/Release-iphonesimulator/TourenBuddy.app/Info.plist
+          node scripts/check-permissions.js ios "$RUNNER_TEMP/info.json"

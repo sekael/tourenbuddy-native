@@ -1,0 +1,9 @@
+# As the PWA: no framing (the sign-in form takes passwords), no MIME sniffing.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'
+
+# Apple reads the association file as JSON; it has no extension to say so.
+/.well-known/apple-app-site-association
+  Content-Type: application/json
