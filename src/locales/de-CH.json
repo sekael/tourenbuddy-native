@@ -337,7 +337,8 @@
       "imprint": "Impressum",
       "legalSection": "Über",
       "accountSection": "Konto",
-      "languageHint": "Die Sprache änderst du in der Einstellungen-App."
+      "languageHint": "Die Sprache änderst du in der Einstellungen-App.",
+      "paceHint": "Jede geschätzte Zeit richtet sich nach deinem Tempo: unter 1.0× bist du langsamer als die Faustregel, darüber schneller."
     },
     "phoneVerification": {
       "title": "Telefon verifizieren",
@@ -662,7 +663,10 @@
       "trackFromGoal": "Am Ziel, wo der Track beginnt",
       "discardTitle": "Änderungen verwerfen?",
       "gpxTrackNone": "Noch kein Track",
-      "changeRouteBtn": "Route auf der Karte ändern"
+      "changeRouteBtn": "Route auf der Karte ändern",
+      "severalActivities": "Mehrere Aktivitäten…",
+      "gradeMore": "Andere Angabe…",
+      "allContacts": "Alle Kontakte"
     },
     "creation": {
       "title": "Neue Tour",
@@ -685,7 +689,7 @@
     },
     "infoSheet": {
       "editTitlePrefix": "Bearbeiten",
-      "editTitle": "Bearbeiten: {{name}}",
+      "editTitle": "Bearbeiten",
       "unnamedTour": "Unbenannte Tour",
       "createdByLabel": "Erstellt von {{name}}",
       "completedBtn": "Abgeschlossen",
@@ -887,7 +891,8 @@
       "gpxNew": "Neuer GPX-Track",
       "gpxExisting": "Bestehender GPX-Track",
       "anAttachment": "Ein Anhang",
-      "byYou": "Vorgeschlagen von dir"
+      "byYou": "Vorgeschlagen von dir",
+      "suggestTitle": "Vorschlag"
     },
     "outing": {
       "segmentCount_one": "{{count}} Etappe",
@@ -985,7 +990,8 @@
       "noInfo": "Keine Routeninformationen verfügbar",
       "offline": "Für Routendetails braucht es eine Verbindung",
       "lookupError": "Routeninfo konnte nicht geladen werden",
-      "planTour": "Als Tour planen"
+      "planTour": "Als Tour planen",
+      "ascentTime": "Aufstiegszeit"
     },
     "cluster": {
       "label": "Cluster aus {{count}} Touren",
@@ -1086,7 +1092,12 @@
       "hint": "Deine Touren findest du auch unter Meine Touren.",
       "legendHint": "Erklärt Markierungen, Farben und Linien.",
       "toursHint": "Listet deine Touren und die deiner Freunde.",
-      "addHint": "Wähle das Ziel auf der Karte oder suche einen Ort."
+      "addHint": "Wähle das Ziel auf der Karte oder suche einen Ort.",
+      "searchHint": "Findet einen Ort auf der Karte"
+    },
+    "search": {
+      "title": "Ort suchen",
+      "hint": "Suche einen Ort, eine Hütte oder eine Haltestelle"
     }
   },
   "i18n": {
@@ -1155,7 +1166,8 @@
     },
     "cooldown": {
       "remaining": "Verfügbar in {{hours}} h"
-    }
+    },
+    "unblockFrom": "Entsperren möglich ab {{date}}"
   },
   "notifications": {
     "sectionTitle": "Benachrichtigungen",
@@ -1263,7 +1275,7 @@
         "body": "Wähle eine Grundkarte und blende Wanderwege oder Skitouren darüber ein, in beliebiger Kombination. Mit Skitouren zoomst du hinein, bis die Routen Schwierigkeits-Badges zeigen, und tippst dann für Details auf eine Route – oder planst sie gleich als Tour. Der ⓘ-Knopf unten links erklärt die Farben und Symbole der Tourenmarker."
       },
       "welcome": {
-        "title": "Willkommen bei TourenBuddy",
+        "title": "Willkommen",
         "body": "Eine kurze Tour durch das Wichtigste: Touren planen, Karten, Freunde und der Kalender. Tippe irgendwo, um fortzufahren, oder nutze die Navigation oben.",
         "start": "Tour starten",
         "skip": "Vorerst überspringen",
@@ -1347,7 +1359,8 @@
       "nearQuota": "Dies verbraucht einen Grossteil deines verbleibenden Speichers.",
       "start": "Herunterladen",
       "cancel": "Abbrechen",
-      "untitled": "Offline-Region"
+      "untitled": "Offline-Region",
+      "sheetTitle": "Neue Region"
     },
     "manage": {
       "title": "Offline-Karten",
@@ -1424,7 +1437,7 @@
   },
   "inbox": {
     "title": "Posteingang",
-    "empty": "Noch nichts Neues. Freundschaftsanfragen, geteilte Touren und Vorschläge erscheinen hier.",
+    "empty": "Noch nichts Neues",
     "loadError": "Der Posteingang konnte nicht geladen werden.",
     "markAllRead": "Alle gelesen",
     "loadMore": "Mehr laden",
@@ -1473,7 +1486,8 @@
       "eyebrow": "Neu in TourenBuddy",
       "settingsAction": "Benachrichtigungen",
       "settingsHint": "Beides kommt auch per Push und E-Mail. Du entscheidest, was du erhältst."
-    }
+    },
+    "emptyHint": "Freundschaftsanfragen, geteilte Touren und Vorschläge erscheinen hier."
   },
   "releaseNotes": {
     "2026-10-availability-reminders": {

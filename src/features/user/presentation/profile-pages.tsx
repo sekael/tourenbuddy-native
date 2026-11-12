@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Linking, StyleSheet, View } from 'react-native';
 
-import { ListRow, ListSection, TextRow, ToggleRow } from '@/core/adaptive/list';
+import { ListRow, ListSection, StepperRow, TextRow, ToggleRow } from '@/core/adaptive/list';
 import { Page } from '@/core/adaptive/screen';
 import { Text } from '@/core/adaptive/text';
 import { PhoneAlreadyRegisteredError } from '@/core/exceptions';
@@ -35,6 +35,10 @@ export async function signOutEverywhereHere() {
  * notifications and calendar sync, password and passkeys, feedback, the legal pages, sign-out
  * and account deletion, as iOS Settings lays such a list out.
  */
+/** The pace's range, a speed factor on every estimated time: tortoise to hare (as in the PWA). */
+const PACE_MIN = 0.5;
+const PACE_MAX = 1.5;
+
 export function ProfilePage({ onPush }: { onPush: (page: string) => void }) {
   const { t, i18n } = useTranslation();
   const profile = useUserProfileStore((s) => s.profile);
@@ -193,6 +197,19 @@ export function ProfilePage({ onPush }: { onPush: (page: string) => void }) {
           icon="language"
           value={de ? 'Deutsch' : 'English'}
           onPress={() => void Linking.openSettings()}
+        />
+      </ListSection>
+      <ListSection footer={t('user.profile.paceHint')}>
+        <StepperRow
+          title={t('tours.route.pace')}
+          value={profile?.pace ?? 1}
+          min={PACE_MIN}
+          max={PACE_MAX}
+          step={0.1}
+          onChange={(pace) =>
+            void useUserProfileStore.getState().updateProfile({ pace: Math.round(pace * 10) / 10 })
+          }
+          format={(pace) => `${pace.toFixed(1)}×`}
         />
       </ListSection>
       <ListSection title={t('user.profile.accountSection')}>

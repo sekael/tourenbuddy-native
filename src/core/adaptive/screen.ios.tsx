@@ -38,6 +38,7 @@ import { color } from '@/core/theme/tokens';
 import { useReducedMotion } from '@/core/theme/use-reduced-motion';
 
 import { icons } from './icons';
+import { InSwiftUIList } from './in-list';
 import { PageBanner } from './page-banner';
 import type { PageProps, ScreenProps } from './screen';
 
@@ -110,12 +111,12 @@ export function Page({
         {banner}
         {header ? (
           <Section>
-            <RNHostView matchContents>
+            <RNHostView matchContents={{ vertical: true }}>
               <View>{header}</View>
             </RNHostView>
           </Section>
         ) : null}
-        {children}
+        <InSwiftUIList.Provider value>{children}</InSwiftUIList.Provider>
       </Container>
       <Toolbar.Content>
         {titleControl ? (

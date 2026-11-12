@@ -194,7 +194,7 @@ export function OfflineRegionSheet() {
     <Screen>
       <Page
         form
-        title={t('offlineMap.download.title')}
+        title={t('offlineMap.download.sheetTitle')}
         cancel={{ label: t('offlineMap.draw.cancel'), onPress: () => router.back() }}
         confirm={{ label: t('offlineMap.download.start'), onPress: start, disabled: !region }}
       >

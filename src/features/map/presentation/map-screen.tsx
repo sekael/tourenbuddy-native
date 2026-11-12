@@ -192,6 +192,14 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
                 label={t('map.actionBar.myTours')}
                 items={[
                   {
+                    id: 'search',
+                    label: t('map.search.title'),
+                    hint: t('map.a11y.searchHint'),
+                    icon: 'search',
+                    iconOnly: true,
+                    onPress: () => router.push('/search'),
+                  },
+                  {
                     id: 'tours',
                     label: t('map.actionBar.myTours'),
                     hint: t('map.a11y.toursHint'),

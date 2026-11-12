@@ -1,13 +1,10 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
 
 import type { IconName } from '@/core/adaptive/icons';
 import { ListRow, ListSection, TextRow } from '@/core/adaptive/list';
 import { Page, Screen } from '@/core/adaptive/screen';
-import { Text } from '@/core/adaptive/text';
-import { color, space } from '@/core/theme/tokens';
 import { useUserProfileStore } from '@/features/user/presentation/stores/user-profile-store';
 
 /**
@@ -75,12 +72,8 @@ export function WelcomeSheet() {
   const fromSignIn = start !== 'features';
   const features = (
     <Page
+      largeTitle
       title={t('onboarding.tour.welcome.title')}
-      header={
-        <Text style={styles.intro} variant="body">
-          {t('onboarding.index.intro')}
-        </Text>
-      }
       onClose={fromSignIn ? undefined : () => router.back()}
       cancel={
         fromSignIn && !needsName
@@ -91,7 +84,7 @@ export function WelcomeSheet() {
         fromSignIn ? { label: t('onboarding.tour.controls.done'), onPress: done } : undefined
       }
     >
-      <ListSection>
+      <ListSection title={t('onboarding.index.intro')}>
         {FEATURES.map((feature) => (
           <ListRow
             key={feature.key}
@@ -173,7 +166,3 @@ function NamePage({ onDone }: { onDone: () => void }) {
     </Page>
   );
 }
-
-const styles = StyleSheet.create({
-  intro: { color: color.onSurfaceVariant, paddingVertical: space.xs },
-});

@@ -207,18 +207,16 @@ export default function RootLayout() {
           <Stack.Screen name="tour-overlaps" options={mapSheetOptions} />
           <Stack.Screen name="plan" options={stepSheetOptions} />
           <Stack.Screen name="draw" options={stepSheetOptions} />
-          <Stack.Screen name="stack" options={mapSheetOptions} />
-          <Stack.Screen name="trail" options={mapSheetOptions} />
-          <Stack.Screen
-            name="legend"
-            options={Platform.OS === 'web' ? mapSheetOptions : sheetOptions}
-          />
+          <Stack.Screen name="stack" options={mapSheetOptions} dangerouslySingular />
+          <Stack.Screen name="trail" options={mapSheetOptions} dangerouslySingular />
+          <Stack.Screen name="legend" options={mapSheetOptions} />
           <Stack.Screen name="contact/[id]" options={mapSheetOptions} />
           <Stack.Screen name="contact/edit" options={formModalOptions} />
           <Stack.Screen name="inbox" options={mapSheetOptions} />
           <Stack.Screen name="offline-maps" options={mapSheetOptions} />
           <Stack.Screen name="offline-region" options={stepSheetOptions} />
           <Stack.Screen name="map-layers" options={mapSheetOptions} />
+          <Stack.Screen name="search" options={mapSheetOptions} />
           <Stack.Screen name="feedback" options={mapSheetOptions} />
           <Stack.Screen name="sync-issues" options={mapSheetOptions} />
           <Stack.Screen name="welcome" options={formModalOptions} />

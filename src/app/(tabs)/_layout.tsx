@@ -17,6 +17,7 @@ export default function TabsLayout() {
   const requests = useFriendshipsStore(
     (s) => s.incoming.filter((r) => r.status === 'pending').length,
   );
+  // expo-router shows any text it is given, `hidden` or not: a zero gets none.
   const badge = (count: number) => (count > 9 ? '9+' : String(count));
 
   return (
@@ -38,14 +39,14 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label>{t('shell.tabs.contacts')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={icons.contacts.sf} md="group" />
         <NativeTabs.Trigger.Badge hidden={requests === 0}>
-          {badge(requests)}
+          {requests ? badge(requests) : undefined}
         </NativeTabs.Trigger.Badge>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
         <NativeTabs.Trigger.Label>{t('shell.tabs.profile')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={icons.profile.sf} md="account_circle" />
         <NativeTabs.Trigger.Badge hidden={attention === 0}>
-          {badge(attention)}
+          {attention ? badge(attention) : undefined}
         </NativeTabs.Trigger.Badge>
       </NativeTabs.Trigger>
     </NativeTabs>

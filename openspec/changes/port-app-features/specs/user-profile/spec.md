@@ -17,3 +17,12 @@ Delete account SHALL ask for confirmation in a system alert that names what is d
 #### Scenario: Success
 - **WHEN** the server confirms the deletion
 - **THEN** the app shows sign-in and no data of the account remains on the device
+
+### Requirement: Pace in the profile
+
+Profil SHALL offer the user's pace as a stepper from 0.5× to 1.5× in steps of 0.1, explained in a line below it; every estimated time SHALL follow it, on every device of the account.
+
+#### Scenario: Faster
+
+- **WHEN** the user raises the pace from 1.0× to 1.2×
+- **THEN** a tour's estimated time SHALL be five sixths of the rule of thumb's

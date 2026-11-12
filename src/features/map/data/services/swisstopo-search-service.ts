@@ -191,6 +191,18 @@ export async function searchLocations(
         },
       ];
     });
+    // GeoAdmin lists one station several times (one entry per line or platform): keep the first.
+    const unique = places.filter(
+      (p, i) =>
+        !places
+          .slice(0, i)
+          .some(
+            (q) =>
+              q.name === p.name &&
+              q.kind === p.kind &&
+              haversineMeters([p.lng, p.lat], [q.lng, q.lat]) < SAME_SPOT_M,
+          ),
+    );
     const stops = stopResults.flatMap((raw): LocationResult[] => {
       const entry = entrySchema.safeParse(raw);
       if (!entry.success) return [];
@@ -205,14 +217,14 @@ export async function searchLocations(
         lat,
         zoom: STOP_ZOOM,
       };
-      const known = places.some(
+      const known = unique.some(
         (p) =>
           p.name === stop.name &&
           haversineMeters([p.lng, p.lat], [stop.lng, stop.lat]) < SAME_SPOT_M,
       );
       return stop.name && !known ? [stop] : [];
     });
-    return [...places, ...stops];
+    return [...unique, ...stops];
   } catch (err) {
     if (timedOut) {
       logger.warn('Location search timed out', { query });

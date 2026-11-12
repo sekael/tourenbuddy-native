@@ -21,6 +21,7 @@ import PasskeysSheet from '@/app/passkeys';
 import PasswordSheet from '@/app/password';
 import LegendRoute from '@/app/legend';
 import PlanRoute from '@/app/plan';
+import SearchSheet from '@/app/search';
 import StackRoute from '@/app/stack';
 import TourRoute from '@/app/tour/[id]';
 import AddSegmentRoute from '@/app/tour/add-segment';
@@ -44,6 +45,7 @@ export const routes = {
   'offline-maps': OfflineMapsSheet,
   'offline-region': OfflineRegionSheet,
   'map-layers': MapLayersSheet,
+  search: SearchSheet,
   feedback: FeedbackSheet,
   'sync-issues': SyncIssuesSheet,
   welcome: WelcomeSheet,

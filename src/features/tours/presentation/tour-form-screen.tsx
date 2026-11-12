@@ -47,6 +47,8 @@ import { useTourDraftStore } from './stores/tour-draft-store';
 import { useTourSuggestionsStore } from './stores/tour-suggestions-store';
 import { useToursStore } from './stores/tours-store';
 import { useTour } from './tour-detail-page';
+import { useMapStore } from '@/features/map/presentation/stores/map-store';
+import type { Contact } from '@/features/contacts/domain/entities/contact';
 
 const log = createLogger('TourForm');
 const GPX_MAX_BYTES = 2 * 1024 * 1024;
@@ -133,8 +135,8 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
     mode === 'create'
       ? t('tours.creation.title')
       : mode === 'suggest'
-        ? `${t('tours.suggestions.suggestTitlePrefix')}: ${original?.name ?? ''}`
-        : t('tours.infoSheet.editTitle', { name: original?.name ?? draft.name ?? '' });
+        ? t('tours.suggestions.suggestTitle')
+        : t('tours.infoSheet.editTitle');
 
   function close() {
     const finish = () => {
@@ -177,6 +179,7 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
     if (!goal) return;
     if (draft.endDate && draft.plannedDate && draft.endDate < draft.plannedDate) return;
     setSaving(true);
+    let created: string | null = null;
     try {
       const next: TourDraft = { ...draft, name: draft.name.trim() };
       if (track) next.gpxFilepath = await uploadTrack(track.text);
@@ -192,6 +195,7 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
           return;
         }
         const id = await tours.createTourFromDraft(next, goal, tourId);
+        created = id ?? null;
         if (id) {
           await useTourAttachmentsStore.getState().commitStaged(draftId, id);
           const anchor = useTourDraftStore.getState().segmentOf;
@@ -221,6 +225,8 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       useTourDraftStore.getState().reset();
       router.back();
+      // A new tour opens on the map, as in the PWA: it is there, and what to do next is at hand.
+      if (created) openTourSheet(created);
     } catch (error) {
       log.error('Save failed', error);
       Alert.alert(t('tours.infoSheet.saveFailed'));
@@ -263,10 +269,12 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
   }
 
   const types = draft.tourTypes;
+  const scales = gradeScales(types);
   const partners = draft.partnerIds
     .map((id) => contacts.find((c) => c.id === id))
     .filter((c) => c !== undefined)
     .map(resolveContactName);
+  const suggested = useSuggestedPartners(draft.partnerIds);
   const hasTrack = !!track || (!!draft.gpxFilepath && !gpxRemoved);
   const trackLabel = track
     ? track.label
@@ -312,15 +320,60 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
           value={types.length ? types.map((type) => typeLabel(t, type)).join(', ') : undefined}
           icon={types[0] ? (TOUR_TYPE_ICONS[types[0]] as IconName) : 'tour'}
           iconColor={types[0] ? TOUR_TYPE_COLORS[types[0]] : undefined}
-          onPress={() => onPush('activities')}
+          // One activity is two taps from a menu, as a chip was one in the PWA; several open the
+          // checklist with their ways up and down.
+          menu={
+            types.length > 1
+              ? undefined
+              : [
+                  ...TOUR_TYPE_VALUES.map((type) => ({
+                    label: typeLabel(t, type),
+                    icon: (types[0] === type ? 'check' : TOUR_TYPE_ICONS[type]) as IconName,
+                    onPress: () => {
+                      update({
+                        tourTypes: [type],
+                        legs: legsFrom([type], (x) => defaultDirection(x, [type])),
+                      });
+                      void Haptics.selectionAsync();
+                    },
+                  })),
+                  {
+                    label: t('tours.form.severalActivities'),
+                    icon: 'add' as IconName,
+                    onPress: () => onPush('activities'),
+                  },
+                ]
+          }
+          onPress={types.length > 1 ? () => onPush('activities') : undefined}
         />
-        <ListRow
-          title={t('tours.filters.gradeLabel')}
-          value={draft.grade ?? t('tours.form.gradeOptional')}
-          icon="speed"
-          onPress={() => onPush('grade')}
-        />
+        {scales.length === 1 ? null : (
+          <ListRow
+            title={t('tours.filters.gradeLabel')}
+            value={draft.grade ?? t('tours.form.gradeOptional')}
+            icon="speed"
+            onPress={() => onPush('grade')}
+          />
+        )}
       </ListSection>
+      {scales.length === 1 ? (
+        // The activity's scale inline: a grade is one tap; modifiers and other scales are typed.
+        <ListSection
+          title={t('tours.form.gradeLabel')}
+          footer={draft.grade && !scales[0]!.grades.includes(draft.grade) ? draft.grade : undefined}
+        >
+          <PickerRow
+            title={t('tours.form.gradeLabel')}
+            style="segmented"
+            value={gradeLeads(draft.grade ?? '')[0] ?? ''}
+            options={scales[0]!.grades.map((g) => ({ value: g, label: g }))}
+            onChange={(grade) => {
+              update({ grade });
+              void Haptics.selectionAsync();
+            }}
+          />
+          <ListRow title={t('tours.form.gradeMore')} icon="edit" onPress={() => onPush('grade')} />
+        </ListSection>
+      ) : null}
 
       <ListSection
         title={t('tours.form.whenSectionLabel')}
@@ -447,7 +500,7 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
           icon="eco"
           onPress={() => onPush('seasons')}
         />
-        {mode !== 'suggest' ? (
+        {mode !== 'suggest' && suggested.length === 0 ? (
           <ListRow
             title={t('tours.form.partnersLabel')}
             value={partners.length ? partners.join(', ') : undefined}
@@ -456,6 +509,42 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
           />
         ) : null}
       </ListSection>
+
+      {mode !== 'suggest' && suggested.length ? (
+        // Who comes along is a tap per person, as the PWA's chips: the people most often along
+        // first, the rest of the contacts one row further.
+        <ListSection title={t('tours.form.partnersLabel')}>
+          {suggested.map((contact) => (
+            <ListRow
+              key={contact.id}
+              title={resolveContactName(contact)}
+              icon="person"
+              checked={draft.partnerIds.includes(contact.id)}
+              chevron={false}
+              onPress={() => {
+                update({
+                  partnerIds: draft.partnerIds.includes(contact.id)
+                    ? draft.partnerIds.filter((id) => id !== contact.id)
+                    : [...draft.partnerIds, contact.id],
+                });
+                void Haptics.selectionAsync();
+              }}
+            />
+          ))}
+          {contacts.length > suggested.length ? (
+            <ListRow
+              title={t('tours.form.allContacts')}
+              value={
+                partners.length > suggested.filter((c) => draft.partnerIds.includes(c.id)).length
+                  ? partners.join(', ')
+                  : undefined
+              }
+              icon="group"
+              onPress={() => onPush('partners')}
+            />
+          ) : null}
+        </ListSection>
+      ) : null}
 
       {mode !== 'suggest' ? (
         <ListSection
@@ -757,4 +846,42 @@ function timeOf(hhmm: string): Date {
   const d = new Date();
   d.setHours(h ?? 0, m ?? 0, 0, 0);
   return d;
+}
+
+/** How many contacts the form offers inline before "All contacts". */
+const SUGGESTED_PARTNERS = 5;
+
+/**
+ * The contacts the form offers as partners, a tap each: the ones already chosen, then those most
+ * often along on the user's tours, then by name.
+ */
+function useSuggestedPartners(chosen: string[]): Contact[] {
+  const contacts = useContactsStore((s) => s.contacts);
+  const tours = useToursStore((s) => s.tours);
+  // Ordered once per form: rows that jump as they are ticked would be tapped wrong.
+  const [order] = useState(() => {
+    const along = new Map<string, number>();
+    for (const tour of tours) {
+      for (const id of tour.partnerIds) along.set(id, (along.get(id) ?? 0) + 1);
+    }
+    const score = (c: Contact) => (chosen.includes(c.id) ? 1e6 : 0) + (along.get(c.id) ?? 0);
+    return [...contacts]
+      .sort(
+        (a, b) => score(b) - score(a) || resolveContactName(a).localeCompare(resolveContactName(b)),
+      )
+      .map((c) => c.id);
+  });
+  const byId = new Map(contacts.map((c) => [c.id, c]));
+  const ranked = [
+    ...order.map((id) => byId.get(id)).filter((c): c is Contact => !!c),
+    // Contacts that arrive after the form opened (the list was still loading) go last.
+    ...contacts.filter((c) => !order.includes(c.id)),
+  ];
+  return ranked.slice(0, Math.max(SUGGESTED_PARTNERS, chosen.length));
+}
+
+/** Opens a tour's sheet over the map, the map on it. */
+function openTourSheet(id: string) {
+  useMapStore.getState().selectTour(id);
+  router.push({ pathname: '/tour/[id]', params: { id } });
 }

@@ -16,8 +16,13 @@ import { TourRow } from './tour-rows';
  * cluster lists them here; a row pushes the tour's detail in the same sheet.
  */
 export function StackSheet() {
-  const { t } = useTranslation();
   const ids = useMapStore((s) => s.stack) ?? [];
+  // The route is singular: another cluster tapped while open replaces the list and starts over.
+  return <StackList key={ids.join()} ids={ids} />;
+}
+
+function StackList({ ids }: { ids: string[] }) {
+  const { t } = useTranslation();
   const tours = useToursStore((s) => s.tours);
   const friendTours = useToursStore((s) => s.friendTours);
   const [path, setPath] = useState<string[]>([]);
@@ -45,10 +50,7 @@ export function StackSheet() {
     >
       <Page
         title={t('map.cluster.stackTitle', { count: listed.length })}
-        onClose={() => {
-          useMapStore.getState().showStack(null);
-          router.back();
-        }}
+        onClose={() => router.back()}
       >
         <ListSection>
           {listed.map((tour) => (

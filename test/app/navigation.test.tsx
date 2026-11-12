@@ -1,6 +1,8 @@
 import { act, fireEvent, screen } from '@testing-library/react-native';
-import { Slot } from 'expo-router';
+import { router, Slot } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
+
+import { useMapStore } from '@/features/map/presentation/stores/map-store';
 
 import { signIn } from '../support/auth';
 import { routes as appRoutes } from './routes';
@@ -72,5 +74,22 @@ describe('app navigation (iOS menu)', () => {
     await press(labelled('Close')[0]);
 
     expect(screen).toHavePathname('/');
+  });
+
+  it('should keep one lookup sheet when the map is tapped again while it is open', async () => {
+    await renderRouter(routes);
+    const lookUp = (id: string) =>
+      act(() => {
+        useMapStore.getState().showTrails([{ overlay: 'ski', id, lines: [], route: null }], 0);
+        router.push('/trail');
+      });
+
+    await lookUp('first');
+    await lookUp('second');
+    await press(labelled('Close')[0]);
+
+    // One Close is back on the map, and the closed sheet kept its card while it slid away.
+    expect(screen).toHavePathname('/');
+    expect(useMapStore.getState().trailCard?.candidates[0]?.id).toBe('second');
   });
 });

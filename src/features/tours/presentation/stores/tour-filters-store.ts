@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 
-import { getCached, putCached } from '@/core/offline/entity-cache';
 import { resolveContactName, type Contact } from '@/features/contacts/domain/entities/contact';
 import { resolveFriendName } from '@/features/friendships/domain/resolve-friend-name';
 import { gradeSelected } from '@/features/tours/data/models/grade';
@@ -12,7 +11,8 @@ import { outingKey, outingSegments } from '@/features/tours/domain/outing';
 /**
  * The tours list's search and filters (tour-list-view), ported from the PWA's `use-tour-filters`:
  * one state per tab, so My Tours and Friends never bleed into each other, kept while the sheet
- * closes and reopens; the tab last viewed survives a restart (device preference).
+ * closes and reopens. Which tab shows is the opener's choice: "Meine Touren" opens mine, a
+ * friend's Touren opens Friends.
  */
 export type CompletionFilter = 'all' | 'done' | 'open';
 export type TourTab = 'owned' | 'friends';
@@ -49,7 +49,6 @@ type FiltersState = {
   owned: TabState;
   friends: TabState;
   setTab: (tab: TourTab) => void;
-  restoreTab: () => Promise<void>;
   setQuery: (tab: TourTab, query: string) => void;
   setFilters: (tab: TourTab, patch: Partial<TourFilters>) => void;
   clearFilters: (tab: TourTab) => void;
@@ -60,20 +59,11 @@ type FiltersState = {
   showFriendTours: (userId: string) => void;
 };
 
-const TAB_KEY = 'tours-list-tab:device';
-
 export const useTourFiltersStore = create<FiltersState>()((set) => ({
   tab: 'owned',
   owned: { query: '', filters: emptyFilters() },
   friends: { query: '', filters: emptyFilters() },
-  setTab: (tab) => {
-    set({ tab });
-    void putCached(TAB_KEY, tab).catch(() => {});
-  },
-  restoreTab: async () => {
-    const tab = await getCached<string>(TAB_KEY).catch(() => undefined);
-    if (tab === 'owned' || tab === 'friends') set({ tab });
-  },
+  setTab: (tab) => set({ tab }),
   setQuery: (tab, query) => set((s) => ({ [tab]: { ...s[tab], query } })),
   setFilters: (tab, patch) =>
     set((s) => ({ [tab]: { ...s[tab], filters: { ...s[tab].filters, ...patch } } })),

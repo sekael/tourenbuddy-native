@@ -14,7 +14,7 @@ import { useContactsStore } from '@/features/contacts/presentation/stores/contac
 
 import { confirmBlockUser, unblockUser } from './block-user';
 import { isPhoneVerified, useFriendshipsStore } from './stores/friendships-store';
-import { useUserBlocksStore } from './stores/user-blocks-store';
+import { unblockOpensAt, useUserBlocksStore } from './stores/user-blocks-store';
 
 const log = createLogger('FriendRequests');
 
@@ -202,13 +202,26 @@ export function FriendRequestsPage() {
             <ListRow
               key={block.blockedUserId}
               title={name || phone || '…'}
-              subtitle={t('blocks.blockedSince', {
-                date: formatDate(block.lastBlockedAt, {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                }),
-              })}
+              subtitle={(() => {
+                const opens = unblockOpensAt(block);
+                return opens
+                  ? t('blocks.unblockFrom', {
+                      date: formatDate(opens, {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }),
+                    })
+                  : t('blocks.blockedSince', {
+                      date: formatDate(block.lastBlockedAt, {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      }),
+                    });
+              })()}
               icon="block"
               menu={[
                 {

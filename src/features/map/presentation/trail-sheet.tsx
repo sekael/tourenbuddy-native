@@ -17,7 +17,7 @@ import { useTourDraftStore } from '@/features/tours/presentation/stores/tour-dra
 import { usePace } from '@/features/user/presentation/stores/user-profile-store';
 
 import { planFromRoute } from './plan-from-route';
-import { useMapStore } from './stores/map-store';
+import { useMapStore, type TrailCard } from './stores/map-store';
 
 type TFn = TFunction;
 
@@ -36,16 +36,18 @@ export function trailTitle({ route }: Trail, t: TFn): string {
  * track.
  */
 export function TrailSheet() {
-  const { t } = useTranslation();
   const card = useMapStore((s) => s.trailCard);
+  // The route is singular: a lookup while open replaces the card and starts over. The card stays
+  // in the store after closing, so the sheet never empties while it slides away.
+  return card ? <TrailCardSheet key={card.candidates.map((c) => c.id).join()} card={card} /> : null;
+}
+
+function TrailCardSheet({ card }: { card: TrailCard }) {
+  const { t } = useTranslation();
   const [path, setPath] = useState<string[]>(() =>
-    card?.selectedId && card.candidates.length > 1 ? [card.selectedId] : [],
+    card.selectedId && card.candidates.length > 1 ? [card.selectedId] : [],
   );
-  if (!card) return null;
-  const close = () => {
-    useMapStore.getState().clearTrails();
-    router.back();
-  };
+  const close = () => router.back();
   const single = card.candidates.length === 1 ? card.candidates[0]! : null;
   return (
     <Screen
@@ -112,7 +114,6 @@ function TrailPage({ trail, onClose }: { trail: Trail; onClose?: () => void }) {
         startPoint: { lng: line[0]![0], lat: line[0]![1] },
         endPoint: { lng: line.at(-1)![0], lat: line.at(-1)![1] },
       });
-      useMapStore.getState().clearTrails();
       router.replace('/tour/edit');
     } finally {
       setPlanning(false);
@@ -147,7 +148,7 @@ function TrailPage({ trail, onClose }: { trail: Trail; onClose?: () => void }) {
           <ListRow title={t('tours.filters.gradeLabel')} value={route.difficulty} icon="speed" />
         ) : null}
         {ascentTime ? (
-          <ListRow title={t('tours.route.ascent')} value={ascentTime} icon="schedule" />
+          <ListRow title={t('map.trail.ascentTime')} value={ascentTime} icon="schedule" />
         ) : null}
         {route.ascentM ? (
           <ListRow

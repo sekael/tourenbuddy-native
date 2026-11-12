@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import type { TFunction } from 'i18next';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -58,6 +58,12 @@ import type { IconName } from '@/core/adaptive/icons';
  */
 export function ToursSheet() {
   const [path, setPath] = useState<string[]>([]);
+  // Opened from "Meine Touren", it shows mine; a friend's tours open on Friends (each tab keeps
+  // its filters).
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
+  useState(() => {
+    if (tab !== 'friends') useTourFiltersStore.getState().setTab('owned');
+  });
   const push = (value: string) => setPath((p) => [...p, value]);
 
   return (
@@ -116,9 +122,6 @@ function ToursListPage({ onPush }: { onPush: (value: string) => void }) {
   const entries = useMemo(() => listEntries(filtered, source), [filtered, source]);
   const filterCount = activeFilterCount(tabState.filters);
 
-  useEffect(() => {
-    void useTourFiltersStore.getState().restoreTab();
-  }, []);
   // Friends' tours refetch when their tab opens.
   useEffect(() => {
     if (tab === 'friends') void useToursStore.getState().loadFriendTours();

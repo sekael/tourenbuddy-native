@@ -22,15 +22,18 @@ import {
 import { snapNetworkFor } from '@/features/map/domain/snap-network';
 import { createLegRouter, isGap, legEnd } from '@/features/map/presentation/leg-router';
 import { useMapStore } from '@/features/map/presentation/stores/map-store';
-import { useLocationSearch } from '@/features/map/presentation/use-location-search';
+import { resultSubtitle, useLocationSearch } from '@/features/map/presentation/use-location-search';
 import { getElevation } from '@/features/tours/data/services/swisstopo-elevation-service';
 import { suggestTourName } from '@/features/tours/data/services/swisstopo-name-service';
 import { densify, getTrackProfile } from '@/features/tours/data/services/swisstopo-profile-service';
 import { gpxFromLine } from '@/features/tours/data/services/gpx-writer';
 import { isSameGoal } from '@/features/tours/domain/distance';
+import { estimatedMinutes, type RouteMetrics } from '@/features/tours/domain/route-metrics';
+import { usePace } from '@/features/user/presentation/stores/user-profile-store';
 import { TOUR_TYPE_TRACK_COLORS } from '@/features/tours/data/models/tour-type';
 
 import { useTourDraftStore } from './stores/tour-draft-store';
+import { profiledMetrics } from './use-route-metrics';
 
 const STEP_ICONS = { start: 'trip_origin', goal: 'flag', end: 'sports_score' } as const;
 const at = (p: PlannedPoint): LngLat => [p.location.lng, p.location.lat];
@@ -78,7 +81,8 @@ class PointLookups {
  */
 export function PlanSheet({ back }: { back: boolean }) {
   const { t } = useTranslation();
-  const { formatElevation, formatDistance } = useFormatter();
+  const { formatElevation, formatDistance, formatDuration } = useFormatter();
+  const pace = usePace();
   const draftState = useTourDraftStore.getState();
   const overlays = useMapStore((s) => s.overlays);
 
@@ -249,14 +253,41 @@ export function PlanSheet({ back }: { back: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [points, legs, follow]);
 
-  const climb = routeClimb(points);
+  // Climb and time measured along the line, as the saved tour will show them (route-planner in the
+  // PWA). They appear once measured, never first as the points' estimate; that only when the line
+  // can't be measured (offline, no profile).
+  const lineKey = line ? line.map((p) => p.join(',')).join(';') : '';
+  const [profiled, setProfiled] = useState<{ key: string; metrics: RouteMetrics | null } | null>(
+    null,
+  );
+  useEffect(() => {
+    if (!line || line.length < 2) return;
+    let alive = true;
+    const timer = setTimeout(() => {
+      void profiledMetrics(line).then((metrics) => {
+        if (alive) setProfiled({ key: lineKey, metrics });
+      });
+    }, 300);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+    // `lineKey` stands for `line`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lineKey]);
+  const measured = profiled?.key === lineKey ? profiled : null;
+  const climb = measured?.metrics ?? (!line || measured || !isOnline() ? routeClimb(points) : null);
   const distance = line ? lineLength(line) : null;
+  const minutes = measured?.metrics ? estimatedMinutes(measured.metrics, false, pace) : null;
   const numbers = [
     climb?.ascent ? `↑ ${formatElevation(climb.ascent)}` : null,
     climb?.descent ? `↓ ${formatElevation(climb.descent)}` : null,
     distance ? formatDistance(distance) : null,
+    minutes ? formatDuration(minutes) : null,
   ]
-    .filter(Boolean)
+    .filter((part): part is string => !!part)
+    // A number keeps its unit on its line ("10:31 h"); lines break between numbers.
+    .map((part) => part.replace(/ /g, '\u00a0'))
     .join('  ');
 
   const waiting = ROUTE_STEPS.some((s) => points[s]?.loading);
@@ -355,15 +386,7 @@ export function PlanSheet({ back }: { back: boolean }) {
                 <ListRow
                   key={`${result.origin}-${result.lng}-${result.lat}`}
                   title={result.name}
-                  subtitle={[
-                    result.kind ??
-                      t(
-                        `tours.picker.search.origin.${result.origin}` as 'tours.picker.search.origin.gazetteer',
-                      ),
-                    result.region,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
+                  subtitle={resultSubtitle(t, result)}
                   icon={result.origin === 'stop' ? 'directions_bus' : 'location_on'}
                   onPress={() => {
                     search.take(result);
@@ -377,6 +400,13 @@ export function PlanSheet({ back }: { back: boolean }) {
                 />
               ))
             )}
+          </ListSection>
+        ) : null}
+
+        {numbers ? (
+          // The route's climb, distance and time first, in view at the sheet's half height.
+          <ListSection>
+            <ListRow title={numbers} icon="elevation" accessibilityLabel={numbers} />
           </ListSection>
         ) : null}
 
@@ -450,9 +480,6 @@ export function PlanSheet({ back }: { back: boolean }) {
             value={follow}
             onValueChange={setFollow}
           />
-          {numbers ? (
-            <ListRow title={numbers} icon="elevation" accessibilityLabel={numbers} />
-          ) : null}
         </ListSection>
       </Page>
     </Screen>

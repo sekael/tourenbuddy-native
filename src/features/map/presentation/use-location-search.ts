@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -73,4 +74,15 @@ export function useLocationSearch(role: PickRole) {
       setResults([]);
     },
   };
+}
+
+/** A result's second line: what it is (or where the hit came from) and its region. */
+export function resultSubtitle(t: TFunction, result: LocationResult): string {
+  return [
+    result.kind ??
+      t(`tours.picker.search.origin.${result.origin}` as 'tours.picker.search.origin.gazetteer'),
+    result.region,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 }

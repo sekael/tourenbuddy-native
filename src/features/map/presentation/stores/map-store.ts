@@ -89,7 +89,6 @@ type MapState = {
   clearPreview: () => void;
   showTrails: (candidates: Trail[], more: number) => void;
   selectTrail: (id: string | null) => void;
-  clearTrails: () => void;
   showStack: (ids: string[] | null) => void;
   requestCamera: (request: CameraRequest) => void;
   consumeCamera: () => CameraRequest | null;
@@ -168,7 +167,6 @@ export const useMapStore = create<MapState>()((set, get) => ({
     const card = get().trailCard;
     if (card) set({ trailCard: { ...card, selectedId: id } });
   },
-  clearTrails: () => set({ trailCard: null }),
   showStack: (stack) => set({ stack }),
 
   requestCamera: (camera) => set({ camera }),

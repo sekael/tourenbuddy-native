@@ -39,6 +39,22 @@ async function withHeights(track: GeoJSON.FeatureCollection): Promise<GeoJSON.Fe
 }
 
 /**
+ * A line's numbers measured along the terrain, as the saved tour will have them (its GPX gets the
+ * same profile); null offline or when the profile can't be had.
+ */
+export async function profiledMetrics(line: LngLat[]): Promise<RouteMetrics | null> {
+  if (line.length < 2 || !isOnline()) return null;
+  const track = await withHeights({
+    type: 'FeatureCollection',
+    features: [
+      { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: line } },
+    ],
+  }).catch(() => null);
+  const metrics = track ? trackMetrics(track) : null;
+  return metrics?.ascent !== null ? metrics : null;
+}
+
+/**
  * A tour's route numbers (gpx-tracks): its track's when it has one, with the terrain's heights
  * when the file has none; unknown while the track loads (never the point estimate first), the
  * point heights only when the track can't be had.

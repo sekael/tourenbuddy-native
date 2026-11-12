@@ -58,6 +58,35 @@ describe('searchLocations', () => {
     expect(results.map((r) => r.name)).toEqual(['Piz Ela']);
   });
 
+  it('should list a station once when the service returns it per line, keeping far namesakes', async () => {
+    const station = (lat: number, lon: number, kind = 'Uebrige Bahnen') => ({
+      attrs: {
+        label: `<i>${kind}</i> <b>Mürren (Schilthornbahn)</b> (BE) - Lauterbrunnen`,
+        lat,
+        lon,
+        origin: 'gazetteer',
+      },
+    });
+    respond({
+      results: [
+        station(46.55795, 7.89156),
+        station(46.558, 7.89097),
+        // Same name and spot, other spelling of the kind: still the same station.
+        station(46.55761, 7.89235, 'Übrige Bahnen'),
+        // Same name, another place a few km away: kept.
+        station(46.6, 7.89156),
+        // Same spot, another kind: kept.
+        station(46.55795, 7.89156, 'Gebaeude'),
+      ],
+    });
+    const results = await searchLocations('Mürren', 'de-CH', new AbortController().signal);
+    expect(results.map((r) => [r.kind, r.lat])).toEqual([
+      ['Übrige Bahnen', 46.55795],
+      ['Übrige Bahnen', 46.6],
+      ['Gebäude', 46.55795],
+    ]);
+  });
+
   it('should restore umlauts in German kinds only, keeping real "ue" and names as given', async () => {
     const kinds = [
       'Gebaeude',

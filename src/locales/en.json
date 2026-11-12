@@ -337,7 +337,8 @@
       "imprint": "Imprint",
       "legalSection": "About",
       "accountSection": "Account",
-      "languageHint": "Change the language in the Settings app."
+      "languageHint": "Change the language in the Settings app.",
+      "paceHint": "Every estimated time follows your pace: below 1.0× you're slower than the rule of thumb, above it faster."
     },
     "phoneVerification": {
       "title": "Verify your phone",
@@ -662,7 +663,10 @@
       "trackFromGoal": "At the goal, where the track begins",
       "discardTitle": "Discard your changes?",
       "gpxTrackNone": "No track yet",
-      "changeRouteBtn": "Change route on the map"
+      "changeRouteBtn": "Change route on the map",
+      "severalActivities": "Several activities…",
+      "gradeMore": "Other grade…",
+      "allContacts": "All contacts"
     },
     "creation": {
       "title": "New Tour",
@@ -685,7 +689,7 @@
     },
     "infoSheet": {
       "editTitlePrefix": "Edit",
-      "editTitle": "Edit: {{name}}",
+      "editTitle": "Edit Tour",
       "unnamedTour": "Unnamed tour",
       "createdByLabel": "Created by {{name}}",
       "completedBtn": "Completed",
@@ -887,7 +891,8 @@
       "gpxNew": "New GPX track",
       "gpxExisting": "Existing GPX track",
       "anAttachment": "An attachment",
-      "byYou": "Suggested by you"
+      "byYou": "Suggested by you",
+      "suggestTitle": "Suggestion"
     },
     "outing": {
       "segmentCount_one": "{{count}} segment",
@@ -985,7 +990,8 @@
       "noInfo": "No route information available",
       "offline": "Route details need a connection",
       "lookupError": "Couldn't load route info",
-      "planTour": "Plan as tour"
+      "planTour": "Plan as tour",
+      "ascentTime": "Ascent time"
     },
     "cluster": {
       "label": "Cluster of {{count}} tours",
@@ -1086,7 +1092,12 @@
       "hint": "Your tours are also listed under My Tours.",
       "legendHint": "Explains the markers, colours and lines.",
       "toursHint": "Lists your tours and your friends' tours.",
-      "addHint": "Pick the goal on the map or search for a place."
+      "addHint": "Pick the goal on the map or search for a place.",
+      "searchHint": "Finds a place on the map"
+    },
+    "search": {
+      "title": "Search places",
+      "hint": "Search a place, hut or stop"
     }
   },
   "i18n": {
@@ -1155,7 +1166,8 @@
     },
     "cooldown": {
       "remaining": "Available again in {{hours}} h"
-    }
+    },
+    "unblockFrom": "Unblock possible from {{date}}"
   },
   "notifications": {
     "sectionTitle": "Notifications",
@@ -1263,7 +1275,7 @@
         "body": "Pick a base map and add hiking trails or ski routes on top, in any combination. With ski routes on, zoom in until the routes show difficulty badges, then tap one for its details — or plan it as a tour right away. The ⓘ button at the bottom left explains the marker colours and symbols."
       },
       "welcome": {
-        "title": "Welcome to TourenBuddy",
+        "title": "Welcome",
         "body": "A quick tour of the essentials: planning tours, maps, friends and the calendar. Tap anywhere to continue, or use the controls at the top.",
         "start": "Start tour",
         "skip": "Skip for now",
@@ -1347,7 +1359,8 @@
       "nearQuota": "This will use most of your remaining storage.",
       "start": "Download",
       "cancel": "Cancel",
-      "untitled": "Offline region"
+      "untitled": "Offline region",
+      "sheetTitle": "New region"
     },
     "manage": {
       "title": "Offline maps",
@@ -1424,7 +1437,7 @@
   },
   "inbox": {
     "title": "Inbox",
-    "empty": "Nothing new yet. Friend requests, shared tours and suggestions show up here.",
+    "empty": "Nothing new yet",
     "loadError": "Couldn't load your inbox.",
     "markAllRead": "Mark all read",
     "loadMore": "Load more",
@@ -1473,7 +1486,8 @@
       "eyebrow": "New in TourenBuddy",
       "settingsAction": "Notification settings",
       "settingsHint": "Both also arrive by push and email. You decide which ones."
-    }
+    },
+    "emptyHint": "Friend requests, shared tours and suggestions show up here."
   },
   "releaseNotes": {
     "2026-10-availability-reminders": {

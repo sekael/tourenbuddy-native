@@ -118,6 +118,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       } finally {
         set({ user, isLoading: false });
       }
+      // The stored session carries the user as it was at sign-in: a phone verified or changed
+      // since (another device, the PWA) shows only after a refresh. Best effort, in the background.
+      if (user && !sessionTrust.getState().unverified) {
+        get()
+          .refreshUser()
+          .catch((error: unknown) => log.info('Could not refresh the user', { error }));
+      }
 
       supabase.auth.onAuthStateChange((event, session) => {
         // A delivered session settles it: signed in, verified.

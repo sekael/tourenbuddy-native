@@ -27,9 +27,12 @@ import {
   badge,
   datePickerStyle,
   disabled as disabledModifier,
+  fixedSize,
   font,
   foregroundStyle,
+  frame,
   keyboardType as keyboardTypeModifier,
+  listRowBackground,
   listStyle,
   lineLimit,
   onSubmit as onSubmitModifier,
@@ -40,12 +43,20 @@ import {
   textInputAutocapitalization,
   tint,
 } from '@expo/ui/swift-ui/modifiers';
-import { Children, isValidElement, useEffect, type ReactElement, type ReactNode } from 'react';
+import {
+  Children,
+  isValidElement,
+  useContext,
+  useEffect,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { color } from '@/core/theme/tokens';
 
 import { icons } from './icons';
+import { InSwiftUIList } from './in-list';
 import type {
   ContentRowProps,
   DateRowProps,
@@ -67,6 +78,10 @@ import type {
  */
 const secondary = foregroundStyle({ type: 'hierarchical', style: 'secondary' });
 const tertiary = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
+// Symbols differ in width; a fixed column keeps every row's text on one left edge, as in Settings.
+const iconFrame = frame({ width: 28 });
+// A second line wraps in full: beside a switch, SwiftUI would rather cut it with "…".
+const wraps = fixedSize({ horizontal: false, vertical: true });
 
 export function GroupedList({ children, form, onRefresh, header, testID }: GroupedListProps) {
   const Container = form ? Form : List;
@@ -80,12 +95,12 @@ export function GroupedList({ children, form, onRefresh, header, testID }: Group
       <Container modifiers={modifiers}>
         {header ? (
           <Section>
-            <RNHostView matchContents>
+            <RNHostView matchContents={{ vertical: true }}>
               <View>{header}</View>
             </RNHostView>
           </Section>
         ) : null}
-        {children}
+        <InSwiftUIList.Provider value>{children}</InSwiftUIList.Provider>
       </Container>
     </Host>
   );
@@ -138,7 +153,12 @@ export function ListRow({
   const label = (
     <HStack spacing={12}>
       {icon ? (
-        <Image systemName={icons[icon].sf} size={20} color={iconColor ?? color.primary} />
+        <Image
+          systemName={icons[icon].sf}
+          size={20}
+          color={iconColor ?? color.primary}
+          modifiers={[iconFrame]}
+        />
       ) : null}
       <VStack alignment="leading" spacing={2}>
         <SwiftText
@@ -150,7 +170,7 @@ export function ListRow({
           {title}
         </SwiftText>
         {subtitle ? (
-          <SwiftText modifiers={[font({ textStyle: 'subheadline' }), secondary, lineLimit(2)]}>
+          <SwiftText modifiers={[font({ textStyle: 'subheadline' }), secondary, wraps]}>
             {subtitle}
           </SwiftText>
         ) : null}
@@ -229,11 +249,18 @@ export function ToggleRow({
       modifiers={[tint(color.primary), ...(disabled ? [disabledModifier(true)] : [])]}
     >
       <HStack spacing={12}>
-        {icon ? <Image systemName={icons[icon].sf} size={20} color={color.primary} /> : null}
+        {icon ? (
+          <Image
+            systemName={icons[icon].sf}
+            size={20}
+            color={color.primary}
+            modifiers={[iconFrame]}
+          />
+        ) : null}
         <VStack alignment="leading" spacing={2}>
           <SwiftText>{title}</SwiftText>
           {subtitle ? (
-            <SwiftText modifiers={[font({ textStyle: 'subheadline' }), secondary]}>
+            <SwiftText modifiers={[font({ textStyle: 'subheadline' }), secondary, wraps]}>
               {subtitle}
             </SwiftText>
           ) : null}
@@ -387,27 +414,29 @@ export function StepperRow({
 /** App-drawn content inside a section: React Native inside the SwiftUI row. */
 export function ContentRow({ children, accessibilityLabel }: ContentRowProps) {
   return (
-    <RNHostView matchContents>
+    <RNHostView matchContents={{ vertical: true }}>
       <View accessibilityLabel={accessibilityLabel}>{children as ReactNode}</View>
     </RNHostView>
   );
 }
 
 export function EmptyState({ icon, title, description, actionLabel, onAction }: EmptyStateProps) {
-  return (
-    <Host style={styles.host}>
-      <ContentUnavailableView
-        title={title}
-        systemImage={icons[icon].sf}
-        description={description}
-        actions={
-          actionLabel && onAction ? (
-            <Button label={actionLabel} onPress={onAction} modifiers={[tint(color.primary)]} />
-          ) : undefined
-        }
-      />
-    </Host>
+  const inList = useContext(InSwiftUIList);
+  const view = (
+    <ContentUnavailableView
+      title={title}
+      systemImage={icons[icon].sf}
+      description={description}
+      actions={
+        actionLabel && onAction ? (
+          <Button label={actionLabel} onPress={onAction} modifiers={[tint(color.primary)]} />
+        ) : undefined
+      }
+      // In a list it is a row of its own, on the list's background rather than a card.
+      modifiers={inList ? [listRowBackground('clear')] : undefined}
+    />
   );
+  return inList ? view : <Host style={styles.host}>{view}</Host>;
 }
 
 const styles = StyleSheet.create({ host: { flex: 1 } });

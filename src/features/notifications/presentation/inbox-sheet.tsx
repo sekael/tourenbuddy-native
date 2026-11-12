@@ -192,7 +192,7 @@ function InboxPage({ onNote }: { onNote: (id: string) => void }) {
       }
     >
       {entries.length === 0 ? (
-        <EmptyState icon="inbox" title={t('inbox.empty')} />
+        <EmptyState icon="inbox" title={t('inbox.empty')} description={t('inbox.emptyHint')} />
       ) : (
         <ListSection>
           {entries.map((entry) => {

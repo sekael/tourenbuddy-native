@@ -11,6 +11,7 @@ import { EmptyState, ListRow, ListSection, type RowAction } from '@/core/adaptiv
 import { Page } from '@/core/adaptive/screen';
 import { Text } from '@/core/adaptive/text';
 import { sessionUser } from '@/core/auth/session-user';
+import { useFormatter } from '@/core/i18n/format';
 import { createLogger } from '@/core/logging/logger';
 import { getCached, putCached } from '@/core/offline/entity-cache';
 import { color, radius, size, space } from '@/core/theme/tokens';
@@ -26,7 +27,10 @@ import {
   useFriendshipsStore,
 } from '@/features/friendships/presentation/stores/friendships-store';
 import { confirmBlockUser, unblockUser } from '@/features/friendships/presentation/block-user';
-import { useUserBlocksStore } from '@/features/friendships/presentation/stores/user-blocks-store';
+import {
+  unblockOpensAt,
+  useUserBlocksStore,
+} from '@/features/friendships/presentation/stores/user-blocks-store';
 import { useTourFiltersStore } from '@/features/tours/presentation/stores/tour-filters-store';
 
 import { confirmDeleteContact } from './contact-delete';
@@ -108,12 +112,14 @@ export function ContactDetailPage({
   onClose?: () => void;
 }) {
   const { t } = useTranslation();
+  const { formatDate } = useFormatter();
   const contact = useContactsStore((s) => s.contacts.find((c) => c.id === id));
   const hasLoaded = useContactsStore((s) => s.hasLoaded);
   const links = useContactLinks();
   const friend = contact ? links.friendOf(contact) : null;
   const blocked = contact ? links.isBlocked(contact) : false;
   const blockedIds = useUserBlocksStore((s) => s.blockedUserIds);
+  const blocks = useUserBlocksStore((s) => s.blocks);
   const incoming = useFriendshipsStore((s) => s.incoming);
   const connect = useMatchedUser(contact, friend);
   const [busy, setBusy] = useState(false);
@@ -139,6 +145,7 @@ export function ContactDetailPage({
   const isFriend = !!friend && !blocked;
   const blockTarget = friend ?? connect.matched;
   const blockedUser = blockTarget && blockedIds.has(blockTarget) ? blockTarget : null;
+  const unblockAt = unblockOpensAt(blocks.find((b) => b.blockedUserId === blockedUser));
   const acceptId = connect.matched
     ? (incoming.find((r) => r.fromUserId === connect.matched && r.status === 'pending')?.id ?? null)
     : null;
@@ -150,7 +157,7 @@ export function ContactDetailPage({
     if (!friend) return;
     useTourFiltersStore.getState().showFriendTours(friend);
     router.navigate('/');
-    router.push('/tours');
+    router.push({ pathname: '/tours', params: { tab: 'friends' } });
   };
 
   async function run(action: () => Promise<unknown>, failure: string) {
@@ -408,10 +415,24 @@ export function ContactDetailPage({
       {blockTarget ? (
         <ListSection>
           {blockedUser ? (
+            // The 48 hours before an unblock show here, not as a refusal after the tap.
             <ListRow
               title={t('blocks.unblockAction')}
+              subtitle={
+                unblockAt
+                  ? t('blocks.unblockFrom', {
+                      date: formatDate(unblockAt, {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }),
+                    })
+                  : undefined
+              }
               icon="block"
-              disabled={busy}
+              disabled={busy || !!unblockAt}
               onPress={() => void unblockUser(t, blockedUser)}
             />
           ) : (

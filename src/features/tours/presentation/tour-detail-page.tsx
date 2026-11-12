@@ -286,7 +286,7 @@ export function TourDetailPage({
         <ListSection>
           <ToggleRow
             title={t('tours.infoSheet.completedBtn')}
-            icon="check_circle"
+            icon={tour.completed ? 'check_circle' : 'radio_button_unchecked'}
             value={!!tour.completed}
             onValueChange={setCompleted}
           />
@@ -308,7 +308,7 @@ export function TourDetailPage({
         <ListSection>
           <ListRow
             title={t('tours.infoSheet.completedBtn')}
-            icon="check_circle"
+            icon={tour.completed ? 'check_circle' : 'radio_button_unchecked'}
             iconColor={color.success}
           />
         </ListSection>
@@ -375,11 +375,20 @@ export function TourDetailPage({
             />
           ) : null}
           {tour.startPoint || tour.endPoint ? (
+            // The route as planned: Start, Ziel, Ende; a one-way tour simply ends at the goal.
+            <ListRow
+              title={name}
+              subtitle={t('tours.form.goalLabel')}
+              value={tour.elevation != null ? formatElevation(tour.elevation) : undefined}
+              icon="flag"
+            />
+          ) : null}
+          {tour.endPoint || (oneWay && landing) ? (
             <ListRow
               title={endValue}
               subtitle={landing ? t('tours.infoSheet.landingShort') : t('tours.infoSheet.endShort')}
               value={endElevation != null ? formatElevation(endElevation) : undefined}
-              icon={oneWay ? 'flag' : 'sports_score'}
+              icon="sports_score"
             />
           ) : null}
           {tour.gpxFilepath ? (

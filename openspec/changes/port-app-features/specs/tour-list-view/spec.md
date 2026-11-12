@@ -47,3 +47,39 @@ The Filters button SHALL push a filters screen in the sheet with the PWA's filte
 #### Scenario: Show N tours
 - **WHEN** the user selects the grade "WS" and taps "Show 3 tours"
 - **THEN** the list shows those three tours and the Filters badge shows 1
+
+## MODIFIED Requirements
+
+### Requirement: Search and filters reset when the list is left
+
+Leaving the tour list SHALL clear the search query and every filter on both tabs. Opening a tour from the list and returning to the list SHALL keep them. The tab SHALL follow how the list is opened: "Meine Touren" SHALL open the user's own tours, and a friend's Touren SHALL open the Friends tab narrowed to that friend (native: a list reopened on Friends hid the user's own tours behind a button labelled "Meine Touren").
+
+#### Scenario: Closing the list
+
+- **WHEN** the user has a search query or active filters and closes the tour list sheet or side drawer
+- **THEN** reopening the list SHALL show an empty search input, no active filters, and all tours
+
+#### Scenario: Switching to another overlay
+
+- **WHEN** the user opens another overlay (e.g. contacts) from the menu while the tour list is open
+- **THEN** the tour list's search query and filters SHALL be cleared
+
+#### Scenario: Round-trip through a tour detail
+
+- **WHEN** the user opens a tour from a searched/filtered list and returns to the list
+- **THEN** the search query and filters SHALL be unchanged
+
+#### Scenario: Closing a tour opened from the list
+
+- **WHEN** the user opens a tour from a searched/filtered list and closes the tour detail instead of returning
+- **THEN** the search query and filters SHALL be cleared
+
+#### Scenario: Reopening after viewing Friends
+
+- **WHEN** the user viewed the Friends tab, closed the list and opens it again from "Meine Touren"
+- **THEN** the list SHALL show the user's own tours
+
+#### Scenario: A friend's tours from the contact
+
+- **WHEN** the user taps Touren on a friend's contact
+- **THEN** the list SHALL open on Friends, showing only that friend's tours

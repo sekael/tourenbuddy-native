@@ -178,3 +178,13 @@ export const useUserBlocksStore = create<BlocksState>()((set, get) => ({
 AppState.addEventListener('change', (state) => {
   if (state === 'active') useUserBlocksStore.getState().invalidateIsBlockedByCache();
 });
+
+/** The wait between a block and its unblock (user-blocks; the server enforces it). */
+const UNBLOCK_COOLDOWN_MS = 48 * 60 * 60 * 1000;
+
+/** When the block can be lifted, while that is still ahead; null once it can (or no block). */
+export function unblockOpensAt(block: UserBlock | undefined, now = Date.now()): Date | null {
+  if (!block || block.unblockedAt !== null) return null;
+  const at = new Date(block.lastBlockedAt).getTime() + UNBLOCK_COOLDOWN_MS;
+  return at > now ? new Date(at) : null;
+}

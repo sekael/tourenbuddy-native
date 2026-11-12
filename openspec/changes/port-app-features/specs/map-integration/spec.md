@@ -20,3 +20,12 @@ The Map tab SHALL show a full-screen Swisstopo map, rendered natively on iOS and
 #### Scenario: Base map switch keeps overlays
 - **WHEN** the user switches from Base to Aerial with the ski overlay on
 - **THEN** the ski overlay stays on, in the same order
+
+### Requirement: Place search on the map
+
+The map's bar SHALL hold a search for places, huts and stops, the route step's search; picking a result SHALL close the search and fly the map to it.
+
+#### Scenario: A village
+
+- **WHEN** the user searches "Lauterbrunnen" and picks the village
+- **THEN** the map SHALL show Lauterbrunnen close up

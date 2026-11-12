@@ -33,7 +33,7 @@ export type { CapsuleItem } from './map-controls';
  * Apple Maps uses for grouped controls, and the FAB-sized glass circle of Phase 1's menu. Real
  * system glass samples the map, follows Reduce Transparency and the glass intensity setting.
  */
-export function GlassCapsule({ items, label }: { items: CapsuleItem[]; label: string }) {
+export function GlassCapsule({ items }: { items: CapsuleItem[]; label: string }) {
   return (
     <Host matchContents>
       <GlassEffectContainer>
@@ -41,7 +41,7 @@ export function GlassCapsule({ items, label }: { items: CapsuleItem[]; label: st
           spacing={0}
           modifiers={[
             glassEffect({ glass: { variant: 'regular', interactive: true }, shape: 'capsule' }),
-            accessibilityLabel(label),
+            // A label here would replace each button's own for VoiceOver: the group keeps theirs.
           ]}
         >
           {items.map((item, index) => [
