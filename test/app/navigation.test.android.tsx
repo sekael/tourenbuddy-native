@@ -29,7 +29,7 @@ describe('app navigation', () => {
     await renderRouter(routes);
 
     expect(screen).toHavePathname('/');
-    expect(screen.getByText('Plan your outdoor tours')).toBeOnTheScreen();
+    expect(screen.getByTestId('maplibre-Map')).toBeOnTheScreen();
   });
 
   it('should open a menu destination as a sheet and close back to the map', async () => {
@@ -84,6 +84,6 @@ describe('app navigation', () => {
     await settle();
 
     expect(screen).toHavePathname('/');
-    expect(screen.getByText('Plan your outdoor tours')).toBeOnTheScreen();
+    expect(screen.getByTestId('maplibre-Map')).toBeOnTheScreen();
   });
 });

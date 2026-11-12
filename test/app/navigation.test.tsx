@@ -43,13 +43,23 @@ describe('app navigation (iOS menu)', () => {
     await renderRouter(routes, { initialUrl: url });
 
     expect(labelled('Menu')).toEqual([]);
-    expect(entries()).toEqual([]);
+    // A tab's own toolbar menus may hold entries; the map's never show.
+    expect(entryLabels()).not.toContain('Offline maps');
+    expect(entryLabels()).not.toContain('Map layers');
   });
 
   it('should open Profile as a place, not as a sheet', async () => {
     await renderRouter(routes, { initialUrl: '/profile' });
 
-    expect(screen.getByRole('heading', { name: 'Profile' })).toBeOnTheScreen();
+    // The title is the SwiftUI navigation bar's.
+    expect(
+      nodes(
+        (p) =>
+          !!p.modifiers?.some(
+            (m) => m.$type === 'navigationTitle' && (m as { title?: string }).title === 'Profile',
+          ),
+      ),
+    ).not.toEqual([]);
     expect(labelled('Close')).toEqual([]);
   });
 

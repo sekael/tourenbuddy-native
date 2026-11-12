@@ -68,18 +68,14 @@ export const supabase = {
       return { data: { subscription: { unsubscribe: () => listeners.delete(listener) } } };
     }),
     signInWithOtp: jest.fn(async (_: unknown) => ({ data: {}, error: null as unknown })),
-    verifyOtp: jest.fn(
-      async (_: unknown): Result<{ session: Session | null }> => ({
-        data: { session: signedIn() },
-        error: null,
-      }),
-    ),
-    signInWithPassword: jest.fn(
-      async (_: unknown): Result<{ session: Session | null }> => ({
-        data: { session: signedIn() },
-        error: null,
-      }),
-    ),
+    verifyOtp: jest.fn(async (_: unknown): Result<{ session: Session | null }> => ({
+      data: { session: signedIn() },
+      error: null,
+    })),
+    signInWithPassword: jest.fn(async (_: unknown): Result<{ session: Session | null }> => ({
+      data: { session: signedIn() },
+      error: null,
+    })),
     updateUser: jest.fn(async (_: unknown): Result<object> => ({ data: {}, error: null })),
     passkey: {
       startAuthentication: jest.fn(
@@ -88,19 +84,20 @@ export const supabase = {
           error: null,
         }),
       ),
-      verifyAuthentication: jest.fn(
-        async (_: unknown): Result<{ session: Session | null }> => ({
-          data: { session: signedIn() },
-          error: null,
-        }),
-      ),
+      verifyAuthentication: jest.fn(async (_: unknown): Result<{ session: Session | null }> => ({
+        data: { session: signedIn() },
+        error: null,
+      })),
       startRegistration: jest.fn(
         async (): Result<{ challenge_id: string; options: object } | null> => ({
           data: { challenge_id: 'challenge-2', options: passkeyOptions.registration },
           error: null,
         }),
       ),
-      verifyRegistration: jest.fn(async (_: unknown): Result<object | null> => ({ data: {}, error: null })),
+      verifyRegistration: jest.fn(async (_: unknown): Result<object | null> => ({
+        data: {},
+        error: null,
+      })),
       list: jest.fn(
         async (): Result<{ id: string; friendly_name?: string; created_at: string }[] | null> => ({
           data: [],
@@ -117,10 +114,16 @@ export const supabase = {
     startAutoRefresh: jest.fn(),
     stopAutoRefresh: jest.fn(),
   },
-  // Realtime tests give these their channels.
-  channel: jest.fn(),
-  removeChannel: jest.fn(),
+  // A channel that subscribes and never hears anything; realtime tests give their own.
+  channel: jest.fn((_topic: string, _params?: unknown): unknown => quietChannel()),
+  removeChannel: jest.fn(async (_channel: unknown) => 'ok'),
   realtime: { setAuth: jest.fn(async () => {}) },
 };
+
+/** A channel whose `.on()` chains and whose `.subscribe()` reports nothing. */
+function quietChannel() {
+  const channel = { on: () => channel, subscribe: () => channel, unsubscribe: async () => 'ok' };
+  return channel;
+}
 
 export const sessionKey = 'sb-127-auth-token';

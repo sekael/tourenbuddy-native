@@ -71,10 +71,22 @@ describe('password sheet', () => {
   });
 
   it.each([
-    ['the same', new AuthApiError('same', 422, 'same_password'), "That's your current password. Choose a different one."],
-    ['weak', new AuthApiError('weak', 422, 'weak_password'), 'This password is too weak. Choose a stronger one.'],
+    [
+      'the same',
+      new AuthApiError('same', 422, 'same_password'),
+      "That's your current password. Choose a different one.",
+    ],
+    [
+      'weak',
+      new AuthApiError('weak', 422, 'weak_password'),
+      'This password is too weak. Choose a stronger one.',
+    ],
     ['offline', offline(), "This action isn't available offline"],
-    ['failing', new AuthApiError('boom', 500, 'unexpected_failure'), "The password couldn't be saved. Please try again."],
+    [
+      'failing',
+      new AuthApiError('boom', 500, 'unexpected_failure'),
+      "The password couldn't be saved. Please try again.",
+    ],
   ])('should explain a password that is %s and stay open with it', async (_, error, message) => {
     supabase.auth.updateUser.mockResolvedValueOnce({ data: {}, error });
 
@@ -145,7 +157,11 @@ describe('passkeys sheet', () => {
   });
 
   it.each([
-    ['already on the device', () => Passkey.create.mockRejectedValueOnce(sheetError('CredentialAlreadyExists')), 'This device already has a passkey for your account.'],
+    [
+      'already on the device',
+      () => Passkey.create.mockRejectedValueOnce(sheetError('CredentialAlreadyExists')),
+      'This device already has a passkey for your account.',
+    ],
     [
       'one too many',
       () =>

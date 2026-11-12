@@ -1,0 +1,34 @@
+diff --git a/node_modules/@maplibre/maplibre-react-native/ios/components/annotations/point-annotation/MLRNPointAnnotation.m b/node_modules/@maplibre/maplibre-react-native/ios/components/annotations/point-annotation/MLRNPointAnnotation.m
+index 71ee64d..e5db92b 100644
+--- a/node_modules/@maplibre/maplibre-react-native/ios/components/annotations/point-annotation/MLRNPointAnnotation.m
++++ b/node_modules/@maplibre/maplibre-react-native/ios/components/annotations/point-annotation/MLRNPointAnnotation.m
+@@ -91,6 +91,18 @@ const float CENTER_Y_OFFSET_BASE = -0.5f;
+   }
+ 
+   [super setCenter:center];
++
++  // patch(tourenbuddy): onDrag fired only on the Dragging state change and reported
++  // self.coordinate, which keeps the start point until the drop. Report every move instead,
++  // from where MapLibre just put the view.
++  if (self.reactOnDrag != nil && _map != nil) {
++    CLLocationCoordinate2D coordinate = [_map convertPoint:center toCoordinateFromView:_map];
++    self.reactOnDrag(@{
++      @"id" : _id ?: @"",
++      @"lngLat" : @[ @(coordinate.longitude), @(coordinate.latitude) ],
++      @"point" : @[ @(center.x), @(center.y) ],
++    });
++  }
+ }
+ 
+ - (void)setMap:(MLNMapView *)map {
+@@ -298,9 +310,7 @@ const float CENTER_Y_OFFSET_BASE = -0.5f;
+     }
+ 
+     case MLNAnnotationViewDragStateDragging:
+-      if (self.reactOnDrag != nil) {
+-        self.reactOnDrag([self makeEventPayload]);
+-      }
++      // patch(tourenbuddy): onDrag comes from setCenter: now, with the live position.
+       break;
+ 
+     case MLNAnnotationViewDragStateEnding:

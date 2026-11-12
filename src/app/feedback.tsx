@@ -1,8 +1,3 @@
-import { useTranslation } from 'react-i18next';
+import { FeedbackSheet } from '@/features/shell/presentation/feedback-sheet';
 
-import { PlaceholderSheet } from '@/features/shell/presentation/placeholder-sheet';
-
-export default function FeedbackSheet() {
-  const { t } = useTranslation();
-  return <PlaceholderSheet title={t('map.overlay.feedback')} />;
-}
+export default FeedbackSheet;

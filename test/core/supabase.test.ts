@@ -2,9 +2,8 @@ import type { Session } from '@supabase/supabase-js';
 
 jest.unmock('@/core/supabase');
 
-const { sessionKey, supabase } = jest.requireActual<typeof import('@/core/supabase')>(
-  '@/core/supabase',
-);
+const { sessionKey, supabase } =
+  jest.requireActual<typeof import('@/core/supabase')>('@/core/supabase');
 
 // Tripwires against supabase-js: the app relies on two things the library does internally.
 describe('supabase client', () => {

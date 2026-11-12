@@ -1,9 +1,17 @@
 import { router, type NativeStackNavigationOptions } from 'expo-router';
-import { type ComponentRef, useEffect, useEffectEvent, useId, useRef, useState } from 'react';
+import {
+  type ComponentRef,
+  type ReactElement,
+  useEffect,
+  useEffectEvent,
+  useId,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { Animated, Easing, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
-import { color, motion, radius, shadow, space } from '@/core/theme/tokens';
+import { color, motion, radius, shadow, size, space } from '@/core/theme/tokens';
 import { useBreakpoint } from '@/core/theme/use-breakpoint';
 import { useReducedMotion } from '@/core/theme/use-reduced-motion';
 
@@ -18,6 +26,68 @@ export const sheetOptions: NativeStackNavigationOptions = {
   headerShown: false,
   animation: 'none',
 };
+
+/**
+ * Web: the map's sheets, steps and forms sit in a panel beside the live map (D4), drawn by
+ * `sheetLayout`. The panel's height on a phone is the iOS sheet's first detent.
+ */
+const panelOptions: NativeStackNavigationOptions = {
+  presentation: 'containedTransparentModal',
+  headerShown: false,
+  animation: 'none',
+  contentStyle: { backgroundColor: 'transparent' },
+};
+export const mapSheetOptions: NativeStackNavigationOptions = {
+  ...panelOptions,
+  sheetAllowedDetents: [0.5],
+};
+export const stepSheetOptions: NativeStackNavigationOptions = {
+  ...panelOptions,
+  sheetAllowedDetents: [0.45],
+};
+export const formModalOptions = panelOptions;
+
+/**
+ * The stack's screen layout: a panel route's content in a side panel from 600 px, a bottom sheet
+ * on phones. The route still covers the window, so everything around the panel lets clicks
+ * through to the map; Escape is the page's own close (`Page`).
+ */
+export function sheetLayout({
+  options,
+  children,
+}: {
+  options: NativeStackNavigationOptions;
+  children: ReactElement;
+}) {
+  if (options.presentation !== 'containedTransparentModal') return children;
+  const detents = options.sheetAllowedDetents;
+  return <Panel height={Array.isArray(detents) ? detents[0]! : 1}>{children}</Panel>;
+}
+
+function Panel({ height, children }: { height: number; children: ReactElement }) {
+  const compact = useBreakpoint() === 'compact';
+  const panel = useRef<ComponentRef<typeof View>>(null);
+
+  useEffect(() => {
+    const node = panel.current as unknown as HTMLElement | null;
+    // Up to the route's own element, the one beside the other routes.
+    for (let el = node?.parentElement; el; el = el.parentElement) {
+      el.style.pointerEvents = 'none';
+      if ((el.parentElement?.childElementCount ?? 0) > 1) break;
+    }
+    node?.focus();
+  }, []);
+
+  return (
+    <View
+      ref={panel}
+      tabIndex={-1}
+      style={[styles.sidePanel, compact && [styles.bottomPanel, { height: `${height * 100}%` }]]}
+    >
+      {children}
+    </View>
+  );
+}
 
 const ease = Easing.bezier(0.22, 0.7, 0.3, 1);
 
@@ -129,4 +199,26 @@ const styles = StyleSheet.create({
     paddingBottom: space.xxl,
   },
   dialog: { width: '100%', maxWidth: 560, maxHeight: '100%', borderRadius: radius.lg },
+  // A full-height drawer over the navigation rail, as a sheet covers the tab bar on iOS.
+  sidePanel: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: size.panel,
+    backgroundColor: color.background,
+    boxShadow: shadow.lg,
+    outlineWidth: 0,
+    pointerEvents: 'auto',
+  },
+  bottomPanel: {
+    top: 'auto',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: 'auto',
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    overflow: 'hidden',
+  },
 });

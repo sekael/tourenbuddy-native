@@ -21,14 +21,18 @@
       "dayCounterLabel": "Day {{day}} of {{total}}",
       "friendCount": "{{count}} friends",
       "toursHeading": "Tours",
-      "friendsHeading": "Available friends"
+      "friendsHeading": "Available friends",
+      "noTours": "No tours this day"
     },
     "availability": {
       "edit": "Edit availability",
       "save": "Save",
       "cancel": "Cancel",
       "disclaimer": "Your availability will be visible to your friends.",
-      "calendarNote": "Days are pre-filled from your calendar. Days you change here override it permanently."
+      "calendarNote": "Days are pre-filled from your calendar. Days you change here override it permanently.",
+      "freeLabel": "free",
+      "saveFailed": "Couldn't save your availability. Try again.",
+      "markHint": "Tap the days you're free."
     },
     "seasons": {
       "title": "Seasonal Planner",
@@ -98,7 +102,8 @@
         "outlookStep3": "Copy the ICS link.",
         "icloudStep1": "Open the Calendar app on your iPhone or iPad and tap \"Calendars\".",
         "icloudStep2": "Tap ⓘ next to the calendar and turn on \"Public Calendar\".",
-        "icloudStep3": "Tap \"Share Link…\" → \"Copy\". Anyone with the link can see the calendar."
+        "icloudStep3": "Tap \"Share Link…\" → \"Copy\". Anyone with the link can see the calendar.",
+        "provider": "Calendar service"
       },
       "label": "Label",
       "labelPlaceholder": "Label (e.g. Work)",
@@ -143,8 +148,12 @@
         "too_complex": "A repeating event is too complex to process.",
         "unknown": "Last sync failed."
       },
-      "feedsTitle": "Your calendars"
-    }
+      "feedsTitle": "Your calendars",
+      "windowSection": "Free day",
+      "addSection": "Connect a calendar",
+      "share": "Share link"
+    },
+    "today": "Today"
   },
   "validation": {
     "required": "This field is required",
@@ -183,6 +192,11 @@
     },
     "bottomSheet": {
       "resizeHandle": "Resize panel"
+    },
+    "update": {
+      "title": "Update TourenBuddy",
+      "body": "This version is no longer supported. Update to keep planning tours with your friends.",
+      "action": "Update"
     }
   },
   "auth": {
@@ -307,7 +321,23 @@
       "calendarSummary_one": "{{count}} calendar",
       "calendarSummary_other": "{{count}} calendars",
       "calendarProblem": "Sync problem",
-      "version": "Version {{version}}"
+      "version": "Version {{version}}",
+      "deleteAccount": {
+        "entryBtn": "Delete account",
+        "title": "Delete your account?",
+        "body": "This deletes your profile, tours, GPX files and attachments, contacts, friendships, availability, calendar feeds and inbox for good. Friends no longer see your shared tours.",
+        "hint": "This cannot be undone. You can sign up again later with the same email, as a new account.",
+        "confirmBtn": "Delete for good",
+        "deleting": "Deleting…",
+        "failed": "Your account could not be deleted. Please try again.",
+        "offline": "You are offline. Connect to the internet to delete your account."
+      },
+      "privacy": "Privacy policy",
+      "terms": "Terms of use",
+      "imprint": "Imprint",
+      "legalSection": "About",
+      "accountSection": "Account",
+      "languageHint": "Change the language in the Settings app."
     },
     "phoneVerification": {
       "title": "Verify your phone",
@@ -324,7 +354,10 @@
       "sendingBtn": "Sending...",
       "resendBtn": "Resend code",
       "verifiedMsg": "Phone verified!",
-      "alreadyRegisteredError": "This phone number is already registered on TourenBuddy. If you believe you have another account with this number, contact feedback@tourenbuddy.ch."
+      "alreadyRegisteredError": "This phone number is already registered on TourenBuddy. If you believe you have another account with this number, contact feedback@tourenbuddy.ch.",
+      "sendCodeBtn": "Send code",
+      "invalidPhone": "Enter a valid phone number.",
+      "sendFailed": "The code could not be sent. Please try again."
     },
     "shared": {
       "firstNameLabel": "First name",
@@ -377,7 +410,9 @@
       "labelPlaceholder": "Label (e.g. Mobile)",
       "removePhoneTooltip": "Remove phone",
       "addPhoneBtn": "Add phone",
-      "primaryPhoneRequired": "Select one primary phone when multiple phones are entered"
+      "primaryPhoneRequired": "Select one primary phone when multiple phones are entered",
+      "clearToRemove": "Clear a number to remove it.",
+      "addEmailBtn": "Add email"
     },
     "addDialog": {
       "title": "Add Contact",
@@ -472,7 +507,10 @@
       "callAction": "Call",
       "whatsAppAction": "WhatsApp",
       "deleteAction": "Delete",
-      "deleteFailed": "Couldn't delete the contact."
+      "deleteFailed": "Couldn't delete the contact.",
+      "messageAction": "Message",
+      "mailAction": "Mail",
+      "copyAction": "Copy"
     },
     "actionMenu": {
       "noMethods": "No contact method available. Edit contact to add one.",
@@ -508,7 +546,13 @@
       "viewBackfillCollisionsBtn": "Review tour overlaps",
       "friendsOnMap_zero": "None of these on the map – you're a partner on none",
       "friendsOnMap_one": "Only 1 of these on the map – the one you're a partner on",
-      "friendsOnMap_other": "Only {{count}} of these on the map – the ones you're a partner on"
+      "friendsOnMap_other": "Only {{count}} of these on the map – the ones you're a partner on",
+      "open": "Open",
+      "markOpen": "Mark as not done",
+      "filtersActive_one": "Filters ({{count}} active)",
+      "filtersActive_other": "Filters ({{count}} active)",
+      "filteredFooter_one": "{{count}} tour matches the filters",
+      "filteredFooter_other": "{{count}} tours match the filters"
     },
     "duplicate": {
       "title": "Tour already here",
@@ -615,7 +659,10 @@
       "nextDayHint": "Staying overnight? The next stage starts where this one ends.",
       "splitDaysBtn": "Split into daily stages",
       "splitDaysHint": "{{count}} days: plan each day as its own stage – this one keeps the first.",
-      "trackFromGoal": "At the goal, where the track begins"
+      "trackFromGoal": "At the goal, where the track begins",
+      "discardTitle": "Discard your changes?",
+      "gpxTrackNone": "No track yet",
+      "changeRouteBtn": "Change route on the map"
     },
     "creation": {
       "title": "New Tour",
@@ -672,7 +719,11 @@
       "landingShort": "Landing",
       "wayUp": "Way up",
       "wayDown": "Way down",
-      "landingOpen": "not set yet"
+      "landingOpen": "not set yet",
+      "gone": "This tour is no longer available.",
+      "visibleToFriends": "Visible to friends",
+      "downloadGpxFailed": "Couldn’t share the track. Please try again.",
+      "deleteConfirmDetail": "This can’t be undone."
     },
     "filters": {
       "partnerLabel": "Partner",
@@ -692,7 +743,8 @@
       "resetBtn": "Reset",
       "showResultsBtn_zero": "Show {{count}} tours",
       "showResultsBtn_one": "Show {{count}} tour",
-      "showResultsBtn_other": "Show {{count}} tours"
+      "showResultsBtn_other": "Show {{count}} tours",
+      "anyDate": "Any"
     },
     "type": {
       "skiing": "Skiing",
@@ -760,7 +812,13 @@
       "retryUpload": "Retry upload",
       "dismissUpload": "Remove file",
       "loadFailed": "Could not load the files for this tour.",
-      "reorderHandle": "Move {{name}}"
+      "reorderHandle": "Move {{name}}",
+      "fromPhotos": "Photo Library",
+      "fromCamera": "Take Photo",
+      "fromFiles": "Choose File",
+      "cameraDenied": "Camera access is off. Allow it in Settings to take a photo.",
+      "share": "Share",
+      "unavailableOffline": "This file isn’t on this device yet. Connect to the internet to open it."
     },
     "suggestions": {
       "suggestBtn": "Suggest changes",
@@ -860,7 +918,9 @@
       "reorderHandle": "Move segment {{n}}",
       "ruleHint": "One day, one tour – even with several summits, or walking up and flying down. After a night, the next segment begins.",
       "connect": "Connect",
-      "connectLabel": "End segment {{n}} at {{place}}"
+      "connectLabel": "End segment {{n}} at {{place}}",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
     },
     "route": {
       "ascent": "Ascent",
@@ -931,7 +991,9 @@
       "label": "Cluster of {{count}} tours",
       "planned": "{{count}} planned",
       "undated": "{{count}} without a date",
-      "done": "{{count}} done"
+      "done": "{{count}} done",
+      "stackTitle_one": "{{count}} tour here",
+      "stackTitle_other": "{{count}} tours here"
     },
     "marker": {
       "done": "Done",
@@ -975,7 +1037,8 @@
       "redo": "Redo",
       "done": "Done",
       "returnToStart": "To start",
-      "returnToStartHint": "Back to the start the same way"
+      "returnToStartHint": "Back to the start the same way",
+      "clear": "Clear the drawing"
     },
     "plan": {
       "stepsLabel": "Route points",
@@ -1017,6 +1080,13 @@
       "back": "Back to the details, without these changes",
       "fold": "Fold the route points away",
       "unfold": "Show the route points"
+    },
+    "a11y": {
+      "label": "Map of Switzerland with your tours",
+      "hint": "Your tours are also listed under My Tours.",
+      "legendHint": "Explains the markers, colours and lines.",
+      "toursHint": "Lists your tours and your friends' tours.",
+      "addHint": "Pick the goal on the map or search for a place."
     }
   },
   "i18n": {
@@ -1055,7 +1125,8 @@
       "body": "Once verified, other verified TourenBuddy users who add this number to their contacts will know an account exists for it and can send a friend request. Your identity is not revealed beyond this. Unverified phones are never discoverable. You can deny any incoming request.",
       "acknowledge": "I understand the conditions on phone discoverability.",
       "sendCodeBtn": "Send verification code"
-    }
+    },
+    "cancelRequest": "Cancel request"
   },
   "blocks": {
     "tabLabel": "Blocked",
@@ -1072,7 +1143,8 @@
       "reportToggle": "Also report this user",
       "reportPlaceholder": "Optional: describe the issue (max 1000 characters)",
       "cancelBtn": "Cancel",
-      "confirmBtn": "Block"
+      "confirmBtn": "Block",
+      "reportAndBlock": "Block and report"
     },
     "snackbar": {
       "blockSuccess": "User blocked",
@@ -1114,7 +1186,13 @@
   },
   "common": {
     "loading": "Loading…",
-    "close": "Close"
+    "close": "Close",
+    "back": "Back",
+    "cancel": "Cancel",
+    "done": "Done",
+    "openSettings": "Open Settings",
+    "more": "More",
+    "genericError": "Something went wrong. Please try again."
   },
   "tourLinks": {
     "linkedWithHeader": "Linked with",
@@ -1150,7 +1228,9 @@
     "mergeBlockedTitle": "Another friend group plans the same tour",
     "mergeBlockedBody": "Friends already in their own linked group: {{names}}. You can reach out to them directly to coordinate — joining their group from yours isn't possible.",
     "dismissBtn": "Got it",
-    "doNotShowAgain": "Don't show again"
+    "doNotShowAgain": "Don't show again",
+    "actionFailed": "Couldn’t update the link. Please try again.",
+    "requestSent": "Link request sent"
   },
   "onboarding": {
     "tour": {
@@ -1234,6 +1314,20 @@
         "title": "Everything in one place",
         "body": "Friend requests, shared-tour changes, suggestions and tour reminders collect in your inbox — even with push and email off. The badge counts what still needs you."
       }
+    },
+    "index": {
+      "intro": "Here's what TourenBuddy does. Tap a row to go there.",
+      "addLocation": "Tap your start, goal and end on the map, or search for them. The route follows the trails.",
+      "mapLayers": "Choose a base map and add hiking trails or ski routes with their difficulty.",
+      "offlineMap": "Download a region, or all of Switzerland, before you head out.",
+      "tours": "Your tours and your friends' tours, as a list or on the map.",
+      "addContact": "Add people from your phone book or by hand, and link them to your tours.",
+      "friendRequests": "Become friends to see each other's tours and plan together.",
+      "inbox": "Requests, tour changes, suggestions and reminders, even with push and email off.",
+      "phone": "Verify your number so friends can find you.",
+      "notifications": "Choose what alerts you, on this device and by email.",
+      "calendarSync": "Your calendar marks your free days. Its contents are never stored.",
+      "openCalendar": "Plan by date, share when you're free, and see when friends are."
     }
   },
   "offlineMap": {
@@ -1263,13 +1357,22 @@
       "empty": "No offline maps downloaded yet.",
       "tip": "Tip: download several smaller regions rather than one very large one.",
       "drawRegion": "Download a region",
-      "wholeMap": "Download all of Switzerland"
+      "wholeMap": "Download all of Switzerland",
+      "incomplete": "Incomplete",
+      "redownload": "Download again",
+      "webUnavailable": "Offline maps are available in the iPhone and Android apps."
     },
     "errors": {
       "load": "Could not load offline maps.",
       "delete": "Could not delete this region.",
       "quota": "Not enough storage to download this region.",
       "download": "Download failed. Please try again."
+    },
+    "regions": {
+      "west": "Switzerland · West",
+      "centreWest": "Switzerland · Centre-west",
+      "centreEast": "Switzerland · Centre-east",
+      "east": "Switzerland · East"
     }
   },
   "offline": {
@@ -1308,7 +1411,12 @@
       },
       "kind": {
         "tour": "tour",
-        "contact": "contact"
+        "contact": "contact",
+        "friendship": "friendship",
+        "availability": "availability",
+        "inbox": "inbox entry",
+        "notif-prefs": "notification settings",
+        "profile": "profile"
       },
       "permanentReason": "This change couldn't be applied and was not saved",
       "transientReason": "The server couldn't be reached — you can try again"

@@ -25,14 +25,21 @@ describe('parseEnv', () => {
   });
 
   it('should name every bad variable at once', () => {
-    expect(() => parseEnv({})).toThrow(
-      /EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY/,
-    );
+    expect(() => parseEnv({})).toThrow(/EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY/);
   });
 
   it('should reject an empty anon key', () => {
     expect(() => parseEnv({ ...valid, EXPO_PUBLIC_SUPABASE_ANON_KEY: '' })).toThrow(
       /EXPO_PUBLIC_SUPABASE_ANON_KEY/,
+    );
+  });
+
+  it('should treat an empty Worker URL as unset and reject one without a scheme', () => {
+    expect(
+      parseEnv({ ...valid, EXPO_PUBLIC_NOTIFY_HOOK_URL: '' }).EXPO_PUBLIC_NOTIFY_HOOK_URL,
+    ).toBe(undefined);
+    expect(() => parseEnv({ ...valid, EXPO_PUBLIC_NOTIFY_HOOK_URL: 'worker.dev' })).toThrow(
+      /EXPO_PUBLIC_NOTIFY_HOOK_URL/,
     );
   });
 });

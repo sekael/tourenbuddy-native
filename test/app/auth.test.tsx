@@ -1,5 +1,5 @@
 import { AuthApiError, AuthRetryableFetchError } from '@supabase/supabase-js';
-import { act, fireEvent, screen } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
@@ -197,7 +197,7 @@ describe('signed in', () => {
 });
 
 describe('offline', () => {
-  it('should open the map on the stored session and say so on the Profile tab', async () => {
+  it('should open the app on the stored session and say so until it is confirmed', async () => {
     signIn();
     const stored = fakeAuth.session;
     fakeAuth.session = null;
@@ -210,11 +210,17 @@ describe('offline', () => {
 
     await renderRouter(routes, { initialUrl: '/profile' });
 
+    // The status capsule is SwiftUI: an inert view carrying its label.
+    const status = () =>
+      screen.container.queryAll(
+        (node) => node.props.title === 'Signed in offline · data may be out of date',
+      );
     expect(screen).toHavePathname('/profile');
-    expect(screen.getByText('Signed in offline · data may be out of date')).toBeOnTheScreen();
+    expect(status()).toHaveLength(1);
 
     await act(async () => fakeAuth.emit('TOKEN_REFRESHED', testSession()));
-    expect(screen.queryByText('Signed in offline · data may be out of date')).toBeNull();
+    // It fades out, then goes.
+    await waitFor(() => expect(status()).toHaveLength(0));
   });
 
   it('should not sign in with a session the server revoked', async () => {

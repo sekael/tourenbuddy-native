@@ -20,6 +20,7 @@ const palette = {
   blue700: '#1d4ed8',
   blue900: '#1e3a8a',
   red600: '#dc2626',
+  swisstopoRed: '#e3061b',
   green800: '#166534',
 } as const;
 
@@ -44,6 +45,9 @@ export const color = {
   outlineVariant: palette.slate300,
   error: palette.red600,
   success: palette.green800,
+  /** A terrain profile's line, as the swisstopo app draws it under a tour. */
+  elevation: palette.swisstopoRed,
+  elevationFill: 'rgba(227, 6, 27, 0.12)',
   /** Text over photos, under `scrim`. */
   onContrast: palette.white,
   backdrop: 'rgba(15, 23, 42, 0.35)',
@@ -103,6 +107,8 @@ export const size = {
   form: 400,
   /** Outline of a text field. */
   fieldBorder: 1.5,
+  /** The web's side panel beside the map. */
+  panel: 420,
 } as const;
 
 /** Material's opacity for disabled controls. */

@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { bounded } from '@/core/async';
 import { authStorage, storageReady } from '@/core/auth/auth-storage';
 import { sessionTrust } from '@/core/auth/session-trust';
+import { sessionUser } from '@/core/auth/session-user';
 import i18n from '@/core/i18n';
 import { createLogger } from '@/core/logging/logger';
 import { sessionKey, supabase } from '@/core/supabase';
@@ -69,6 +70,8 @@ type AuthState = {
   addPasskey: () => Promise<void>;
   deletePasskey: (id: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Reloads the user from the server (after a phone change or its removal). */
+  refreshUser: () => Promise<void>;
 };
 
 async function requestCode(email: string) {
@@ -180,6 +183,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   addPasskey: () => passkeys.addPasskey(),
   deletePasskey: (id) => passkeys.deletePasskey(id),
 
+  refreshUser: async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    // Only while still signed in as that user: a sign-out meanwhile wins.
+    if (data.user && get().user?.id === data.user.id) set({ user: data.user });
+  },
+
   /**
    * Shows sign-in at once and never throws: it is the one way out of an unverified session, and it
    * has to work offline. auth-js deletes the local session before it asks the server to revoke
@@ -204,3 +214,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     }
   },
 }));
+
+// `core/` (the offline outbox) needs the signed-in user's id and may not import this feature, so
+// the store mirrors it into `sessionUser`, as it does for `sessionTrust`.
+useAuthStore.subscribe((state) => {
+  const id = state.user?.id ?? null;
+  if (sessionUser.getState().id !== id) sessionUser.setState({ id });
+});
+
+/** Whether this device offers passkeys (iOS with a passkey provider): screens read it here. */
+export { passkeysSupported } from '@/features/auth/data/passkeys';

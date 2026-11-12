@@ -22,8 +22,7 @@ const rateLimited = (seconds: number) =>
   );
 
 const field = (label: string) => screen.getByLabelText(label);
-const type = (label: string, text: string) =>
-  act(() => fireEvent.changeText(field(label), text));
+const type = (label: string, text: string) => act(() => fireEvent.changeText(field(label), text));
 
 beforeEach(() => {
   resetAuth();
@@ -95,7 +94,11 @@ describe('sign-in screen: email code', () => {
       new AuthApiError('Email address is invalid', 400, 'email_address_invalid'),
       'Please enter a valid email address',
     ],
-    ['failing on the server', new AuthApiError('boom', 500, 'unexpected_failure'), 'Failed to send code. Please try again.'],
+    [
+      'failing on the server',
+      new AuthApiError('boom', 500, 'unexpected_failure'),
+      'Failed to send code. Please try again.',
+    ],
   ])('should explain a send that is %s and stay', async (_, error, message) => {
     supabase.auth.signInWithOtp.mockResolvedValueOnce({ data: {}, error });
 
@@ -165,16 +168,23 @@ describe('sign-in screen: password', () => {
       'Too many attempts. Please wait a moment and try again.',
     ],
     ['offline', offline(), "This action isn't available offline"],
-    ['failing', new AuthApiError('boom', 500, 'unexpected_failure'), 'Sign-in failed. Please try again.'],
-  ])('should explain a password sign-in that is %s and keep the email', async (_, error, message) => {
-    supabase.auth.signInWithPassword.mockResolvedValueOnce({ data: { session: null }, error });
+    [
+      'failing',
+      new AuthApiError('boom', 500, 'unexpected_failure'),
+      'Sign-in failed. Please try again.',
+    ],
+  ])(
+    'should explain a password sign-in that is %s and keep the email',
+    async (_, error, message) => {
+      supabase.auth.signInWithPassword.mockResolvedValueOnce({ data: { session: null }, error });
 
-    await signIn('anna@example.com', 'secret-123');
+      await signIn('anna@example.com', 'secret-123');
 
-    expect(screen.getByText(message)).toBeOnTheScreen();
-    expect(field('Email address')).toHaveDisplayValue('anna@example.com');
-    expect(screen).toHavePathname('/auth');
-  });
+      expect(screen.getByText(message)).toBeOnTheScreen();
+      expect(field('Email address')).toHaveDisplayValue('anna@example.com');
+      expect(screen).toHavePathname('/auth');
+    },
+  );
 
   it('should not start a second sign-in while one runs, by any way', async () => {
     supabase.auth.signInWithPassword.mockReturnValueOnce(new Promise(() => {}));
@@ -332,7 +342,9 @@ describe('account creation screen', () => {
 });
 
 describe('code screen', () => {
-  beforeEach(() => renderRouter(routes, { initialUrl: '/auth/verify-otp?email=anna%40example.com' }));
+  beforeEach(() =>
+    renderRouter(routes, { initialUrl: '/auth/verify-otp?email=anna%40example.com' }),
+  );
 
   it('should take the one-time code from autofill, on a number pad, never as a credential', () => {
     expect(field('Sign-in code').props).toMatchObject({

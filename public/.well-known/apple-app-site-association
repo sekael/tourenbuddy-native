@@ -1,4 +1,21 @@
 {
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["R26MV7TAH3.ch.tourenbuddy.app", "R26MV7TAH3.ch.tourenbuddy.app.dev"],
+        "components": [
+          { "/": "/privacy*", "exclude": true, "comment": "Legal pages open in the browser" },
+          { "/": "/terms*", "exclude": true },
+          { "/": "/imprint*", "exclude": true },
+          { "/": "/account-deletion*", "exclude": true },
+          { "/": "/de/*", "exclude": true },
+          { "/": "/legal.css", "exclude": true },
+          { "/": "/app-config.json", "exclude": true },
+          { "/": "/*", "comment": "Every app path, including ?notification= links" }
+        ]
+      }
+    ]
+  },
   "webcredentials": {
     "apps": ["R26MV7TAH3.ch.tourenbuddy.app", "R26MV7TAH3.ch.tourenbuddy.app.dev"]
   }

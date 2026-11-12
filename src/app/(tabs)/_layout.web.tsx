@@ -92,7 +92,8 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderRightColor: color.divider,
   },
-  railItems: { alignItems: 'center', gap: space.md, paddingTop: space.xl },
+  // TabList lays its child out as a row; the rail stacks.
+  railItems: { flexDirection: 'column', alignItems: 'center', gap: space.md, paddingTop: space.xl },
   item: { alignItems: 'center', gap: space.xxs, minWidth: 64 },
   indicator: {
     width: 64,
