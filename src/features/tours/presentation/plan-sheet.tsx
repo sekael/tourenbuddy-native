@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 
 import { useLatest } from '@/core/use-latest';
-import { ListRow, ListSection, ToggleRow, type RowAction } from '@/core/adaptive/list';
+import { ListRow, ListSection, type RowAction } from '@/core/adaptive/list';
 import { Page, Screen } from '@/core/adaptive/screen';
 import { useFormatter } from '@/core/i18n/format';
 import { isOnline } from '@/core/offline/online';
@@ -19,8 +19,10 @@ import {
   type RoutePoints,
   type RouteStep,
 } from '@/features/map/domain/route-plan';
-import { snapNetworkFor } from '@/features/map/domain/snap-network';
-import { createLegRouter, isGap, legEnd } from '@/features/map/presentation/leg-router';
+import { initialFollow, type Follow, type SnapNetwork } from '@/features/map/domain/snap-network';
+import type { HandleTarget } from '@/features/map/presentation/stores/map-store';
+import { FollowSection } from '@/features/map/presentation/follow-section';
+import { createLegRouter, isGap, legEnd, tapSnapM } from '@/features/map/presentation/leg-router';
 import { useMapStore } from '@/features/map/presentation/stores/map-store';
 import { resultSubtitle, useLocationSearch } from '@/features/map/presentation/use-location-search';
 import { getElevation } from '@/features/tours/data/services/swisstopo-elevation-service';
@@ -38,12 +40,28 @@ import { profiledMetrics } from './use-route-metrics';
 const STEP_ICONS = { start: 'trip_origin', goal: 'flag', end: 'sports_score' } as const;
 const at = (p: PlannedPoint): LngLat => [p.location.lng, p.location.lat];
 
-/** The route's stops in order and the goal's place among them; none before there is a goal. */
-function stopsOf(points: RoutePoints): { stops: LngLat[]; goal: number } | null {
+/** Points pulled out of the legs, in order: between start and goal, and between goal and end. */
+type Vias = { start: LngLat[]; goal: LngLat[] };
+const NO_VIAS: Vias = { start: [], goal: [] };
+
+/**
+ * The route's points in order — start, the points between, goal, the points between, end — and
+ * the goal's place among them; none before there is a goal. Points between count only while both
+ * their ends are set.
+ */
+function stopsOf(points: RoutePoints, vias: Vias): { stops: LngLat[]; goal: number } | null {
   if (!points.goal) return null;
+  const before = points.start ? vias.start : [];
+  const after = points.end ? vias.goal : [];
   return {
-    stops: [points.start, points.goal, points.end].filter((p) => p !== null).map(at),
-    goal: points.start ? 1 : 0,
+    stops: [
+      ...(points.start ? [at(points.start)] : []),
+      ...before,
+      at(points.goal),
+      ...after,
+      ...(points.end ? [at(points.end)] : []),
+    ],
+    goal: (points.start ? 1 : 0) + before.length,
   };
 }
 
@@ -90,17 +108,30 @@ export function PlanSheet({ back }: { back: boolean }) {
   const [active, setActive] = useState<RouteStep>(() =>
     points.goal ? 'goal' : points.start ? 'goal' : 'start',
   );
-  const [follow, setFollow] = useState(true);
+  const [follow, setFollow] = useState<Follow>(() =>
+    initialFollow(overlays, draftState.draft.tourTypes),
+  );
+  const [vias, setVias] = useState<Vias>(() => initialVias());
+  const following = follow !== 'straight';
+  /** A leg's dot picked by a tap: the next map tap sends the route through there. */
+  const [pickedLeg, setPickedLeg] = useState<number | null>(null);
   const [legs, setLegs] = useState<Map<string, LngLat[]>>(new Map());
   const [issue, setIssue] = useState<'unavailable' | null>(null);
   const [finishing, setFinishing] = useState(false);
   const pointsRef = useLatest(points);
+  const viasRef = useLatest(vias);
+  const moveRef = useLatest(movePoint);
+  const pullRef = useLatest(pullLeg);
+  const dropRef = useLatest(dropPoint);
+  const pickRef = useLatest(pick);
+  const tapRef = useLatest(tapMap);
+  const pickedLegRef = useLatest(pickedLeg);
   const activeRef = useLatest(active);
   const [lookups] = useState(() => new PointLookups());
   const search = useLocationSearch(active);
 
   const tourTypes = draftState.draft.tourTypes;
-  const network = snapNetworkFor(overlays, tourTypes);
+  const network = following ? (follow as SnapNetwork) : null;
   const legRouter = useMemo(
     () => createLegRouter({ network: () => network, maxTiles: 64 }),
     [network],
@@ -133,14 +164,91 @@ export function PlanSheet({ back }: { back: boolean }) {
   function clear(step: RouteStep) {
     lookups.abort(step);
     setPoints((p) => ({ ...p, [step]: null }));
+    // Points between a removed end and the goal go with it.
+    if (step === 'start') setVias((v) => ({ ...v, start: [] }));
+    if (step === 'end') setVias((v) => ({ ...v, goal: [] }));
     setActive(step);
+  }
+
+  /** Where the point at `index` of the route's points sits: a step, or a point between. */
+  function pointAt(index: number): { step: RouteStep } | { leg: keyof Vias; i: number } | null {
+    const r = stopsOf(pointsRef.current, viasRef.current);
+    if (!r) return null;
+    const first = pointsRef.current.start ? 1 : 0;
+    if (index === r.goal) return { step: 'goal' };
+    if (index === 0 && pointsRef.current.start) return { step: 'start' };
+    if (index === r.stops.length - 1 && pointsRef.current.end) return { step: 'end' };
+    return index < r.goal
+      ? { leg: 'start', i: index - first }
+      : { leg: 'goal', i: index - r.goal - 1 };
+  }
+
+  /** A point dragged: a step is set anew there (named and measured), a point between moved. */
+  function movePoint(index: number, to: LngLat) {
+    const where = pointAt(index);
+    if (!where) return;
+    void Haptics.selectionAsync();
+    if ('step' in where) {
+      place(where.step, { lng: to[0], lat: to[1] });
+      return;
+    }
+    void onWay(to).then((at) =>
+      setVias((v) => ({ ...v, [where.leg]: v[where.leg].map((p, i) => (i === where.i ? at : p)) })),
+    );
+  }
+
+  /** A point between lands on the way nearest the finger, as a drawn point does. */
+  async function onWay(to: LngLat): Promise<LngLat> {
+    if (!following) return to;
+    const radius = tapSnapM(to[1], useMapStore.getState().zoom ?? 13);
+    return (await legRouter.resolve(null, to, radius).catch(() => ({ to }))).to;
+  }
+
+  /** A leg's middle dragged to `to`: the route goes through there. */
+  function pullLeg(leg: number, to: LngLat) {
+    const r = stopsOf(pointsRef.current, viasRef.current);
+    if (!r) return;
+    void Haptics.selectionAsync();
+    const first = pointsRef.current.start ? 1 : 0;
+    const [part, i] =
+      leg < r.goal ? (['start', leg + 1 - first] as const) : (['goal', leg - r.goal] as const);
+    void onWay(to).then((at) =>
+      setVias((v) => ({ ...v, [part]: [...v[part].slice(0, i), at, ...v[part].slice(i)] })),
+    );
+  }
+
+  /** A tap on a point or a leg's dot: a step becomes the one the next tap moves, a leg waits. */
+  function pick(target: HandleTarget) {
+    void Haptics.selectionAsync();
+    if ('leg' in target) {
+      setPickedLeg((leg) => (leg === target.leg ? null : target.leg));
+      return;
+    }
+    const where = pointAt(target.point);
+    setPickedLeg(null);
+    if (where && 'step' in where) setActive(where.step);
+  }
+
+  /** A map tap: through a picked leg, else the active point set or moved there. */
+  function tapMap(location: LngLat) {
+    if (pickedLegRef.current !== null) {
+      pullLeg(pickedLegRef.current, location);
+      setPickedLeg(null);
+      return;
+    }
+    setAndAdvance(activeRef.current, { lng: location[0], lat: location[1] });
+  }
+
+  function dropPoint(index: number) {
+    const where = pointAt(index);
+    if (!where || 'step' in where) return;
+    void Haptics.selectionAsync();
+    setVias((v) => ({ ...v, [where.leg]: v[where.leg].filter((_, i) => i !== where.i) }));
   }
 
   // The map's taps set the active point while the step runs.
   useEffect(() => {
-    useMapStore
-      .getState()
-      .beginStep('route', ([lng, lat]) => setAndAdvance(activeRef.current, { lng, lat }));
+    useMapStore.getState().beginStep('route', (location) => tapRef.current(location));
     // A point handed over unnamed (the next day starting at a goal) is looked up like a new one.
     ROUTE_STEPS.forEach((step) => {
       const p = pointsRef.current[step];
@@ -171,10 +279,10 @@ export function PlanSheet({ back }: { back: boolean }) {
   }, []);
 
   // Legs along the ways, one at a time, keyed by network and both ends.
-  const route = stopsOf(points);
+  const route = stopsOf(points, vias);
   const pairs = route ? route.stops.slice(1).map((b, i) => [route.stops[i]!, b] as const) : [];
   const keyOf = (a: LngLat, b: LngLat) => `${network ?? 'ways'}|${a.join()}|${b.join()}`;
-  const missing = follow ? pairs.filter(([a, b]) => !legs.has(keyOf(a, b))) : [];
+  const missing = following ? pairs.filter(([a, b]) => !legs.has(keyOf(a, b))) : [];
   const missingKey = missing.map(([a, b]) => keyOf(a, b)).join(';');
   useEffect(() => {
     if (!missing.length || !route) return;
@@ -201,14 +309,14 @@ export function PlanSheet({ back }: { back: boolean }) {
   }, [missingKey, legRouter]);
 
   const line: LngLat[] | null =
-    follow && pairs.length
+    following && pairs.length
       ? pairs.flatMap(([a, b], i) => {
           const leg = legs.get(keyOf(a, b)) ?? [a, b];
           return i === 0 ? leg : leg.slice(1);
         })
       : null;
-  const finding = follow && missing.length > 0;
-  const gap = follow && pairs.some(([a, b]) => isGap(legs.get(keyOf(a, b)) ?? []));
+  const finding = following && missing.length > 0;
+  const gap = following && pairs.some(([a, b]) => isGap(legs.get(keyOf(a, b)) ?? []));
 
   // What the map draws: the line (or straight dashes) and the points.
   useEffect(() => {
@@ -230,28 +338,38 @@ export function PlanSheet({ back }: { back: boolean }) {
               ]
             : [],
       },
-      previewPoints: {
-        type: 'FeatureCollection',
-        features: ROUTE_STEPS.flatMap((step) => {
-          const p = points[step];
-          if (!p) return [];
-          const kind = step === 'goal' ? 'preview' : step;
-          return [
-            {
-              type: 'Feature' as const,
-              geometry: { type: 'Point' as const, coordinates: at(p) },
-              properties: { kind, ...(p.name ? { label: p.name } : {}) } as {
-                kind: 'start' | 'end' | 'preview';
-                label?: string;
-              },
-            },
-          ];
-        }),
-      },
+      // The points are handles to drag (`editHandles`); a leg's middle pulls the route elsewhere.
+      previewPoints: null,
+      editHandles: route
+        ? {
+            points: route.stops.map((p, i) => ({
+              at: p,
+              kind:
+                i === route.goal
+                  ? 'goal'
+                  : i === 0 && points.start
+                    ? 'start'
+                    : i === route.stops.length - 1 && points.end
+                      ? 'end'
+                      : 'via',
+            })),
+            legs: pairs.map(([a, b]) => (following ? (legs.get(keyOf(a, b)) ?? [a, b]) : [a, b])),
+            move: (i, to) => moveRef.current(i, to),
+            pull: (leg, to) => pullRef.current(leg, to),
+            drop: (i) => dropRef.current(i),
+            pick: (target) => pickRef.current(target),
+            picked:
+              pickedLeg !== null
+                ? { leg: pickedLeg }
+                : points[active]
+                  ? { point: activeIndex(route, active) }
+                  : null,
+          }
+        : null,
     });
     // Drawn from what the step holds; the line follows from points and legs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [points, legs, follow]);
+  }, [points, vias, legs, follow, active, pickedLeg]);
 
   // Climb and time measured along the line, as the saved tour will show them (route-planner in the
   // PWA). They appear once measured, never first as the points' estimate; that only when the line
@@ -344,7 +462,7 @@ export function PlanSheet({ back }: { back: boolean }) {
     }
   }
 
-  const followStatus = !follow
+  const followStatus = !following
     ? t('map.plan.follow.straight')
     : finding
       ? t('map.plan.follow.finding')
@@ -354,14 +472,12 @@ export function PlanSheet({ back }: { back: boolean }) {
           ? t('map.plan.follow.gap')
           : network === 'ski'
             ? t('map.plan.follow.ski')
-            : network === 'hiking'
-              ? t('map.plan.follow.hiking')
-              : t('map.plan.follow.ways');
+            : t('map.plan.follow.hiking');
 
   return (
     <Screen>
       <Page
-        title={t('tours.creation.title')}
+        title={draftState.mode === 'create' ? t('tours.creation.title') : t('map.plan.editTitle')}
         cancel={{ label: back ? t('common.back') : t('common.cancel'), onPress: cancel }}
         confirm={{
           label: back ? t('map.plan.done') : t('map.plan.continue'),
@@ -410,7 +526,16 @@ export function PlanSheet({ back }: { back: boolean }) {
           </ListSection>
         ) : null}
 
-        <ListSection title={t('map.plan.stepsLabel')} footer={t(`map.plan.hint.${active}`)}>
+        <ListSection
+          title={t('map.plan.stepsLabel')}
+          footer={[
+            pickedLeg !== null ? t('map.plan.hint.pull') : t(`map.plan.hint.${active}`),
+            route && route.stops.length > 1 ? t('map.plan.hint.shape') : null,
+            vias.start.length + vias.goal.length ? t('map.plan.hint.via') : null,
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
           {ROUTE_STEPS.map((step) => {
             const p = points[step];
             const actions: RowAction[] =
@@ -427,21 +552,26 @@ export function PlanSheet({ back }: { back: boolean }) {
             return (
               <ListRow
                 key={step}
+                // Unset, the row is its step ("Ziel", required); set, the place, its step below.
                 title={
                   p
                     ? p.loading
                       ? t('common.loading')
                       : (p.name ?? t('map.plan.unnamed'))
+                    : t(`map.plan.step.${step}`)
+                }
+                subtitle={
+                  p
+                    ? [
+                        t(`map.plan.step.${step}`),
+                        !p.loading && p.elevation != null ? formatElevation(p.elevation) : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')
                     : step === 'goal'
                       ? t('map.plan.required')
                       : t('map.plan.optional')
                 }
-                subtitle={[
-                  t(`map.plan.step.${step}`),
-                  p && !p.loading && p.elevation != null ? formatElevation(p.elevation) : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
                 icon={step === 'end' && roundTripSet ? 'u_turn_left' : STEP_ICONS[step]}
                 iconColor={active === step ? undefined : '#94a3b8'}
                 checked={active === step}
@@ -473,17 +603,29 @@ export function PlanSheet({ back }: { back: boolean }) {
           ) : null}
         </ListSection>
 
-        <ListSection footer={followStatus}>
-          <ToggleRow
-            title={t('map.plan.follow.label')}
-            icon="route"
-            value={follow}
-            onValueChange={setFollow}
-          />
-        </ListSection>
+        <FollowSection value={follow} onChange={setFollow} status={followStatus} />
       </Page>
     </Screen>
   );
+}
+
+/** Where step `step` sits among the route's points. */
+function activeIndex(route: { stops: LngLat[]; goal: number }, step: RouteStep): number {
+  if (step === 'goal') return route.goal;
+  return step === 'start' ? 0 : route.stops.length - 1;
+}
+
+/** The points between from a route planned before (back from the form), else none. */
+function initialVias(): Vias {
+  const { route } = useTourDraftStore.getState();
+  const track = route?.track;
+  if (!track || track.goal == null) return NO_VIAS;
+  const first = route.points.start ? 1 : 0;
+  const last = route.points.end ? track.points.length - 1 : track.points.length;
+  return {
+    start: track.points.slice(first, track.goal),
+    goal: track.points.slice(track.goal + 1, last),
+  };
 }
 
 /** The points to start from: the draft's (from the form), else none. */

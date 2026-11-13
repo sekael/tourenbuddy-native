@@ -19,7 +19,6 @@ import OfflineMapsSheet from '@/app/offline-maps';
 import OfflineRegionSheet from '@/app/offline-region';
 import PasskeysSheet from '@/app/passkeys';
 import PasswordSheet from '@/app/password';
-import LegendRoute from '@/app/legend';
 import PlanRoute from '@/app/plan';
 import SearchSheet from '@/app/search';
 import StackRoute from '@/app/stack';
@@ -61,7 +60,6 @@ export const routes = {
   draw: DrawRoute,
   stack: StackRoute,
   trail: TrailRoute,
-  legend: LegendRoute,
   'contact/[id]': ContactRoute,
   'contact/edit': ContactEditRoute,
   'auth/_layout': AuthLayout,

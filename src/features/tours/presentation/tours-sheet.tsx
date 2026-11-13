@@ -215,7 +215,7 @@ function ToursListPage({ onPush }: { onPush: (value: string) => void }) {
             filterCount > 0
               ? t('tours.list.filtersActive', { count: filterCount })
               : t('tours.list.filtersBtn'),
-          icon: filterCount > 0 ? 'tune' : 'tune',
+          icon: 'tune',
           onPress: () => onPush('filters'),
         },
         ...(tab === 'friends' && hasFriends
@@ -231,7 +231,7 @@ function ToursListPage({ onPush }: { onPush: (value: string) => void }) {
               {
                 id: 'add',
                 label: t('tours.list.addTourAriaLabel'),
-                icon: 'add_location_alt' as const,
+                icon: 'add' as const,
                 onPress: () => router.replace('/plan'),
               },
             ]),
@@ -353,6 +353,7 @@ function TourFiltersPage({ onDone }: { onDone: () => void }) {
           id: 'reset',
           label: t('tours.filters.resetBtn'),
           icon: 'replay',
+          titled: true,
           disabled: activeFilterCount(f) === 0,
           onPress: () => useTourFiltersStore.getState().clearFilters(tab),
         },

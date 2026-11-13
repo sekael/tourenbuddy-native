@@ -48,3 +48,10 @@ The route step SHALL show the drawn route's climb, descent, distance and time at
 
 - **WHEN** the user taps a start and a goal and the line follows the trails
 - **THEN** the sheet SHALL show "↑ climb ↓ descent distance time" at its half height, and the saved tour SHALL show the same numbers
+
+### Requirement: Activities, grade, seasons and partners as pills
+The tour form SHALL offer activities, grades, seasons and partners as pills that wrap, as the PWA's chips: a tap picks or drops one. Activities, seasons and partners SHALL allow several at once; a grade scale SHALL allow one per scale. With several activities, which way each goes SHALL be one row away.
+
+#### Scenario: Two activities
+- **WHEN** the user taps "Ski touring" and "Hiking" in the form and saves
+- **THEN** the tour shows both activities

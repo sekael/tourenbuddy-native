@@ -21,6 +21,8 @@ export type MonthGridProps = {
   /** Availability edit: future days toggle instead of selecting. */
   editing: boolean;
   onToggle: (key: string) => void;
+  /** Back to this month and today, shown while another month or day is in view. */
+  onToday?: () => void;
 };
 
 /**
@@ -38,6 +40,7 @@ export function MonthGrid({
   availableDays,
   editing,
   onToggle,
+  onToday,
 }: MonthGridProps) {
   const { t, i18n } = useTranslation();
   const { formatDate } = useFormatter();
@@ -55,6 +58,17 @@ export function MonthGrid({
         <Text variant="title" role="heading" style={styles.month}>
           {formatDate(month, { month: 'long', year: 'numeric' })}
         </Text>
+        {onToday && (selected !== today || dayKey(month).slice(0, 7) !== today.slice(0, 7)) ? (
+          <Pressable
+            role="button"
+            onPress={onToday}
+            style={({ pressed }) => [styles.todayButton, pressed && styles.todayButtonPressed]}
+          >
+            <Text variant="caption" style={styles.todayButtonLabel}>
+              {t('calendar.today')}
+            </Text>
+          </Pressable>
+        ) : null}
         <Pressable
           role="button"
           aria-label={t('calendar.planned.prevMonth')}
@@ -164,6 +178,15 @@ const DOT = 6;
 const styles = StyleSheet.create({
   grid: { gap: space.xxs, paddingBottom: space.xs },
   header: { flexDirection: 'row', alignItems: 'center', gap: space.xxs },
+  todayButton: {
+    minHeight: 32,
+    justifyContent: 'center',
+    paddingHorizontal: space.sm,
+    borderRadius: radius.pill,
+    backgroundColor: color.secondaryContainer,
+  },
+  todayButtonPressed: { backgroundColor: color.secondaryContainerPressed },
+  todayButtonLabel: { ...strong, color: color.onSecondaryContainer },
   month: { flex: 1 },
   chevron: {
     width: size.touch,

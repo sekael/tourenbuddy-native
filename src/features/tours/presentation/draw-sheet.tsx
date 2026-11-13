@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,10 +15,11 @@ import {
   type DrawnTrack,
 } from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
-import { snapNetworkFor } from '@/features/map/domain/snap-network';
+import { initialFollow, type Follow } from '@/features/map/domain/snap-network';
 import { tapSnapM } from '@/features/map/presentation/leg-router';
-import { useMapStore } from '@/features/map/presentation/stores/map-store';
+import { useMapStore, type HandleTarget } from '@/features/map/presentation/stores/map-store';
 import { ElevationProfile } from '@/features/map/presentation/elevation-profile';
+import { FollowSection } from '@/features/map/presentation/follow-section';
 import { useTrackDrawing } from '@/features/map/presentation/use-track-drawing';
 import { TOUR_TYPE_TRACK_COLORS } from '@/features/tours/data/models/tour-type';
 import { gpxFromLine } from '@/features/tours/data/services/gpx-writer';
@@ -49,19 +51,26 @@ export function DrawSheet() {
   const overlays = useMapStore((s) => s.overlays);
   const pace = usePace();
   const types = useTourDraftStore.getState().draft.tourTypes;
-  const network = snapNetworkFor(overlays, types);
+  const [follow, setFollow] = useState<Follow>(() => initialFollow(overlays, types));
   const [seed] = useState(seedTrack);
-  const drawing = useTrackDrawing(seed, network);
+  const drawing = useTrackDrawing(seed, follow);
   const [saving, setSaving] = useState(false);
-  const addRef = useLatest(drawing.add);
+  const drawingRef = useLatest(drawing);
+  /** A point or leg's dot picked by a tap: the next map tap moves it or sends the leg there. */
+  const [picked, setPicked] = useState<HandleTarget | null>(null);
+  const pickedRef = useLatest(picked);
 
   useEffect(() => {
     useMapStore.getState().beginStep('draw', (point) => {
-      const { zoom } = useMapStore.getState();
-      addRef.current(point, tapSnapM(point[1], zoom ?? 13));
+      const target = pickedRef.current;
+      const draw = drawingRef.current;
+      if (target && 'point' in target) draw.move(target.point, point, snapRadius(point));
+      else if (target) draw.pull(target.leg, point, snapRadius(point));
+      else draw.add(point, snapRadius(point));
+      setPicked(null);
     });
     return () => useMapStore.getState().endStep();
-  }, [addRef]);
+  }, [drawingRef, pickedRef]);
 
   // The drawing on the map: its line, its points and the taps still waiting for their leg.
   const { track, queued } = drawing;
@@ -82,19 +91,39 @@ export function DrawSheet() {
               ]
             : [],
       },
+      // The points are handles (`editHandles`); a tap still waiting for its leg shows here.
       previewPoints: {
         type: 'FeatureCollection',
-        features: [...track.points, ...queued].map((p, i) => ({
+        features: queued.map((p) => ({
           type: 'Feature' as const,
           geometry: { type: 'Point' as const, coordinates: p },
-          properties: {
-            kind: (i === 0 ? 'start' : i === track.goal ? 'preview' : 'end') as
-              'start' | 'end' | 'preview',
-          },
+          properties: { kind: 'end' as const },
         })),
       },
+      editHandles: {
+        points: track.points.map((at, i) => ({
+          at,
+          kind:
+            i === track.goal
+              ? 'goal'
+              : i === 0
+                ? 'start'
+                : i === track.points.length - 1
+                  ? 'end'
+                  : 'via',
+        })),
+        legs: track.legs,
+        move: (i, to) => drawingRef.current.move(i, to, snapRadius(to)),
+        pull: (leg, at) => drawingRef.current.pull(leg, at, snapRadius(at)),
+        drop: (i) => drawingRef.current.drop(i),
+        pick: (target) => {
+          void Haptics.selectionAsync();
+          setPicked((p) => (JSON.stringify(p) === JSON.stringify(target) ? null : target));
+        },
+        picked,
+      },
     });
-  }, [track, queued, types]);
+  }, [track, queued, types, drawingRef, picked]);
 
   const { metrics } = drawing;
   const minutes = estimatedMinutes(metrics, onSkis(types), pace);
@@ -139,13 +168,13 @@ export function DrawSheet() {
   }
 
   const status =
-    drawing.issue === 'unavailable'
-      ? t('map.draw.status.unavailable')
-      : network === 'ski'
-        ? t('map.draw.status.ski')
-        : network === 'hiking'
-          ? t('map.draw.status.hiking')
-          : t('map.draw.status.ways');
+    follow === 'straight'
+      ? t('map.plan.follow.straight')
+      : drawing.issue === 'unavailable'
+        ? t('map.draw.status.unavailable')
+        : follow === 'ski'
+          ? t('map.draw.status.ski')
+          : t('map.draw.status.hiking');
 
   return (
     <Screen>
@@ -179,7 +208,17 @@ export function DrawSheet() {
           },
         ]}
       >
-        <ListSection footer={status}>
+        <ListSection
+          footer={
+            picked
+              ? 'point' in picked
+                ? t('map.plan.hint.move')
+                : t('map.plan.hint.pull')
+              : track.legs.length
+                ? t('map.plan.hint.shape')
+                : undefined
+          }
+        >
           <ListRow
             title={
               numbers || (track.points.length ? t('map.draw.hint.next') : t('map.draw.hint.start'))
@@ -211,7 +250,13 @@ export function DrawSheet() {
             />
           ) : null}
         </ListSection>
+        <FollowSection value={follow} onChange={setFollow} status={status} />
       </Page>
     </Screen>
   );
+}
+
+/** How far a dragged point jumps to a way: a finger's width at the current zoom. */
+function snapRadius([, lat]: LngLat): number {
+  return tapSnapM(lat, useMapStore.getState().zoom ?? 13);
 }

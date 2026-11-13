@@ -42,7 +42,13 @@ export type TourMapHandle = {
   zoom: () => Promise<number>;
 };
 
-export type LineProps = { color: string; width?: number; dashed?: boolean; casing?: boolean };
+export type LineProps = {
+  color: string;
+  width?: number;
+  dashed?: boolean;
+  casing?: boolean;
+  opacity?: number;
+};
 export type PointProps = {
   /** `start`, `end` or a preview colour circle. */
   kind: 'start' | 'end' | 'preview';

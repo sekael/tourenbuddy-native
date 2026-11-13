@@ -1,5 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react-native';
-import { router, Slot } from 'expo-router';
+import { Slot } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
 import { signIn } from '../support/auth';
@@ -17,10 +17,8 @@ afterEach(() => jest.useRealTimers());
 
 const settle = () => act(() => jest.runAllTimers());
 
-async function openFromMenu(item: string) {
-  await fireEvent.press(screen.getByRole('button', { name: 'Menu' }));
-  await settle();
-  await fireEvent.press(screen.getByRole('button', { name: item }));
+async function openMap() {
+  await fireEvent.press(screen.getByRole('button', { name: 'Map layers' }));
   await settle();
 }
 
@@ -32,10 +30,10 @@ describe('app navigation', () => {
     expect(screen.getByTestId('maplibre-Map')).toBeOnTheScreen();
   });
 
-  it('should open a menu destination as a sheet and close back to the map', async () => {
+  it('should open the map button as a sheet and close back to the map', async () => {
     await renderRouter(routes);
 
-    await openFromMenu('Map layers');
+    await openMap();
 
     expect(screen).toHavePathname('/map-layers');
     expect(screen.getByRole('heading', { name: 'Map layers' })).toBeOnTheScreen();
@@ -46,36 +44,39 @@ describe('app navigation', () => {
     expect(screen).toHavePathname('/');
   });
 
-  it.each([
-    ['Offline maps', '/offline-maps'],
-    ['Map layers', '/map-layers'],
-  ])('should route the %s menu item to %s', async (item, path) => {
+  it('should reach the offline maps from the map sheet, in its place', async () => {
     await renderRouter(routes);
+    await openMap();
 
-    await openFromMenu(item);
-
-    expect(screen).toHavePathname(path);
-  });
-
-  it.each(['/calendar', '/contacts', '/profile'])('should show no menu on %s', async (url) => {
-    await renderRouter(routes, { initialUrl: url });
-
-    expect(screen.queryByRole('button', { name: 'Menu' })).toBeNull();
-  });
-
-  it('should fold the menu away when a sheet opens over its tab', async () => {
-    await renderRouter(routes);
-    await fireEvent.press(screen.getByRole('button', { name: 'Menu' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Offline maps' }));
     await settle();
 
-    await act(() => router.push('/inbox'));
-    await settle();
+    expect(screen).toHavePathname('/offline-maps');
     await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
     await settle();
-
-    expect(screen.queryByRole('button', { name: 'Map layers' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Menu' })).toBeCollapsed();
+    expect(screen).toHavePathname('/');
   });
+
+  it('should show the legend inside the map sheet', async () => {
+    await renderRouter(routes);
+    await openMap();
+
+    // In the bar and as a row: either opens it.
+    await fireEvent.press(screen.getAllByRole('button', { name: 'Legend' })[0]!);
+    await settle();
+
+    expect(screen).toHavePathname('/map-layers');
+    expect(screen.getByRole('heading', { name: 'Legend' })).toBeOnTheScreen();
+  });
+
+  it.each(['/calendar', '/contacts', '/profile'])(
+    'should show no map controls on %s',
+    async (url) => {
+      await renderRouter(routes, { initialUrl: url });
+
+      expect(screen.queryByRole('button', { name: 'Map layers' })).toBeNull();
+    },
+  );
 
   it('should put the map beneath a sheet opened from a link', async () => {
     await renderRouter(routes, { initialUrl: '/inbox' });

@@ -315,6 +315,7 @@ export function ContactDetailPage({
           id: 'edit',
           label: t('contacts.detailView.editBtn'),
           icon: 'edit',
+          titled: true,
           onPress: () => router.push({ pathname: '/contact/edit', params: { id } }),
         },
       ]}

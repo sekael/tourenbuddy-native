@@ -29,3 +29,14 @@ The map's bar SHALL hold a search for places, huts and stops, the route step's s
 
 - **WHEN** the user searches "Lauterbrunnen" and picks the village
 - **THEN** the map SHALL show Lauterbrunnen close up
+
+### Requirement: Map controls in one compact row
+The Map tab SHALL show its controls in one row right above the tab bar, none overlapping at phone width: a search button, a "My Tours | Add tour" capsule in the app's blue, and a map button opening the map sheet. The map sheet SHALL hold the base maps and overlays as previews, the legend and the offline maps. On iOS the controls SHALL be compact Liquid Glass (44 pt), the round ones tinted with the app's blue.
+
+#### Scenario: Legend from the map button
+- **WHEN** the user taps the map button and then "Legend"
+- **THEN** the legend opens inside the same sheet, with a back button to the map layers
+
+#### Scenario: Nothing clashes
+- **WHEN** the Map tab shows on a 375 pt wide phone in German
+- **THEN** search, the capsule and the map button sit side by side without overlapping

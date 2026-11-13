@@ -6,7 +6,8 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GlassCapsule, GlassCircleButton } from '@/core/adaptive/map-controls';
-import { space } from '@/core/theme/tokens';
+import { color, space } from '@/core/theme/tokens';
+import { haversineMeters } from '@/core/utils/haversine';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import { loadGpxTrack } from '@/features/tours/data/services/gpx-track-service';
 import { TOUR_TYPE_TRACK_COLORS } from '@/features/tours/data/models/tour-type';
@@ -14,7 +15,7 @@ import type { Tour } from '@/features/tours/domain/entities/tour';
 import { trackLines } from '@/features/tours/domain/route-metrics';
 import { useToursStore } from '@/features/tours/presentation/stores/tours-store';
 
-import { useMapStore } from './stores/map-store';
+import { useMapStore, type MapState } from './stores/map-store';
 import { sameSpot, tourFeatures } from './tour-features';
 import {
   CLUSTER_LAYER,
@@ -24,6 +25,8 @@ import {
   type PointProps,
   type TourMapHandle,
 } from './tour-map';
+import { legHandle, metersPerPixel } from './leg-router';
+import { TrackHandles } from './track-handles';
 import { lookupSkiRoutes } from './trail-lookup';
 
 /** Where the map opens before it knows better: central Switzerland, the whole country in view. */
@@ -36,8 +39,8 @@ const noLines: Lines = { type: 'FeatureCollection', features: [] };
 
 /**
  * The Map tab (map-integration): the live Swisstopo map with every own and friends' tour, and its
- * thumb-zone chrome (D19): the legend circle, the glass "My tours | Add tour" capsule and the
- * menu circle (`children`, Phase 1's map menu), right above the tab bar. Tours, a tour's detail,
+ * thumb-zone chrome (D19), one row right above the tab bar: search, the "My tours | Add tour"
+ * capsule and the map button (layers with previews, legend, offline maps). Tours, a tour's detail,
  * the route step and drawing open as sheets over this same map (D4).
  */
 export function MapScreen({ children }: { children?: React.ReactNode }) {
@@ -57,6 +60,7 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
   const tapHandler = useMapStore((s) => s.tapHandler);
   const previewLines = useMapStore((s) => s.previewLines);
   const previewPoints = useMapStore((s) => s.previewPoints);
+  const trailHighlight = useMapStore((s) => s.trailHighlight);
 
   const allTours = useMemo(() => [...tours, ...friendTours], [tours, friendTours]);
   const selected = allTours.find((tour) => tour.id === selectedTourId) ?? null;
@@ -100,6 +104,8 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
 
   async function onPress(lngLat: LngLat, point: [number, number]) {
     if (tapHandler) {
+      // A tap on a handle is the handle's (it picks it); the map gets it too, so leave it be.
+      if (onHandle(lngLat)) return;
       tapHandler(lngLat);
       return;
     }
@@ -145,9 +151,12 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
   const lines: Lines = useMemo(
     () => ({
       type: 'FeatureCollection',
-      features: [...(previewLines?.features ?? selectedLines.features)],
+      features: [
+        ...(previewLines?.features ?? selectedLines.features),
+        ...highlightLines(trailHighlight),
+      ],
     }),
-    [previewLines, selectedLines],
+    [previewLines, selectedLines, trailHighlight],
   );
   const points: Points = useMemo(
     () => previewPoints ?? detailPoints(selected),
@@ -173,7 +182,9 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
         onRegionDidChange={(center, zoom, bounds) =>
           useMapStore.getState().setView(center, zoom, bounds)
         }
-      />
+      >
+        <TrackHandles />
+      </TourMap>
       {mode === 'browse' ? (
         <>
           <SafeAreaView
@@ -182,49 +193,56 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
             pointerEvents="box-none"
           >
             <GlassCircleButton
-              label={t('map.legend.open')}
-              hint={t('map.a11y.legendHint')}
-              icon="info"
-              onPress={() => router.push('/legend')}
+              label={t('map.search.title')}
+              hint={t('map.a11y.searchHint')}
+              icon="search"
+              onPress={() => router.push('/search')}
             />
-            <View style={styles.center} pointerEvents="box-none">
-              <GlassCapsule
-                label={t('map.actionBar.myTours')}
-                items={[
-                  {
-                    id: 'search',
-                    label: t('map.search.title'),
-                    hint: t('map.a11y.searchHint'),
-                    icon: 'search',
-                    iconOnly: true,
-                    onPress: () => router.push('/search'),
-                  },
-                  {
-                    id: 'tours',
-                    label: t('map.actionBar.myTours'),
-                    hint: t('map.a11y.toursHint'),
-                    icon: 'location_on',
-                    onPress: () => router.push('/tours'),
-                  },
-                  {
-                    id: 'add',
-                    label: t('map.actionBar.addTourAriaLabel'),
-                    hint: t('map.a11y.addHint'),
-                    icon: 'add_location_alt',
-                    iconOnly: true,
-                    onPress: () => router.push('/plan'),
-                  },
-                ]}
-              />
-            </View>
-            {/* The menu circle's slot, kept free: Phase 1's floating menu draws itself there. */}
-            <View style={styles.menuSlot} />
+            <GlassCapsule
+              label={t('map.actionBar.myTours')}
+              items={[
+                {
+                  id: 'tours',
+                  label: t('map.actionBar.myTours'),
+                  hint: t('map.a11y.toursHint'),
+                  icon: 'location_on',
+                  onPress: () => router.push('/tours'),
+                },
+                {
+                  id: 'add',
+                  label: t('map.actionBar.addTourAriaLabel'),
+                  hint: t('map.a11y.addHint'),
+                  icon: 'add_location_alt',
+                  iconOnly: true,
+                  onPress: () => router.push('/plan'),
+                },
+              ]}
+            />
+            <GlassCircleButton
+              label={t('map.overlay.mapLayers')}
+              hint={t('map.a11y.layersHint')}
+              icon="layers"
+              onPress={() => router.push('/map-layers')}
+            />
           </SafeAreaView>
           {children}
         </>
       ) : null}
     </View>
   );
+}
+
+/** Within a finger's reach of a line's point or leg dot (`TrackHandles`, 44 pt targets). */
+function onHandle(lngLat: LngLat): boolean {
+  const { editHandles, zoom } = useMapStore.getState();
+  if (!editHandles) return false;
+  const z = zoom ?? 13;
+  const reach = 22 * metersPerPixel(lngLat[1], z);
+  const spots = [
+    ...editHandles.points.map((p) => p.at),
+    ...editHandles.legs.flatMap((leg) => (leg.length > 1 ? [legHandle(leg, z)] : [])),
+  ].filter((spot): spot is LngLat => spot !== null);
+  return spots.some((spot) => haversineMeters(spot, lngLat) < reach);
 }
 
 /** Opens a tour's detail sheet over the map. */
@@ -246,6 +264,22 @@ function tourBounds(tour: Tour): [LngLat, LngLat] | null {
     [Math.min(...lngs), Math.min(...lats)],
     [Math.max(...lngs), Math.max(...lats)],
   ];
+}
+
+/** The lookup sheet's routes: all faint while listed, the chosen one in full on a white casing. */
+function highlightLines(highlight: MapState['trailHighlight']): Lines['features'] {
+  if (!highlight) return [];
+  const { trails, selectedId } = highlight;
+  const shown = selectedId ? trails.filter((trail) => trail.id === selectedId) : trails;
+  return shown.flatMap((trail) =>
+    trail.lines.map((coordinates) => ({
+      type: 'Feature' as const,
+      geometry: { type: 'LineString' as const, coordinates },
+      properties: selectedId
+        ? { color: color.trailHighlight, width: 5, casing: true }
+        : { color: color.trailHighlight, width: 4, opacity: 0.55 },
+    })),
+  );
 }
 
 function detailPoints(tour: Tour | null): Points {
@@ -320,9 +354,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: space.lg,
     paddingBottom: space.sm,
   },
-  center: { flex: 1, alignItems: 'center' },
-  menuSlot: { width: 60 },
 });

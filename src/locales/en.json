@@ -1052,9 +1052,10 @@
         "start": "Where do you set off? Tap the map or search.",
         "goal": "Where to? Tap your goal on the map or search.",
         "end": "Where do you finish? Tap the map – or continue without.",
-        "move": "Tap or drag point on the map.",
-        "shape": "Drag a line’s middle dot to change the way.",
-        "via": "Tap a point you pulled out to remove it again."
+        "move": "Now tap the map where the point should go.",
+        "shape": "To change the way, tap a line’s middle dot (or a point), then the map – or hold and drag it.",
+        "via": "Tap a point you pulled out to remove it again.",
+        "pull": "Now tap the map where the way should go."
       },
       "required": "Required",
       "optional": "Optional",
@@ -1073,7 +1074,7 @@
       "measuring": "Working out the route…",
       "nextDay": "Next day",
       "follow": {
-        "label": "Follow the trails",
+        "label": "Line follows",
         "hiking": "Follows the hiking trails",
         "ski": "Follows the ski routes",
         "ways": "Follows roads and paths",
@@ -1081,11 +1082,17 @@
         "unavailable": "Trails couldn’t load (offline?), so it’s straight",
         "fixed": "Your uploaded track stays as it is",
         "gap": "No path for part of it – a straight line there",
-        "finding": "Finding the way…"
+        "finding": "Finding the way…",
+        "option": {
+          "hiking": "Trails",
+          "ski": "Ski routes",
+          "straight": "Straight"
+        }
       },
       "back": "Back to the details, without these changes",
       "fold": "Fold the route points away",
-      "unfold": "Show the route points"
+      "unfold": "Show the route points",
+      "editTitle": "Edit route"
     },
     "a11y": {
       "label": "Map of Switzerland with your tours",
@@ -1093,7 +1100,8 @@
       "legendHint": "Explains the markers, colours and lines.",
       "toursHint": "Lists your tours and your friends' tours.",
       "addHint": "Pick the goal on the map or search for a place.",
-      "searchHint": "Finds a place on the map"
+      "searchHint": "Finds a place on the map",
+      "layersHint": "Base map and trail overlays with previews, the legend and offline maps."
     },
     "search": {
       "title": "Search places",
@@ -1268,11 +1276,11 @@
       },
       "addLocation": {
         "title": "Plan a tour",
-        "body": "Tap here, then tap your start, goal and end on the map — or search for them. The route follows the trails and becomes your track; staying overnight, tap “Next day” to plan the next stage right away."
+        "body": "Tap here, then tap your start, goal and end on the map — or search for them. The route follows the trails or ski routes and becomes your track; hold and drag a point or a line’s middle dot to change the way. Staying overnight, tap “Next day” to plan the next stage right away."
       },
       "mapLayers": {
         "title": "Map layers",
-        "body": "Pick a base map and add hiking trails or ski routes on top, in any combination. With ski routes on, zoom in until the routes show difficulty badges, then tap one for its details — or plan it as a tour right away. The ⓘ button at the bottom left explains the marker colours and symbols."
+        "body": "The round map button at the bottom right shows each base map and overlay as a preview: pick a base map and add hiking trails or ski routes on top, in any combination. With ski routes on, zoom in until the routes show difficulty badges, then tap one for its details — or plan it as a tour right away. The legend there explains the marker colours and symbols."
       },
       "welcome": {
         "title": "Welcome",

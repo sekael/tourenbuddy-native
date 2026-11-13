@@ -22,6 +22,7 @@ const palette = {
   red600: '#dc2626',
   swisstopoRed: '#e3061b',
   green800: '#166534',
+  orange500: '#f97316',
 } as const;
 
 export const color = {
@@ -33,6 +34,12 @@ export const color = {
   // Floating controls over the map (Android and web): brand blue with white glyphs.
   fab: palette.blue700,
   onFab: palette.white,
+  /** A picked ski route on the map: orange, since swisstopo draws the routes themselves blue. */
+  trailHighlight: palette.orange500,
+  /** A line between actions on the blue capsule. */
+  onFabDivider: 'rgba(255, 255, 255, 0.45)',
+  /** Clear glass over the map, breathed with the app's blue (iOS round map controls). */
+  glassTint: 'rgba(37, 99, 235, 0.12)',
   background: palette.white,
   onBackground: palette.slate900,
   surface: palette.slate50,
@@ -101,8 +108,8 @@ export const size = {
   /** Minimum touch target (Apple 44 pt, Material 48 dp). */
   touch: 48,
   fab: 56,
-  /** The iOS menu's glass circle: FAB-sized, as tall as the system tab bar beneath it. */
-  menu: 60,
+  /** A floating control over the map (glass on iOS): compact, still a full touch target. */
+  mapControl: 44,
   /** Widest a form or an account card gets on a tablet or a desktop window. */
   form: 400,
   /** Outline of a text field. */

@@ -12,14 +12,14 @@ import {
   type DrawnTrack,
 } from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
-import type { SnapNetwork } from '@/features/map/domain/snap-network';
+import type { Follow } from '@/features/map/domain/snap-network';
 import {
   getTrackProfile,
   type ProfiledLine,
 } from '@/features/tours/data/services/swisstopo-profile-service';
 import { trackMetrics, type RouteMetrics } from '@/features/tours/domain/route-metrics';
 
-import { createLegRouter, legEnd, type NetworkIssue } from './leg-router';
+import { createLegRouter, legEnd, straightRouter, type NetworkIssue } from './leg-router';
 
 const log = createLogger('TrackDrawing');
 
@@ -53,8 +53,11 @@ function straightened(seed: DrawnTrack): DrawnTrack {
  * terrain profile. Steps run one after another, so the history only holds finished legs; a tap's
  * point shows at once (`queued`) while its leg loads. A route's goal stays its point throughout.
  */
-export function useTrackDrawing(seed: DrawnTrack | null, network: SnapNetwork | null) {
-  const router = useMemo(() => createLegRouter({ network: () => network }), [network]);
+export function useTrackDrawing(seed: DrawnTrack | null, follow: Follow) {
+  const router = useMemo(
+    () => (follow === 'straight' ? straightRouter : createLegRouter({ network: () => follow })),
+    [follow],
+  );
   // A route's stops show joined straight at once; the effect below routes them along the ways.
   const [track, setTrack] = useState<DrawnTrack>(() => (seed ? straightened(seed) : EMPTY_TRACK));
   const [past, setPast] = useState<DrawnTrack[]>([]);
@@ -75,7 +78,9 @@ export function useTrackDrawing(seed: DrawnTrack | null, network: SnapNetwork | 
   }
 
   function commit(next: DrawnTrack) {
-    setPast((p) => [...p, trackRef.current]);
+    // Read now: the updater runs later, when the ref already holds `next`.
+    const before = trackRef.current;
+    setPast((p) => [...p, before]);
     setFuture([]);
     trackRef.current = next;
     setTrack(next);
@@ -154,18 +159,84 @@ export function useTrackDrawing(seed: DrawnTrack | null, network: SnapNetwork | 
     },
     undo: () => {
       if (busy || past.length === 0) return;
-      setFuture((f) => [trackRef.current, ...f]);
+      const current = trackRef.current;
+      setFuture((f) => [current, ...f]);
       trackRef.current = past.at(-1)!;
       setTrack(trackRef.current);
       setPast((p) => p.slice(0, -1));
     },
     redo: () => {
       if (busy || future.length === 0) return;
-      setPast((p) => [...p, trackRef.current]);
+      const current = trackRef.current;
+      setPast((p) => [...p, current]);
       trackRef.current = future[0]!;
       setTrack(trackRef.current);
       setFuture((f) => f.slice(1));
     },
     clear: () => commit(EMPTY_TRACK),
+    /** Point `index` dragged to `to` (on the nearest way): its legs either side follow again. */
+    move: (index: number, to: LngLat, radiusM: number) => {
+      enqueue(async () => {
+        const { points: pts, legs, goal } = trackRef.current;
+        if (!pts[index]) return;
+        const at = (await router.resolve(null, to, radiusM)).to;
+        const next = pts.map((p, i) => (i === index ? at : p));
+        const nextLegs = [...legs];
+        const end = (i: number) => legEnd(i, next.length, goal);
+        if (index > 0)
+          nextLegs[index - 1] = await router.between(next[index - 1]!, at, [
+            end(index - 1),
+            end(index),
+          ]);
+        if (index < next.length - 1)
+          nextLegs[index] = await router.between(at, next[index + 1]!, [
+            end(index),
+            end(index + 1),
+          ]);
+        setIssue(router.issue());
+        commit({ points: next, legs: nextLegs, goal });
+      });
+    },
+    /** A point pulled out of leg `leg` to `to`: the leg goes through it, both halves along the ways. */
+    pull: (leg: number, to: LngLat, radiusM: number) => {
+      enqueue(async () => {
+        const { points: pts, legs, goal } = trackRef.current;
+        if (!pts[leg + 1]) return;
+        const at = (await router.resolve(null, to, radiusM)).to;
+        const next = [...pts.slice(0, leg + 1), at, ...pts.slice(leg + 1)];
+        const g = goal != null && goal > leg ? goal + 1 : goal;
+        const end = (i: number) => legEnd(i, next.length, g);
+        const a = await router.between(next[leg]!, at, [end(leg), 'via']);
+        const b = await router.between(at, next[leg + 2]!, ['via', end(leg + 2)]);
+        setIssue(router.issue());
+        commit({
+          points: next,
+          legs: [...legs.slice(0, leg), a, b, ...legs.slice(leg + 1)],
+          goal: g,
+        });
+      });
+    },
+    /** Point `index` taken out (never the goal): its neighbours join along the ways. */
+    drop: (index: number) => {
+      enqueue(async () => {
+        const { points: pts, legs, goal } = trackRef.current;
+        if (!pts[index] || index === goal) return;
+        const next = pts.filter((_, i) => i !== index);
+        const g = goal != null && goal > index ? goal - 1 : goal;
+        let nextLegs: LngLat[][];
+        if (index === 0) nextLegs = legs.slice(1);
+        else if (index === pts.length - 1) nextLegs = legs.slice(0, -1);
+        else {
+          const end = (i: number) => legEnd(i, next.length, g);
+          const joined = await router.between(next[index - 1]!, next[index]!, [
+            end(index - 1),
+            end(index),
+          ]);
+          nextLegs = [...legs.slice(0, index - 1), joined, ...legs.slice(index + 1)];
+        }
+        setIssue(router.issue());
+        commit({ points: next, legs: nextLegs, goal: g });
+      });
+    },
   };
 }

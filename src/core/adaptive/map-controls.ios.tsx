@@ -1,76 +1,66 @@
+import { Button, HStack, Host, Label } from '@expo/ui/swift-ui';
 import {
-  Button,
-  Divider,
-  GlassEffectContainer,
-  HStack,
-  Host,
-  Image,
-  Label,
-} from '@expo/ui/swift-ui';
-import {
-  accessibilityHint,
   accessibilityLabel,
   buttonBorderShape,
   buttonStyle,
   controlSize,
-  disabled as disabledModifier,
   font,
-  frame,
   glassEffect,
-  labelStyle,
   padding,
 } from '@expo/ui/swift-ui/modifiers';
+import { GlassView } from 'expo-glass-effect';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { color, size, space } from '@/core/theme/tokens';
 
+import { Icon } from './icon';
 import { icons, type IconName } from './icons';
 import type { CapsuleItem } from './map-controls';
+import { Text } from './text';
 
 export type { CapsuleItem } from './map-controls';
 
 /**
- * Liquid Glass over the map (D6): one interactive glass capsule holding its actions, the shape
- * Apple Maps uses for grouped controls, and the FAB-sized glass circle of Phase 1's menu. Real
- * system glass samples the map, follows Reduce Transparency and the glass intensity setting.
+ * Liquid Glass over the map (D6), compact and tinted: the capsule of the map's main actions in the
+ * app's blue (as the PWA's bar), the round controls beside it in clear glass with a blue glyph.
+ * Real system glass samples the map and follows Reduce Transparency; interactive glass gives the
+ * press its own feedback (no scaling of ours, so Reduce Motion has nothing to undo).
  */
-export function GlassCapsule({ items }: { items: CapsuleItem[]; label: string }) {
+export function GlassCapsule({ items, label }: { items: CapsuleItem[]; label: string }) {
   return (
-    <Host matchContents>
-      <GlassEffectContainer>
-        <HStack
-          spacing={0}
-          modifiers={[
-            glassEffect({ glass: { variant: 'regular', interactive: true }, shape: 'capsule' }),
-            // A label here would replace each button's own for VoiceOver: the group keeps theirs.
-          ]}
-        >
-          {items.map((item, index) => [
-            index > 0 ? (
-              <Divider key={`${item.id}-divider`} modifiers={[frame({ height: 24 })]} />
-            ) : null,
-            <Button
-              key={item.id}
-              onPress={item.onPress}
-              modifiers={[
-                buttonStyle('plain'),
-                controlSize('large'),
-                frame({ minWidth: size.menu, minHeight: size.menu }),
-                accessibilityLabel(item.label),
-                ...(item.hint ? [accessibilityHint(item.hint)] : []),
-                ...(item.disabled ? [disabledModifier(true)] : []),
-              ]}
-            >
-              <Label
-                title={item.label}
-                systemImage={icons[item.icon].sf}
-                color={color.onSurface}
-                modifiers={[labelStyle(item.iconOnly ? 'iconOnly' : 'titleAndIcon')]}
-              />
-            </Button>,
-          ])}
-        </HStack>
-      </GlassEffectContainer>
-    </Host>
+    <GlassView
+      isInteractive
+      tintColor={color.fab}
+      style={styles.capsule}
+      accessibilityRole="toolbar"
+      accessibilityLabel={label}
+    >
+      {items.map((item, index) => (
+        <View key={item.id} style={styles.segmentRow}>
+          {index > 0 ? <View style={styles.divider} /> : null}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={item.label}
+            accessibilityHint={item.hint}
+            disabled={item.disabled}
+            onPress={item.onPress}
+            hitSlop={{ top: 4, bottom: 4 }}
+            style={[
+              styles.segment,
+              item.iconOnly && styles.iconOnly,
+              item.disabled && styles.disabled,
+            ]}
+          >
+            <Icon name={item.icon} size={22} color={color.onFab} />
+            {item.iconOnly ? null : (
+              <Text variant="label" style={styles.label} numberOfLines={1}>
+                {item.label}
+              </Text>
+            )}
+          </Pressable>
+        </View>
+      ))}
+    </GlassView>
   );
 }
 
@@ -86,25 +76,18 @@ export function GlassCircleButton({
   onPress: () => void;
 }) {
   return (
-    <Host matchContents>
-      <Button
+    <GlassView isInteractive tintColor={color.glassTint} style={styles.circle}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityHint={hint}
         onPress={onPress}
-        modifiers={[
-          buttonStyle('glass'),
-          buttonBorderShape('circle'),
-          frame({ width: size.menu, height: size.menu }),
-          accessibilityLabel(label),
-          ...(hint ? [accessibilityHint(hint)] : []),
-        ]}
+        hitSlop={4}
+        style={styles.circlePress}
       >
-        <Image
-          systemName={icons[icon].sf}
-          size={size.icon}
-          color={color.onSurface}
-          modifiers={[frame({ maxWidth: size.menu, maxHeight: size.menu })]}
-        />
-      </Button>
-    </Host>
+        <Icon name={icon} size={22} color={color.primary} />
+      </Pressable>
+    </GlassView>
   );
 }
 
@@ -156,3 +139,33 @@ export function GlassStatus({
     </Host>
   );
 }
+
+const styles = StyleSheet.create({
+  capsule: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: size.mapControl,
+    borderRadius: size.mapControl / 2,
+    overflow: 'hidden',
+  },
+  segmentRow: { flexDirection: 'row', alignItems: 'center' },
+  divider: { width: StyleSheet.hairlineWidth * 2, height: 22, backgroundColor: color.onFabDivider },
+  segment: {
+    height: size.mapControl,
+    paddingHorizontal: space.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: space.xs,
+  },
+  iconOnly: { width: size.mapControl + space.sm, paddingHorizontal: 0 },
+  label: { color: color.onFab },
+  disabled: { opacity: 0.38 },
+  circle: {
+    width: size.mapControl,
+    height: size.mapControl,
+    borderRadius: size.mapControl / 2,
+    overflow: 'hidden',
+  },
+  circlePress: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+});

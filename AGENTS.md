@@ -30,11 +30,13 @@ Decided or default in #346. Versions come from `npx expo install`; `package-lock
   menus), `@expo/ui` SwiftUI for glass controls and menus (glass on a `Menu` via
   `buttonStyle('glass')`: `glassEffect()` leaves a halo as it closes), `expo-glass-effect` for
   floating map controls (D6). iOS 26 minimum, so no non-glass fallback. Navigation: Map · Calendar ·
-  Contacts · Profile in the system tab bar (`NativeTabs` on iOS and Android), the map's menu
-  (offline maps, map layers) in the thumb zone right above it, on the Map tab only (iOS: a glass
-  circle opening the system menu; Android and web: a FAB menu), other destinations as sheet routes
-- **Fonts and icons:** iOS system font and SF Symbols; Android embedded Inter, web a bundled Inter
-  subset; Material Symbols drawn as SVG on Android and web. Icons come from the registry in
+  Contacts · Profile in the system tab bar (`NativeTabs` on iOS and Android); on the Map tab only,
+  one row of map controls in the thumb zone right above it (search, the "My Tours | Add tour"
+  capsule, the map button opening map layers with previews, the legend and offline maps); other
+  destinations as sheet routes. Icons are the PWA's Material Symbols on every platform (SF Symbols
+  only where the system draws: menus, the tab bar, swipe actions)
+- **Fonts and icons:** iOS system font; Android embedded Inter, web a bundled Inter
+  subset; Material Symbols drawn as SVG on every platform. Icons come from the registry in
   `src/core/adaptive/icons.ts`. No runtime font downloads from third parties
 - **Validation:** Zod. **i18n:** `i18next` + `react-i18next`, locale from `expo-localization`
 - **Tooling:** ESLint (`eslint-config-expo`) with Prettier, Jest (`jest-expo`) with React Native

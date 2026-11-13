@@ -17,8 +17,8 @@ import {
   Text as SwiftText,
   TextField,
   Toggle,
-  useNativeState,
   VStack,
+  ZStack,
   ContentUnavailableView,
 } from '@expo/ui/swift-ui';
 import {
@@ -43,20 +43,15 @@ import {
   textInputAutocapitalization,
   tint,
 } from '@expo/ui/swift-ui/modifiers';
-import {
-  Children,
-  isValidElement,
-  useContext,
-  useEffect,
-  type ReactElement,
-  type ReactNode,
-} from 'react';
+import { Children, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { color } from '@/core/theme/tokens';
 
-import { icons } from './icons';
+import { Icon } from './icon';
+import { icons, type IconName } from './icons';
 import { InSwiftUIList } from './in-list';
+import { useFieldText } from './use-field-text';
 import type {
   ContentRowProps,
   DateRowProps,
@@ -82,6 +77,24 @@ const tertiary = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
 const iconFrame = frame({ width: 28 });
 // A second line wraps in full: beside a switch, SwiftUI would rather cut it with "…".
 const wraps = fixedSize({ horizontal: false, vertical: true });
+const ROW_ICON = 22;
+
+/**
+ * A row's icon: the app's own glyph set (the PWA's Material Symbols), drawn by React Native inside
+ * the SwiftUI row, so rows wear the same icons as the rest of the app. System-drawn menus keep
+ * their SF Symbols.
+ */
+function RowIcon({ name, tint: tintColor }: { name: IconName; tint: string }) {
+  return (
+    <ZStack modifiers={[iconFrame]}>
+      <RNHostView matchContents>
+        <View style={styles.rowIcon}>
+          <Icon name={name} size={ROW_ICON} color={tintColor} />
+        </View>
+      </RNHostView>
+    </ZStack>
+  );
+}
 
 export function GroupedList({ children, form, onRefresh, header, testID }: GroupedListProps) {
   const Container = form ? Form : List;
@@ -152,14 +165,7 @@ export function ListRow({
   const showChevron = chevron ?? (!!onPress && !destructive && !menu);
   const label = (
     <HStack spacing={12}>
-      {icon ? (
-        <Image
-          systemName={icons[icon].sf}
-          size={20}
-          color={iconColor ?? color.primary}
-          modifiers={[iconFrame]}
-        />
-      ) : null}
+      {icon ? <RowIcon name={icon} tint={iconColor ?? color.primary} /> : null}
       <VStack alignment="leading" spacing={2}>
         <SwiftText
           modifiers={[
@@ -242,31 +248,30 @@ export function ToggleRow({
   onValueChange,
   disabled,
 }: ToggleRowProps) {
-  return (
+  // The icon sits beside the switch, not in its label: the system draws a toggle's label itself,
+  // where an app-drawn view does not show.
+  const toggle = (
     <Toggle
       isOn={value}
       onIsOnChange={onValueChange}
       modifiers={[tint(color.primary), ...(disabled ? [disabledModifier(true)] : [])]}
     >
-      <HStack spacing={12}>
-        {icon ? (
-          <Image
-            systemName={icons[icon].sf}
-            size={20}
-            color={color.primary}
-            modifiers={[iconFrame]}
-          />
+      <VStack alignment="leading" spacing={2}>
+        <SwiftText modifiers={[wraps]}>{title}</SwiftText>
+        {subtitle ? (
+          <SwiftText modifiers={[font({ textStyle: 'subheadline' }), secondary, wraps]}>
+            {subtitle}
+          </SwiftText>
         ) : null}
-        <VStack alignment="leading" spacing={2}>
-          <SwiftText>{title}</SwiftText>
-          {subtitle ? (
-            <SwiftText modifiers={[font({ textStyle: 'subheadline' }), secondary, wraps]}>
-              {subtitle}
-            </SwiftText>
-          ) : null}
-        </VStack>
-      </HStack>
+      </VStack>
     </Toggle>
+  );
+  if (!icon) return toggle;
+  return (
+    <HStack spacing={12}>
+      <RowIcon name={icon} tint={color.primary} />
+      {toggle}
+    </HStack>
   );
 }
 
@@ -283,11 +288,7 @@ export function TextRow({
   error,
   onSubmit,
 }: TextRowProps) {
-  const text = useNativeState(value);
-  // A value set from outside (a lookup, a reset) reaches the field; typing keeps them equal.
-  useEffect(() => {
-    if (text.get() !== value) text.set(value);
-  }, [text, value]);
+  const { text, onTextChange } = useFieldText(value, onChangeText);
 
   const modifiers = [
     ...(keyboardType ? [keyboardTypeModifier(keyboardType)] : []),
@@ -309,7 +310,7 @@ export function TextRow({
         placeholder={placeholder ?? label}
         axis={multiline ? 'vertical' : 'horizontal'}
         maxLength={maxLength}
-        onTextChange={onChangeText}
+        onTextChange={onTextChange}
         modifiers={modifiers}
       />
       {error ? (
@@ -439,4 +440,7 @@ export function EmptyState({ icon, title, description, actionLabel, onAction }: 
   return inList ? view : <Host style={styles.host}>{view}</Host>;
 }
 
-const styles = StyleSheet.create({ host: { flex: 1 } });
+const styles = StyleSheet.create({
+  host: { flex: 1 },
+  rowIcon: { width: ROW_ICON, height: ROW_ICON },
+});

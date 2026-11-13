@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Linking, StyleSheet, View } from 'react-native';
@@ -49,6 +49,13 @@ function TrailCardSheet({ card }: { card: TrailCard }) {
   );
   const close = () => router.back();
   const single = card.candidates.length === 1 ? card.candidates[0]! : null;
+  const selectedId = single?.id ?? path[0] ?? null;
+  // The map marks what the sheet shows: every candidate faint in the list, the chosen route in
+  // full (trail-lookup "Highlight"), until the sheet closes.
+  useEffect(() => {
+    useMapStore.setState({ trailHighlight: { trails: card.candidates, selectedId } });
+  }, [card.candidates, selectedId]);
+  useEffect(() => () => useMapStore.setState({ trailHighlight: null }), []);
   return (
     <Screen
       path={path}

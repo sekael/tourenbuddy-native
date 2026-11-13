@@ -259,23 +259,15 @@ export function TourDetailPage({
       title={name}
       onClose={onClose}
       header={hero}
+      // The track is shared from its row under Route; the bar says in a word what it does.
       actions={[
-        ...(tour.gpxFilepath
-          ? [
-              {
-                id: 'share',
-                label: t('tours.infoSheet.downloadGpxBtn'),
-                icon: 'download' as const,
-                onPress: () => void shareTourGpx(tour),
-              },
-            ]
-          : []),
         ...(isOwner
           ? [
               {
                 id: 'edit',
                 label: t('tours.infoSheet.editBtn'),
                 icon: 'edit' as const,
+                titled: true,
                 onPress: () => router.push({ pathname: '/tour/edit', params: { id: tour.id } }),
               },
             ]
@@ -283,7 +275,15 @@ export function TourDetailPage({
       ]}
     >
       {isOwner ? (
-        <ListSection>
+        // Who sees the tour is the section's footer, where it wraps in full (a switch row's
+        // second line is cut at two).
+        <ListSection
+          footer={
+            tour.visibility === 'private'
+              ? t('tours.form.visibilityPrivateHint')
+              : t('tours.form.visibilityFriendsHint')
+          }
+        >
           <ToggleRow
             title={t('tours.infoSheet.completedBtn')}
             icon={tour.completed ? 'check_circle' : 'radio_button_unchecked'}
@@ -292,11 +292,6 @@ export function TourDetailPage({
           />
           <ToggleRow
             title={t('tours.infoSheet.visibleToFriends')}
-            subtitle={
-              tour.visibility === 'private'
-                ? t('tours.form.visibilityPrivateHint')
-                : t('tours.form.visibilityFriendsHint')
-            }
             icon={tour.visibility === 'private' ? 'lock' : 'group'}
             value={tour.visibility !== 'private'}
             onValueChange={(visible) =>

@@ -99,6 +99,13 @@ export type LegRouter = {
   between: (from: LngLat, to: LngLat, ends?: readonly [LegEnd, LegEnd]) => Promise<LngLat[]>;
 };
 
+/** Legs straight between their points: a line drawn across untracked terrain, as the user sets it. */
+export const straightRouter: LegRouter = {
+  issue: () => null,
+  resolve: async (from, to) => ({ to, line: from && [from, to], off: null }),
+  between: async (from, to) => [from, to],
+};
+
 export function createLegRouter({
   network,
   maxTiles,

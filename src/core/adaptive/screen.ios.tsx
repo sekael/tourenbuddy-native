@@ -12,7 +12,6 @@ import {
   Text as SwiftText,
   Toolbar,
   ToolbarItem,
-  useNativeState,
 } from '@expo/ui/swift-ui';
 import {
   accessibilityLabel,
@@ -30,7 +29,7 @@ import {
   tag,
   tint,
 } from '@expo/ui/swift-ui/modifiers';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -40,6 +39,7 @@ import { useReducedMotion } from '@/core/theme/use-reduced-motion';
 import { icons } from './icons';
 import { InSwiftUIList } from './in-list';
 import { PageBanner } from './page-banner';
+import { useFieldText } from './use-field-text';
 import type { PageProps, ScreenProps } from './screen';
 
 /**
@@ -77,11 +77,11 @@ export function Page({
   children,
 }: PageProps) {
   const { t } = useTranslation();
-  const query = useNativeState(search?.value ?? '');
-  // A query set from JS (cleared filters, a reset) reaches the field.
-  useEffect(() => {
-    if (search && query.get() !== search.value) query.set(search.value);
-  }, [query, search]);
+  // A query set from JS (cleared filters, a reset) reaches the field; typing is never undone.
+  const { text: query, onTextChange: onQueryChange } = useFieldText(
+    search?.value ?? '',
+    search?.onChange,
+  );
 
   const banner = useContext(PageBanner);
   const reducedMotion = useReducedMotion();
@@ -96,7 +96,7 @@ export function Page({
           searchable(query, {
             prompt: search.prompt,
             placement: 'navigationBarDrawer',
-            onChange: search.onChange,
+            onChange: onQueryChange,
           }),
         ]
       : []),
@@ -144,7 +144,7 @@ export function Page({
             {action.menu?.length ? (
               <Menu
                 label={action.label}
-                systemImage={icons[action.icon].sf}
+                systemImage={action.titled ? undefined : icons[action.icon].sf}
                 modifiers={[
                   accessibilityLabel(action.label),
                   ...(action.disabled ? [disabledModifier(true)] : []),
@@ -163,7 +163,7 @@ export function Page({
             ) : (
               <Button
                 label={action.label}
-                systemImage={icons[action.icon].sf}
+                systemImage={action.titled ? undefined : icons[action.icon].sf}
                 onPress={action.onPress}
                 modifiers={[
                   accessibilityLabel(action.label),

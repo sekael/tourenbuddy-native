@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   segmentRow: { flexDirection: 'row', alignItems: 'center' },
-  divider: { width: 1, height: 24, backgroundColor: 'rgba(255,255,255,0.35)' },
+  divider: { width: 1, height: 24, backgroundColor: color.onFabDivider },
   segment: {
     minHeight: size.fab,
     minWidth: size.fab,

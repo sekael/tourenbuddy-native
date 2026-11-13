@@ -209,7 +209,6 @@ export default function RootLayout() {
           <Stack.Screen name="draw" options={stepSheetOptions} />
           <Stack.Screen name="stack" options={mapSheetOptions} dangerouslySingular />
           <Stack.Screen name="trail" options={mapSheetOptions} dangerouslySingular />
-          <Stack.Screen name="legend" options={mapSheetOptions} />
           <Stack.Screen name="contact/[id]" options={mapSheetOptions} />
           <Stack.Screen name="contact/edit" options={formModalOptions} />
           <Stack.Screen name="inbox" options={mapSheetOptions} />

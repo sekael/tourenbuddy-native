@@ -7,7 +7,15 @@ import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 
 import type { IconName } from '@/core/adaptive/icons';
-import { DateRow, ListRow, ListSection, PickerRow, TextRow } from '@/core/adaptive/list';
+import {
+  ContentRow,
+  DateRow,
+  ListRow,
+  ListSection,
+  PickerRow,
+  TextRow,
+} from '@/core/adaptive/list';
+import { Pills } from '@/core/adaptive/pills';
 import { Page, Screen } from '@/core/adaptive/screen';
 import { sessionUser } from '@/core/auth/session-user';
 import { newId, readText } from '@/core/files';
@@ -20,7 +28,7 @@ import { useContactsStore } from '@/features/contacts/presentation/stores/contac
 import { lineLength } from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import { gradeScales, toggleGrade, gradeLeads } from '@/features/tours/data/models/grade';
-import { SEASON_VALUES, type Season } from '@/features/tours/data/models/season';
+import { SEASON_VALUES } from '@/features/tours/data/models/season';
 import {
   TOUR_TYPE_COLORS,
   TOUR_TYPE_I18N_KEYS,
@@ -64,7 +72,6 @@ const typeLabel = (t: TFunction, type: TourType) =>
  * texts and attachments. Create, edit and (a partner on a friend's tour) suggest changes.
  */
 export function TourFormScreen() {
-  const { t } = useTranslation();
   const [path, setPath] = useState<string[]>([]);
   return (
     <Screen
@@ -75,18 +82,6 @@ export function TourFormScreen() {
           <ActivitiesPage />
         ) : value === 'grade' ? (
           <GradePage />
-        ) : value === 'seasons' ? (
-          <ChecklistPage
-            title={t('tours.form.seasonLabel')}
-            options={SEASON_VALUES.map((s: Season) => ({
-              value: s,
-              label: t(`tours.season.${s}`),
-            }))}
-            selected={useTourDraftStore.getState().draft.seasons ?? []}
-            onChange={(seasons) =>
-              useTourDraftStore.getState().update({ seasons: seasons as Season[] })
-            }
-          />
         ) : value === 'partners' ? (
           <PartnersPage />
         ) : null
@@ -138,13 +133,37 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
         ? t('tours.suggestions.suggestTitle')
         : t('tours.infoSheet.editTitle');
 
+  /**
+   * To the map for the route or the track. A new tour's form sits right on the map; an edited
+   * tour's sits on its sheet, perhaps on another tab: those close first, so the map is free, and
+   * the tour's sheet comes back when the form is done.
+   */
+  function editOnMap(pathname: '/plan' | '/draw') {
+    const params = { back: '1' };
+    if (mode === 'create') {
+      router.replace({ pathname, params });
+      return;
+    }
+    useTourDraftStore.setState({ returnTo: tourId });
+    router.dismissAll();
+    router.navigate('/');
+    router.push({ pathname, params });
+  }
+
+  /** Closes the form; `open` (a new tour), or the tour edited on the map, opens on the map. */
+  function leaveForm(open?: string | null) {
+    const reopen = open ?? useTourDraftStore.getState().returnTo;
+    useTourDraftStore.getState().reset();
+    router.back();
+    if (reopen) openTourSheet(reopen);
+  }
+
   function close() {
     const finish = () => {
       void useTourAttachmentsStore
         .getState()
         .discardDraft(draftId, mode === 'create' ? tourId : null);
-      useTourDraftStore.getState().reset();
-      router.back();
+      leaveForm();
     };
     if (!dirty && !(preUploaded?.length || staged?.length)) {
       finish();
@@ -223,10 +242,8 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
         attachments.clearStaged(draftId);
       }
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      useTourDraftStore.getState().reset();
-      router.back();
       // A new tour opens on the map, as in the PWA: it is there, and what to do next is at hand.
-      if (created) openTourSheet(created);
+      leaveForm(created);
     } catch (error) {
       log.error('Save failed', error);
       Alert.alert(t('tours.infoSheet.saveFailed'));
@@ -270,6 +287,14 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
 
   const types = draft.tourTypes;
   const scales = gradeScales(types);
+
+  /** An activity on or off; the ways up and down go back to their defaults. */
+  function toggleType(type: TourType) {
+    const next = TOUR_TYPE_VALUES.filter((v) =>
+      v === type ? !types.includes(v) : types.includes(v),
+    );
+    update({ tourTypes: next, legs: legsFrom(next, (x) => defaultDirection(x, next)) });
+  }
   const partners = draft.partnerIds
     .map((id) => contacts.find((c) => c.id === id))
     .filter((c) => c !== undefined)
@@ -315,65 +340,63 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
           autoCapitalize="words"
           error={nameError ?? undefined}
         />
-        <ListRow
-          title={t('tours.form.activityLabel')}
-          value={types.length ? types.map((type) => typeLabel(t, type)).join(', ') : undefined}
-          icon={types[0] ? (TOUR_TYPE_ICONS[types[0]] as IconName) : 'tour'}
-          iconColor={types[0] ? TOUR_TYPE_COLORS[types[0]] : undefined}
-          // One activity is two taps from a menu, as a chip was one in the PWA; several open the
-          // checklist with their ways up and down.
-          menu={
-            types.length > 1
-              ? undefined
-              : [
-                  ...TOUR_TYPE_VALUES.map((type) => ({
-                    label: typeLabel(t, type),
-                    icon: (types[0] === type ? 'check' : TOUR_TYPE_ICONS[type]) as IconName,
-                    onPress: () => {
-                      update({
-                        tourTypes: [type],
-                        legs: legsFrom([type], (x) => defaultDirection(x, [type])),
-                      });
-                      void Haptics.selectionAsync();
-                    },
-                  })),
-                  {
-                    label: t('tours.form.severalActivities'),
-                    icon: 'add' as IconName,
-                    onPress: () => onPush('activities'),
-                  },
-                ]
-          }
-          onPress={types.length > 1 ? () => onPush('activities') : undefined}
-        />
-        {scales.length === 1 ? null : (
-          <ListRow
-            title={t('tours.filters.gradeLabel')}
-            value={draft.grade ?? t('tours.form.gradeOptional')}
-            icon="speed"
-            onPress={() => onPush('grade')}
-          />
-        )}
       </ListSection>
-      {scales.length === 1 ? (
-        // The activity's scale inline: a grade is one tap; modifiers and other scales are typed.
-        <ListSection
-          title={t('tours.form.gradeLabel')}
-          footer={draft.grade && !scales[0]!.grades.includes(draft.grade) ? draft.grade : undefined}
-        >
-          <PickerRow
-            title={t('tours.form.gradeLabel')}
-            style="segmented"
-            value={gradeLeads(draft.grade ?? '')[0] ?? ''}
-            options={scales[0]!.grades.map((g) => ({ value: g, label: g }))}
-            onChange={(grade) => {
-              update({ grade });
-              void Haptics.selectionAsync();
-            }}
+
+      {/* Activities and grade as the PWA's chips: a tap each, several activities at once. */}
+      <ListSection title={t('tours.form.activityLabel')}>
+        <ContentRow>
+          <Pills
+            accessibilityLabel={t('tours.form.activityLabel')}
+            options={TOUR_TYPE_VALUES.map((type) => ({
+              value: type,
+              label: typeLabel(t, type),
+              icon: TOUR_TYPE_ICONS[type] as IconName,
+              iconColor: TOUR_TYPE_COLORS[type],
+            }))}
+            selected={types}
+            onToggle={toggleType}
           />
-          <ListRow title={t('tours.form.gradeMore')} icon="edit" onPress={() => onPush('grade')} />
-        </ListSection>
-      ) : null}
+        </ContentRow>
+      </ListSection>
+
+      <ListSection
+        title={t('tours.form.gradeLabel')}
+        footer={
+          draft.grade &&
+          !gradeLeads(draft.grade).every((g) => scales.some((sc) => sc.grades.includes(g)))
+            ? draft.grade
+            : undefined
+        }
+      >
+        {scales.map((scale) => (
+          <ContentRow key={scale.grades.join()}>
+            <Pills
+              single
+              accessibilityLabel={t('tours.form.gradeScale', {
+                activity: typeLabel(t, scale.type),
+              })}
+              options={scale.grades.map((g) => ({
+                value: g,
+                label: g,
+                ...(scales.length > 1 && g === scale.grades[0]
+                  ? {
+                      icon: TOUR_TYPE_ICONS[scale.type] as IconName,
+                      iconColor: TOUR_TYPE_COLORS[scale.type],
+                    }
+                  : {}),
+              }))}
+              selected={gradeLeads(draft.grade ?? '')}
+              onToggle={(chip) => update({ grade: toggleGrade(draft.grade ?? '', chip) || null })}
+            />
+          </ContentRow>
+        ))}
+        <ListRow
+          title={scales.length ? t('tours.form.gradeMore') : t('tours.filters.gradeLabel')}
+          value={scales.length ? undefined : (draft.grade ?? undefined)}
+          icon="edit"
+          onPress={() => onPush('grade')}
+        />
+      </ListSection>
 
       <ListSection
         title={t('tours.form.whenSectionLabel')}
@@ -445,10 +468,18 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
           icon="sports_score"
           chevron={false}
         />
+        {/* Below the activities, so a second one never pushes the grade under the thumb. */}
+        {types.length > 1 ? (
+          <ListRow
+            title={t('tours.form.legs.label')}
+            icon="swap_vert"
+            onPress={() => onPush('activities')}
+          />
+        ) : null}
         <ListRow
           title={t('tours.form.changeRouteBtn')}
           icon="edit"
-          onPress={() => router.replace({ pathname: '/plan', params: { back: '1' } })}
+          onPress={() => editOnMap('/plan')}
         />
         <ListRow
           title={trackLabel}
@@ -458,7 +489,7 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
             {
               label: hasTrack ? t('tours.form.gpxEditBtn') : t('tours.form.gpxDrawBtn'),
               icon: 'draw',
-              onPress: () => router.replace({ pathname: '/draw', params: { back: '1' } }),
+              onPress: () => editOnMap('/draw'),
             },
             {
               label: hasTrack ? t('tours.form.gpxReplaceTooltip') : t('tours.form.gpxUploadBtn'),
@@ -490,16 +521,6 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
             update({ elevation: Number.isFinite(n) ? n : null });
           }}
         />
-        <ListRow
-          title={t('tours.form.seasonLabel')}
-          value={
-            draft.seasons?.length
-              ? draft.seasons.map((s) => t(`tours.season.${s}`)).join(', ')
-              : undefined
-          }
-          icon="eco"
-          onPress={() => onPush('seasons')}
-        />
         {mode !== 'suggest' && suggested.length === 0 ? (
           <ListRow
             title={t('tours.form.partnersLabel')}
@@ -510,27 +531,48 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
         ) : null}
       </ListSection>
 
+      <ListSection title={t('tours.form.seasonLabel')}>
+        <ContentRow>
+          <Pills
+            accessibilityLabel={t('tours.form.seasonLabel')}
+            options={SEASON_VALUES.map((season) => ({
+              value: season,
+              label: t(`tours.season.${season}`),
+            }))}
+            selected={draft.seasons ?? []}
+            onToggle={(season) => {
+              const seasons = draft.seasons ?? [];
+              update({
+                seasons: SEASON_VALUES.filter((v) =>
+                  v === season ? !seasons.includes(v) : seasons.includes(v),
+                ),
+              });
+            }}
+          />
+        </ContentRow>
+      </ListSection>
+
       {mode !== 'suggest' && suggested.length ? (
         // Who comes along is a tap per person, as the PWA's chips: the people most often along
         // first, the rest of the contacts one row further.
         <ListSection title={t('tours.form.partnersLabel')}>
-          {suggested.map((contact) => (
-            <ListRow
-              key={contact.id}
-              title={resolveContactName(contact)}
-              icon="person"
-              checked={draft.partnerIds.includes(contact.id)}
-              chevron={false}
-              onPress={() => {
+          <ContentRow>
+            <Pills
+              accessibilityLabel={t('tours.form.partnersLabel')}
+              options={suggested.map((contact) => ({
+                value: contact.id,
+                label: resolveContactName(contact),
+              }))}
+              selected={draft.partnerIds}
+              onToggle={(id) =>
                 update({
-                  partnerIds: draft.partnerIds.includes(contact.id)
-                    ? draft.partnerIds.filter((id) => id !== contact.id)
-                    : [...draft.partnerIds, contact.id],
-                });
-                void Haptics.selectionAsync();
-              }}
+                  partnerIds: draft.partnerIds.includes(id)
+                    ? draft.partnerIds.filter((x) => x !== id)
+                    : [...draft.partnerIds, id],
+                })
+              }
             />
-          ))}
+          </ContentRow>
           {contacts.length > suggested.length ? (
             <ListRow
               title={t('tours.form.allContacts')}
@@ -655,7 +697,7 @@ function DraftAttachments({
   );
 }
 
-/** Activities as a checklist; with several, which way each goes (activity-legs). */
+/** With several activities, which way each goes (activity-legs). */
 function ActivitiesPage() {
   const { t } = useTranslation();
   const draft = useTourDraftStore((s) => s.draft);
@@ -664,15 +706,6 @@ function ActivitiesPage() {
   const direction = (type: TourType): LegDirection =>
     draft.legs ? directionOf(draft.legs, type) : defaultDirection(type, types);
 
-  function toggle(type: TourType) {
-    const next = TOUR_TYPE_VALUES.filter((v) =>
-      v === type ? !types.includes(v) : types.includes(v),
-    );
-    // Ways reset to their defaults when the activities change.
-    update({ tourTypes: next, legs: legsFrom(next, (x) => defaultDirection(x, next)) });
-    void Haptics.selectionAsync();
-  }
-
   function setDirection(type: TourType, way: LegDirection) {
     const pick = (x: TourType) => (x === type ? way : direction(x));
     if (!waysCovered(types, pick)) return;
@@ -680,38 +713,23 @@ function ActivitiesPage() {
   }
 
   return (
-    <Page title={t('tours.form.activityLabel')}>
-      <ListSection>
-        {TOUR_TYPE_VALUES.map((type) => (
-          <ListRow
+    <Page title={t('tours.form.legs.label')}>
+      <ListSection footer={t('tours.form.legs.hint')}>
+        {types.map((type) => (
+          <PickerRow<LegDirection>
             key={type}
             title={typeLabel(t, type)}
             icon={TOUR_TYPE_ICONS[type] as IconName}
-            iconColor={TOUR_TYPE_COLORS[type]}
-            checked={types.includes(type)}
-            chevron={false}
-            onPress={() => toggle(type)}
+            value={direction(type)}
+            onChange={(way) => setDirection(type, way)}
+            options={[
+              { value: 'up', label: t('tours.form.legs.up') },
+              { value: 'both', label: t('tours.form.legs.both') },
+              { value: 'down', label: t('tours.form.legs.down') },
+            ]}
           />
         ))}
       </ListSection>
-      {types.length > 1 ? (
-        <ListSection title={t('tours.form.legs.label')} footer={t('tours.form.legs.hint')}>
-          {types.map((type) => (
-            <PickerRow<LegDirection>
-              key={type}
-              title={typeLabel(t, type)}
-              icon={TOUR_TYPE_ICONS[type] as IconName}
-              value={direction(type)}
-              onChange={(way) => setDirection(type, way)}
-              options={[
-                { value: 'up', label: t('tours.form.legs.up') },
-                { value: 'both', label: t('tours.form.legs.both') },
-                { value: 'down', label: t('tours.form.legs.down') },
-              ]}
-            />
-          ))}
-        </ListSection>
-      ) : null}
     </Page>
   );
 }
@@ -755,42 +773,6 @@ function GradePage() {
           ))}
         </ListSection>
       ))}
-    </Page>
-  );
-}
-
-function ChecklistPage({
-  title,
-  options,
-  selected,
-  onChange,
-}: {
-  title: string;
-  options: { value: string; label: string }[];
-  selected: string[];
-  onChange: (values: string[]) => void;
-}) {
-  const [values, setValues] = useState(selected);
-  return (
-    <Page title={title}>
-      <ListSection>
-        {options.map((option) => (
-          <ListRow
-            key={option.value}
-            title={option.label}
-            checked={values.includes(option.value)}
-            chevron={false}
-            onPress={() => {
-              const next = options
-                .map((o) => o.value)
-                .filter((v) => (v === option.value ? !values.includes(v) : values.includes(v)));
-              setValues(next);
-              onChange(next);
-              void Haptics.selectionAsync();
-            }}
-          />
-        ))}
-      </ListSection>
     </Page>
   );
 }

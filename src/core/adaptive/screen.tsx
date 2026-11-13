@@ -29,13 +29,15 @@ export type ScreenAction = {
   disabled?: boolean;
   /** A tap opens these instead (iOS: the system menu from the bar button). */
   menu?: RowAction[];
+  /** Shows its label instead of the icon: a word where an icon would leave the user guessing. */
+  titled?: boolean;
 };
 
 export type PageProps = {
   title: string;
   /** Tab roots: a large title that folds into the bar on scroll (iOS). */
   largeTitle?: boolean;
-  /** Trailing toolbar buttons, icon only (their label is read out). */
+  /** Trailing toolbar buttons, icon only (their label is read out) unless `titled`. */
   actions?: ScreenAction[];
   /** A sheet's close button (iOS: the system xmark). */
   onClose?: () => void;
@@ -100,19 +102,27 @@ export function Page(page: PageProps) {
         <Text variant="title" role="heading" style={styles.title} numberOfLines={1}>
           {page.title}
         </Text>
-        {page.actions?.map((action) => (
-          <IconButton
-            key={action.id}
-            icon={action.icon}
-            label={action.label}
-            onPress={
-              action.menu?.length
-                ? () => setOpenMenu((open) => (open === action.id ? null : action.id))
-                : (action.onPress ?? (() => {}))
-            }
-            disabled={action.disabled}
-          />
-        ))}
+        {page.actions?.map((action) => {
+          const onPress = action.menu?.length
+            ? () => setOpenMenu((open) => (open === action.id ? null : action.id))
+            : (action.onPress ?? (() => {}));
+          return action.titled ? (
+            <TextButton
+              key={action.id}
+              label={action.label}
+              onPress={onPress}
+              disabled={action.disabled}
+            />
+          ) : (
+            <IconButton
+              key={action.id}
+              icon={action.icon}
+              label={action.label}
+              onPress={onPress}
+              disabled={action.disabled}
+            />
+          );
+        })}
         {page.confirm ? (
           <TextButton
             label={page.confirm.label}

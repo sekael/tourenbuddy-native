@@ -143,7 +143,11 @@ export function tourMapLayers({
         type: 'line',
         filter: ['!=', ['get', 'dashed'], true],
         layout: LINE,
-        paint: { 'line-color': ['get', 'color'], 'line-width': ['coalesce', ['get', 'width'], 4] },
+        paint: {
+          'line-color': ['get', 'color'],
+          'line-width': ['coalesce', ['get', 'width'], 4],
+          'line-opacity': ['coalesce', ['get', 'opacity'], 1],
+        },
       },
       {
         id: 'line-dashed',

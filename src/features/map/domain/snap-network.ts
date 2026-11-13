@@ -18,3 +18,19 @@ export function snapNetworkFor(
   if (hiking && ski) return onSkis(tourTypes) ? 'ski' : 'hiking';
   return hiking ? 'hiking' : ski ? 'ski' : null;
 }
+
+/** What a planned or drawn line follows: a network first (then every way), or nothing: straight. */
+export type Follow = SnapNetwork | 'straight';
+
+/**
+ * Where a route or drawing starts: an activity on skis follows the ski routes, any other activity
+ * the hiking trails; without one, what the map shows (hiking first).
+ */
+export function initialFollow(
+  overlays: readonly TrailOverlayId[],
+  tourTypes: readonly string[],
+): SnapNetwork {
+  if (onSkis(tourTypes)) return 'ski';
+  if (tourTypes.length) return 'hiking';
+  return snapNetworkFor(overlays, tourTypes) ?? 'hiking';
+}

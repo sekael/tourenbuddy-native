@@ -33,7 +33,26 @@ export type DraftStage = {
 export type CameraRequest =
   { kind: 'fly'; center: LngLat; zoom?: number } | { kind: 'fit'; bounds: [LngLat, LngLat] };
 
-type MapState = {
+/** A point of the line, or the dot halfway along one of its legs. */
+export type HandleTarget = { point: number } | { leg: number };
+
+/**
+ * A line being planned or drawn, as handles on the map (track-drawing "Shape the line"): its points
+ * to drag, a handle halfway along each leg to pull a new point out of, a tap on a pulled point
+ * to take it out again. Without dragging, a tap picks a point or a leg's dot and the next map tap
+ * moves the point there or sends the leg through there.
+ */
+export type EditHandles = {
+  points: { at: LngLat; kind: 'start' | 'goal' | 'end' | 'via' }[];
+  legs: LngLat[][];
+  move: (index: number, to: LngLat) => void;
+  pull: (leg: number, at: LngLat) => void;
+  drop: (index: number) => void;
+  pick: (target: HandleTarget) => void;
+  picked: HandleTarget | null;
+};
+
+export type MapState = {
   mode: MapMode;
   styleIndex: number;
   overlays: TrailOverlayId[];
@@ -46,8 +65,12 @@ type MapState = {
   previewTrack: LngLat[] | null;
   previewStages: DraftStage[];
   trailCard: TrailCard | null;
+  /** The routes the open lookup sheet shows, the chosen one highlighted (null: sheet closed). */
+  trailHighlight: { trails: Trail[]; selectedId: string | null } | null;
   /** Tours sharing one spot, from a stack tap: the stack list sheet shows them. */
   stack: string[] | null;
+  /** The planned or drawn line's handles while the route or draw step runs. */
+  editHandles: EditHandles | null;
   camera: CameraRequest | null;
   /** The map's visible centre, kept for picks that start "here" and for offline regions. */
   center: LngLat | null;
@@ -119,6 +142,8 @@ export const useMapStore = create<MapState>()((set, get) => ({
   selectedOutingKey: null,
   ...noPreview,
   trailCard: null,
+  trailHighlight: null,
+  editHandles: null,
   stack: null,
   camera: null,
   center: null,
@@ -184,6 +209,7 @@ export const useMapStore = create<MapState>()((set, get) => ({
       tapHandler: null,
       previewLines: null,
       previewPoints: null,
+      editHandles: null,
       ...noPreview,
     }),
 }));

@@ -68,6 +68,8 @@ type DraftState = {
   route: RoutePlan | null;
   /** Anchor of a new segment (Add segment): saved into its outing. */
   segmentOf: string | null;
+  /** The tour whose sheet closed so its route could be edited on the map: reopened after. */
+  returnTo: string | null;
   begin: (mode: DraftMode, tour?: Tour | null, seed?: Partial<TourDraft>) => void;
   update: (patch: Partial<TourDraft>) => void;
   setRoute: (plan: RoutePlan) => void;
@@ -90,6 +92,7 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
   dirty: false,
   route: null,
   segmentOf: null,
+  returnTo: null,
 
   begin: (mode, tour = null, seed = {}) =>
     set({
@@ -163,6 +166,7 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
       dirty: false,
       route: null,
       segmentOf: null,
+      returnTo: null,
     }),
 }));
 

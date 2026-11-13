@@ -135,42 +135,22 @@ export function CalendarScreen() {
     setSelected(dayKey(now));
   };
 
-  if (view === 'seasons') {
-    return (
-      <Page
-        largeTitle
-        title={t('shell.tabs.calendar')}
-        titleControl={{
-          value: view,
-          options: [
-            { value: 'planned', label: t('calendar.nav.planned') },
-            { value: 'seasons', label: t('calendar.nav.seasons') },
-          ],
-          onChange: (next) => setView(next as View),
-        }}
-        header={tours.length ? <SeasonsChart tours={tours} onOpen={openTour} /> : undefined}
-      >
-        <SeasonsView tours={tours} />
-      </Page>
-    );
-  }
+  // One page for both views, its bar the same in both: only the switch between them, so it never
+  // moves or changes as the view does. The month's own controls sit with the month.
+  const viewSwitch = {
+    value: view,
+    options: [
+      { value: 'planned', label: t('calendar.nav.planned') },
+      { value: 'seasons', label: t('calendar.nav.seasons') },
+    ],
+    onChange: (next: string) => setView(next as View),
+  };
 
   return (
     <Page
       largeTitle={!editing}
       title={editing ? t('calendar.availability.edit') : t('shell.tabs.calendar')}
-      titleControl={
-        editing
-          ? undefined
-          : {
-              value: view,
-              options: [
-                { value: 'planned', label: t('calendar.nav.planned') },
-                { value: 'seasons', label: t('calendar.nav.seasons') },
-              ],
-              onChange: (next) => setView(next as View),
-            }
-      }
+      titleControl={editing ? undefined : viewSwitch}
       cancel={
         editing ? { label: t('calendar.availability.cancel'), onPress: store.cancel } : undefined
       }
@@ -179,34 +159,30 @@ export function CalendarScreen() {
           ? { label: t('calendar.availability.save'), onPress: () => void save(), disabled: saving }
           : undefined
       }
-      actions={
-        editing
-          ? undefined
-          : [
-              { id: 'today', label: t('calendar.today'), icon: 'calendar_today', onPress: goToday },
-              {
-                id: 'availability',
-                label: t('calendar.availability.edit'),
-                icon: 'event_available',
-                onPress: store.enterEdit,
-              },
-            ]
-      }
       header={
-        <MonthGrid
-          month={month}
-          onMonth={setMonth}
-          selected={selected}
-          onSelect={setSelected}
-          entriesByDay={entriesByDay}
-          friendsByDay={friendsByDay}
-          availableDays={editing ? workingDays : savedDays}
-          editing={editing}
-          onToggle={store.toggleDay}
-        />
+        view === 'seasons' ? (
+          tours.length ? (
+            <SeasonsChart tours={tours} onOpen={openTour} />
+          ) : undefined
+        ) : (
+          <MonthGrid
+            month={month}
+            onMonth={setMonth}
+            selected={selected}
+            onSelect={setSelected}
+            entriesByDay={entriesByDay}
+            friendsByDay={friendsByDay}
+            availableDays={editing ? workingDays : savedDays}
+            editing={editing}
+            onToggle={store.toggleDay}
+            onToday={editing ? undefined : goToday}
+          />
+        )
       }
     >
-      {editing ? (
+      {view === 'seasons' ? (
+        <SeasonsView tours={tours} />
+      ) : editing ? (
         <ListSection
           footer={[
             t('calendar.availability.disclaimer'),
@@ -224,6 +200,13 @@ export function CalendarScreen() {
       ) : (
         <>
           {showTip ? <CalendarTip /> : null}
+          <ListSection>
+            <ListRow
+              title={t('calendar.availability.edit')}
+              icon="event_available"
+              onPress={store.enterEdit}
+            />
+          </ListSection>
           <ListSection
             title={formatDate(selectedDate, { weekday: 'long', day: 'numeric', month: 'long' })}
           >
