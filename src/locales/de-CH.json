@@ -32,7 +32,8 @@
       "calendarNote": "Tage werden aus deinem Kalender vorausgefüllt. Tage, die du hier änderst, überschreiben ihn dauerhaft.",
       "freeLabel": "frei",
       "saveFailed": "Deine Verfügbarkeit konnte nicht gespeichert werden. Versuch es nochmals.",
-      "markHint": "Tippe die Tage an, an denen du frei bist."
+      "markHint": "Tippe die Tage an, an denen du frei bist.",
+      "editTitle": "Verfügbarkeit"
     },
     "seasons": {
       "title": "Saisonplaner",
@@ -413,7 +414,8 @@
       "addPhoneBtn": "Telefon hinzufügen",
       "primaryPhoneRequired": "Wähle ein Haupttelefon aus, wenn mehrere Telefonnummern eingetragen sind",
       "clearToRemove": "Leere eine Nummer, um sie zu entfernen.",
-      "addEmailBtn": "E-Mail hinzufügen"
+      "addEmailBtn": "E-Mail hinzufügen",
+      "newTitle": "Neuer Kontakt"
     },
     "addDialog": {
       "title": "Kontakt hinzufügen",
@@ -654,7 +656,6 @@
       "pointsFromTrack": "Start und Ende kommen aus dem Track.",
       "pointsByHandBtn": "Selbst setzen",
       "fromTrack": "aus dem Track",
-      "gpxDrawnFile": "Gezeichneter Track · {{distance}}",
       "gpxPreparing": "Höhen werden ergänzt …",
       "nextDayBtn": "Nächster Tag",
       "nextDayHint": "Mit Übernachtung? Die nächste Etappe beginnt, wo diese endet.",

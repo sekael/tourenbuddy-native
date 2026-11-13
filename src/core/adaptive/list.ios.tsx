@@ -22,6 +22,7 @@ import {
   ContentUnavailableView,
 } from '@expo/ui/swift-ui';
 import {
+  accessibilityHidden,
   accessibilityLabel as a11yLabel,
   autocorrectionDisabled,
   badge,
@@ -304,7 +305,18 @@ export function TextRow({
   ];
 
   return (
-    <VStack alignment="leading" spacing={4}>
+    // The name stays above the field once it is filled (a bare "1649" says nothing); VoiceOver
+    // reads it from the field.
+    <VStack alignment="leading" spacing={2}>
+      <SwiftText
+        modifiers={[
+          font({ textStyle: 'caption' }),
+          foregroundStyle(color.onSurfaceVariant),
+          accessibilityHidden(true),
+        ]}
+      >
+        {label}
+      </SwiftText>
       <TextField
         text={text}
         placeholder={placeholder ?? label}

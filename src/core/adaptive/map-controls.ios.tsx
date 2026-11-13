@@ -11,7 +11,7 @@ import {
 import { GlassView } from 'expo-glass-effect';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { color, size, space } from '@/core/theme/tokens';
+import { color, shadow, size, space } from '@/core/theme/tokens';
 
 import { Icon } from './icon';
 import { icons, type IconName } from './icons';
@@ -21,8 +21,9 @@ import { Text } from './text';
 export type { CapsuleItem } from './map-controls';
 
 /**
- * Liquid Glass over the map (D6), compact and tinted: the capsule of the map's main actions in the
- * app's blue (as the PWA's bar), the round controls beside it in clear glass with a blue glyph.
+ * Liquid Glass over the map (D6), compact and tinted: the capsule of the map's main actions in
+ * frosted glass tinted with the app's blue (as the PWA's bar; white glyphs on a soft shadow stay
+ * legible over snow), the round controls beside it in faintly tinted glass with a blue glyph.
  * Real system glass samples the map and follows Reduce Transparency; interactive glass gives the
  * press its own feedback (no scaling of ours, so Reduce Motion has nothing to undo).
  */
@@ -30,7 +31,7 @@ export function GlassCapsule({ items, label }: { items: CapsuleItem[]; label: st
   return (
     <GlassView
       isInteractive
-      tintColor={color.fab}
+      tintColor={color.fabGlass}
       style={styles.capsule}
       accessibilityRole="toolbar"
       accessibilityLabel={label}
@@ -51,7 +52,9 @@ export function GlassCapsule({ items, label }: { items: CapsuleItem[]; label: st
               item.disabled && styles.disabled,
             ]}
           >
-            <Icon name={item.icon} size={22} color={color.onFab} />
+            <View style={styles.glyph}>
+              <Icon name={item.icon} size={22} color={color.onFab} />
+            </View>
             {item.iconOnly ? null : (
               <Text variant="label" style={styles.label} numberOfLines={1}>
                 {item.label}
@@ -159,7 +162,19 @@ const styles = StyleSheet.create({
     gap: space.xs,
   },
   iconOnly: { width: size.mapControl + space.sm, paddingHorizontal: 0 },
-  label: { color: color.onFab },
+  label: {
+    color: color.onFab,
+    textShadowColor: color.onGlassShadow,
+    textShadowOffset: shadow.glyph.offset,
+    textShadowRadius: shadow.glyph.radius,
+  },
+  // A layer shadow on a view without a fill follows the glyph's own shape.
+  glyph: {
+    shadowColor: color.onGlassShadow,
+    shadowOpacity: 1,
+    shadowOffset: shadow.glyph.offset,
+    shadowRadius: shadow.glyph.radius,
+  },
   disabled: { opacity: 0.38 },
   circle: {
     width: size.mapControl,

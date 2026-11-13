@@ -9,12 +9,15 @@ import { GlassCapsule, GlassCircleButton } from '@/core/adaptive/map-controls';
 import { color, space } from '@/core/theme/tokens';
 import { haversineMeters } from '@/core/utils/haversine';
 import type { LngLat } from '@/features/map/domain/entities/trail';
+import { boundsAboveSheet } from '@/features/map/domain/offline-regions';
 import { loadGpxTrack } from '@/features/tours/data/services/gpx-track-service';
 import { TOUR_TYPE_TRACK_COLORS } from '@/features/tours/data/models/tour-type';
 import type { Tour } from '@/features/tours/domain/entities/tour';
+import { outingSegments } from '@/features/tours/domain/outing';
 import { trackLines } from '@/features/tours/domain/route-metrics';
 import { useToursStore } from '@/features/tours/presentation/stores/tours-store';
 
+import { openTour } from './open-tour';
 import { useMapStore, type MapState } from './stores/map-store';
 import { sameSpot, tourFeatures } from './tour-features';
 import {
@@ -56,6 +59,7 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
   const styleIndex = useMapStore((s) => s.styleIndex);
   const overlays = useMapStore((s) => s.overlays);
   const selectedTourId = useMapStore((s) => s.selectedTourId);
+  const selectedOutingKey = useMapStore((s) => s.selectedOutingKey);
   const camera = useMapStore((s) => s.camera);
   const tapHandler = useMapStore((s) => s.tapHandler);
   const previewLines = useMapStore((s) => s.previewLines);
@@ -71,7 +75,11 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
   const selectedLines = useSelectedLines(selected);
 
   // A sheet over the map covers its lower half (medium detent): frame what is left above it.
-  const sheetOpen = selectedTourId !== null || mode !== 'browse';
+  const sheetOpen =
+    selectedTourId !== null ||
+    selectedOutingKey !== null ||
+    trailHighlight !== null ||
+    mode !== 'browse';
   const padding = {
     top: insets.top + space.lg,
     left: space.lg,
@@ -91,16 +99,60 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
     else mapRef.current?.fitBounds(request.bounds[0], request.bounds[1]);
   }, [camera]);
 
-  // Opening a tour frames it (its goal, start and end) in the space above the sheet, once; dragging
-  // the sheet never flies the camera again (map-integration "Calm camera flights").
+  // The tour shows whole above the sheet (the PWA's framing, plus its line): the open tour's goal,
+  // start, end and track, or the route being planned or drawn. Framed again whenever that extent
+  // changes (a point set or moved, the track loaded or rerouted), once it settles; an edit that
+  // keeps it, or dragging the sheet, never moves the map (map-integration "Calm camera flights").
+  const editHandles = useMapStore((s) => s.editHandles);
+  const extent = useMemo(() => {
+    const framed = selected ? [selected] : outingSegments(allTours, selectedOutingKey);
+    const stops =
+      mode === 'browse'
+        ? framed.flatMap((tour) =>
+            [tour.goal, tour.startPoint, tour.endPoint].flatMap((p) =>
+              p ? [[p.lng, p.lat] as LngLat] : [],
+            ),
+          )
+        : [
+            ...(editHandles?.points.map((p) => p.at) ?? []),
+            ...(previewPoints?.features.map((f) => f.geometry.coordinates as LngLat) ?? []),
+          ];
+    const line = (previewLines?.features ?? selectedLines.features).flatMap(
+      (f) => f.geometry.coordinates as LngLat[],
+    );
+    // A ski route picked from the lookup shows whole, as a tour does.
+    const chosen = trailHighlight?.trails.find((trail) => trail.id === trailHighlight.selectedId);
+    return boxOf([...stops, ...line, ...(chosen?.lines.flat() ?? [])]);
+  }, [
+    mode,
+    selected,
+    allTours,
+    selectedOutingKey,
+    editHandles,
+    previewLines,
+    previewPoints,
+    selectedLines,
+    trailHighlight,
+  ]);
+  const extentKey = extent
+    ?.flat()
+    .map((n) => n.toFixed(4))
+    .join();
   useEffect(() => {
-    if (!selected) return;
-    const bounds = tourBounds(selected);
-    if (bounds) mapRef.current?.fitBounds(bounds[0], bounds[1]);
-    else mapRef.current?.flyTo([selected.goal.lng, selected.goal.lat], 13);
-    // Only on a newly opened tour: an edit of the open one must not move the map.
+    if (!extent) return;
+    const timer = setTimeout(() => {
+      const [[west, south], [east, north]] = extent;
+      const lone = west === east && south === north;
+      // A lone point and a drawing (the user's own taps) move the map only once out of view.
+      if ((lone || mode === 'draw') && inView(extent, padding.bottom / height)) return;
+      if (lone)
+        mapRef.current?.flyTo([west, south], Math.max(useMapStore.getState().zoom ?? 0, 13));
+      else mapRef.current?.fitBounds(...widened(extent));
+    }, 300);
+    return () => clearTimeout(timer);
+    // The extent's key alone: a new tour, point or line, not a new array of the same.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected?.id]);
+  }, [extentKey]);
 
   async function onPress(lngLat: LngLat, point: [number, number]) {
     if (tapHandler) {
@@ -245,25 +297,38 @@ function onHandle(lngLat: LngLat): boolean {
   return spots.some((spot) => haversineMeters(spot, lngLat) < reach);
 }
 
-/** Opens a tour's detail sheet over the map. */
-export function openTour(id: string) {
-  useMapStore.getState().selectTour(id);
-  router.push({ pathname: '/tour/[id]', params: { id } });
-}
-
-/** The box around a tour's goal, start and end; null for a lone goal. */
-function tourBounds(tour: Tour): [LngLat, LngLat] | null {
-  const pts = [tour.goal, tour.startPoint, tour.endPoint].filter(Boolean) as {
-    lng: number;
-    lat: number;
-  }[];
-  if (pts.length < 2) return null;
-  const lngs = pts.map((p) => p.lng);
-  const lats = pts.map((p) => p.lat);
+/** The box around these points; null without any. */
+function boxOf(points: LngLat[]): [LngLat, LngLat] | null {
+  if (!points.length) return null;
+  const lngs = points.map((p) => p[0]);
+  const lats = points.map((p) => p[1]);
   return [
     [Math.min(...lngs), Math.min(...lats)],
     [Math.max(...lngs), Math.max(...lats)],
   ];
+}
+
+/** A short tour framed no closer than about a kilometre across (the camera has no zoom cap). */
+const MIN_SPAN = 0.01;
+function widened([[west, south], [east, north]]: [LngLat, LngLat]): [LngLat, LngLat] {
+  const dLng = Math.max(0, MIN_SPAN * 1.5 - (east - west)) / 2;
+  const dLat = Math.max(0, MIN_SPAN - (north - south)) / 2;
+  return [
+    [west - dLng, south - dLat],
+    [east + dLng, north + dLat],
+  ];
+}
+
+/**
+ * Whether the box lies in the part of the map the sheet leaves visible (`covered`: its share),
+ * clear of the edges by a tenth, where a marker or its name would be cut.
+ */
+function inView([[west, south], [east, north]]: [LngLat, LngLat], covered: number): boolean {
+  const shown = useMapStore.getState().bounds;
+  if (!shown) return false;
+  const [w, s, e, n] = boundsAboveSheet(shown, covered);
+  const [dx, dy] = [(e - w) / 10, (n - s) / 10];
+  return west >= w + dx && east <= e - dx && south >= s + dy && north <= n - dy;
 }
 
 /** The lookup sheet's routes: all faint while listed, the chosen one in full on a white casing. */

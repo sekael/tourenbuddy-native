@@ -27,7 +27,13 @@ import type { LngLat } from '@/features/map/domain/entities/trail';
 import { markerImages } from './marker-images';
 import { BASE_STYLES } from './map-styles';
 import type { TourFeatureProps } from './tour-features';
-import { overlaySourceId, SKI_SOURCE, TOURS_CLUSTER, tourMapLayers } from './tour-map-layers';
+import {
+  framePadding,
+  overlaySourceId,
+  SKI_SOURCE,
+  TOURS_CLUSTER,
+  tourMapLayers,
+} from './tour-map-layers';
 
 /**
  * The Swisstopo map on iOS and Android (MapLibre Native; `tour-map.web.tsx` is GL JS): the base
@@ -117,7 +123,10 @@ export function TourMap({
   useImperativeHandle(ref, () => ({
     flyTo: (center, zoom) => cameraRef.current?.easeTo({ center, zoom, padding, duration: 600 }),
     fitBounds: (sw, ne) =>
-      cameraRef.current?.fitBounds([sw[0], sw[1], ne[0], ne[1]], { padding, duration: 600 }),
+      cameraRef.current?.fitBounds([sw[0], sw[1], ne[0], ne[1]], {
+        padding: framePadding(padding),
+        duration: 600,
+      }),
     queryAt: async ([x, y], ids) =>
       (await mapRef.current?.queryRenderedFeatures(
         [

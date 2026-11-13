@@ -308,6 +308,7 @@ export function ContactDetailPage({
   return (
     <Page
       title={name}
+      titleInHeader
       onClose={onClose}
       header={hero}
       actions={[

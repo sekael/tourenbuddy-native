@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 
 import {
+  ContentRow,
   DateRow,
   EmptyState,
   ListRow,
@@ -13,6 +14,7 @@ import {
   PickerRow,
   type RowAction,
 } from '@/core/adaptive/list';
+import { Pills } from '@/core/adaptive/pills';
 import { Page, Screen } from '@/core/adaptive/screen';
 import { resolveContactName } from '@/features/contacts/domain/entities/contact';
 import { useContactsStore } from '@/features/contacts/presentation/stores/contacts-store';
@@ -345,19 +347,19 @@ function TourFiltersPage({ onDone }: { onDone: () => void }) {
     }));
   }, [source, f.grades, t]);
 
+  // A pill gives its own tick (`Pills`).
+  const toggle = <K extends 'ownerIds' | 'partnerIds' | 'tourTypes' | 'grades' | 'seasons'>(
+    key: K,
+    value: string,
+  ) =>
+    useTourFiltersStore
+      .getState()
+      .setFilters(tab, { [key]: toggled(f[key] as Set<string>, value) } as Partial<TourFilters>);
+
   return (
     <Page
       title={t('tours.list.filtersBtn')}
-      actions={[
-        {
-          id: 'reset',
-          label: t('tours.filters.resetBtn'),
-          icon: 'replay',
-          titled: true,
-          disabled: activeFilterCount(f) === 0,
-          onPress: () => useTourFiltersStore.getState().clearFilters(tab),
-        },
-      ]}
+      // Reset is a row at the end: beside the results button the bar overflows into "…".
       confirm={{
         label: t('tours.filters.showResultsBtn', { count: resultCount }),
         onPress: onDone,
@@ -378,71 +380,78 @@ function TourFiltersPage({ onDone }: { onDone: () => void }) {
       </ListSection>
       {tab === 'friends' && owners.length > 0 ? (
         <ListSection title={t('tours.filters.ownerLabel')}>
-          {owners.map((owner) => (
-            <ListRow
-              key={owner.id}
-              title={owner.label}
-              icon="person"
-              checked={f.ownerIds.has(owner.id)}
-              onPress={() => set({ ownerIds: toggled(f.ownerIds, owner.id) })}
-              chevron={false}
+          <ContentRow>
+            <Pills
+              accessibilityLabel={t('tours.filters.ownerLabel')}
+              options={owners.map((owner) => ({
+                value: owner.id,
+                label: owner.label,
+                icon: 'person' as const,
+              }))}
+              selected={[...f.ownerIds]}
+              onToggle={(id) => toggle('ownerIds', id)}
             />
-          ))}
+          </ContentRow>
         </ListSection>
       ) : null}
       {tab === 'owned' && contacts.length > 0 ? (
         <ListSection title={t('tours.filters.partnerLabel')}>
-          {contacts.map((contact) => (
-            <ListRow
-              key={contact.id}
-              title={resolveContactName(contact)}
-              icon="person"
-              checked={f.partnerIds.has(contact.id)}
-              onPress={() => set({ partnerIds: toggled(f.partnerIds, contact.id) })}
-              chevron={false}
+          <ContentRow>
+            <Pills
+              accessibilityLabel={t('tours.filters.partnerLabel')}
+              options={contacts.map((contact) => ({
+                value: contact.id,
+                label: resolveContactName(contact),
+                icon: 'person' as const,
+              }))}
+              selected={[...f.partnerIds]}
+              onToggle={(id) => toggle('partnerIds', id)}
             />
-          ))}
+          </ContentRow>
         </ListSection>
       ) : null}
       <ListSection title={t('tours.filters.activityLabel')}>
-        {TOUR_TYPE_VALUES.map((type: TourType) => (
-          <ListRow
-            key={type}
-            title={t(`tours.type.${TOUR_TYPE_I18N_KEYS[type]}` as 'tours.type.hiking')}
-            icon={TOUR_TYPE_ICONS[type] as IconName}
-            iconColor={TOUR_TYPE_COLORS[type]}
-            checked={f.tourTypes.has(type)}
-            onPress={() => set({ tourTypes: toggled(f.tourTypes, type) })}
-            chevron={false}
+        <ContentRow>
+          <Pills<TourType>
+            accessibilityLabel={t('tours.filters.activityLabel')}
+            options={TOUR_TYPE_VALUES.map((type) => ({
+              value: type,
+              label: t(`tours.type.${TOUR_TYPE_I18N_KEYS[type]}` as 'tours.type.hiking'),
+              icon: TOUR_TYPE_ICONS[type] as IconName,
+              iconColor: TOUR_TYPE_COLORS[type],
+            }))}
+            selected={[...f.tourTypes]}
+            onToggle={(type) => toggle('tourTypes', type)}
           />
-        ))}
+        </ContentRow>
       </ListSection>
       {scales.map((scale) => (
         <ListSection
           key={scale.grades.join()}
           title={t('tours.filters.gradeScale', { activities: scale.activities })}
         >
-          {scale.grades.map((grade) => (
-            <ListRow
-              key={grade}
-              title={grade}
-              checked={f.grades.has(grade)}
-              onPress={() => set({ grades: toggled(f.grades, grade) })}
-              chevron={false}
+          <ContentRow>
+            <Pills
+              accessibilityLabel={t('tours.filters.gradeScale', { activities: scale.activities })}
+              options={scale.grades.map((grade) => ({ value: grade, label: grade }))}
+              selected={[...f.grades]}
+              onToggle={(grade) => toggle('grades', grade)}
             />
-          ))}
+          </ContentRow>
         </ListSection>
       ))}
       <ListSection title={t('tours.filters.seasonLabel')}>
-        {SEASON_VALUES.map((season: Season) => (
-          <ListRow
-            key={season}
-            title={t(`tours.season.${season}`)}
-            checked={f.seasons.has(season)}
-            onPress={() => set({ seasons: toggled(f.seasons, season) })}
-            chevron={false}
+        <ContentRow>
+          <Pills<Season>
+            accessibilityLabel={t('tours.filters.seasonLabel')}
+            options={SEASON_VALUES.map((season) => ({
+              value: season,
+              label: t(`tours.season.${season}`),
+            }))}
+            selected={[...f.seasons]}
+            onToggle={(season) => toggle('seasons', season)}
           />
-        ))}
+        </ContentRow>
       </ListSection>
       <ListSection title={t('tours.filters.plannedDateLabel')}>
         <DateRow
@@ -461,6 +470,15 @@ function TourFiltersPage({ onDone }: { onDone: () => void }) {
           onChange={(dateTo) => set({ dateTo })}
           onClear={() => set({ dateTo: null })}
           clearLabel={t('tours.filters.resetBtn')}
+        />
+      </ListSection>
+      <ListSection>
+        <ListRow
+          title={t('tours.filters.resetBtn')}
+          icon="replay"
+          disabled={activeFilterCount(f) === 0}
+          onPress={() => useTourFiltersStore.getState().clearFilters(tab)}
+          chevron={false}
         />
       </ListSection>
     </Page>

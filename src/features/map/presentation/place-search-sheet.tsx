@@ -5,7 +5,7 @@ import { EmptyState, ListRow, ListSection } from '@/core/adaptive/list';
 import { Page, Screen } from '@/core/adaptive/screen';
 import { useMapStore } from '@/features/map/presentation/stores/map-store';
 
-import { resultSubtitle, useLocationSearch } from './use-location-search';
+import { resultKey, resultSubtitle, useLocationSearch } from './use-location-search';
 
 /**
  * The map's place search (map-integration): a place, hut or stop by name; picking one flies the
@@ -34,7 +34,7 @@ export function PlaceSearchSheet() {
         <ListSection>
           {search.results.slice(0, 10).map((result) => (
             <ListRow
-              key={`${result.origin}-${result.lng}-${result.lat}`}
+              key={resultKey(result)}
               title={result.name}
               subtitle={resultSubtitle(t, result)}
               icon={result.origin === 'stop' ? 'directions_bus' : 'location_on'}

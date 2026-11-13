@@ -47,20 +47,7 @@ function LayersPage({ onLegend }: { onLegend: () => void }) {
   const store = useMapStore.getState();
 
   return (
-    <Page
-      title={t('map.overlay.mapLayers')}
-      onClose={() => router.back()}
-      // The legend in a word at the top, where the eye lands first.
-      actions={[
-        {
-          id: 'legend',
-          label: t('map.legend.title'),
-          icon: 'info',
-          titled: true,
-          onPress: onLegend,
-        },
-      ]}
-    >
+    <Page title={t('map.overlay.mapLayers')} onClose={() => router.back()}>
       {/* Base maps and overlays side by side: both in view at the sheet's half height. */}
       <ListSection footer={online ? undefined : t('map.layers.needsConnection')}>
         <ContentRow>

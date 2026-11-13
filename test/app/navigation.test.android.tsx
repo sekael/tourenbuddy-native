@@ -61,8 +61,7 @@ describe('app navigation', () => {
     await renderRouter(routes);
     await openMap();
 
-    // In the bar and as a row: either opens it.
-    await fireEvent.press(screen.getAllByRole('button', { name: 'Legend' })[0]!);
+    await fireEvent.press(screen.getByRole('button', { name: 'Legend' }));
     await settle();
 
     expect(screen).toHavePathname('/map-layers');

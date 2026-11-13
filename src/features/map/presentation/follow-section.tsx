@@ -1,15 +1,12 @@
-import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ListSection, PickerRow } from '@/core/adaptive/list';
 import type { Follow } from '@/features/map/domain/snap-network';
 
-import { useMapStore } from './stores/map-store';
-
 /**
  * What the planned or drawn line follows (track-drawing "Snap network"): the hiking trails, the ski
- * routes, or straight across. The chosen network shows on the map, so the user sees what the
- * line keeps to.
+ * routes, or straight across. The map's overlays stay as the user set them: the router loads the
+ * ways itself, shown or not.
  */
 export function FollowSection({
   value,
@@ -21,10 +18,6 @@ export function FollowSection({
   status: string;
 }) {
   const { t } = useTranslation();
-  useEffect(() => {
-    const { overlays, toggleOverlay } = useMapStore.getState();
-    if (value !== 'straight' && !overlays.includes(value)) toggleOverlay(value);
-  }, [value]);
   return (
     <ListSection title={t('map.plan.follow.label')} footer={status}>
       <PickerRow

@@ -52,17 +52,34 @@ export function MonthGrid({
   }, [i18n.language]);
   const shift = (by: number) => onMonth(new Date(month.getFullYear(), month.getMonth() + by, 1));
 
+  const awayFromToday = selected !== today || dayKey(month).slice(0, 7) !== today.slice(0, 7);
+
   return (
     <View style={styles.grid}>
       <View style={styles.header}>
-        <Text variant="title" role="heading" style={styles.month}>
+        <Text
+          variant="title"
+          role="heading"
+          style={styles.month}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
+        >
           {formatDate(month, { month: 'long', year: 'numeric' })}
         </Text>
-        {onToday && (selected !== today || dayKey(month).slice(0, 7) !== today.slice(0, 7)) ? (
+        {/* Always in place, shown only away from today: the header never shifts. */}
+        {onToday ? (
           <Pressable
             role="button"
             onPress={onToday}
-            style={({ pressed }) => [styles.todayButton, pressed && styles.todayButtonPressed]}
+            disabled={!awayFromToday}
+            accessibilityElementsHidden={!awayFromToday}
+            importantForAccessibility={awayFromToday ? 'auto' : 'no-hide-descendants'}
+            style={({ pressed }) => [
+              styles.todayButton,
+              pressed && styles.todayButtonPressed,
+              !awayFromToday && styles.hidden,
+            ]}
           >
             <Text variant="caption" style={styles.todayButtonLabel}>
               {t('calendar.today')}
@@ -186,6 +203,7 @@ const styles = StyleSheet.create({
     backgroundColor: color.secondaryContainer,
   },
   todayButtonPressed: { backgroundColor: color.secondaryContainerPressed },
+  hidden: { opacity: 0 },
   todayButtonLabel: { ...strong, color: color.onSecondaryContainer },
   month: { flex: 1 },
   chevron: {

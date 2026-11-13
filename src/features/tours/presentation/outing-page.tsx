@@ -115,7 +115,11 @@ export function OutingPage({
   );
 
   return (
-    <Page title={outingDisplayName(segments) ?? t('tours.infoSheet.unnamedTour')} header={hero}>
+    <Page
+      title={outingDisplayName(segments) ?? t('tours.infoSheet.unnamedTour')}
+      titleInHeader
+      header={hero}
+    >
       {isOwner ? (
         <ListSection footer={t('tours.outing.ruleHint')}>
           <TextRow

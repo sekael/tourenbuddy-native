@@ -36,6 +36,10 @@ export const color = {
   onFab: palette.white,
   /** A picked ski route on the map: orange, since swisstopo draws the routes themselves blue. */
   trailHighlight: palette.orange500,
+  /** The blue capsule as frosted glass (iOS): blue enough for white glyphs over snow (3:1). */
+  fabGlass: 'rgba(29, 78, 216, 0.7)',
+  /** Lifts white glyphs off clear glass over bright snow and glacier. */
+  onGlassShadow: 'rgba(15, 23, 42, 0.55)',
   /** A line between actions on the blue capsule. */
   onFabDivider: 'rgba(255, 255, 255, 0.45)',
   /** Clear glass over the map, breathed with the app's blue (iOS round map controls). */
@@ -133,6 +137,8 @@ export const motion = {
 } as const;
 
 export const shadow = {
+  /** Under a glyph on clear glass (text shadow, iOS layer shadow). */
+  glyph: { offset: { width: 0, height: 1 }, radius: 3 },
   md: '0 2px 4px rgba(23, 37, 84, 0.04), 0 8px 20px -4px rgba(23, 37, 84, 0.14)',
   lg: '0 4px 8px rgba(23, 37, 84, 0.04), 0 16px 40px -8px rgba(23, 37, 84, 0.22)',
 } as const;

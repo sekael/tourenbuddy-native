@@ -2,6 +2,7 @@ import { act, fireEvent, screen } from '@testing-library/react-native';
 import { router, Slot } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
+import { openTour } from '@/features/map/presentation/open-tour';
 import { useMapStore } from '@/features/map/presentation/stores/map-store';
 
 import { signIn } from '../support/auth';
@@ -93,5 +94,18 @@ describe('app navigation (iOS map controls)', () => {
     // One Close is back on the map, and the closed sheet kept its card while it slid away.
     expect(screen).toHavePathname('/');
     expect(useMapStore.getState().trailCard?.candidates[0]?.id).toBe('second');
+  });
+
+  it('should open a tour from a sheet over Profile on the map, the sheet closed', async () => {
+    await renderRouter(routes, { initialUrl: '/profile' });
+    await act(() => router.push('/inbox'));
+
+    await act(() => openTour('t1'));
+
+    expect(screen).toHavePathname('/tour/t1');
+    expect(useMapStore.getState().selectedTourId).toBe('t1');
+    // Closing it shows the map, not the inbox or Profile.
+    await press(labelled('Close')[0]);
+    expect(screen).toHavePathname('/');
   });
 });

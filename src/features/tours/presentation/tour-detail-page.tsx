@@ -11,7 +11,7 @@ import { ContentRow, EmptyState, ListRow, ListSection, ToggleRow } from '@/core/
 import { Page } from '@/core/adaptive/screen';
 import { Text } from '@/core/adaptive/text';
 import { useFormatter } from '@/core/i18n/format';
-import { color, radius, space } from '@/core/theme/tokens';
+import { color, radius, space, strong } from '@/core/theme/tokens';
 import { resolveContactName } from '@/features/contacts/domain/entities/contact';
 import { useContactsStore } from '@/features/contacts/presentation/stores/contacts-store';
 import { resolveFriendName } from '@/features/friendships/domain/resolve-friend-name';
@@ -199,6 +199,8 @@ export function TourDetailPage({
     if (completed) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
+  // The PWA's hero: the activities left, the name (in full, never cut as in the bar) and the facts
+  // beside them.
   const hero = (
     <View style={styles.hero}>
       <View style={styles.discs}>
@@ -212,51 +214,58 @@ export function TourDetailPage({
             <Icon name="tour" color={color.onContrast} size={22} />
           </View>
         ) : null}
-        {tour.completed ? (
-          <View
-            style={[styles.stamp, { backgroundColor: color.success }]}
-            aria-label={t('tours.infoSheet.completedBtn')}
-          >
-            <Icon name="check" color={color.onContrast} size={14} />
+      </View>
+      <View style={styles.facts}>
+        <Text variant="title" role="heading" selectable>
+          {name}
+        </Text>
+        {tour.elevation != null ? (
+          <View style={styles.line}>
+            <Icon name="landscape" size={18} color={color.onSurface} />
+            <Text style={styles.elevation}>{formatElevation(tour.elevation)}</Text>
           </View>
         ) : null}
-        {tour.visibility === 'private' ? (
-          <View
-            style={[styles.stamp, { backgroundColor: color.onSurfaceVariant }]}
-            aria-label={t('tours.form.visibilityPrivate')}
-          >
-            <Icon name="lock" color={color.onContrast} size={14} />
+        {when ? <Text style={styles.headline}>{when}</Text> : null}
+        {numbers ? (
+          <Text style={styles.numbers} aria-label={numbers.label}>
+            {numbers.text}
+          </Text>
+        ) : null}
+        {tour.isFriendTour ? (
+          <Text style={styles.meta}>
+            {owner.isResolved
+              ? t('tours.infoSheet.createdByLabel', { name: owner.displayName ?? '' })
+              : ' '}
+          </Text>
+        ) : null}
+        {tour.completed || tour.visibility === 'private' ? (
+          <View style={styles.line}>
+            {tour.completed ? (
+              <View
+                style={[styles.stamp, { backgroundColor: color.success }]}
+                aria-label={t('tours.infoSheet.completedBtn')}
+              >
+                <Icon name="check" color={color.onContrast} size={14} />
+              </View>
+            ) : null}
+            {tour.visibility === 'private' ? (
+              <View
+                style={[styles.stamp, { backgroundColor: color.onSurfaceVariant }]}
+                aria-label={t('tours.form.visibilityPrivate')}
+              >
+                <Icon name="lock" color={color.onContrast} size={14} />
+              </View>
+            ) : null}
           </View>
         ) : null}
       </View>
-      <Text variant="title" role="heading" selectable>
-        {name}
-      </Text>
-      {tour.elevation != null || when ? (
-        <Text style={styles.headline}>
-          {[tour.elevation != null ? formatElevation(tour.elevation) : null, when || null]
-            .filter(Boolean)
-            .join(' · ')}
-        </Text>
-      ) : null}
-      {numbers ? (
-        <Text style={styles.numbers} aria-label={numbers.label}>
-          {numbers.text}
-        </Text>
-      ) : null}
-      {tour.isFriendTour ? (
-        <Text style={styles.meta}>
-          {owner.isResolved
-            ? t('tours.infoSheet.createdByLabel', { name: owner.displayName ?? '' })
-            : ' '}
-        </Text>
-      ) : null}
     </View>
   );
 
   return (
     <Page
       title={name}
+      titleInHeader
       onClose={onClose}
       header={hero}
       // The track is shared from its row under Route; the bar says in a word what it does.
@@ -342,7 +351,7 @@ export function TourDetailPage({
           )),
         )}
         {tour.tourTypes.length === 0 && tour.grade ? (
-          <ListRow title={t('tours.filters.gradeLabel')} value={tour.grade} icon="speed" />
+          <ListRow title={t('tours.filters.gradeLabel')} value={tour.grade} icon="tour" />
         ) : null}
         {tour.seasons?.length ? (
           <ListRow
@@ -481,11 +490,6 @@ export function TourDetailPage({
 
       {isOwner ? (
         <ListSection>
-          <ListRow
-            title={t('tours.infoSheet.editBtn')}
-            icon="edit"
-            onPress={() => router.push({ pathname: '/tour/edit', params: { id: tour.id } })}
-          />
           {canSplit ? (
             <ListRow
               title={t('tours.form.splitDaysBtn')}
@@ -560,8 +564,15 @@ function TextSection({ title, text }: { title: string; text: string | null | und
 }
 
 const styles = StyleSheet.create({
-  hero: { gap: space.xxs, paddingVertical: space.xs },
-  discs: { flexDirection: 'row', alignItems: 'center', gap: space.xxs, marginBottom: space.xxs },
+  hero: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: space.sm,
+    paddingVertical: space.xs,
+  },
+  discs: { gap: space.xxs },
+  facts: { flex: 1, gap: space.xxs },
+  line: { flexDirection: 'row', alignItems: 'center', gap: space.xxs },
   disc: {
     width: 40,
     height: 40,
@@ -576,6 +587,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  elevation: { ...strong, color: color.onSurface },
   headline: { color: color.onSurface },
   numbers: { color: color.onSurfaceVariant, fontVariant: ['tabular-nums'] },
   meta: { color: color.primary },

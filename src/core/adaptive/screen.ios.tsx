@@ -29,7 +29,7 @@ import {
   tag,
   tint,
 } from '@expo/ui/swift-ui/modifiers';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -74,13 +74,18 @@ export function Page({
   form,
   onRefresh,
   header,
+  titleInHeader,
   children,
 }: PageProps) {
   const { t } = useTranslation();
   // A query set from JS (cleared filters, a reset) reaches the field; typing is never undone.
+  // A query cleared from JS (a result taken) ends the search: a new list starts unsearched, so
+  // the keyboard goes and the bar's buttons come back.
+  const [searches, setSearches] = useState(0);
   const { text: query, onTextChange: onQueryChange } = useFieldText(
     search?.value ?? '',
     search?.onChange,
+    () => setSearches((n) => n + 1),
   );
 
   const banner = useContext(PageBanner);
@@ -100,14 +105,14 @@ export function Page({
           }),
         ]
       : []),
-    navigationTitle(title),
+    navigationTitle(titleInHeader ? '' : title),
     navigationBarTitleDisplayMode(largeTitle ? 'large' : 'inline'),
     tint(color.primary),
   ];
 
   return (
     <Toolbar>
-      <Container modifiers={modifiers}>
+      <Container key={searches} modifiers={modifiers}>
         {banner}
         {header ? (
           <Section>

@@ -9,8 +9,9 @@ import { Page, Screen } from '@/core/adaptive/screen';
 import { Text } from '@/core/adaptive/text';
 import { useFormatter } from '@/core/i18n/format';
 import { color, space } from '@/core/theme/tokens';
-import { lineLength, trackLine } from '@/features/map/domain/drawn-track';
+import { trackLine } from '@/features/map/domain/drawn-track';
 import type { Trail } from '@/features/map/domain/entities/trail';
+import { TOUR_TYPE_COLORS } from '@/features/tours/data/models/tour-type';
 import { gpxFromLine } from '@/features/tours/data/services/gpx-writer';
 import { labelMinutes } from '@/features/tours/domain/route-metrics';
 import { useTourDraftStore } from '@/features/tours/presentation/stores/tour-draft-store';
@@ -96,7 +97,7 @@ function TrailCardSheet({ card }: { card: TrailCard }) {
 
 function TrailPage({ trail, onClose }: { trail: Trail; onClose?: () => void }) {
   const { t, i18n } = useTranslation();
-  const { formatElevation, formatDuration, formatDistance } = useFormatter();
+  const { formatElevation, formatDuration } = useFormatter();
   const pace = usePace();
   const [planning, setPlanning] = useState(false);
   const route = trail.route;
@@ -113,7 +114,7 @@ function TrailPage({ trail, onClose }: { trail: Trail; onClose?: () => void }) {
       const line = trackLine(planned.track);
       store.setTrack({
         text: gpxFromLine(line, null, route.targetName),
-        label: t('tours.form.gpxDrawnFile', { distance: formatDistance(lineLength(line)) }),
+        label: t('tours.form.gpxDrawn'),
         line,
         drawing: planned.track,
       });
@@ -152,7 +153,12 @@ function TrailPage({ trail, onClose }: { trail: Trail; onClose?: () => void }) {
     >
       <ListSection>
         {route.difficulty ? (
-          <ListRow title={t('tours.filters.gradeLabel')} value={route.difficulty} icon="speed" />
+          <ListRow
+            title={t('tours.filters.gradeLabel')}
+            value={route.difficulty}
+            icon="ski_touring"
+            iconColor={TOUR_TYPE_COLORS.skitour}
+          />
         ) : null}
         {ascentTime ? (
           <ListRow title={t('map.trail.ascentTime')} value={ascentTime} icon="schedule" />

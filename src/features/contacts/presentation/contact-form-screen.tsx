@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useNavigation } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 
@@ -60,6 +60,9 @@ export function ContactFormScreen({ id }: { id: string | null }) {
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [dirty, setDirty] = useState(false);
+  // Unsaved, the form can't be swiped away: Cancel asks first.
+  const navigation = useNavigation();
+  useEffect(() => navigation.setOptions({ gestureEnabled: !dirty }), [navigation, dirty]);
   const [saving, setSaving] = useState(false);
 
   const edit =
@@ -222,7 +225,7 @@ export function ContactFormScreen({ id }: { id: string | null }) {
   return (
     <Page
       form
-      title={existing ? resolveContactName(existing) : t('contacts.addDialog.title')}
+      title={existing ? resolveContactName(existing) : t('contacts.form.newTitle')}
       cancel={{ label: t('common.cancel'), onPress: close }}
       confirm={{
         label: t('contacts.detailView.saveBtn'),

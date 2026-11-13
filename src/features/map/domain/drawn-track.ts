@@ -154,3 +154,32 @@ export function trackFromLine(line: readonly LngLat[], maxPoints = 10): DrawnTra
     legs: indices.slice(1).map((end, k) => line.slice(indices[k]!, end + 1)),
   };
 }
+
+/**
+ * A line cut at the stops it passes, one leg between each two (both ends the stops): a saved
+ * route's shape for its legs. Null when a stop lies farther than `near` metres off the line.
+ * ponytail: each stop takes its nearest point after the one before; a line that passes a stop
+ * twice (there and back on one path) may cut at the later pass.
+ */
+export function legsAlong(
+  line: readonly LngLat[],
+  stops: readonly LngLat[],
+  near = 100,
+): LngLat[][] | null {
+  if (stops.length < 2 || line.length < 2) return null;
+  const cuts: number[] = [];
+  for (const stop of stops) {
+    const from = cuts.at(-1) ?? 0;
+    let best = -1;
+    let bestM = near;
+    for (let i = from; i < line.length; i++) {
+      const m = haversineMeters(line[i]!, stop);
+      if (m < bestM) [best, bestM] = [i, m];
+    }
+    if (best < 0) return null;
+    cuts.push(best);
+  }
+  return stops
+    .slice(1)
+    .map((stop, i) => [stops[i]!, ...line.slice(cuts[i]! + 1, cuts[i + 1]!), stop]);
+}

@@ -12,6 +12,7 @@ import { resolveContactName } from '@/features/contacts/domain/entities/contact'
 import { useContactsStore } from '@/features/contacts/presentation/stores/contacts-store';
 import { useFriendshipsStore } from '@/features/friendships/presentation/stores/friendships-store';
 import type { Tour } from '@/features/tours/domain/entities/tour';
+import { openTour } from '@/features/map/presentation/open-tour';
 import { useToursStore } from '@/features/tours/presentation/stores/tours-store';
 import { TourRow } from '@/features/tours/presentation/tour-rows';
 import { useUserProfileStore } from '@/features/user/presentation/stores/user-profile-store';
@@ -22,8 +23,6 @@ import { useAvailabilityStore } from './stores/availability-store';
 import { useCalendarFeedStore } from './stores/calendar-feed-store';
 
 type View = 'planned' | 'seasons';
-
-const openTour = (id: string) => router.push({ pathname: '/tour/[id]', params: { id } });
 
 /** Who a friend is to the user: their contact, else the name they gave. */
 function useFriendNames() {
@@ -149,7 +148,7 @@ export function CalendarScreen() {
   return (
     <Page
       largeTitle={!editing}
-      title={editing ? t('calendar.availability.edit') : t('shell.tabs.calendar')}
+      title={editing ? t('calendar.availability.editTitle') : t('shell.tabs.calendar')}
       titleControl={editing ? undefined : viewSwitch}
       cancel={
         editing ? { label: t('calendar.availability.cancel'), onPress: store.cancel } : undefined

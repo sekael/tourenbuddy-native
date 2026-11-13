@@ -42,4 +42,24 @@ describe('useFieldText', () => {
     await hook.rerender({ value: '' });
     expect(hook.result.current.text.get()).toBe('');
   });
+
+  it('should report a clear from elsewhere (a result taken), not one typed', async () => {
+    const onCleared = jest.fn();
+    const hook = await renderHook(
+      ({ value }: { value: string }) => useFieldText(value, jest.fn(), onCleared),
+      { initialProps: { value: '' } },
+    );
+    await act(async () => {
+      type(hook.result.current, 'M');
+      type(hook.result.current, '');
+    });
+    await hook.rerender({ value: '' });
+    expect(onCleared).not.toHaveBeenCalled();
+
+    await act(async () => type(hook.result.current, 'Mürren'));
+    await hook.rerender({ value: 'Mürren' });
+    await hook.rerender({ value: '' });
+
+    expect(onCleared).toHaveBeenCalledTimes(1);
+  });
 });

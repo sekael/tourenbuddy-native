@@ -32,7 +32,8 @@
       "calendarNote": "Days are pre-filled from your calendar. Days you change here override it permanently.",
       "freeLabel": "free",
       "saveFailed": "Couldn't save your availability. Try again.",
-      "markHint": "Tap the days you're free."
+      "markHint": "Tap the days you're free.",
+      "editTitle": "Availability"
     },
     "seasons": {
       "title": "Seasonal Planner",
@@ -413,7 +414,8 @@
       "addPhoneBtn": "Add phone",
       "primaryPhoneRequired": "Select one primary phone when multiple phones are entered",
       "clearToRemove": "Clear a number to remove it.",
-      "addEmailBtn": "Add email"
+      "addEmailBtn": "Add email",
+      "newTitle": "New contact"
     },
     "addDialog": {
       "title": "Add Contact",
@@ -654,7 +656,6 @@
       "pointsFromTrack": "Start and end come from the track.",
       "pointsByHandBtn": "Set by hand",
       "fromTrack": "from the track",
-      "gpxDrawnFile": "Drawn track · {{distance}}",
       "gpxPreparing": "Adding heights to the track…",
       "nextDayBtn": "Next day",
       "nextDayHint": "Staying overnight? The next stage starts where this one ends.",

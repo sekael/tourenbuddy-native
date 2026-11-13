@@ -9,7 +9,7 @@ import { ListRow, ListSection, type RowAction } from '@/core/adaptive/list';
 import { Page, Screen } from '@/core/adaptive/screen';
 import { useFormatter } from '@/core/i18n/format';
 import { isOnline } from '@/core/offline/online';
-import { lineLength } from '@/features/map/domain/drawn-track';
+import { legsAlong, lineLength } from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import {
   nextStep,
@@ -24,13 +24,22 @@ import type { HandleTarget } from '@/features/map/presentation/stores/map-store'
 import { FollowSection } from '@/features/map/presentation/follow-section';
 import { createLegRouter, isGap, legEnd, tapSnapM } from '@/features/map/presentation/leg-router';
 import { useMapStore } from '@/features/map/presentation/stores/map-store';
-import { resultSubtitle, useLocationSearch } from '@/features/map/presentation/use-location-search';
+import {
+  resultKey,
+  resultSubtitle,
+  useLocationSearch,
+} from '@/features/map/presentation/use-location-search';
 import { getElevation } from '@/features/tours/data/services/swisstopo-elevation-service';
 import { suggestTourName } from '@/features/tours/data/services/swisstopo-name-service';
 import { densify, getTrackProfile } from '@/features/tours/data/services/swisstopo-profile-service';
+import { loadGpxTrack } from '@/features/tours/data/services/gpx-track-service';
 import { gpxFromLine } from '@/features/tours/data/services/gpx-writer';
 import { isSameGoal } from '@/features/tours/domain/distance';
-import { estimatedMinutes, type RouteMetrics } from '@/features/tours/domain/route-metrics';
+import {
+  estimatedMinutes,
+  trackLines,
+  type RouteMetrics,
+} from '@/features/tours/domain/route-metrics';
 import { usePace } from '@/features/user/presentation/stores/user-profile-store';
 import { TOUR_TYPE_TRACK_COLORS } from '@/features/tours/data/models/tour-type';
 
@@ -116,6 +125,8 @@ export function PlanSheet({ back }: { back: boolean }) {
   /** A leg's dot picked by a tap: the next map tap sends the route through there. */
   const [pickedLeg, setPickedLeg] = useState<number | null>(null);
   const [legs, setLegs] = useState<Map<string, LngLat[]>>(new Map());
+  /** The saved track's legs, by key: they win over routing until a point moves. */
+  const [savedLegs, setSavedLegs] = useState<Map<string, LngLat[]>>(new Map());
   const [issue, setIssue] = useState<'unavailable' | null>(null);
   const [finishing, setFinishing] = useState(false);
   const pointsRef = useLatest(points);
@@ -254,22 +265,7 @@ export function PlanSheet({ back }: { back: boolean }) {
       const p = pointsRef.current[step];
       if (p?.loading) place(step, p.location);
     });
-    const framed = ROUTE_STEPS.flatMap((s) =>
-      pointsRef.current[s] ? [at(pointsRef.current[s]!)] : [],
-    );
-    if (framed.length > 1) {
-      const lngs = framed.map((p) => p[0]);
-      const lats = framed.map((p) => p[1]);
-      useMapStore.getState().requestCamera({
-        kind: 'fit',
-        bounds: [
-          [Math.min(...lngs), Math.min(...lats)],
-          [Math.max(...lngs), Math.max(...lats)],
-        ],
-      });
-    } else if (framed.length === 1) {
-      useMapStore.getState().requestCamera({ kind: 'fly', center: framed[0]!, zoom: 14 });
-    }
+    // The map frames the route's points itself (map-screen), as they come and change.
     return () => {
       lookups.abortAll();
       useMapStore.getState().endStep();
@@ -278,11 +274,30 @@ export function PlanSheet({ back }: { back: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // A route planned before keeps its shape: its track (waiting in the form, else the saved GPX),
+  // cut at the route's points, stands for their legs, a detour pulled out before included.
+  useEffect(() => {
+    let alive = true;
+    void savedLine().then((saved) => {
+      const r = stopsOf(pointsRef.current, viasRef.current);
+      const cut = saved && r ? legsAlong(saved, r.stops) : null;
+      if (!alive || !cut || !r || !network) return;
+      const key = (a: LngLat, b: LngLat) => `${network}|${a.join()}|${b.join()}`;
+      setSavedLegs(new Map(cut.map((leg, i) => [key(r.stops[i]!, r.stops[i + 1]!), leg])));
+    });
+    return () => {
+      alive = false;
+    };
+    // Once, for the network the step opens with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Legs along the ways, one at a time, keyed by network and both ends.
   const route = stopsOf(points, vias);
   const pairs = route ? route.stops.slice(1).map((b, i) => [route.stops[i]!, b] as const) : [];
   const keyOf = (a: LngLat, b: LngLat) => `${network ?? 'ways'}|${a.join()}|${b.join()}`;
-  const missing = following ? pairs.filter(([a, b]) => !legs.has(keyOf(a, b))) : [];
+  const legOf = (a: LngLat, b: LngLat) => savedLegs.get(keyOf(a, b)) ?? legs.get(keyOf(a, b));
+  const missing = following ? pairs.filter(([a, b]) => !legOf(a, b)) : [];
   const missingKey = missing.map(([a, b]) => keyOf(a, b)).join(';');
   useEffect(() => {
     if (!missing.length || !route) return;
@@ -311,12 +326,12 @@ export function PlanSheet({ back }: { back: boolean }) {
   const line: LngLat[] | null =
     following && pairs.length
       ? pairs.flatMap(([a, b], i) => {
-          const leg = legs.get(keyOf(a, b)) ?? [a, b];
+          const leg = legOf(a, b) ?? [a, b];
           return i === 0 ? leg : leg.slice(1);
         })
       : null;
   const finding = following && missing.length > 0;
-  const gap = following && pairs.some(([a, b]) => isGap(legs.get(keyOf(a, b)) ?? []));
+  const gap = following && pairs.some(([a, b]) => isGap(legOf(a, b) ?? []));
 
   // What the map draws: the line (or straight dashes) and the points.
   useEffect(() => {
@@ -339,7 +354,24 @@ export function PlanSheet({ back }: { back: boolean }) {
             : [],
       },
       // The points are handles to drag (`editHandles`); a leg's middle pulls the route elsewhere.
-      previewPoints: null,
+      // Before there is a goal, a set start or end is a plain marker.
+      previewPoints: route
+        ? null
+        : {
+            type: 'FeatureCollection',
+            features: (['start', 'end'] as const).flatMap((kind) => {
+              const p = points[kind];
+              return p
+                ? [
+                    {
+                      type: 'Feature' as const,
+                      geometry: { type: 'Point' as const, coordinates: at(p) },
+                      properties: { kind, ...(p.name ? { label: p.name } : {}) },
+                    },
+                  ]
+                : [];
+            }),
+          },
       editHandles: route
         ? {
             points: route.stops.map((p, i) => ({
@@ -353,7 +385,7 @@ export function PlanSheet({ back }: { back: boolean }) {
                       ? 'end'
                       : 'via',
             })),
-            legs: pairs.map(([a, b]) => (following ? (legs.get(keyOf(a, b)) ?? [a, b]) : [a, b])),
+            legs: pairs.map(([a, b]) => (following ? (legOf(a, b) ?? [a, b]) : [a, b])),
             move: (i, to) => moveRef.current(i, to),
             pull: (leg, to) => pullRef.current(leg, to),
             drop: (i) => dropRef.current(i),
@@ -448,7 +480,7 @@ export function PlanSheet({ back }: { back: boolean }) {
         const name = store.draft.name?.trim() || points.goal.name || t('tours.form.gpxDrawn');
         store.setTrack({
           text: gpxFromLine(profiled?.line ?? densify(line), profiled?.heights ?? null, name),
-          label: t('tours.form.gpxDrawnFile', { distance: formatDistance(lineLength(line)) }),
+          label: t('tours.form.gpxDrawn'),
           line,
           drawing: track,
         });
@@ -500,18 +532,14 @@ export function PlanSheet({ back }: { back: boolean }) {
             ) : (
               search.results.slice(0, 8).map((result) => (
                 <ListRow
-                  key={`${result.origin}-${result.lng}-${result.lat}`}
+                  key={resultKey(result)}
                   title={result.name}
                   subtitle={resultSubtitle(t, result)}
                   icon={result.origin === 'stop' ? 'directions_bus' : 'location_on'}
                   onPress={() => {
                     search.take(result);
+                    // The map then frames the route with it (map-screen).
                     setAndAdvance(active, { lng: result.lng, lat: result.lat }, result.name);
-                    useMapStore.getState().requestCamera({
-                      kind: 'fly',
-                      center: [result.lng, result.lat],
-                      zoom: Math.max(result.zoom ?? 13, 13),
-                    });
                   }}
                 />
               ))
@@ -613,6 +641,17 @@ export function PlanSheet({ back }: { back: boolean }) {
 function activeIndex(route: { stops: LngLat[]; goal: number }, step: RouteStep): number {
   if (step === 'goal') return route.goal;
   return step === 'start' ? 0 : route.stops.length - 1;
+}
+
+/** The tour's track: one waiting in the form, else the saved GPX (unless removed); null without. */
+async function savedLine(): Promise<LngLat[] | null> {
+  const { track, gpxRemoved, draft, tourId } = useTourDraftStore.getState();
+  if (track) return track.line;
+  if (gpxRemoved || !draft.gpxFilepath || !tourId) return null;
+  const geojson = await loadGpxTrack({ id: tourId, gpxFilepath: draft.gpxFilepath }).catch(
+    () => null,
+  );
+  return geojson ? (trackLines(geojson).flat() as LngLat[]) : null;
 }
 
 /** The points between from a route planned before (back from the form), else none. */

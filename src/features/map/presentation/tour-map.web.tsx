@@ -23,6 +23,7 @@ import { loadMarkerImages } from './marker-images.web';
 import { BASE_STYLES } from './map-styles';
 import type { TourMapProps } from './tour-map';
 import {
+  framePadding,
   overlaySourceId,
   SKI_SOURCE,
   TOURS_CLUSTER,
@@ -193,7 +194,10 @@ export function TourMap({
     flyTo: (center, zoom) =>
       mapRef.current?.easeTo({ center, zoom, padding: latest.current.padding, duration: 600 }),
     fitBounds: (sw, ne) =>
-      mapRef.current?.fitBounds([sw, ne], { padding: latest.current.padding, duration: 600 }),
+      mapRef.current?.fitBounds([sw, ne], {
+        padding: framePadding(latest.current.padding),
+        duration: 600,
+      }),
     queryAt: async ([x, y], ids) => {
       const map = mapRef.current;
       const present = ids.filter((id) => map?.getLayer(id));

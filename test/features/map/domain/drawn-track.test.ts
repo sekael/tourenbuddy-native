@@ -1,5 +1,11 @@
 import type { LngLat } from '@/features/map/domain/entities/trail';
-import { routeStops, trackFromLine, trackLine, withGoal } from '@/features/map/domain/drawn-track';
+import {
+  legsAlong,
+  routeStops,
+  trackFromLine,
+  trackLine,
+  withGoal,
+} from '@/features/map/domain/drawn-track';
 
 describe('drawnTrack', () => {
   it('should be a lone point before the first leg, and join legs without doubling their shared point', () => {
@@ -112,5 +118,46 @@ describe('drawnTrack', () => {
         goal: 1,
       }),
     ).toMatchObject({ start: [8, 46], end: null });
+  });
+});
+
+describe('legsAlong', () => {
+  // A loop: out east over a detour north, back along the bottom to the start.
+  const line: LngLat[] = [
+    [7.8, 46.5],
+    [7.81, 46.51],
+    [7.82, 46.5],
+    [7.81, 46.49],
+    [7.8, 46.5],
+  ];
+
+  it('should cut a loop at its start, goal and end, keeping the detour', () => {
+    const legs = legsAlong(line, [
+      [7.8, 46.5],
+      [7.82, 46.5],
+      [7.8, 46.5],
+    ]);
+
+    expect(legs).toEqual([
+      [
+        [7.8, 46.5],
+        [7.81, 46.51],
+        [7.82, 46.5],
+      ],
+      [
+        [7.82, 46.5],
+        [7.81, 46.49],
+        [7.8, 46.5],
+      ],
+    ]);
+  });
+
+  it('should give up when a stop lies off the line', () => {
+    expect(
+      legsAlong(line, [
+        [7.8, 46.5],
+        [7.9, 46.6],
+      ]),
+    ).toBeNull();
   });
 });

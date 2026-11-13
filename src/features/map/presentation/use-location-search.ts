@@ -37,13 +37,15 @@ export function useLocationSearch(role: PickRole) {
         .then((found) => {
           if (controller.signal.aborted) return;
           const { center, zoom } = useMapStore.getState();
+          const ranked = rankResults(
+            found,
+            center ? { lng: center[0], lat: center[1] } : { lng: 8.23, lat: 46.8 },
+            zoom ?? 8,
+            role,
+          );
+          // The same place can come back twice (one stop in two layers): listed once.
           setResults(
-            rankResults(
-              found,
-              center ? { lng: center[0], lat: center[1] } : { lng: 8.23, lat: 46.8 },
-              zoom ?? 8,
-              role,
-            ),
+            ranked.filter((r, i) => ranked.findIndex((o) => resultKey(o) === resultKey(r)) === i),
           );
           setFailed(false);
         })
@@ -75,6 +77,9 @@ export function useLocationSearch(role: PickRole) {
     },
   };
 }
+
+/** A result's identity in a list: where it comes from and where it is. */
+export const resultKey = (r: LocationResult) => `${r.origin}-${r.lng}-${r.lat}`;
 
 /** A result's second line: what it is (or where the hit came from) and its region. */
 export function resultSubtitle(t: TFunction, result: LocationResult): string {

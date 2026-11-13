@@ -55,6 +55,8 @@ export type PageProps = {
   onRefresh?: () => Promise<void>;
   /** App-drawn content above the first section (a hero, a segmented control). */
   header?: ReactNode;
+  /** The header shows the title (a contact's name under their avatar): the bar leaves it out. */
+  titleInHeader?: boolean;
   children: ReactNode;
   testID?: string;
 };
@@ -99,9 +101,13 @@ export function Page(page: PageProps) {
         ) : page.cancel ? (
           <TextButton label={page.cancel.label} onPress={page.cancel.onPress} />
         ) : null}
-        <Text variant="title" role="heading" style={styles.title} numberOfLines={1}>
-          {page.title}
-        </Text>
+        {page.titleInHeader ? (
+          <View style={styles.title} />
+        ) : (
+          <Text variant="title" role="heading" style={styles.title} numberOfLines={1}>
+            {page.title}
+          </Text>
+        )}
         {page.actions?.map((action) => {
           const onPress = action.menu?.length
             ? () => setOpenMenu((open) => (open === action.id ? null : action.id))

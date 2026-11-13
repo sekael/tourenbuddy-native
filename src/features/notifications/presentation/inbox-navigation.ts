@@ -3,6 +3,7 @@ import type { TFunction } from 'i18next';
 import { Alert } from 'react-native';
 
 import { todayKey } from '@/features/calendar/domain/calendar-dates';
+import { openTour } from '@/features/map/presentation/open-tour';
 import type { InboxNotification } from '@/features/notifications/domain/entities/inbox-notification';
 import { useToursStore } from '@/features/tours/presentation/stores/tours-store';
 
@@ -25,7 +26,8 @@ export function canOpenTour(tourId: string): boolean {
 /**
  * Where an entry leads (notification-inbox D7: acting happens on the subject), shared by a tap in
  * the inbox and a tapped push: the calendar for a weekly summary, friend requests or the contacts
- * for a friend request, the overlaps for a backfill, else the tour, if the user may still open it.
+ * for a friend request, the overlaps for a backfill, else the tour on the map, if the user may
+ * still open it.
  */
 export async function openInboxEntry(entry: InboxNotification, t: TFunction) {
   if (entry.action === 'weekly') {
@@ -57,7 +59,7 @@ export async function openInboxEntry(entry: InboxNotification, t: TFunction) {
   }
   // The server's answer, not the store's: the list may predate a lost share.
   await useToursStore.getState().loadFriendTours();
-  if (canOpenTour(tourId)) router.push({ pathname: '/tour/[id]', params: { id: tourId } });
+  if (canOpenTour(tourId)) openTour(tourId);
   else Alert.alert(t('inbox.unavailable'));
 }
 

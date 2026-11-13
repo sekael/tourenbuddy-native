@@ -1,7 +1,7 @@
 import * as DocumentPicker from 'expo-document-picker';
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { router, useNavigation } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
@@ -55,7 +55,7 @@ import { useTourDraftStore } from './stores/tour-draft-store';
 import { useTourSuggestionsStore } from './stores/tour-suggestions-store';
 import { useToursStore } from './stores/tours-store';
 import { useTour } from './tour-detail-page';
-import { useMapStore } from '@/features/map/presentation/stores/map-store';
+import { openTour } from '@/features/map/presentation/open-tour';
 import type { Contact } from '@/features/contacts/domain/entities/contact';
 
 const log = createLogger('TourForm');
@@ -108,6 +108,10 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
   const pending = useTourAttachmentsStore((s) => (tourId ? s.pendingByTour[tourId] : undefined));
   const preUploaded = useTourAttachmentsStore((s) => s.preUploadedByDraft[draftId]);
   const staged = useTourAttachmentsStore((s) => s.stagedByDraft[draftId]);
+  const unsaved = dirty || !!(preUploaded?.length || staged?.length);
+  // Unsaved, the form can't be swiped away: Cancel asks first.
+  const navigation = useNavigation();
+  useEffect(() => navigation.setOptions({ gestureEnabled: !unsaved }), [navigation, unsaved]);
   const [saving, setSaving] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
   const [gpxError, setGpxError] = useState<string | null>(null);
@@ -154,8 +158,9 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
   function leaveForm(open?: string | null) {
     const reopen = open ?? useTourDraftStore.getState().returnTo;
     useTourDraftStore.getState().reset();
-    router.back();
-    if (reopen) openTourSheet(reopen);
+    // Opening the tour closes the form with the other sheets.
+    if (reopen) openTour(reopen);
+    else router.back();
   }
 
   function close() {
@@ -165,7 +170,7 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
         .discardDraft(draftId, mode === 'create' ? tourId : null);
       leaveForm();
     };
-    if (!dirty && !(preUploaded?.length || staged?.length)) {
+    if (!unsaved) {
       finish();
       return;
     }
@@ -860,10 +865,4 @@ function useSuggestedPartners(chosen: string[]): Contact[] {
     ...contacts.filter((c) => !order.includes(c.id)),
   ];
   return ranked.slice(0, Math.max(SUGGESTED_PARTNERS, chosen.length));
-}
-
-/** Opens a tour's sheet over the map, the map on it. */
-function openTourSheet(id: string) {
-  useMapStore.getState().selectTour(id);
-  router.push({ pathname: '/tour/[id]', params: { id } });
 }

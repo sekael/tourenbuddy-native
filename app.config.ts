@@ -153,6 +153,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-sharing',
     // Push (D11): the APNs entitlement; the environment follows the signing profile.
     ['expo-notifications', { color: '#2563eb' }],
+    // The system contact picker runs out of process and needs no Contacts permission; `false`
+    // drops the plugin's NSContactsUsageDescription (Android: blockedPermissions above).
+    ['expo-contacts', { contactsPermission: false }],
     // Photo attachments: the usage strings are localized through `locales` above.
     [
       'expo-image-picker',

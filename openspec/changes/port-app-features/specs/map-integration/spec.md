@@ -31,7 +31,7 @@ The map's bar SHALL hold a search for places, huts and stops, the route step's s
 - **THEN** the map SHALL show Lauterbrunnen close up
 
 ### Requirement: Map controls in one compact row
-The Map tab SHALL show its controls in one row right above the tab bar, none overlapping at phone width: a search button, a "My Tours | Add tour" capsule in the app's blue, and a map button opening the map sheet. The map sheet SHALL hold the base maps and overlays as previews, the legend and the offline maps. On iOS the controls SHALL be compact Liquid Glass (44 pt), the round ones tinted with the app's blue.
+The Map tab SHALL show its controls in one row right above the tab bar, none overlapping at phone width: a search button, a "My Tours | Add tour" capsule in the app's blue (on iOS frosted glass tinted blue, white glyphs legible over snow), and a map button opening the map sheet. The map sheet SHALL hold the base maps and overlays as previews, the legend and the offline maps. On iOS the controls SHALL be compact Liquid Glass (44 pt), the round ones tinted with the app's blue.
 
 #### Scenario: Legend from the map button
 - **WHEN** the user taps the map button and then "Legend"
@@ -40,3 +40,17 @@ The Map tab SHALL show its controls in one row right above the tab bar, none ove
 #### Scenario: Nothing clashes
 - **WHEN** the Map tab shows on a 375 pt wide phone in German
 - **THEN** search, the capsule and the map button sit side by side without overlapping
+
+### Requirement: A tour always shows whole on the map
+The map SHALL frame a tour so its goal, start, end and track all show above the sheet: when its sheet opens, again when its track has loaded, and in the route step whenever a point is set or moved or the route is rerouted. A drawing or a lone point SHALL move the map only once out of view. A short tour SHALL be framed no closer than about a kilometre across.
+
+#### Scenario: Goal set far away
+- **WHEN** in the route step the user sets the start, then searches a goal 20 km away
+- **THEN** the map zooms out until start, goal and the route between them all show above the sheet
+
+### Requirement: Tours open on the Map tab
+Opening a tour from another tab or sheet (the calendar, the inbox) SHALL close the sheets above the tabs and show the tour on the Map tab, framed above its sheet.
+
+#### Scenario: From the inbox
+- **WHEN** the user opens a shared tour's entry in the inbox under Profile
+- **THEN** the Map tab shows with the tour framed above its sheet, and closing the sheet shows the map

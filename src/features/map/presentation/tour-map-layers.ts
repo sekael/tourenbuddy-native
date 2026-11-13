@@ -1,5 +1,6 @@
 import type { ExpressionSpecification, LayerSpecification } from '@maplibre/maplibre-gl-style-spec';
 
+import { space } from '@/core/theme/tokens';
 import { TRAIL_OVERLAYS, type TrailOverlayId } from '@/features/map/data/trail-overlays';
 
 import {
@@ -311,5 +312,17 @@ export function tourMapLayers({
         paint: { 'text-color': '#334155', 'text-halo-color': '#ffffff', 'text-halo-width': 1.5 },
       },
     ],
+  };
+}
+
+type Padding = { top: number; right: number; bottom: number; left: number };
+
+/** Room around framed points for their markers and names (the PWA's margin; more on top: pins). */
+export function framePadding(padding: Padding): Padding {
+  return {
+    top: padding.top + space.xxxl + space.md,
+    right: padding.right + space.xxxl,
+    bottom: padding.bottom + space.xxxl,
+    left: padding.left + space.xxxl,
   };
 }

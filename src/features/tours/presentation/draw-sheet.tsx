@@ -8,12 +8,7 @@ import { ListRow, ListSection } from '@/core/adaptive/list';
 import { Page, Screen } from '@/core/adaptive/screen';
 import { useFormatter } from '@/core/i18n/format';
 import { isOnline } from '@/core/offline/online';
-import {
-  lineLength,
-  trackLine,
-  trackFromLine,
-  type DrawnTrack,
-} from '@/features/map/domain/drawn-track';
+import { trackLine, trackFromLine, type DrawnTrack } from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import { initialFollow, type Follow } from '@/features/map/domain/snap-network';
 import { tapSnapM } from '@/features/map/presentation/leg-router';
@@ -150,7 +145,7 @@ export function DrawSheet() {
       const name = store.draft.name?.trim() || t('tours.form.gpxDrawn');
       store.setTrack({
         text: gpxFromLine(profiled?.line ?? densify(line), profiled?.heights ?? null, name),
-        label: t('tours.form.gpxDrawnFile', { distance: formatDistance(lineLength(line)) }),
+        label: t('tours.form.gpxDrawn'),
         line,
         drawing: track,
       });
