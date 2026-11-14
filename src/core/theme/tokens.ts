@@ -46,6 +46,8 @@ export const color = {
   onGlassPressed: 'rgba(255, 255, 255, 0.24)',
   /** A line between actions on the blue capsule. */
   onFabDivider: 'rgba(255, 255, 255, 0.45)',
+  /** An area marked on the map (an offline region): the app's blue, faint enough to read through. */
+  areaFill: 'rgba(37, 99, 235, 0.12)',
   /** Clear glass over the map, breathed with the app's blue (iOS round map controls). */
   glassTint: 'rgba(37, 99, 235, 0.12)',
   background: palette.white,

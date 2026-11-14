@@ -14,6 +14,7 @@ import {
   ListSection,
   PickerRow,
   TextRow,
+  ToggleRow,
 } from '@/core/adaptive/list';
 import { Pills } from '@/core/adaptive/pills';
 import { Page, Screen } from '@/core/adaptive/screen';
@@ -274,13 +275,8 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
         .map(([lng, lat]) => [lng!, lat!] as LngLat);
       if (line.length < 2) throw new Error('empty track');
       store.setTrack({ text, label: asset.name, line, drawing: null });
-      // Its ends set the route's start and end when the form has none.
-      if (!draft.startPoint) {
-        update({
-          startPoint: { lng: line[0]![0], lat: line[0]![1] },
-          endPoint: { lng: line.at(-1)![0], lat: line.at(-1)![1] },
-        });
-      }
+      // Its ends are the route's start and end: one each, where the track begins and ends.
+      store.setEnds(line[0]!, line.at(-1)!);
     } catch (error) {
       setGpxError(
         error instanceof GpxFileTooLargeError
@@ -602,15 +598,12 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
               : t('tours.form.visibilityFriendsHint')
           }
         >
-          <PickerRow
-            title={t('tours.form.visibilityLabel')}
-            style="segmented"
-            value={draft.visibility ?? 'friends'}
-            onChange={(visibility) => update({ visibility })}
-            options={[
-              { value: 'friends', label: t('tours.form.visibilityFriends') },
-              { value: 'private', label: t('tours.form.visibilityPrivate') },
-            ]}
+          {/* The same switch as on the tour's sheet (the PWA's "Privat"): on hides the tour. */}
+          <ToggleRow
+            title={t('tours.form.visibilityPrivate')}
+            icon="lock"
+            value={draft.visibility === 'private'}
+            onValueChange={(hidden) => update({ visibility: hidden ? 'private' : 'friends' })}
           />
         </ListSection>
       ) : null}

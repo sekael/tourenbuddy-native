@@ -34,6 +34,7 @@ import {
   frame,
   keyboardType as keyboardTypeModifier,
   listRowBackground,
+  listSectionSpacing,
   listStyle,
   lineLimit,
   onSubmit as onSubmitModifier,
@@ -101,6 +102,7 @@ export function GroupedList({ children, form, onRefresh, header, testID }: Group
   const Container = form ? Form : List;
   const modifiers = [
     ...(form ? [] : [listStyle('insetGrouped')]),
+    listSectionSpacing('compact'),
     ...(onRefresh ? [refreshable(onRefresh)] : []),
     tint(color.primary),
   ];
@@ -140,6 +142,8 @@ function actionButtons(actions: RowAction[]) {
       label={action.label}
       systemImage={action.icon ? icons[action.icon].sf : undefined}
       role={action.destructive ? 'destructive' : undefined}
+      // The list's tint would paint a destructive swipe blue: it is red, as in Mail.
+      modifiers={action.destructive ? [tint(color.error)] : undefined}
       onPress={action.onPress}
     />
   ));

@@ -81,6 +81,10 @@ export type MapState = {
   center: LngLat | null;
   zoom: number | null;
   bounds: [number, number, number, number] | null;
+  /** Sheets showing the saved offline regions on the map (a count: one opens as another closes). */
+  regionsShown: number;
+  /** A region is being framed for download: the frame shows over the map. */
+  regionFrame: boolean;
   /** Height the open sheet covers at the bottom, so the camera frames tours above it. */
   bottomInset: number;
   /** While a step runs (route, pick, draw, region), map taps go to it instead of the tours. */
@@ -155,6 +159,8 @@ export const useMapStore = create<MapState>()((set, get) => ({
   center: null,
   zoom: null,
   bounds: null,
+  regionsShown: 0,
+  regionFrame: false,
   bottomInset: 0,
   tapHandler: null,
   previewLines: null,

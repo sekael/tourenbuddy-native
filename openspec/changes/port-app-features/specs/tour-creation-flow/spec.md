@@ -19,12 +19,17 @@ On iOS and Android the route step, a point pick from the form, and track drawing
 
 ### Requirement: A new tour comes filled in
 
-The form for a new tour SHALL show what the tour most likely is, each value changed in a tap: the coming weekend day (today on a Saturday or Sunday) with its season, and the activity the user plans most in that season, else ski touring when the map shows the ski trails in winter or spring, else hiking when it shows the hiking trails.
+The form for a new tour SHALL show what the tour most likely is, each value changed in a tap: the coming weekend day (today on a Saturday or Sunday) with its season, and the activity of the trails the map shows: ski touring for the ski routes alone (or both shown in winter or spring), hiking for the hiking trails, else none. Past tours SHALL NOT pick the activity; until the user picks one, it follows the line (track-drawing).
 
 #### Scenario: Planned on a Thursday in November
 
-- **WHEN** a user whose tours are hikes adds a tour on Thursday, 12 November
-- **THEN** the form SHALL show Saturday, 14 November, autumn and hiking
+- **WHEN** a user whose tours are hikes adds a tour on Thursday, 12 November with only the ski routes shown
+- **THEN** the form SHALL show Saturday, 14 November, autumn and ski touring
+
+#### Scenario: No trails shown
+
+- **WHEN** the user adds a tour with no trail overlay shown
+- **THEN** no activity is picked, and the form asks for one
 
 ### Requirement: A new tour's details take few taps
 

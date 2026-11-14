@@ -8,7 +8,13 @@ import { ListRow, ListSection } from '@/core/adaptive/list';
 import { Page, Screen } from '@/core/adaptive/screen';
 import { useFormatter } from '@/core/i18n/format';
 import { isOnline } from '@/core/offline/online';
-import { trackLine, trackFromLine, type DrawnTrack } from '@/features/map/domain/drawn-track';
+import {
+  routeStops,
+  trackFromLine,
+  trackLine,
+  withGoal,
+  type DrawnTrack,
+} from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import { initialFollow, type Follow } from '@/features/map/domain/snap-network';
 import { tapSnapM } from '@/features/map/presentation/leg-router';
@@ -28,7 +34,11 @@ import { useTourDraftStore } from './stores/tour-draft-store';
 function seedTrack(): DrawnTrack | null {
   const { track, draft, goal } = useTourDraftStore.getState();
   if (track?.drawing) return track.drawing;
-  if (track?.line.length) return trackFromLine(track.line);
+  // A track from a file: its turning points, the goal among them when the line passes it.
+  if (track?.line.length) {
+    const line = trackFromLine(track.line);
+    return (goal && withGoal(line, [goal.lng, goal.lat])) || line;
+  }
   if (!goal) return null;
   const ll = (p: { lng: number; lat: number }): LngLat => [p.lng, p.lat];
   const points = [draft.startPoint, goal, draft.endPoint].filter((p) => p !== null).map(ll);
@@ -47,6 +57,11 @@ export function DrawSheet() {
   const pace = usePace();
   const types = useTourDraftStore.getState().draft.tourTypes;
   const [follow, setFollow] = useState<Follow>(() => initialFollow(overlays, types));
+  /** A new tour's activity follows the line (ski routes: a ski tour) until the user picks one. */
+  const changeFollow = (next: Follow) => {
+    setFollow(next);
+    useTourDraftStore.getState().followed(next);
+  };
   const [seed] = useState(seedTrack);
   const drawing = useTrackDrawing(seed, follow);
   const [saving, setSaving] = useState(false);
@@ -70,6 +85,11 @@ export function DrawSheet() {
   // The drawing on the map: its line, its points and the taps still waiting for their leg.
   const { track, queued } = drawing;
   useEffect(() => {
+    const remove = (index: number) => {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setPicked(null);
+      drawingRef.current.drop(index);
+    };
     const color = types[0] ? TOUR_TYPE_TRACK_COLORS[types[0]] : '#334155';
     const line = trackLine(track);
     useMapStore.setState({
@@ -89,10 +109,11 @@ export function DrawSheet() {
       // The points are handles (`editHandles`); a tap still waiting for its leg shows here.
       previewPoints: {
         type: 'FeatureCollection',
+        // A plain dot, not an end flag: the line has one end, its last point.
         features: queued.map((p) => ({
           type: 'Feature' as const,
           geometry: { type: 'Point' as const, coordinates: p },
-          properties: { kind: 'end' as const },
+          properties: { kind: 'preview' as const },
         })),
       },
       editHandles: {
@@ -110,8 +131,14 @@ export function DrawSheet() {
         legs: track.legs,
         move: (i, to) => drawingRef.current.move(i, to, snapRadius(to)),
         pull: (leg, at) => drawingRef.current.pull(leg, at, snapRadius(at)),
-        drop: (i) => drawingRef.current.drop(i),
+        drop: (i) => remove(i),
+        // A tap on a point takes it out (track-drawing "Remove a point"), the goal excepted: a tap
+        // on it, or on a leg's dot, picks it for the next map tap.
         pick: (target) => {
+          if ('point' in target && target.point !== track.goal) {
+            remove(target.point);
+            return;
+          }
           void Haptics.selectionAsync();
           setPicked((p) => (JSON.stringify(p) === JSON.stringify(target) ? null : target));
         },
@@ -149,12 +176,11 @@ export function DrawSheet() {
         line,
         drawing: track,
       });
-      // The drawing's ends are the route's start and end, unless a goal keeps its own.
-      if (track.goal == null) {
-        store.update({
-          startPoint: { lng: line[0]![0], lat: line[0]![1] },
-          endPoint: { lng: line.at(-1)![0], lat: line.at(-1)![1] },
-        });
+      // One start and one end, where the line begins and ends (a goal at either end is the goal).
+      if (track.goal == null) store.setEnds(line[0]!, line.at(-1)!);
+      else {
+        const { start, end } = routeStops({ ...track, goal: track.goal });
+        store.setEnds(start, end);
       }
       router.replace('/tour/edit');
     } finally {
@@ -210,7 +236,7 @@ export function DrawSheet() {
                 ? t('map.plan.hint.move')
                 : t('map.plan.hint.pull')
               : track.legs.length
-                ? t('map.plan.hint.shape')
+                ? t('map.draw.hint.shape')
                 : undefined
           }
         >
@@ -245,7 +271,7 @@ export function DrawSheet() {
             />
           ) : null}
         </ListSection>
-        <FollowSection value={follow} onChange={setFollow} status={status} />
+        <FollowSection value={follow} onChange={changeFollow} status={status} />
       </Page>
     </Screen>
   );

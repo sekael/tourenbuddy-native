@@ -20,3 +20,14 @@ On iOS and Android a downloaded region SHALL be an offline pack of the vector ba
 #### Scenario: Incomplete pack
 - **WHEN** the system evicted part of a pack
 - **THEN** the region shows as incomplete with a way to download it again
+
+### Requirement: Saved regions and the new one show on the map
+Opening the offline maps SHALL show the saved regions outlined on the map, framed above the sheet, and list each with its name and size, also after the app restarts; with none saved, the list SHALL say so. Framing a new region SHALL show a fixed frame over the map, as the PWA does, marking exactly the area that downloads, with its estimated size updating as the map moves under it; the estimate SHALL err high, never promising less storage than the region takes.
+
+#### Scenario: After a restart
+- **WHEN** the user saved a region, restarts the app and opens the offline maps
+- **THEN** the region is listed with its size and outlined on the map
+
+#### Scenario: Framing a valley
+- **WHEN** the user taps "Region herunterladen" and moves the map until the frame covers the Lauterbrunnen valley
+- **THEN** the sheet shows the estimated size for the framed area, and after the download the region's outline matches the frame

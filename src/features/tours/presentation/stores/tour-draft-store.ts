@@ -4,8 +4,13 @@ import { newId } from '@/core/files';
 import type { DrawnTrack } from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import type { RoutePlan, RoutePoints } from '@/features/map/domain/route-plan';
+import type { Follow } from '@/features/map/domain/snap-network';
 import { seasonsForDates } from '@/features/tours/data/models/season';
+import { getElevation } from '@/features/tours/data/services/swisstopo-elevation-service';
+import { suggestTourName } from '@/features/tours/data/services/swisstopo-name-service';
+import { isSameGoal } from '@/features/tours/domain/distance';
 import type { Tour, TourDraft } from '@/features/tours/domain/entities/tour';
+import { onSkis } from '@/features/tours/domain/route-metrics';
 
 import { tourToDraft } from './tours-store';
 
@@ -64,6 +69,8 @@ type DraftState = {
   gpxRemoved: boolean;
   /** Something changed since the draft began: closing asks first. */
   dirty: boolean;
+  /** The user picked the activities (the form): a line's network no longer changes them. */
+  typesChosen: boolean;
   /** Where the step should continue: the route planned so far. */
   route: RoutePlan | null;
   /** Anchor of a new segment (Add segment): saved into its outing. */
@@ -74,6 +81,13 @@ type DraftState = {
   update: (patch: Partial<TourDraft>) => void;
   setRoute: (plan: RoutePlan) => void;
   setTrack: (track: PendingTrack | null) => void;
+  /**
+   * The route's start and end where its track begins and ends (null: none), so a tour never shows
+   * a second end: a point that moved is named and measured anew, one that stayed keeps its name.
+   */
+  setEnds: (start: LngLat | null, end: LngLat | null) => void;
+  /** The line follows `follow`: an activity the user has not picked follows it (ski routes, ski tour). */
+  followed: (follow: Follow) => void;
   removeTrack: () => void;
   setSegmentOf: (id: string | null) => void;
   reset: () => void;
@@ -90,6 +104,7 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
   track: null,
   gpxRemoved: false,
   dirty: false,
+  typesChosen: false,
   route: null,
   segmentOf: null,
   returnTo: null,
@@ -104,6 +119,7 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
       track: null,
       gpxRemoved: false,
       dirty: false,
+      typesChosen: !!tour?.tourTypes.length,
       route: null,
       segmentOf: null,
     }),
@@ -118,7 +134,7 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
         const untouched = !s.draft.seasons?.length || same(s.draft.seasons, before);
         if (untouched) draft.seasons = auto.length ? auto : s.draft.seasons;
       }
-      return { draft, dirty: true };
+      return { draft, dirty: true, typesChosen: s.typesChosen || 'tourTypes' in patch };
     }),
 
   setRoute: (plan) =>
@@ -152,6 +168,51 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
     }),
 
   setTrack: (track) => set({ track, gpxRemoved: false, dirty: true }),
+
+  setEnds: (start, end) => {
+    const draft = get().draft;
+    const moved = (was: Spot | null, at: LngLat | null): Spot | null | undefined => {
+      const next = at ? { lng: at[0], lat: at[1] } : null;
+      if (was && next ? isSameGoal(was, next, KEEP_NAME_M) : was === next) return undefined;
+      return next;
+    };
+    const s = moved(draft.startPoint, start);
+    const e = moved(draft.endPoint, end);
+    if (s === undefined && e === undefined) return;
+    set((state) => ({
+      draft: {
+        ...state.draft,
+        ...(s !== undefined
+          ? { startPoint: s, startPointName: null, startPointElevation: null }
+          : {}),
+        ...(e !== undefined ? { endPoint: e, endPointName: null, endPointElevation: null } : {}),
+      },
+      dirty: true,
+    }));
+    const lookUp = (at: Spot, apply: (name: string | null, elevation: number | null) => void) =>
+      void Promise.all([
+        suggestTourName(at).catch(() => null),
+        getElevation(at).catch(() => null),
+      ]).then(([name, elevation]) => apply(name, elevation));
+    if (s)
+      lookUp(s, (startPointName, startPointElevation) => {
+        if (get().draft.startPoint !== s) return;
+        set((state) => ({ draft: { ...state.draft, startPointName, startPointElevation } }));
+      });
+    if (e)
+      lookUp(e, (endPointName, endPointElevation) => {
+        if (get().draft.endPoint !== e) return;
+        set((state) => ({ draft: { ...state.draft, endPointName, endPointElevation } }));
+      });
+  },
+
+  followed: (follow) =>
+    set((s) => {
+      const types = s.draft.tourTypes;
+      if (s.typesChosen || follow === 'straight' || (follow === 'ski') === onSkis(types)) return {};
+      return { draft: { ...s.draft, tourTypes: follow === 'ski' ? ['skitour'] : ['hiking'] } };
+    }),
+
   removeTrack: () => set((s) => ({ track: null, gpxRemoved: !!s.draft.gpxFilepath, dirty: true })),
   setSegmentOf: (segmentOf) => set({ segmentOf }),
   reset: () =>
@@ -164,11 +225,16 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
       track: null,
       gpxRemoved: false,
       dirty: false,
+      typesChosen: false,
       route: null,
       segmentOf: null,
       returnTo: null,
     }),
 }));
+
+type Spot = { lng: number; lat: number };
+/** A start or end this close to where it was keeps its name and height. */
+const KEEP_NAME_M = 50;
 
 function same(a: readonly string[], b: readonly string[]) {
   return a.length === b.length && a.every((x) => b.includes(x));

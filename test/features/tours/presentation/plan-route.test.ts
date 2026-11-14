@@ -50,33 +50,22 @@ describe('newTourGuess', () => {
     useMapStore.setState({ overlays: [] });
   });
 
-  it("takes the activity the user plans most in the day's season", () => {
-    useToursStore.setState({
-      tours: [
-        { ...tour('a', ['skitour']), seasons: ['winter'] },
-        { ...tour('b', ['skitour']), seasons: ['winter'] },
-        { ...tour('c', ['hiking']), seasons: ['autumn'] },
-        // Undated tours count by their dates, and without either not at all.
-        { ...tour('d', ['trailrunning']), plannedDate: new Date(Date.UTC(2025, 9, 4)) },
-        tour('e', ['climbing']),
-      ],
-    });
-    expect(newTourGuess(day(12)).tourTypes).toEqual(['hiking']);
-    useToursStore.setState({
-      tours: [{ ...tour('d', ['trailrunning']), plannedDate: new Date(Date.UTC(2025, 9, 4)) }],
-    });
-    expect(newTourGuess(day(12)).tourTypes).toEqual(['trailrunning']);
+  it('never takes the activity from past tours: a hiker planning on the ski routes gets a ski tour', () => {
+    useToursStore.setState({ tours: [{ ...tour('c', ['hiking']), seasons: ['autumn'] }] });
+    useMapStore.setState({ overlays: ['ski'] });
+    expect(newTourGuess(day(12)).tourTypes).toEqual(['skitour']);
   });
 
-  it('falls back to the trails the map shows, ski touring only in its season', () => {
+  it('takes the trails the map shows, ski touring when both show in its season', () => {
+    useMapStore.setState({ overlays: ['hiking'] });
+    expect(newTourGuess(day(12)).tourTypes).toEqual(['hiking']);
     useMapStore.setState({ overlays: ['hiking', 'ski'] });
     expect(newTourGuess(day(12)).tourTypes).toEqual(['hiking']);
     expect(newTourGuess(new Date(2027, 0, 13)).tourTypes).toEqual(['skitour']);
-    useMapStore.setState({ overlays: ['ski'] });
-    expect(newTourGuess(day(12)).tourTypes).toEqual([]);
   });
 
-  it('guesses no activity without tours or trails, but still the day and its season', () => {
+  it('guesses no activity without trails shown, past hikes or not, but still the day and its season', () => {
+    useToursStore.setState({ tours: [{ ...tour('c', ['hiking']), seasons: ['autumn'] }] });
     const guess = newTourGuess(day(12));
     expect(guess.tourTypes).toEqual([]);
     expect(guess.plannedDate).toEqual(utc(14));

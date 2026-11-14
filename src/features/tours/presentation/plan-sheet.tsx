@@ -120,6 +120,11 @@ export function PlanSheet({ back }: { back: boolean }) {
   const [follow, setFollow] = useState<Follow>(() =>
     initialFollow(overlays, draftState.draft.tourTypes),
   );
+  /** A new tour's activity follows the line (ski routes: a ski tour) until the user picks one. */
+  const changeFollow = (next: Follow) => {
+    setFollow(next);
+    useTourDraftStore.getState().followed(next);
+  };
   const [vias, setVias] = useState<Vias>(() => initialVias());
   const following = follow !== 'straight';
   /** A leg's dot picked by a tap: the next map tap sends the route through there. */
@@ -631,7 +636,7 @@ export function PlanSheet({ back }: { back: boolean }) {
           ) : null}
         </ListSection>
 
-        <FollowSection value={follow} onChange={setFollow} status={followStatus} />
+        <FollowSection value={follow} onChange={changeFollow} status={followStatus} />
       </Page>
     </Screen>
   );

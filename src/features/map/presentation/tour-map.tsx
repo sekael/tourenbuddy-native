@@ -68,6 +68,8 @@ export type TourMapProps = {
   tours: GeoJSON.FeatureCollection<GeoJSON.Point, TourFeatureProps>;
   lines?: GeoJSON.FeatureCollection<GeoJSON.LineString, LineProps>;
   points?: GeoJSON.FeatureCollection<GeoJSON.Point, PointProps>;
+  /** Areas outlined on the map (saved offline regions; native only). */
+  areas?: GeoJSON.FeatureCollection<GeoJSON.Polygon>;
   /** Trails step back while a track is drawn (track-drawing). */
   dimTrails?: boolean;
   /** While drawing, tours take no taps and double-tap zoom is off (track-drawing). */
@@ -103,6 +105,7 @@ export function TourMap({
   tours,
   lines,
   points,
+  areas,
   dimTrails = false,
   drawing = false,
   padding,
@@ -187,6 +190,12 @@ export function TourMap({
           <Layer key={layer.id} {...layer} />
         ))}
       </VectorSource>
+
+      <GeoJSONSource id="areas" data={areas ?? EMPTY}>
+        {layers.areas.map((layer) => (
+          <Layer key={layer.id} {...layer} />
+        ))}
+      </GeoJSONSource>
 
       <GeoJSONSource id="lines" data={lines ?? EMPTY}>
         {layers.lines.map((layer) => (

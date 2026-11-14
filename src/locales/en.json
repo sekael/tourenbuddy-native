@@ -540,7 +540,7 @@
       "emptySubtitle": "Create one from the map.",
       "noMatchesTitle": "No tours match your filters.",
       "clearFiltersBtn": "Clear filters",
-      "tabOwned": "My Tours",
+      "tabOwned": "Mine",
       "tabFriends": "Friends",
       "friendsEmptyTitle": "No friend tours yet.",
       "friendsEmptySubtitle": "Tours your friends share will appear here.",
@@ -1035,7 +1035,8 @@
         "start": "Tap the map to set the start.",
         "next": "Tap along the way to add points. Drag a point to move it.",
         "profileLoading": "Loading the elevation profile…",
-        "profileOffline": "The elevation profile needs a connection."
+        "profileOffline": "The elevation profile needs a connection.",
+        "shape": "Tap a point to remove it, or hold and drag it to move it. Drag a line’s middle dot onto another way to send the line there."
       },
       "pace": {
         "open": "Set your pace"
@@ -1366,12 +1367,13 @@
       "hintMobile": "Move the map to frame your region · {{size}}",
       "redraw": "Redraw",
       "cancel": "Cancel",
-      "confirm": "Next"
+      "confirm": "Next",
+      "hintFrame": "Move and zoom the map until the blue frame shows your region."
     },
     "download": {
       "title": "Download offline map",
       "nameLabel": "Region name",
-      "estimate": "Estimated size: {{size}}",
+      "estimate": "Estimated size: about {{size}}",
       "tooLarge": "Not enough free storage for this region.",
       "nearQuota": "This will use most of your remaining storage.",
       "start": "Download",
@@ -1390,7 +1392,8 @@
       "wholeMap": "Download all of Switzerland",
       "incomplete": "Incomplete",
       "redownload": "Download again",
-      "webUnavailable": "Offline maps are available in the iPhone and Android apps."
+      "webUnavailable": "Offline maps are available in the iPhone and Android apps.",
+      "showOnMap": "Show on map"
     },
     "errors": {
       "load": "Could not load offline maps.",

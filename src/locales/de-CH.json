@@ -540,7 +540,7 @@
       "emptySubtitle": "Erstelle eine auf der Karte.",
       "noMatchesTitle": "Keine Touren gefunden.",
       "clearFiltersBtn": "Filter zurücksetzen",
-      "tabOwned": "Meine Touren",
+      "tabOwned": "Meine",
       "tabFriends": "Freunde",
       "friendsEmptyTitle": "Noch keine Touren von Freunden.",
       "friendsEmptySubtitle": "Touren, die deine Freunde teilen, erscheinen hier.",
@@ -1035,7 +1035,8 @@
         "start": "Tippe auf die Karte, um den Start zu setzen.",
         "next": "Tippe entlang des Wegs, um Punkte zu setzen. Ziehe einen Punkt, um ihn zu verschieben.",
         "profileLoading": "Höhenprofil wird geladen …",
-        "profileOffline": "Das Höhenprofil braucht eine Verbindung."
+        "profileOffline": "Das Höhenprofil braucht eine Verbindung.",
+        "shape": "Tippe auf einen Punkt, um ihn zu entfernen, oder halte und ziehe ihn, um ihn zu verschieben. Den Punkt in der Mitte einer Linie ziehst du auf einen anderen Weg."
       },
       "pace": {
         "open": "Tempo einstellen"
@@ -1366,12 +1367,13 @@
       "hintMobile": "Verschiebe die Karte, um deine Region einzurahmen · {{size}}",
       "redraw": "Neu zeichnen",
       "cancel": "Abbrechen",
-      "confirm": "Weiter"
+      "confirm": "Weiter",
+      "hintFrame": "Verschiebe und zoome die Karte, bis der blaue Rahmen deine Region zeigt."
     },
     "download": {
       "title": "Offline-Karte herunterladen",
       "nameLabel": "Name der Region",
-      "estimate": "Geschätzte Grösse: {{size}}",
+      "estimate": "Geschätzte Grösse: ca. {{size}}",
       "tooLarge": "Nicht genügend freier Speicher für diese Region.",
       "nearQuota": "Dies verbraucht einen Grossteil deines verbleibenden Speichers.",
       "start": "Herunterladen",
@@ -1390,7 +1392,8 @@
       "wholeMap": "Ganze Schweiz herunterladen",
       "incomplete": "Unvollständig",
       "redownload": "Erneut herunterladen",
-      "webUnavailable": "Offline-Karten gibt es in den Apps für iPhone und Android."
+      "webUnavailable": "Offline-Karten gibt es in den Apps für iPhone und Android.",
+      "showOnMap": "Auf der Karte zeigen"
     },
     "errors": {
       "load": "Offline-Karten konnten nicht geladen werden.",

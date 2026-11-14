@@ -199,66 +199,142 @@ export function TourDetailPage({
     if (completed) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
+  // What the tour is, as the PWA's chips: activities (the way up and down apart) with the grade,
+  // and the seasons.
+  const seasonNames = tour.seasons?.map((s) => t(`tours.season.${s}`)).join(', ');
+  const chips: {
+    key: string;
+    icon: IconName;
+    tint: string;
+    label: string;
+    grade?: string | null;
+    a11y: string;
+  }[] = [
+    ...typeGroups.flatMap((group) =>
+      group.types.map((type, i) => {
+        const way =
+          group.way === 'up'
+            ? t('tours.infoSheet.wayUp')
+            : group.way === 'down'
+              ? t('tours.infoSheet.wayDown')
+              : null;
+        const grade = i === 0 && group.way !== 'down' ? tour.grade : null;
+        return {
+          key: `${group.way ?? 'all'}-${type}`,
+          icon: TOUR_TYPE_ICONS[type] as IconName,
+          tint: TOUR_TYPE_COLORS[type],
+          label: `${group.way === 'up' ? '↑ ' : group.way === 'down' ? '↓ ' : ''}${typeLabel(t, type)}`,
+          grade,
+          a11y: [way, typeLabel(t, type), grade].filter(Boolean).join(', '),
+        };
+      }),
+    ),
+    ...(tour.tourTypes.length === 0 && tour.grade
+      ? [
+          {
+            key: 'grade',
+            icon: 'tour' as const,
+            tint: color.primary,
+            label: t('tours.filters.gradeLabel'),
+            grade: tour.grade,
+            a11y: `${t('tours.filters.gradeLabel')}: ${tour.grade}`,
+          },
+        ]
+      : []),
+    ...(seasonNames
+      ? [
+          {
+            key: 'seasons',
+            icon: SEASON_ICONS[tour.seasons![0]!],
+            tint: color.primary,
+            label: seasonNames,
+            a11y: `${t('tours.infoSheet.iconTooltipSeasons')}: ${seasonNames}`,
+          },
+        ]
+      : []),
+  ];
+
   // The PWA's hero: the activities left, the name (in full, never cut as in the bar) and the facts
   // beside them.
   const hero = (
-    <View style={styles.hero}>
-      <View style={styles.discs}>
-        {routeOrder(tour).map((type) => (
-          <View key={type} style={[styles.disc, { backgroundColor: TOUR_TYPE_COLORS[type] }]}>
-            <Icon name={TOUR_TYPE_ICONS[type] as IconName} color={color.onContrast} size={22} />
-          </View>
-        ))}
-        {tour.tourTypes.length === 0 ? (
-          <View style={[styles.disc, { backgroundColor: color.primary }]}>
-            <Icon name="tour" color={color.onContrast} size={22} />
-          </View>
-        ) : null}
-      </View>
-      <View style={styles.facts}>
-        <Text variant="title" role="heading" selectable>
-          {name}
-        </Text>
-        {tour.elevation != null ? (
-          <View style={styles.line}>
-            <Icon name="landscape" size={18} color={color.onSurface} />
-            <Text style={styles.elevation}>{formatElevation(tour.elevation)}</Text>
-          </View>
-        ) : null}
-        {when ? <Text style={styles.headline}>{when}</Text> : null}
-        {numbers ? (
-          <Text style={styles.numbers} aria-label={numbers.label}>
-            {numbers.text}
+    <View style={styles.heroBlock}>
+      <View style={styles.hero}>
+        <View style={styles.discs}>
+          {routeOrder(tour).map((type) => (
+            <View key={type} style={[styles.disc, { backgroundColor: TOUR_TYPE_COLORS[type] }]}>
+              <Icon name={TOUR_TYPE_ICONS[type] as IconName} color={color.onContrast} size={22} />
+            </View>
+          ))}
+          {tour.tourTypes.length === 0 ? (
+            <View style={[styles.disc, { backgroundColor: color.primary }]}>
+              <Icon name="tour" color={color.onContrast} size={22} />
+            </View>
+          ) : null}
+        </View>
+        <View style={styles.facts}>
+          <Text variant="title" role="heading" selectable>
+            {name}
           </Text>
-        ) : null}
-        {tour.isFriendTour ? (
-          <Text style={styles.meta}>
-            {owner.isResolved
-              ? t('tours.infoSheet.createdByLabel', { name: owner.displayName ?? '' })
-              : ' '}
-          </Text>
-        ) : null}
-        {tour.completed || tour.visibility === 'private' ? (
-          <View style={styles.line}>
-            {tour.completed ? (
-              <View
-                style={[styles.stamp, { backgroundColor: color.success }]}
-                aria-label={t('tours.infoSheet.completedBtn')}
-              >
-                <Icon name="check" color={color.onContrast} size={14} />
-              </View>
-            ) : null}
-            {tour.visibility === 'private' ? (
-              <View
-                style={[styles.stamp, { backgroundColor: color.onSurfaceVariant }]}
-                aria-label={t('tours.form.visibilityPrivate')}
-              >
-                <Icon name="lock" color={color.onContrast} size={14} />
-              </View>
-            ) : null}
-          </View>
-        ) : null}
+          {tour.elevation != null ? (
+            <View style={styles.line}>
+              <Icon name="landscape" size={18} color={color.onSurface} />
+              <Text style={styles.elevation}>{formatElevation(tour.elevation)}</Text>
+            </View>
+          ) : null}
+          {when ? <Text style={styles.headline}>{when}</Text> : null}
+          {numbers ? (
+            <Text style={styles.numbers} aria-label={numbers.label}>
+              {numbers.text}
+            </Text>
+          ) : null}
+          {tour.isFriendTour ? (
+            <Text style={styles.meta}>
+              {owner.isResolved
+                ? t('tours.infoSheet.createdByLabel', { name: owner.displayName ?? '' })
+                : ' '}
+            </Text>
+          ) : null}
+          {/* The owner's switches say it below; a friend's tour shows it here. */}
+          {!isOwner && (tour.completed || tour.visibility === 'private') ? (
+            <View style={styles.line}>
+              {tour.completed ? (
+                <View
+                  style={[styles.stamp, { backgroundColor: color.success }]}
+                  aria-label={t('tours.infoSheet.completedBtn')}
+                >
+                  <Icon name="check" color={color.onContrast} size={14} />
+                </View>
+              ) : null}
+              {tour.visibility === 'private' ? (
+                <View
+                  style={[styles.stamp, { backgroundColor: color.onSurfaceVariant }]}
+                  aria-label={t('tours.form.visibilityPrivate')}
+                >
+                  <Icon name="lock" color={color.onContrast} size={14} />
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+        </View>
       </View>
+      {chips.length ? (
+        // A row of its own, as wide as the card: the chips wrap there.
+        <View style={styles.chips}>
+          {chips.map((chip) => (
+            <View key={chip.key} style={styles.chip} accessible aria-label={chip.a11y}>
+              <Icon name={chip.icon} size={16} color={chip.tint} />
+              <Text variant="caption" style={styles.chipLabel} numberOfLines={1}>
+                {chip.label}
+              </Text>
+              {chip.grade ? (
+                <Text variant="caption" style={styles.grade}>
+                  {chip.grade}
+                </Text>
+              ) : null}
+            </View>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 
@@ -284,14 +360,10 @@ export function TourDetailPage({
       ]}
     >
       {isOwner ? (
-        // Who sees the tour is the section's footer, where it wraps in full (a switch row's
-        // second line is cut at two).
+        // As in the PWA, the switch makes the tour private (friends see it unless). Who sees a
+        // private tour is the section's footer, where it wraps in full.
         <ListSection
-          footer={
-            tour.visibility === 'private'
-              ? t('tours.form.visibilityPrivateHint')
-              : t('tours.form.visibilityFriendsHint')
-          }
+          footer={tour.visibility === 'private' ? t('tours.form.visibilityPrivateHint') : undefined}
         >
           <ToggleRow
             title={t('tours.infoSheet.completedBtn')}
@@ -300,11 +372,11 @@ export function TourDetailPage({
             onValueChange={setCompleted}
           />
           <ToggleRow
-            title={t('tours.infoSheet.visibleToFriends')}
-            icon={tour.visibility === 'private' ? 'lock' : 'group'}
-            value={tour.visibility !== 'private'}
-            onValueChange={(visible) =>
-              void useToursStore.getState().setVisibility(tour.id, visible ? 'friends' : 'private')
+            title={t('tours.form.visibilityPrivate')}
+            icon="lock"
+            value={tour.visibility === 'private'}
+            onValueChange={(hidden) =>
+              void useToursStore.getState().setVisibility(tour.id, hidden ? 'private' : 'friends')
             }
           />
         </ListSection>
@@ -330,39 +402,6 @@ export function TourDetailPage({
       ) : null}
 
       <LinkedToursSection tour={tour} onOpenTour={onOpenTour} />
-
-      <ListSection>
-        {typeGroups.flatMap((group) =>
-          group.types.map((type, i) => (
-            <ListRow
-              key={`${group.way ?? 'all'}-${type}`}
-              title={typeLabel(t, type)}
-              subtitle={
-                group.way && i === 0
-                  ? group.way === 'up'
-                    ? t('tours.infoSheet.wayUp')
-                    : t('tours.infoSheet.wayDown')
-                  : undefined
-              }
-              icon={TOUR_TYPE_ICONS[type] as IconName}
-              iconColor={TOUR_TYPE_COLORS[type]}
-              value={i === 0 && group.way !== 'down' ? (tour.grade ?? undefined) : undefined}
-            />
-          )),
-        )}
-        {tour.tourTypes.length === 0 && tour.grade ? (
-          <ListRow title={t('tours.filters.gradeLabel')} value={tour.grade} icon="tour" />
-        ) : null}
-        {tour.seasons?.length ? (
-          <ListRow
-            title={tour.seasons.map((s) => t(`tours.season.${s}`)).join(', ')}
-            icon={SEASON_ICONS[tour.seasons[0]!]}
-            accessibilityLabel={`${t('tours.infoSheet.iconTooltipSeasons')}: ${tour.seasons
-              .map((s) => t(`tours.season.${s}`))
-              .join(', ')}`}
-          />
-        ) : null}
-      </ListSection>
 
       {tour.startPoint || tour.endPoint || tour.gpxFilepath ? (
         <ListSection>
@@ -568,7 +607,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: space.sm,
-    paddingVertical: space.xs,
   },
   discs: { gap: space.xxs },
   facts: { flex: 1, gap: space.xxs },
@@ -580,6 +618,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // A row of its own under the hero, as wide as the card, so the chips wrap there.
+  heroBlock: { gap: space.xs },
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: space.xxs + 2,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.xxs,
+    paddingHorizontal: space.xs,
+    paddingVertical: space.xxs - 1,
+    borderRadius: radius.pill,
+    backgroundColor: color.neutralContainer,
+  },
+  chipLabel: { color: color.onSurface },
+  grade: { ...strong, color: color.onSurface },
   stamp: {
     width: 22,
     height: 22,

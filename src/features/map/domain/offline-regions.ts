@@ -8,10 +8,14 @@ export const OFFLINE_MIN_ZOOM = 0;
 export const OFFLINE_MAX_ZOOM = 14;
 
 /**
- * Bytes per tile, measured on whole Switzerland (S3: about 2.7 GB for 37 000 tiles, all the base
- * map's sources together), rounded up: promising too little storage is worse than too much.
+ * What a pack takes per tile position: the base map's two sources (base and relief) each store a
+ * tile there. Sized never to promise too little (owner, 2026-11-14): the largest measured, about
+ * 350 kB together uncompressed in the Alps (geo.admin, Lauterbrunnen), plus 5 MB the style brings
+ * once (fonts, sprites). Packs saved on the device: 8.7, 12 and 18 MB, all at or under this. Flat
+ * land comes out high; the sheet says "ca.".
  */
-const BYTES_PER_TILE = 75_000;
+const BYTES_PER_TILE = 350_000;
+const PACK_OVERHEAD = 5_000_000;
 
 const tileX = (lng: number, z: number) => Math.floor(((lng + 180) / 360) * 2 ** z);
 const tileY = (lat: number, z: number) => {
@@ -34,7 +38,7 @@ export function tileCount(
   return count;
 }
 
-export const estimateBytes = (bounds: Bounds) => tileCount(bounds) * BYTES_PER_TILE;
+export const estimateBytes = (bounds: Bounds) => PACK_OVERHEAD + tileCount(bounds) * BYTES_PER_TILE;
 
 /**
  * The part of a viewport the user sees above a sheet: the sheet covers `coveredFraction` of the
@@ -46,6 +50,26 @@ export function boundsAboveSheet(
 ): Bounds {
   const covered = Math.max(0, Math.min(0.9, coveredFraction));
   return [west, south + (north - south) * covered, east, north];
+}
+
+/** A rectangle on the screen, as shares of the map's width and height in from each edge. */
+export type ScreenFrame = { top: number; right: number; bottom: number; left: number };
+
+/**
+ * The region being framed (offline-map, as the PWA): a fixed rectangle over the map, clear of the
+ * status bar and above the step sheet at its taller height (55 %); the map moves under it.
+ */
+export const REGION_FRAME: ScreenFrame = { top: 0.12, right: 0.06, bottom: 0.58, left: 0.06 };
+
+/** The map area under `frame` when the map shows `bounds`. */
+export function framedBounds([west, south, east, north]: Bounds, frame: ScreenFrame): Bounds {
+  const [w, h] = [east - west, north - south];
+  return [
+    west + w * frame.left,
+    south + h * frame.bottom,
+    east - w * frame.right,
+    north - h * frame.top,
+  ];
 }
 
 /**

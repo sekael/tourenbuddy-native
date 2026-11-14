@@ -6,12 +6,12 @@ import { Alert } from 'react-native';
 
 import { EmptyState, ListRow, ListSection, TextRow } from '@/core/adaptive/list';
 import { Page, Screen } from '@/core/adaptive/screen';
-import { stepSheetOptions } from '@/core/adaptive/sheet';
 import { color } from '@/core/theme/tokens';
 import { formatBytes } from '@/core/utils/format-bytes';
 import {
-  boundsAboveSheet,
   estimateBytes,
+  framedBounds,
+  REGION_FRAME,
   SWITZERLAND_REGIONS,
 } from '@/features/map/domain/offline-regions';
 
@@ -22,9 +22,29 @@ import {
   type OfflineRegion,
 } from './stores/offline-maps-store';
 
+/** The saved regions show on the map, outlined, while a sheet of them is open. */
+function useRegionsOnMap() {
+  useEffect(() => {
+    useMapStore.setState((s) => ({ regionsShown: s.regionsShown + 1 }));
+    return () => useMapStore.setState((s) => ({ regionsShown: s.regionsShown - 1 }));
+  }, []);
+}
+
+/** The map shows `regions` whole above the sheet. */
+function frameRegions(regions: OfflineRegion[]) {
+  if (!regions.length) return;
+  useMapStore.getState().requestCamera({
+    kind: 'fit',
+    bounds: [
+      [Math.min(...regions.map((r) => r.bounds[0])), Math.min(...regions.map((r) => r.bounds[1]))],
+      [Math.max(...regions.map((r) => r.bounds[2])), Math.max(...regions.map((r) => r.bounds[3]))],
+    ],
+  });
+}
+
 /**
- * Offline maps (offline-map): the downloaded regions with their size and state, a region framed
- * on the map, or all of Switzerland in four regions.
+ * Offline maps (offline-map): the downloaded regions with their size and state (outlined on the
+ * map; a tap shows one whole), a region framed on the map, or all of Switzerland in four regions.
  */
 export function OfflineMapsSheet() {
   const { t } = useTranslation();
@@ -35,8 +55,13 @@ export function OfflineMapsSheet() {
   const total = regions.reduce((sum, r) => sum + r.bytes, 0);
 
   useEffect(() => {
-    void useOfflineMapsStore.getState().load();
+    // Opening the list shows the saved regions on the map, wherever they are.
+    void useOfflineMapsStore
+      .getState()
+      .load()
+      .then(() => frameRegions(useOfflineMapsStore.getState().regions));
   }, []);
+  useRegionsOnMap();
 
   const confirmDelete = (region: OfflineRegion) =>
     Alert.alert(t('offlineMap.manage.delete'), region.name, [
@@ -89,13 +114,16 @@ export function OfflineMapsSheet() {
           footer={
             error
               ? t(`offlineMap.errors.${error}`)
-              : regions.length
+              : // The total once there is more than one row to add up.
+                regions.length > 1
                 ? formatBytes(total)
-                : loaded
-                  ? t('offlineMap.manage.empty')
-                  : undefined
+                : undefined
           }
         >
+          {loaded && !regions.length ? (
+            // A section of only a footer does not show: the empty list says so in a row.
+            <ListRow title={t('offlineMap.manage.empty')} icon="cloud_off" />
+          ) : null}
           {regions.map((region) => (
             <ListRow
               key={region.id}
@@ -115,25 +143,13 @@ export function OfflineMapsSheet() {
                     : 'warning'
               }
               iconColor={region.state === 'incomplete' ? color.error : undefined}
-              chevron={false}
-              onPress={() =>
-                useMapStore.getState().requestCamera({
-                  kind: 'fit',
-                  bounds: [
-                    [region.bounds[0], region.bounds[1]],
-                    [region.bounds[2], region.bounds[3]],
-                  ],
-                })
-              }
-              swipeActions={[
+              // A tap offers what a region can do: show it, download it again, delete it.
+              menu={[
                 {
-                  label: t('offlineMap.manage.delete'),
-                  icon: 'delete',
-                  destructive: true,
-                  onPress: () => confirmDelete(region),
+                  label: t('offlineMap.manage.showOnMap'),
+                  icon: 'map',
+                  onPress: () => frameRegions([region]),
                 },
-              ]}
-              contextActions={[
                 ...(region.state === 'incomplete'
                   ? [
                       {
@@ -145,7 +161,15 @@ export function OfflineMapsSheet() {
                   : []),
                 {
                   label: t('offlineMap.manage.delete'),
-                  icon: 'delete' as const,
+                  icon: 'delete',
+                  destructive: true,
+                  onPress: () => confirmDelete(region),
+                },
+              ]}
+              swipeActions={[
+                {
+                  label: t('offlineMap.manage.delete'),
+                  icon: 'delete',
                   destructive: true,
                   onPress: () => confirmDelete(region),
                 },
@@ -166,20 +190,21 @@ export function OfflineMapsSheet() {
   );
 }
 
-/** The step sheet's taller height: the map above it is the region (the lower one shows more). */
-const detents = stepSheetOptions.sheetAllowedDetents;
-const COVERED = Array.isArray(detents) ? Math.max(...detents) : 0.55;
-
 /**
- * Framing a region (offline-map): the user moves the map; the part above this sheet is the region,
- * its size estimated as it moves. Named, it downloads in the background.
+ * Framing a region (offline-map, as the PWA): a frame over the map marks the region; the user
+ * moves the map under it, its size estimated as it moves. Named, it downloads in the background.
  */
 export function OfflineRegionSheet() {
   const { t } = useTranslation();
   const bounds = useMapStore((s) => s.bounds);
   const [name, setName] = useState('');
-  const region = bounds ? boundsAboveSheet(bounds, COVERED) : null;
+  const region = bounds ? framedBounds(bounds, REGION_FRAME) : null;
   const size = region ? formatBytes(estimateBytes(region)) : '…';
+  useRegionsOnMap();
+  useEffect(() => {
+    useMapStore.setState({ regionFrame: true });
+    return () => useMapStore.setState({ regionFrame: false });
+  }, []);
 
   const start = () => {
     if (!region) return;
@@ -194,11 +219,16 @@ export function OfflineRegionSheet() {
     <Screen>
       <Page
         form
+        // The bar holds Cancel and Download; the title heads the section, where it fits.
         title={t('offlineMap.download.sheetTitle')}
+        titleInHeader
         cancel={{ label: t('offlineMap.draw.cancel'), onPress: () => router.back() }}
         confirm={{ label: t('offlineMap.download.start'), onPress: start, disabled: !region }}
       >
-        <ListSection footer={t('offlineMap.draw.hintMobile', { size })}>
+        <ListSection
+          title={t('offlineMap.download.sheetTitle')}
+          footer={`${t('offlineMap.draw.hintFrame')} ${t('offlineMap.download.estimate', { size })}`}
+        >
           <TextRow
             label={t('offlineMap.download.nameLabel')}
             placeholder={t('offlineMap.download.untitled')}

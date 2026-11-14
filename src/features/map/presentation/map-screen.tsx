@@ -10,12 +10,12 @@ import { showAlert } from '@/core/adaptive/alert';
 import type { IconName } from '@/core/adaptive/icons';
 import { GlassCapsule, GlassCircleButton, GlassToggle } from '@/core/adaptive/map-controls';
 import { Text } from '@/core/adaptive/text';
-import { color, size, space } from '@/core/theme/tokens';
+import { color, radius, size, space } from '@/core/theme/tokens';
 import { haversineMeters } from '@/core/utils/haversine';
 import { draggedLine } from '@/features/map/domain/drawn-track';
 import { TRAIL_OVERLAYS } from '@/features/map/data/trail-overlays';
 import type { LngLat } from '@/features/map/domain/entities/trail';
-import { boundsAboveSheet } from '@/features/map/domain/offline-regions';
+import { boundsAboveSheet, REGION_FRAME, type Bounds } from '@/features/map/domain/offline-regions';
 import { loadGpxTrack } from '@/features/tours/data/services/gpx-track-service';
 import { TOUR_TYPE_TRACK_COLORS } from '@/features/tours/data/models/tour-type';
 import type { Tour } from '@/features/tours/domain/entities/tour';
@@ -26,6 +26,7 @@ import { useToursStore } from '@/features/tours/presentation/stores/tours-store'
 import { MAP_CREDIT } from './map-styles';
 import { openTour } from './open-tour';
 import { useMapStore, type MapState } from './stores/map-store';
+import { useOfflineMapsStore } from './stores/offline-maps-store';
 import { sameSpot, tourFeatures } from './tour-features';
 import {
   CLUSTER_LAYER,
@@ -72,6 +73,13 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
   const previewLines = useMapStore((s) => s.previewLines);
   const previewPoints = useMapStore((s) => s.previewPoints);
   const trailHighlight = useMapStore((s) => s.trailHighlight);
+  const regionsShown = useMapStore((s) => s.regionsShown > 0);
+  const regionFrame = useMapStore((s) => s.regionFrame);
+  const offlineRegions = useOfflineMapsStore((s) => s.regions);
+  const areas = useMemo(
+    () => (regionsShown ? regionAreas(offlineRegions.map((r) => r.bounds)) : undefined),
+    [regionsShown, offlineRegions],
+  );
 
   const allTours = useMemo(() => [...tours, ...friendTours], [tours, friendTours]);
   const selected = allTours.find((tour) => tour.id === selectedTourId) ?? null;
@@ -86,6 +94,7 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
     selectedTourId !== null ||
     selectedOutingKey !== null ||
     trailHighlight !== null ||
+    regionsShown ||
     mode !== 'browse';
   const padding = {
     top: insets.top + space.lg,
@@ -242,6 +251,7 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
         tours={features}
         lines={lines}
         points={points}
+        areas={areas}
         dimTrails={mode === 'draw'}
         drawing={mode === 'draw'}
         padding={padding}
@@ -254,6 +264,10 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
       >
         <TrackHandles />
       </TourMap>
+      {regionFrame ? (
+        // The region being framed for offline use: fixed over the map, the map moves under it.
+        <View pointerEvents="none" style={styles.regionFrame} />
+      ) : null}
       {mode === 'route' || mode === 'draw' ? (
         // The overlays at hand while a tour is planned or drawn (track-drawing): one tap each.
         <SafeAreaView
@@ -403,6 +417,29 @@ function highlightLines(highlight: MapState['trailHighlight']): Lines['features'
   );
 }
 
+/** Offline regions as outlined areas. */
+function regionAreas(regions: Bounds[]): GeoJSON.FeatureCollection<GeoJSON.Polygon> {
+  return {
+    type: 'FeatureCollection',
+    features: regions.map(([w, s, e, n]) => ({
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [w, s],
+            [e, s],
+            [e, n],
+            [w, n],
+            [w, s],
+          ],
+        ],
+      },
+    })),
+  };
+}
+
 function detailPoints(tour: Tour | null): Points {
   const features: Points['features'] = [];
   if (tour?.startPoint) {
@@ -468,6 +505,17 @@ function useSelectedLines(tour: Tour | null): Lines {
 }
 
 const styles = StyleSheet.create({
+  regionFrame: {
+    position: 'absolute',
+    top: `${REGION_FRAME.top * 100}%`,
+    right: `${REGION_FRAME.right * 100}%`,
+    bottom: `${REGION_FRAME.bottom * 100}%`,
+    left: `${REGION_FRAME.left * 100}%`,
+    borderWidth: 2,
+    borderColor: color.primary,
+    borderRadius: radius.sm,
+    backgroundColor: color.areaFill,
+  },
   chrome: {
     position: 'absolute',
     left: 0,

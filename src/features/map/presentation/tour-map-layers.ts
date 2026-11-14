@@ -1,6 +1,6 @@
 import type { ExpressionSpecification, LayerSpecification } from '@maplibre/maplibre-gl-style-spec';
 
-import { space } from '@/core/theme/tokens';
+import { color, space } from '@/core/theme/tokens';
 import { TRAIL_OVERLAYS, type TrailOverlayId } from '@/features/map/data/trail-overlays';
 
 import {
@@ -72,6 +72,8 @@ export type TourMapLayers = {
   /** One per trail overlay, in `TRAIL_OVERLAYS` order, each on its own raster source. */
   overlays: LayerSpecification[];
   ski: LayerSpecification[];
+  /** Areas outlined on the map: the saved offline regions. */
+  areas: LayerSpecification[];
   lines: LayerSpecification[];
   tours: LayerSpecification[];
   points: LayerSpecification[];
@@ -124,6 +126,21 @@ export function tourMapLayers({
           'icon-rotation-alignment': 'viewport',
           'icon-padding': 4,
         },
+      },
+    ],
+    areas: [
+      {
+        id: 'area-fill',
+        source: 'areas',
+        type: 'fill',
+        paint: { 'fill-color': color.areaFill },
+      },
+      {
+        id: 'area-outline',
+        source: 'areas',
+        type: 'line',
+        layout: LINE,
+        paint: { 'line-color': color.primary, 'line-width': 2 },
       },
     ],
     lines: [
