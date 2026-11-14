@@ -1,6 +1,9 @@
 import * as lv95 from '@/core/utils/wgs84-to-lv95';
 import { stubGlobal, unstubAllGlobals } from '../../../../support/globals';
-import { suggestTourName } from '@/features/tours/data/services/swisstopo-name-service';
+import {
+  suggestAreaName,
+  suggestTourName,
+} from '@/features/tours/data/services/swisstopo-name-service';
 
 function makeIdentifyResponse(results: object[]): Response {
   return new Response(JSON.stringify({ results }), { status: 200 });
@@ -233,5 +236,73 @@ describe('suggestTourName', () => {
     const result = suggestTourName({ lng: 8.0, lat: 46.5 }, caller.signal);
     caller.abort();
     expect(await result).toBeNull();
+  });
+});
+
+describe('suggestAreaName', () => {
+  beforeEach(() => {
+    stubGlobal('fetch', jest.fn());
+  });
+
+  afterEach(() => {
+    unstubAllGlobals();
+  });
+
+  it('should name a region after the town its centre lies in, the official name first', async () => {
+    jest
+      .mocked(fetch)
+      .mockResolvedValueOnce(
+        makeIdentifyResponse([
+          { attributes: { name: 'Praborgne', objektart: 'Ort', status: 'informell' } },
+          { attributes: { name: 'Zermatt', objektart: 'Ort', status: 'offiziell' } },
+        ]),
+      )
+      .mockResolvedValueOnce(
+        makeIdentifyResponse([
+          { attributes: { name: 'Mattertal', objektart: 'Tal', status: 'offiziell' } },
+        ]),
+      );
+
+    await expect(suggestAreaName({ lng: 7.749, lat: 46.02 })).resolves.toBe('Zermatt');
+  });
+
+  it('should name it after the valley around when its centre lies in no named area', async () => {
+    jest
+      .mocked(fetch)
+      .mockResolvedValueOnce(makeIdentifyResponse([]))
+      .mockResolvedValueOnce(
+        makeIdentifyResponse([
+          { attributes: { name: 'Wengen', objektart: 'Ort' } },
+          { attributes: { name: 'Mirrenflue', objektart: 'Gebiet' } },
+          { attributes: { name: 'Lauterbrunnental', objektart: 'Tal' } },
+        ]),
+      );
+
+    await expect(suggestAreaName({ lng: 7.909, lat: 46.594 })).resolves.toBe('Lauterbrunnental');
+  });
+
+  it("should fall back to the tour lookup's name when no valley, town or area is near", async () => {
+    jest
+      .mocked(fetch)
+      .mockResolvedValueOnce(makeIdentifyResponse([]))
+      .mockResolvedValueOnce(
+        makeIdentifyResponse([{ attributes: { name: 'Aabach', objektart: 'Fliessgewaesser' } }]),
+      )
+      .mockResolvedValueOnce(
+        makeIdentifyResponse([{ attributes: { name: 'Tällistock', objektart: 'Gipfel' } }]),
+      );
+
+    await expect(suggestAreaName({ lng: 8.3, lat: 46.75 })).resolves.toBe('Tällistock');
+  });
+
+  it('should give no name once the caller stops waiting', async () => {
+    const caller = new AbortController();
+    hangingFetch();
+    hangingFetch();
+    const name = suggestAreaName({ lng: 8.3, lat: 46.75 }, caller.signal);
+    caller.abort();
+
+    await expect(name).resolves.toBeNull();
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 });

@@ -177,6 +177,8 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
       tapHandler(lngLat);
       return;
     }
+    // Framing a region to download: the map only moves under the frame.
+    if (regionFrame) return;
     const map = mapRef.current;
     if (!map) return;
     const [hit] = await map.queryAt(point, [CLUSTER_LAYER, ...TOUR_LAYERS, 'tour-activity']);
@@ -195,8 +197,11 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
       if (found) {
         useMapStore.getState().showTrails(found.candidates, found.more);
         router.push('/trail');
+        return;
       }
     }
+    // A tap on the open map closes the sheets on it, as Apple Maps lets go of a place.
+    if (router.canDismiss()) router.dismissAll();
   }
 
   async function openCluster(clusterId: number, count: number, hit: GeoJSON.Feature) {

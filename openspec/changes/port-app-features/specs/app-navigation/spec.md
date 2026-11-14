@@ -22,6 +22,13 @@ The tours list and a tour's detail SHALL open as sheets over the Map tab with a 
 - **WHEN** the user cancels a tour form with unsaved changes
 - **THEN** the system asks to discard the changes before closing
 
+### Requirement: A tap beside the sheets closes them
+A tap on the map where there is no tour, cluster or ski route SHALL close the sheets over the map, as Apple Maps lets go of a place; while a step runs on the map (route, drawing, framing a region) the map's taps SHALL belong to the step.
+
+#### Scenario: Tap beside a tour
+- **WHEN** a tour's detail sheet is at its medium height and the user taps an empty spot on the map
+- **THEN** the sheet closes; a tap on another tour's marker opens that tour instead
+
 ### Requirement: Unread inbox entries badge the Profile tab
 The Profile tab item SHALL carry the inbox's badge (unread, not stale entries, capped at "9+", hidden at zero), and the Inbox row in the Profile tab SHALL show the same count.
 

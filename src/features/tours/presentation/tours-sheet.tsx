@@ -16,6 +16,7 @@ import {
 } from '@/core/adaptive/list';
 import { Pills } from '@/core/adaptive/pills';
 import { Page, Screen } from '@/core/adaptive/screen';
+import { opened } from '@/core/adaptive/page-path';
 import { resolveContactName } from '@/features/contacts/domain/entities/contact';
 import { useContactsStore } from '@/features/contacts/presentation/stores/contacts-store';
 import { resolveFriendName } from '@/features/friendships/domain/resolve-friend-name';
@@ -66,7 +67,7 @@ export function ToursSheet() {
   useState(() => {
     if (tab !== 'friends') useTourFiltersStore.getState().setTab('owned');
   });
-  const push = (value: string) => setPath((p) => [...p, value]);
+  const push = (value: string) => setPath((p) => opened(p, value));
 
   return (
     <Screen

@@ -22,6 +22,7 @@ import {
 import { initialFollow, type Follow, type SnapNetwork } from '@/features/map/domain/snap-network';
 import type { HandleTarget } from '@/features/map/presentation/stores/map-store';
 import { FollowSection } from '@/features/map/presentation/follow-section';
+import { openTour } from '@/features/map/presentation/open-tour';
 import { createLegRouter, isGap, legEnd, tapSnapM } from '@/features/map/presentation/leg-router';
 import { useMapStore } from '@/features/map/presentation/stores/map-store';
 import {
@@ -233,7 +234,7 @@ export function PlanSheet({ back }: { back: boolean }) {
     );
   }
 
-  /** A tap on a point or a leg's dot: a step becomes the one the next tap moves, a leg waits. */
+  /** A tap on a point or a leg's dot: a start or end goes, the goal or a leg waits for a tap. */
   function pick(target: HandleTarget) {
     void Haptics.selectionAsync();
     if ('leg' in target) {
@@ -242,7 +243,11 @@ export function PlanSheet({ back }: { back: boolean }) {
     }
     const where = pointAt(target.point);
     setPickedLeg(null);
-    if (where && 'step' in where) setActive(where.step);
+    if (!where || !('step' in where)) return;
+    // As in drawing, a tap takes a point out: a start or end goes (the next map tap sets it anew);
+    // the goal, which the route needs, waits for the next map tap to move it.
+    if (where.step === 'goal') setActive('goal');
+    else clear(where.step);
   }
 
   /** A map tap: through a picked leg, else the active point set or moved there. */
@@ -454,21 +459,20 @@ export function PlanSheet({ back }: { back: boolean }) {
       router.replace('/tour/edit');
       return;
     }
-    if (!ROUTE_STEPS.some((s) => points[s])) {
+    // A new segment given up goes back to its tour's sheet.
+    const leave = () => {
+      const reopen = useTourDraftStore.getState().returnTo;
       useTourDraftStore.getState().reset();
-      router.back();
+      if (reopen) openTour(reopen);
+      else router.back();
+    };
+    if (!ROUTE_STEPS.some((s) => points[s])) {
+      leave();
       return;
     }
     Alert.alert(t('tours.creation.discard'), undefined, [
       { text: t('tours.creation.keepEditing'), style: 'cancel' },
-      {
-        text: t('contacts.shared.discardBtn'),
-        style: 'destructive',
-        onPress: () => {
-          useTourDraftStore.getState().reset();
-          router.back();
-        },
-      },
+      { text: t('contacts.shared.discardBtn'), style: 'destructive', onPress: leave },
     ]);
   }
 
@@ -514,7 +518,13 @@ export function PlanSheet({ back }: { back: boolean }) {
   return (
     <Screen>
       <Page
-        title={draftState.mode === 'create' ? t('tours.creation.title') : t('map.plan.editTitle')}
+        title={
+          draftState.mode !== 'create'
+            ? t('map.plan.editTitle')
+            : draftState.segmentOf
+              ? t('tours.outing.newTitle')
+              : t('tours.creation.title')
+        }
         cancel={{ label: back ? t('common.back') : t('common.cancel'), onPress: cancel }}
         confirm={{
           label: back ? t('map.plan.done') : t('map.plan.continue'),

@@ -9,6 +9,7 @@ import {
   List,
   Menu,
   Picker,
+  ProgressView,
   RNHostView,
   Section,
   Spacer,
@@ -26,6 +27,7 @@ import {
   accessibilityLabel as a11yLabel,
   autocorrectionDisabled,
   badge,
+  buttonStyle,
   datePickerStyle,
   disabled as disabledModifier,
   fixedSize,
@@ -33,6 +35,7 @@ import {
   foregroundStyle,
   frame,
   keyboardType as keyboardTypeModifier,
+  labelStyle,
   listRowBackground,
   listSectionSpacing,
   listStyle,
@@ -127,6 +130,10 @@ export function ListSection({ title, footer, children }: ListSectionProps) {
   if (rows.length === 0) return null;
   return (
     <Section
+      // SwiftUI builds a section with and without a footer (or title) as different views, so its
+      // rows are made anew when one comes or goes; the rows' app-drawn icons are remounted with
+      // them, or they stay blank.
+      key={`${title ? 'title' : ''}-${footer ? 'footer' : ''}`}
       title={title}
       footer={footer ? <SwiftText modifiers={[secondary]}>{footer}</SwiftText> : undefined}
     >
@@ -135,13 +142,16 @@ export function ListSection({ title, footer, children }: ListSectionProps) {
   );
 }
 
-function actionButtons(actions: RowAction[]) {
+function actionButtons(actions: RowAction[], { swipe = false } = {}) {
   return actions.map((action) => (
     <Button
       key={action.label}
       label={action.label}
       systemImage={action.icon ? icons[action.icon].sf : undefined}
-      role={action.destructive ? 'destructive' : undefined}
+      // A destructive swipe button makes SwiftUI take the row out at once, while the app first
+      // asks and removes it later: the list's rows no longer add up and the app quits. A swipe
+      // shows red by its tint alone; menus keep the role.
+      role={action.destructive && !swipe ? 'destructive' : undefined}
       // The list's tint would paint a destructive swipe blue: it is red, as in Mail.
       modifiers={action.destructive ? [tint(color.error)] : undefined}
       onPress={action.onPress}
@@ -153,6 +163,7 @@ export function ListRow({
   title,
   subtitle,
   value,
+  progress,
   icon,
   iconColor,
   onPress,
@@ -165,6 +176,7 @@ export function ListRow({
   leadingSwipeActions,
   contextActions,
   menu,
+  accessory,
   accessibilityLabel,
 }: ListRowProps) {
   const showChevron = chevron ?? (!!onPress && !destructive && !menu);
@@ -188,6 +200,9 @@ export function ListRow({
             {subtitle}
           </SwiftText>
         ) : null}
+        {progress !== undefined ? (
+          <ProgressView value={Math.min(Math.max(progress, 0), 1)} />
+        ) : null}
       </VStack>
       <Spacer />
       {value ? <SwiftText modifiers={[secondary, lineLimit(1)]}>{value}</SwiftText> : null}
@@ -197,6 +212,21 @@ export function ListRow({
           systemName="chevron.forward"
           size={13}
           modifiers={[tertiary, font({ weight: 'semibold' })]}
+        />
+      ) : null}
+      {accessory?.icon ? (
+        // Borderless, so only the symbol takes the tap, as an App Store download's stop.
+        <Button
+          label={accessory.label}
+          systemImage={icons[accessory.icon].sf}
+          onPress={accessory.onPress}
+          modifiers={[
+            buttonStyle('borderless'),
+            labelStyle('iconOnly'),
+            font({ size: 26 }),
+            // In the brand colour, as the App Store's stop: the row's label colour would win a tint.
+            foregroundStyle(color.primary),
+          ]}
         />
       ) : null}
     </HStack>
@@ -236,11 +266,13 @@ export function ListRow({
         {row}
         {leadingSwipeActions?.length ? (
           <SwipeActions.Actions edge="leading">
-            {actionButtons(leadingSwipeActions)}
+            {actionButtons(leadingSwipeActions, { swipe: true })}
           </SwipeActions.Actions>
         ) : null}
         {swipeActions?.length ? (
-          <SwipeActions.Actions edge="trailing">{actionButtons(swipeActions)}</SwipeActions.Actions>
+          <SwipeActions.Actions edge="trailing">
+            {actionButtons(swipeActions, { swipe: true })}
+          </SwipeActions.Actions>
         ) : null}
       </SwipeActions>
     );

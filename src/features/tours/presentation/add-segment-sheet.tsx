@@ -36,7 +36,12 @@ export function AddSegmentSheet({ anchorId }: { anchorId: string }) {
     const store = useTourDraftStore.getState();
     store.begin('create', null, seed);
     store.setSegmentOf(anchor.id);
-    router.replace({ pathname: '/plan', params: { keep: '1' } });
+    // The route step is on the map, as for a new tour: the sheets close first, and the tour's
+    // sheet comes back if the segment is given up.
+    useTourDraftStore.setState({ returnTo: anchor.id });
+    if (router.canDismiss()) router.dismissAll();
+    router.navigate('/');
+    router.push({ pathname: '/plan', params: { keep: '1' } });
   }
 
   async function addExisting(tourId: string) {

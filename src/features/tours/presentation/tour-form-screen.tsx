@@ -133,7 +133,9 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
 
   const title =
     mode === 'create'
-      ? t('tours.creation.title')
+      ? useTourDraftStore.getState().segmentOf
+        ? t('tours.outing.newTitle')
+        : t('tours.creation.title')
       : mode === 'suggest'
         ? t('tours.suggestions.suggestTitle')
         : t('tours.infoSheet.editTitle');

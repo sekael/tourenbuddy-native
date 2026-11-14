@@ -926,7 +926,8 @@
       "connect": "Connect",
       "connectLabel": "End segment {{n}} at {{place}}",
       "moveUp": "Move up",
-      "moveDown": "Move down"
+      "moveDown": "Move down",
+      "newTitle": "New segment"
     },
     "route": {
       "ascent": "Ascent",
@@ -1393,7 +1394,11 @@
       "incomplete": "Incomplete",
       "redownload": "Download again",
       "webUnavailable": "Offline maps are available in the iPhone and Android apps.",
-      "showOnMap": "Show on map"
+      "showOnMap": "Show on map",
+      "downloading": "Downloading · {{percent}} %",
+      "ready": "Available offline · {{size}}",
+      "cancelDownload": "Cancel download",
+      "keepDownloading": "Keep downloading"
     },
     "errors": {
       "load": "Could not load offline maps.",

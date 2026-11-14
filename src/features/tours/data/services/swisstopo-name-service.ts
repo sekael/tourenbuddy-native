@@ -43,6 +43,8 @@ interface IdentifyFeature {
     name?: string;
     label?: string;
     objektart?: string;
+    /** "offiziell" or "informell" (a local or foreign variant, such as "Praborgne" in Zermatt). */
+    status?: string;
   };
 }
 
@@ -192,4 +194,50 @@ export async function suggestTourName(
     clearTimeout(timeoutId);
     signal?.removeEventListener('abort', abort);
   }
+}
+
+/** Names of an area, most telling first for a region of the map: a valley, a town, an area. */
+const AREA_KINDS = ['Tal', 'Ort', 'Gebiet'];
+/** How far around a region's centre its valley or town is looked for. */
+const AREA_RADIUS_M = 1000;
+
+/**
+ * Suggests a name for a region of the map (an offline region): the valley, town or named area its
+ * centre lies in ("Davos Platz", "Zermatt"), else the one around it ("Lauterbrunnental"), official
+ * names before local variants; else the name a tour pinned at the centre would get
+ * (`suggestTourName`, the PWA's lookup).
+ *
+ * Returns null if nothing is found, the API is unavailable, or `signal` aborts.
+ */
+export async function suggestAreaName(
+  coords: { lng: number; lat: number },
+  signal?: AbortSignal,
+): Promise<string | null> {
+  const { easting, northing } = wgs84ToLv95(coords.lng, coords.lat);
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  signal?.addEventListener('abort', abort);
+  const timeoutId = setTimeout(abort, TIMEOUT_MS);
+
+  try {
+    const [atCentre, around] = await Promise.all([
+      identifyAt(easting, northing, 50, controller.signal),
+      identifyAt(easting, northing, AREA_RADIUS_M, controller.signal),
+    ]);
+    const kind = (f: IdentifyFeature) => AREA_KINDS.indexOf(f.attributes?.objektart ?? '');
+    const informal = (f: IdentifyFeature) => (f.attributes?.status === 'informell' ? 1 : 0);
+    const named = (fs: IdentifyFeature[]) =>
+      fs
+        .filter((f) => kind(f) !== -1 && f.attributes?.name?.trim())
+        .sort((a, b) => informal(a) - informal(b) || kind(a) - kind(b));
+    const [best] = [...named(atCentre), ...named(around)];
+    if (best) return best.attributes!.name!.trim();
+  } catch (err) {
+    if (signal?.aborted) return null;
+    logger.warn('Swisstopo area lookup failed, naming the centre instead', err);
+  } finally {
+    clearTimeout(timeoutId);
+    signal?.removeEventListener('abort', abort);
+  }
+  return signal?.aborted ? null : suggestTourName(coords, signal);
 }

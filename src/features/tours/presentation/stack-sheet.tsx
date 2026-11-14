@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { ListSection } from '@/core/adaptive/list';
 import { Page, Screen } from '@/core/adaptive/screen';
+import { opened } from '@/core/adaptive/page-path';
 import { useMapStore } from '@/features/map/presentation/stores/map-store';
 
 import { OutingPage } from './outing-page';
@@ -26,7 +27,7 @@ function StackList({ ids }: { ids: string[] }) {
   const tours = useToursStore((s) => s.tours);
   const friendTours = useToursStore((s) => s.friendTours);
   const [path, setPath] = useState<string[]>([]);
-  const push = (value: string) => setPath((p) => [...p, value]);
+  const push = (value: string) => setPath((p) => opened(p, value));
   const listed = ids
     .map((id) => tours.find((x) => x.id === id) ?? friendTours.find((x) => x.id === id))
     .filter((x) => x !== undefined);

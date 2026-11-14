@@ -122,6 +122,7 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
       typesChosen: !!tour?.tourTypes.length,
       route: null,
       segmentOf: null,
+      returnTo: null,
     }),
 
   update: (patch) =>

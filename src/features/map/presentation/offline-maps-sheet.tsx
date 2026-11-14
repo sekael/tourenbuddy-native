@@ -14,6 +14,7 @@ import {
   REGION_FRAME,
   SWITZERLAND_REGIONS,
 } from '@/features/map/domain/offline-regions';
+import { suggestAreaName } from '@/features/tours/data/services/swisstopo-name-service';
 
 import { useMapStore } from './stores/map-store';
 import {
@@ -73,6 +74,33 @@ export function OfflineMapsSheet() {
       },
     ]);
 
+  // A download under way is stopped, what it fetched dropped.
+  const confirmCancel = (region: OfflineRegion) =>
+    Alert.alert(t('offlineMap.manage.cancelDownload'), region.name, [
+      { text: t('offlineMap.manage.keepDownloading'), style: 'cancel' },
+      {
+        text: t('offlineMap.manage.cancelDownload'),
+        style: 'destructive',
+        onPress: () => void store.cancel(region.id),
+      },
+    ]);
+
+  /** The row's way out: cancel a download under way, else delete the region. */
+  const dropAction = (region: OfflineRegion) =>
+    region.state === 'downloading'
+      ? {
+          label: t('offlineMap.manage.cancelDownload'),
+          icon: 'stop_circle' as const,
+          destructive: true,
+          onPress: () => confirmCancel(region),
+        }
+      : {
+          label: t('offlineMap.manage.delete'),
+          icon: 'delete' as const,
+          destructive: true,
+          onPress: () => confirmDelete(region),
+        };
+
   const downloadAll = () => {
     const bytes = SWITZERLAND_REGIONS.reduce((sum, r) => sum + estimateBytes(r.bounds), 0);
     Alert.alert(
@@ -130,11 +158,12 @@ export function OfflineMapsSheet() {
               title={region.name || t('offlineMap.download.untitled')}
               subtitle={
                 region.state === 'downloading'
-                  ? `${region.percentage} %`
+                  ? t('offlineMap.manage.downloading', { percent: region.percentage })
                   : region.state === 'incomplete'
                     ? `${t('offlineMap.manage.incomplete')} · ${formatBytes(region.bytes)}`
-                    : formatBytes(region.bytes)
+                    : t('offlineMap.manage.ready', { size: formatBytes(region.bytes) })
               }
+              progress={region.state === 'downloading' ? region.percentage / 100 : undefined}
               icon={
                 region.state === 'complete'
                   ? 'download_for_offline'
@@ -143,37 +172,31 @@ export function OfflineMapsSheet() {
                     : 'warning'
               }
               iconColor={region.state === 'incomplete' ? color.error : undefined}
-              // A tap offers what a region can do: show it, download it again, delete it.
-              menu={[
-                {
-                  label: t('offlineMap.manage.showOnMap'),
-                  icon: 'map',
-                  onPress: () => frameRegions([region]),
-                },
-                ...(region.state === 'incomplete'
-                  ? [
+              // A download under way stops with the button at its end, as in the App Store; a
+              // saved region's tap offers what it can do: show it, download it again, delete it.
+              accessory={region.state === 'downloading' ? dropAction(region) : undefined}
+              menu={
+                region.state === 'downloading'
+                  ? undefined
+                  : [
                       {
-                        label: t('offlineMap.manage.redownload'),
-                        icon: 'replay' as const,
-                        onPress: () => void store.redownload(region.id),
+                        label: t('offlineMap.manage.showOnMap'),
+                        icon: 'map',
+                        onPress: () => frameRegions([region]),
                       },
+                      ...(region.state === 'incomplete'
+                        ? [
+                            {
+                              label: t('offlineMap.manage.redownload'),
+                              icon: 'replay' as const,
+                              onPress: () => void store.redownload(region.id),
+                            },
+                          ]
+                        : []),
+                      dropAction(region),
                     ]
-                  : []),
-                {
-                  label: t('offlineMap.manage.delete'),
-                  icon: 'delete',
-                  destructive: true,
-                  onPress: () => confirmDelete(region),
-                },
-              ]}
-              swipeActions={[
-                {
-                  label: t('offlineMap.manage.delete'),
-                  icon: 'delete',
-                  destructive: true,
-                  onPress: () => confirmDelete(region),
-                },
-              ]}
+              }
+              swipeActions={[dropAction(region)]}
             />
           ))}
         </ListSection>
@@ -198,8 +221,41 @@ export function OfflineRegionSheet() {
   const { t } = useTranslation();
   const bounds = useMapStore((s) => s.bounds);
   const [name, setName] = useState('');
+  /** The user wrote a name: it stays as the frame moves. */
+  const [named, setNamed] = useState(false);
   const region = bounds ? framedBounds(bounds, REGION_FRAME) : null;
   const size = region ? formatBytes(estimateBytes(region)) : '…';
+
+  // A name prefilled, as in the PWA, from Swisstopo's names at the framed area's centre: its valley,
+  // town or area first ("Lauterbrunnental"), else the spot's name a tour would get, else its
+  // coordinates. It follows the frame until the user writes their own.
+  const centre = region
+    ? { lng: (region[0] + region[2]) / 2, lat: (region[1] + region[3]) / 2 }
+    : null;
+  const centreKey = centre ? `${centre.lng.toFixed(3)},${centre.lat.toFixed(3)}` : null;
+  useEffect(() => {
+    if (!centre || named) return;
+    const lookup = new AbortController();
+    const timer = setTimeout(
+      () => {
+        void suggestAreaName(centre, lookup.signal)
+          .catch(() => null)
+          .then((found) => {
+            if (!lookup.signal.aborted) {
+              setName(found ?? `${centre.lat.toFixed(3)}, ${centre.lng.toFixed(3)}`);
+            }
+          });
+        // At once as the sheet opens, so the name is there before the user reaches the field.
+      },
+      name ? 400 : 0,
+    );
+    return () => {
+      clearTimeout(timer);
+      lookup.abort();
+    };
+    // The centre's key alone: a new frame, not a new object for the same one.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [centreKey, named]);
   useRegionsOnMap();
   useEffect(() => {
     useMapStore.setState({ regionFrame: true });
@@ -233,7 +289,10 @@ export function OfflineRegionSheet() {
             label={t('offlineMap.download.nameLabel')}
             placeholder={t('offlineMap.download.untitled')}
             value={name}
-            onChangeText={setName}
+            onChangeText={(text) => {
+              setName(text);
+              setNamed(true);
+            }}
             autoCapitalize="words"
           />
         </ListSection>

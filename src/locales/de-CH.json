@@ -926,7 +926,8 @@
       "connect": "Verbinden",
       "connectLabel": "Etappe {{n}} bei {{place}} enden lassen",
       "moveUp": "Nach oben",
-      "moveDown": "Nach unten"
+      "moveDown": "Nach unten",
+      "newTitle": "Neue Etappe"
     },
     "route": {
       "ascent": "Aufstieg",
@@ -1393,7 +1394,11 @@
       "incomplete": "Unvollständig",
       "redownload": "Erneut herunterladen",
       "webUnavailable": "Offline-Karten gibt es in den Apps für iPhone und Android.",
-      "showOnMap": "Auf der Karte zeigen"
+      "showOnMap": "Auf der Karte zeigen",
+      "downloading": "Wird heruntergeladen · {{percent}} %",
+      "ready": "Offline verfügbar · {{size}}",
+      "cancelDownload": "Download abbrechen",
+      "keepDownloading": "Weiterladen"
     },
     "errors": {
       "load": "Offline-Karten konnten nicht geladen werden.",

@@ -48,7 +48,11 @@ export function useRouteNumbers(
   return {
     metrics,
     numbers: parts.length
-      ? { text: parts.map((p) => p.text).join('  '), label: parts.map((p) => p.label).join(', ') }
+      ? {
+          // A number keeps its unit and arrow on its line ("10:31 h"); lines break between numbers.
+          text: parts.map((p) => p.text.replace(/ /g, '\u00a0')).join('  '),
+          label: parts.map((p) => p.label).join(', '),
+        }
       : null,
   };
 }

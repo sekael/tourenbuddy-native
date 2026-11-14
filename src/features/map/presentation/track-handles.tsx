@@ -14,10 +14,10 @@ const STOP_ICONS = { start: 'trip_origin', goal: 'flag', end: 'sports_score' } a
 
 /**
  * The line's handles (track-drawing "Shape the line"): hold a point and drag it to move it; hold
- * the dot halfway along a leg and drag it onto another way to send the line through there; tap a
- * pulled point to take it out again. Without dragging, a tap picks a point or a dot (it turns
- * blue) and the next map tap moves it there. While a handle is dragged the line runs straight
- * through it; the drop routes the legs it touches anew.
+ * the dot halfway along a leg and drag it onto another way to send the line through there. A
+ * quick tap on a point takes it out (the step decides: the goal is picked instead, it turns blue
+ * and the next map tap moves it); a tap on a leg's dot picks it for the next map tap. While a
+ * handle is dragged the line runs straight through it; the drop routes the legs it touches anew.
  */
 export function TrackHandles() {
   const { t } = useTranslation();

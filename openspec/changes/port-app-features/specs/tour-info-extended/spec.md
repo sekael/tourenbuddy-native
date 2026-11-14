@@ -10,3 +10,14 @@ A tour's sheet SHALL show its essentials close together, right under the bar's b
 #### Scenario: Making a tour private
 - **WHEN** the owner turns "Private" on
 - **THEN** the tour is hidden from friends and partners, the note says so, and reopening the tour shows the switch on
+
+### Requirement: A tour's state shows on its disc
+As on the tour's map marker, the top of a tour's sheet SHALL show its activities in one disc, split into equal slices in their colours when there are several, and the disc SHALL carry a check while the tour is completed and a lock while it is private, on own and friends' tours, changing as soon as a switch does.
+
+#### Scenario: Four activities
+- **WHEN** the user opens a tour with hiking, a high tour, climbing and trail running
+- **THEN** one disc shows all four as quarters, each in its colour with its glyph, and the chips below name them
+
+#### Scenario: Marking a tour done
+- **WHEN** the owner turns "Completed" on, then off again
+- **THEN** the activity disc at the top shows a green check at once, and the check goes again

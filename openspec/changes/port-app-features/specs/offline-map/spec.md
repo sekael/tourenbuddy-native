@@ -17,6 +17,18 @@ On iOS and Android a downloaded region SHALL be an offline pack of the vector ba
 - **WHEN** a region finished downloading and the device is in airplane mode after a restart
 - **THEN** the base map, labels and ski routes render inside the region
 
+#### Scenario: Download under way
+- **WHEN** the user starts downloading a region
+- **THEN** its row shows a progress bar filling with the percentage, and once done the row says the region is available offline with its size
+
+#### Scenario: Cancel a download
+- **WHEN** the user taps the stop button at the end of a download's row (or swipes it) and confirms
+- **THEN** the download stops, the region and what it fetched are gone, and the app keeps running
+
+#### Scenario: Delete after a restart
+- **WHEN** the user restarts the app, opens the offline maps and deletes a saved region
+- **THEN** the region is gone from the list and the map, and the app keeps running
+
 #### Scenario: Incomplete pack
 - **WHEN** the system evicted part of a pack
 - **THEN** the region shows as incomplete with a way to download it again
@@ -27,6 +39,10 @@ Opening the offline maps SHALL show the saved regions outlined on the map, frame
 #### Scenario: After a restart
 - **WHEN** the user saved a region, restarts the app and opens the offline maps
 - **THEN** the region is listed with its size and outlined on the map
+
+#### Scenario: A name from the place
+- **WHEN** the user frames a region
+- **THEN** its name is prefilled from Swisstopo's names at the frame's centre: the town, valley or named area the centre lies in ("Zermatt"), else one within a kilometre ("Gadmertal"), official names before local variants, else the name a tour pinned there would get, else its coordinates; it follows the frame until the user types a name of their own
 
 #### Scenario: Framing a valley
 - **WHEN** the user taps "Region herunterladen" and moves the map until the frame covers the Lauterbrunnen valley

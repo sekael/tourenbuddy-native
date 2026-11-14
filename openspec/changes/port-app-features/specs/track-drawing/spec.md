@@ -34,8 +34,12 @@ A tour's route and its track SHALL have exactly one start, one goal and one end:
 - **THEN** the tour's end is the last drawn point, named after its place, and the map shows one end flag where the track ends
 
 ### Requirement: A drawn point goes with a tap
-While drawing, tapping a point SHALL remove it (the goal excepted), its neighbours joined along the ways; undo brings it back.
+While drawing and in the route step, a quick tap on a point SHALL remove it, its neighbours joined along the ways; holding a point and dragging it SHALL move it. A tap on the goal SHALL pick it for the next map tap instead. While drawing, undo brings a point back; in the route step, the next map tap sets a removed start or end anew.
 
 #### Scenario: Remove a point by tapping it
 - **WHEN** the user taps a point of the drawn line (start, end or a point between)
 - **THEN** the point goes, the line joins its neighbours, and the numbers update
+
+#### Scenario: Remove the start in the route step
+- **WHEN** the user taps the start's marker in the route step
+- **THEN** the start goes, the sheet's Start row is the active one, and the next map tap sets the start there

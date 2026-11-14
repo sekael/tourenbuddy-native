@@ -9,7 +9,7 @@ import {
 } from '@/features/map/domain/offline-regions';
 import { BASE_MAP_URL } from '@/features/map/presentation/map-styles';
 
-import { OfflineManager, type OfflinePack } from './offline-packs';
+import { OfflineManager, type OfflinePack, type OfflinePackStatus } from './offline-packs';
 
 /**
  * Offline maps (offline-map D10): each region an offline pack of the vector base map, zoom 0 to
@@ -37,6 +37,8 @@ type OfflineMapsState = {
   load: () => Promise<void>;
   download: (name: string, bounds: Bounds) => Promise<void>;
   remove: (id: string) => Promise<void>;
+  /** A download under way: stop it and drop what it fetched. */
+  cancel: (id: string) => Promise<void>;
   /** An incomplete region: delete and download it again. */
   redownload: (id: string) => Promise<void>;
 };
@@ -49,8 +51,14 @@ function configure() {
   OfflineManager.setProgressEventThrottle(500);
 }
 
-async function regionOf(pack: OfflinePack): Promise<OfflineRegion> {
+/** A pack's region; null for a pack gone meanwhile (the native side answers no status). */
+async function regionOf(pack: OfflinePack): Promise<OfflineRegion | null> {
   const status = await pack.status();
+  return status ? regionFrom(pack, status) : null;
+}
+
+/** A pack's region from a status in hand (a progress event carries one: no native lookup). */
+function regionFrom(pack: OfflinePack, status: OfflinePackStatus): OfflineRegion {
   return {
     id: pack.id,
     name: typeof pack.metadata?.name === 'string' ? pack.metadata.name : '',
@@ -67,13 +75,20 @@ async function regionOf(pack: OfflinePack): Promise<OfflineRegion> {
 }
 
 export const useOfflineMapsStore = create<OfflineMapsState>()((set, get) => {
-  const upsert = (region: OfflineRegion) =>
-    set({ regions: [...get().regions.filter((r) => r.id !== region.id), region] });
+  /** A region updated where it stands (rows keep their order while downloads report), else added. */
+  const upsert = (region: OfflineRegion) => {
+    const regions = get().regions;
+    set({
+      regions: regions.some((r) => r.id === region.id)
+        ? regions.map((r) => (r.id === region.id ? region : r))
+        : [...regions, region],
+    });
+  };
 
   const listen = (id: string) =>
     OfflineManager.addListener(
       id,
-      (pack) => void regionOf(pack).then(upsert),
+      (pack, status) => upsert(regionFrom(pack, status)),
       (_pack, error) => {
         log.warn('Offline pack failed', error.message);
         set({ error: 'download' });
@@ -91,7 +106,7 @@ export const useOfflineMapsStore = create<OfflineMapsState>()((set, get) => {
       configure();
       try {
         const packs = await OfflineManager.getPacks();
-        const regions = await Promise.all(packs.map(regionOf));
+        const regions = (await Promise.all(packs.map(regionOf))).filter((r) => r !== null);
         set({ regions, loaded: true, error: null });
         // A download still running from before keeps reporting.
         regions.filter((r) => r.state === 'downloading').forEach((r) => void listen(r.id));
@@ -114,13 +129,14 @@ export const useOfflineMapsStore = create<OfflineMapsState>()((set, get) => {
             maxZoom: OFFLINE_MAX_ZOOM,
             metadata: { name },
           },
-          (current) => void regionOf(current).then(upsert),
+          (current, status) => upsert(regionFrom(current, status)),
           (_pack, error) => {
             log.warn('Offline pack failed', error.message);
             set({ error: 'download' });
           },
         );
-        upsert(await regionOf(pack));
+        const region = await regionOf(pack);
+        if (region) upsert(region);
       } catch (error) {
         log.error('Creating an offline pack failed', error);
         set({ error: 'download' });
@@ -130,6 +146,11 @@ export const useOfflineMapsStore = create<OfflineMapsState>()((set, get) => {
     remove: async (id) => {
       if (!offlineMapsSupported) return;
       try {
+        // No progress reaches a pack being deleted, and a download stops before its pack goes.
+        OfflineManager.removeListener(id);
+        if (get().regions.find((r) => r.id === id)?.state === 'downloading') {
+          await (await OfflineManager.getPack(id)).pause();
+        }
         await OfflineManager.deletePack(id);
         set({ regions: get().regions.filter((r) => r.id !== id) });
       } catch (error) {
@@ -137,6 +158,8 @@ export const useOfflineMapsStore = create<OfflineMapsState>()((set, get) => {
         set({ error: 'delete' });
       }
     },
+
+    cancel: (id) => get().remove(id),
 
     redownload: async (id) => {
       const region = get().regions.find((r) => r.id === id);

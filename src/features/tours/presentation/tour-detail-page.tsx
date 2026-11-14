@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Linking, StyleSheet, View } from 'react-native';
@@ -33,6 +33,7 @@ import { tourMinutes } from '@/features/tours/domain/route-metrics';
 import { usePace } from '@/features/user/presentation/stores/user-profile-store';
 import { useAuthStore } from '@/features/auth/presentation/stores/auth-store';
 
+import { ActivityDisc } from './activity-disc';
 import { AttachmentsSection } from './attachments-section';
 import { LinkedToursSection } from './linked-tours-section';
 import { useRouteNumbers } from './route-numbers';
@@ -68,7 +69,7 @@ export function useTour(id: string): Tour | null {
  * above the sheet; leaving it lets the map go back to all tours.
  */
 export function TourDetailPage({
-  id,
+  id: openedId,
   onGone,
   onOpenOuting,
   onOpenTour,
@@ -85,6 +86,8 @@ export function TourDetailPage({
 }) {
   const { t } = useTranslation();
   const { formatDate, formatDateRange, formatElevation } = useFormatter();
+  // A segment steps to the one before or after it in place, as in the PWA.
+  const [id, setId] = useState(openedId);
   const tour = useTour(id);
   const tours = useToursStore((s) => s.tours);
   const friendTours = useToursStore((s) => s.friendTours);
@@ -256,18 +259,30 @@ export function TourDetailPage({
 
   // The PWA's hero: the activities left, the name (in full, never cut as in the bar) and the facts
   // beside them.
+  const activities = routeOrder(tour);
+  const discSize = activities.length > 2 ? 52 : activities.length > 1 ? 48 : 40;
   const hero = (
     <View style={styles.heroBlock}>
       <View style={styles.hero}>
-        <View style={styles.discs}>
-          {routeOrder(tour).map((type) => (
-            <View key={type} style={[styles.disc, { backgroundColor: TOUR_TYPE_COLORS[type] }]}>
-              <Icon name={TOUR_TYPE_ICONS[type] as IconName} color={color.onContrast} size={22} />
+        <View>
+          {/* All activities in one disc, as the map's marker; done and private on its edge. */}
+          <ActivityDisc types={activities} size={discSize} />
+          {tour.completed ? (
+            <View
+              style={[styles.badge, styles.badgeDone, { top: discSize - 16 }]}
+              accessible
+              aria-label={t('tours.infoSheet.completedBtn')}
+            >
+              <Icon name="check" color={color.onContrast} size={12} />
             </View>
-          ))}
-          {tour.tourTypes.length === 0 ? (
-            <View style={[styles.disc, { backgroundColor: color.primary }]}>
-              <Icon name="tour" color={color.onContrast} size={22} />
+          ) : null}
+          {tour.visibility === 'private' ? (
+            <View
+              style={[styles.badge, styles.badgePrivate]}
+              accessible
+              aria-label={t('tours.form.visibilityPrivate')}
+            >
+              <Icon name="lock" color={color.onContrast} size={11} />
             </View>
           ) : null}
         </View>
@@ -293,27 +308,6 @@ export function TourDetailPage({
                 ? t('tours.infoSheet.createdByLabel', { name: owner.displayName ?? '' })
                 : ' '}
             </Text>
-          ) : null}
-          {/* The owner's switches say it below; a friend's tour shows it here. */}
-          {!isOwner && (tour.completed || tour.visibility === 'private') ? (
-            <View style={styles.line}>
-              {tour.completed ? (
-                <View
-                  style={[styles.stamp, { backgroundColor: color.success }]}
-                  aria-label={t('tours.infoSheet.completedBtn')}
-                >
-                  <Icon name="check" color={color.onContrast} size={14} />
-                </View>
-              ) : null}
-              {tour.visibility === 'private' ? (
-                <View
-                  style={[styles.stamp, { backgroundColor: color.onSurfaceVariant }]}
-                  aria-label={t('tours.form.visibilityPrivate')}
-                >
-                  <Icon name="lock" color={color.onContrast} size={14} />
-                </View>
-              ) : null}
-            </View>
           ) : null}
         </View>
       </View>
@@ -398,6 +392,31 @@ export function TourDetailPage({
             icon="timeline"
             onPress={() => onOpenOuting(key!)}
           />
+          {[
+            {
+              to: segments[segmentIndex - 1],
+              label: t('tours.outing.previous'),
+              icon: 'arrow_back',
+            },
+            {
+              to: segments[segmentIndex + 1],
+              label: t('tours.outing.next'),
+              icon: 'arrow_forward',
+            },
+          ].map(({ to, label, icon }) =>
+            to ? (
+              <ListRow
+                key={label}
+                title={label}
+                subtitle={to.name ?? t('tours.infoSheet.unnamedTour')}
+                icon={icon as IconName}
+                onPress={() => {
+                  void Haptics.selectionAsync();
+                  setId(to.id);
+                }}
+              />
+            ) : null,
+          )}
         </ListSection>
       ) : null}
 
@@ -608,16 +627,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: space.sm,
   },
-  discs: { gap: space.xxs },
   facts: { flex: 1, gap: space.xxs },
   line: { flexDirection: 'row', alignItems: 'center', gap: space.xxs },
-  disc: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   // A row of its own under the hero, as wide as the card, so the chips wrap there.
   heroBlock: { gap: space.xs },
   chips: {
@@ -636,13 +647,19 @@ const styles = StyleSheet.create({
   },
   chipLabel: { color: color.onSurface },
   grade: { ...strong, color: color.onSurface },
-  stamp: {
-    width: 22,
-    height: 22,
+  badge: {
+    position: 'absolute',
+    right: -5,
+    width: 18,
+    height: 18,
     borderRadius: radius.pill,
+    borderWidth: 2,
+    borderColor: color.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  badgeDone: { backgroundColor: color.success },
+  badgePrivate: { top: -4, backgroundColor: color.onSurfaceVariant },
   elevation: { ...strong, color: color.onSurface },
   headline: { color: color.onSurface },
   numbers: { color: color.onSurfaceVariant, fontVariant: ['tabular-nums'] },

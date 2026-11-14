@@ -47,6 +47,8 @@ export type ListRowProps = {
   subtitle?: string;
   /** Trailing secondary text (a setting's current value). */
   value?: string;
+  /** A bar under the text, 0 to 1 (a download under way). */
+  progress?: number;
   icon?: IconName;
   /** The icon's tint; the brand colour by default. */
   iconColor?: string;
@@ -64,6 +66,8 @@ export type ListRowProps = {
   contextActions?: RowAction[];
   /** A tap opens these as a menu (iOS: the system menu from the row). */
   menu?: RowAction[];
+  /** A button of its own at the trailing edge, its icon alone (a download's stop). */
+  accessory?: RowAction;
   accessibilityLabel?: string;
   testID?: string;
 };
@@ -189,6 +193,7 @@ export function ListRow({
   title,
   subtitle,
   value,
+  progress,
   icon,
   iconColor,
   onPress,
@@ -201,6 +206,7 @@ export function ListRow({
   leadingSwipeActions,
   contextActions,
   menu: tapMenu,
+  accessory,
   accessibilityLabel,
   testID,
 }: ListRowProps) {
@@ -223,6 +229,13 @@ export function ListRow({
             {subtitle}
           </Text>
         ) : null}
+        {progress !== undefined ? (
+          <View style={styles.track} role="progressbar" aria-valuenow={Math.round(progress * 100)}>
+            <View
+              style={[styles.fill, { width: `${Math.min(Math.max(progress, 0), 1) * 100}%` }]}
+            />
+          </View>
+        ) : null}
       </View>
       {value ? (
         <Text variant="caption" style={styles.muted} numberOfLines={1}>
@@ -238,6 +251,17 @@ export function ListRow({
       ) : null}
       {checked ? <Icon name="check" color={color.primary} size={20} /> : null}
       {showChevron ? <Icon name="chevron_right" color={color.onSurfaceVariant} size={20} /> : null}
+      {accessory?.icon ? (
+        <Pressable
+          role="button"
+          aria-label={accessory.label}
+          onPress={accessory.onPress}
+          hitSlop={space.xs}
+          style={styles.accessory}
+        >
+          <Icon name={accessory.icon} color={color.primary} size={26} />
+        </Pressable>
+      ) : null}
     </View>
   );
 
@@ -573,6 +597,15 @@ const styles = StyleSheet.create({
   rowText: { flex: 1, gap: 2 },
   title: { ...typeScale.body, color: color.onSurface },
   muted: { color: color.onSurfaceVariant },
+  track: {
+    height: 4,
+    marginTop: space.xxs,
+    borderRadius: radius.pill,
+    backgroundColor: color.neutralContainer,
+    overflow: 'hidden',
+  },
+  fill: { height: '100%', backgroundColor: color.primary },
+  accessory: { padding: space.xxs },
   destructive: { color: color.error },
   pressed: { backgroundColor: color.neutralContainer },
   disabled: { opacity: 0.38 },
