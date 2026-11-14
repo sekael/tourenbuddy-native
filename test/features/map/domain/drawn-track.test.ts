@@ -1,5 +1,6 @@
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import {
+  draggedLine,
   legsAlong,
   routeStops,
   trackFromLine,
@@ -159,5 +160,43 @@ describe('legsAlong', () => {
         [7.9, 46.6],
       ]),
     ).toBeNull();
+  });
+});
+
+describe('draggedLine', () => {
+  // Start → goal along a bend, goal → end straight.
+  const legs: LngLat[][] = [
+    [
+      [8, 46],
+      [8.05, 46.02],
+      [8.1, 46],
+    ],
+    [
+      [8.1, 46],
+      [8.2, 46],
+    ],
+  ];
+  const finger: LngLat = [8.12, 46.05];
+
+  it('should run both legs of a dragged middle point straight through the finger', () => {
+    expect(draggedLine(legs, { point: 1 }, finger)).toEqual([[8, 46], finger, [8.2, 46]]);
+  });
+
+  it('should move only the one leg of a dragged first or last point', () => {
+    expect(draggedLine(legs, { point: 0 }, finger)).toEqual([finger, [8.1, 46], [8.2, 46]]);
+    expect(draggedLine(legs, { point: 2 }, finger)).toEqual([
+      [8, 46],
+      [8.05, 46.02],
+      [8.1, 46],
+      finger,
+    ]);
+  });
+
+  it('should bend only the pulled leg through the finger, keeping both its ends', () => {
+    expect(draggedLine(legs, { leg: 0 }, finger)).toEqual([[8, 46], finger, [8.1, 46], [8.2, 46]]);
+  });
+
+  it('should give no line before there is a leg (a lone goal)', () => {
+    expect(draggedLine([], { point: 0 }, finger)).toEqual([]);
   });
 });

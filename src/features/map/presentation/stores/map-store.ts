@@ -71,6 +71,11 @@ export type MapState = {
   stack: string[] | null;
   /** The planned or drawn line's handles while the route or draw step runs. */
   editHandles: EditHandles | null;
+  /**
+   * A handle under the finger and where it is now: the map runs the line straight through it
+   * until the step publishes its next handles (the move routed, or kept where it failed).
+   */
+  drag: { handles: EditHandles; target: HandleTarget; at: LngLat } | null;
   camera: CameraRequest | null;
   /** The map's visible centre, kept for picks that start "here" and for offline regions. */
   center: LngLat | null;
@@ -144,6 +149,7 @@ export const useMapStore = create<MapState>()((set, get) => ({
   trailCard: null,
   trailHighlight: null,
   editHandles: null,
+  drag: null,
   stack: null,
   camera: null,
   center: null,
@@ -210,6 +216,7 @@ export const useMapStore = create<MapState>()((set, get) => ({
       previewLines: null,
       previewPoints: null,
       editHandles: null,
+      drag: null,
       ...noPreview,
     }),
 }));

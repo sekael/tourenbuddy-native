@@ -13,6 +13,9 @@ export type BaseStyle = {
 export const BASE_MAP_URL =
   'https://vectortiles.geo.admin.ch/styles/ch.swisstopo.basemap.vt/style.json';
 
+/** Swisstopo's credit, as every base map and overlay here comes from swisstopo. */
+export const MAP_CREDIT = '© swisstopo';
+
 const CLASSIC: StyleSpecification = {
   version: 8,
   glyphs: 'https://vectortiles.geo.admin.ch/fonts/{fontstack}/{range}.pbf',
@@ -23,7 +26,7 @@ const CLASSIC: StyleSpecification = {
         'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg',
       ],
       tileSize: 256,
-      attribution: '© swisstopo',
+      attribution: MAP_CREDIT,
       maxzoom: 25,
     },
   },

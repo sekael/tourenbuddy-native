@@ -7,6 +7,10 @@ On iOS, every screen that is a list or a form (settings, contacts, inbox, tour l
 - **WHEN** the Profile tab shows its Language row on an iPhone
 - **THEN** it is a system grouped-list row with the current language as its value and a disclosure chevron
 
+#### Scenario: Rows read in the label colour
+- **WHEN** a list shows rows that open something (a tour, a contact, a setting) or offer a choice
+- **THEN** their titles are in the label colour (black in light mode) with secondary-grey subtitles and chevrons, as in Settings; only a plain action row ("Round trip", "Reset") is in the app's tint
+
 #### Scenario: Swipe to delete
 - **WHEN** a user swipes an inbox entry or a contact row from the trailing edge on iOS
 - **THEN** the system swipe action appears and a full swipe runs the destructive action

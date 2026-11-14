@@ -2,6 +2,7 @@ import {
   Button,
   Form,
   Host,
+  Image,
   List,
   Menu,
   NavigationDestination,
@@ -20,7 +21,9 @@ import {
   buttonStyle,
   disabled as disabledModifier,
   fixedSize,
+  frame,
   listStyle,
+  menuStyle,
   navigationBarTitleDisplayMode,
   navigationTitle,
   pickerStyle,
@@ -33,10 +36,10 @@ import { useContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { color } from '@/core/theme/tokens';
+import { color, size } from '@/core/theme/tokens';
 import { useReducedMotion } from '@/core/theme/use-reduced-motion';
 
-import { icons } from './icons';
+import { icons, type IconName } from './icons';
 import { InSwiftUIList } from './in-list';
 import { PageBanner } from './page-banner';
 import { useFieldText } from './use-field-text';
@@ -144,40 +147,49 @@ export function Page({
             <Button label={cancel.label} role="cancel" onPress={cancel.onPress} />
           </ToolbarItem>
         ) : null}
-        {actions?.map((action) => (
-          <ToolbarItem key={action.id} placement="topBarTrailing">
-            {action.menu?.length ? (
-              <Menu
-                label={action.label}
-                systemImage={action.titled ? undefined : icons[action.icon].sf}
-                modifiers={[
-                  accessibilityLabel(action.label),
-                  ...(action.disabled ? [disabledModifier(true)] : []),
-                ]}
-              >
-                {action.menu.map((item) => (
-                  <Button
-                    key={item.label}
-                    label={item.label}
-                    systemImage={item.icon ? icons[item.icon].sf : undefined}
-                    role={item.destructive ? 'destructive' : undefined}
-                    onPress={item.onPress}
-                  />
-                ))}
-              </Menu>
-            ) : (
-              <Button
-                label={action.label}
-                systemImage={action.titled ? undefined : icons[action.icon].sf}
-                onPress={action.onPress}
-                modifiers={[
-                  accessibilityLabel(action.label),
-                  ...(action.disabled ? [disabledModifier(true)] : []),
-                ]}
-              />
-            )}
-          </ToolbarItem>
-        ))}
+        {actions?.map((action) => {
+          // In a sheet's bar an icon gets a full target; a tab's large-title bar keeps the system's.
+          const sized = !action.titled && !largeTitle;
+          const look = [
+            ...(sized ? [buttonStyle('plain')] : []),
+            accessibilityLabel(action.label),
+            ...(action.disabled ? [disabledModifier(true)] : []),
+          ];
+          const systemImage = sized || action.titled ? undefined : icons[action.icon].sf;
+          return (
+            <ToolbarItem
+              key={action.id}
+              placement={action.leading ? 'topBarLeading' : 'topBarTrailing'}
+            >
+              {action.menu?.length ? (
+                <Menu
+                  label={sized ? <BarIcon icon={action.icon} /> : action.label}
+                  systemImage={systemImage}
+                  modifiers={sized ? [menuStyle('button'), ...look] : look}
+                >
+                  {action.menu.map((item) => (
+                    <Button
+                      key={item.label}
+                      label={item.label}
+                      systemImage={item.icon ? icons[item.icon].sf : undefined}
+                      role={item.destructive ? 'destructive' : undefined}
+                      onPress={item.onPress}
+                    />
+                  ))}
+                </Menu>
+              ) : (
+                <Button
+                  label={sized ? undefined : action.label}
+                  systemImage={systemImage}
+                  onPress={action.onPress}
+                  modifiers={look}
+                >
+                  {sized ? <BarIcon icon={action.icon} /> : undefined}
+                </Button>
+              )}
+            </ToolbarItem>
+          );
+        })}
         {confirm ? (
           <ToolbarItem placement="confirmationAction">
             <Button
@@ -193,15 +205,38 @@ export function Page({
         ) : null}
         {onClose ? (
           <ToolbarItem placement="topBarTrailing">
-            <Button
-              role="close"
-              onPress={onClose}
-              modifiers={[accessibilityLabel(t('common.close'))]}
-            />
+            {largeTitle ? (
+              <Button
+                role="close"
+                onPress={onClose}
+                modifiers={[accessibilityLabel(t('common.close'))]}
+              />
+            ) : (
+              // The same xmark, as big as the bar's other buttons.
+              <Button
+                role="close"
+                onPress={onClose}
+                modifiers={[buttonStyle('plain'), accessibilityLabel(t('common.close'))]}
+              >
+                <BarIcon icon="close" />
+              </Button>
+            )}
           </ToolbarItem>
         ) : null}
       </Toolbar.Content>
     </Toolbar>
+  );
+}
+
+/**
+ * A bar's icon button: the glyph centred in a full touch target (the bar's own style would hold
+ * it to 35 pt). Plain, so the bar's glass is the only glass around it.
+ */
+const TARGET = size.touch;
+
+function BarIcon({ icon }: { icon: IconName }) {
+  return (
+    <Image systemName={icons[icon].sf} modifiers={[frame({ width: TARGET, height: TARGET })]} />
   );
 }
 

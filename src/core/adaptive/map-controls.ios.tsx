@@ -9,9 +9,10 @@ import {
   padding,
 } from '@expo/ui/swift-ui/modifiers';
 import { GlassView } from 'expo-glass-effect';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
-import { color, shadow, size, space } from '@/core/theme/tokens';
+import { color, motion, shadow, size, space } from '@/core/theme/tokens';
 
 import { Icon } from './icon';
 import { icons, type IconName } from './icons';
@@ -19,6 +20,43 @@ import type { CapsuleItem } from './map-controls';
 import { Text } from './text';
 
 export type { CapsuleItem } from './map-controls';
+
+/**
+ * One half of the capsule. The whole glass answers a touch (interactive glass); the half under the
+ * finger lights up at once and fades as it lifts, as a system glass toolbar's item does, so a press
+ * on "+" never reads as one on "Meine Touren". Only light changes: nothing moves under Reduce Motion.
+ */
+function Segment({ item }: { item: CapsuleItem }) {
+  const [lit] = useState(() => new Animated.Value(0));
+  const fade = (to: number, duration: number) =>
+    Animated.timing(lit, { toValue: to, duration, useNativeDriver: true }).start();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={item.label}
+      accessibilityHint={item.hint}
+      disabled={item.disabled}
+      onPress={item.onPress}
+      onPressIn={() => fade(1, 0)}
+      onPressOut={() => fade(0, motion.medium)}
+      hitSlop={{ top: 4, bottom: 4 }}
+      style={[styles.segment, item.iconOnly && styles.iconOnly, item.disabled && styles.disabled]}
+    >
+      <Animated.View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, styles.lit, { opacity: lit }]}
+      />
+      <View style={styles.glyph}>
+        <Icon name={item.icon} size={22} color={color.onFab} />
+      </View>
+      {item.iconOnly ? null : (
+        <Text variant="label" style={styles.label} numberOfLines={1}>
+          {item.label}
+        </Text>
+      )}
+    </Pressable>
+  );
+}
 
 /**
  * Liquid Glass over the map (D6), compact and tinted: the capsule of the map's main actions in
@@ -39,28 +77,7 @@ export function GlassCapsule({ items, label }: { items: CapsuleItem[]; label: st
       {items.map((item, index) => (
         <View key={item.id} style={styles.segmentRow}>
           {index > 0 ? <View style={styles.divider} /> : null}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={item.label}
-            accessibilityHint={item.hint}
-            disabled={item.disabled}
-            onPress={item.onPress}
-            hitSlop={{ top: 4, bottom: 4 }}
-            style={[
-              styles.segment,
-              item.iconOnly && styles.iconOnly,
-              item.disabled && styles.disabled,
-            ]}
-          >
-            <View style={styles.glyph}>
-              <Icon name={item.icon} size={22} color={color.onFab} />
-            </View>
-            {item.iconOnly ? null : (
-              <Text variant="label" style={styles.label} numberOfLines={1}>
-                {item.label}
-              </Text>
-            )}
-          </Pressable>
+          <Segment item={item} />
         </View>
       ))}
     </GlassView>
@@ -89,6 +106,41 @@ export function GlassCircleButton({
         style={styles.circlePress}
       >
         <Icon name={icon} size={22} color={color.primary} />
+      </Pressable>
+    </GlassView>
+  );
+}
+
+/**
+ * A layer switch over the map (the step's overlays): a glass chip with its glyph and name, filled
+ * with the capsule's blue while on. Interactive glass answers the press.
+ */
+export function GlassToggle({
+  label,
+  icon,
+  on,
+  onPress,
+}: {
+  label: string;
+  icon: IconName;
+  on: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <GlassView isInteractive tintColor={on ? color.fabGlass : color.glassTint} style={styles.chip}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityState={{ selected: on }}
+        onPress={onPress}
+        style={styles.chipPress}
+      >
+        <View style={on && styles.glyph}>
+          <Icon name={icon} size={20} color={on ? color.onFab : color.primary} />
+        </View>
+        <Text variant="label" style={on ? styles.label : styles.chipLabel} numberOfLines={1}>
+          {label}
+        </Text>
       </Pressable>
     </GlassView>
   );
@@ -175,6 +227,7 @@ const styles = StyleSheet.create({
     shadowOffset: shadow.glyph.offset,
     shadowRadius: shadow.glyph.radius,
   },
+  lit: { backgroundColor: color.onGlassPressed },
   disabled: { opacity: 0.38 },
   circle: {
     width: size.mapControl,
@@ -183,4 +236,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   circlePress: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  chip: { height: size.mapControl, borderRadius: size.mapControl / 2, overflow: 'hidden' },
+  chipPress: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.xxs + 2,
+    paddingHorizontal: space.sm,
+  },
+  chipLabel: { color: color.onSurface },
 });

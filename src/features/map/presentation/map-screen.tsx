@@ -1,13 +1,19 @@
 import type { GeoJSONSourceRef } from '@maplibre/maplibre-react-native';
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { GlassCapsule, GlassCircleButton } from '@/core/adaptive/map-controls';
-import { color, space } from '@/core/theme/tokens';
+import { showAlert } from '@/core/adaptive/alert';
+import type { IconName } from '@/core/adaptive/icons';
+import { GlassCapsule, GlassCircleButton, GlassToggle } from '@/core/adaptive/map-controls';
+import { Text } from '@/core/adaptive/text';
+import { color, size, space } from '@/core/theme/tokens';
 import { haversineMeters } from '@/core/utils/haversine';
+import { draggedLine } from '@/features/map/domain/drawn-track';
+import { TRAIL_OVERLAYS } from '@/features/map/data/trail-overlays';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import { boundsAboveSheet } from '@/features/map/domain/offline-regions';
 import { loadGpxTrack } from '@/features/tours/data/services/gpx-track-service';
@@ -17,6 +23,7 @@ import { outingSegments } from '@/features/tours/domain/outing';
 import { trackLines } from '@/features/tours/domain/route-metrics';
 import { useToursStore } from '@/features/tours/presentation/stores/tours-store';
 
+import { MAP_CREDIT } from './map-styles';
 import { openTour } from './open-tour';
 import { useMapStore, type MapState } from './stores/map-store';
 import { sameSpot, tourFeatures } from './tour-features';
@@ -200,16 +207,26 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
     mapRef.current?.flyTo((hit.geometry as GeoJSON.Point).coordinates as LngLat, zoom);
   }
 
-  const lines: Lines = useMemo(
-    () => ({
+  // While a handle is dragged, the step's line runs straight through the finger; the step's own
+  // line (and so the framing) changes only once the drop is routed.
+  const drag = useMapStore((s) => s.drag);
+  const lines: Lines = useMemo(() => {
+    const shaped = previewLines?.features ?? selectedLines.features;
+    const [line, ...rest] = shaped;
+    const live =
+      drag && drag.handles === editHandles && line
+        ? draggedLine(drag.handles.legs, drag.target, drag.at)
+        : [];
+    return {
       type: 'FeatureCollection',
       features: [
-        ...(previewLines?.features ?? selectedLines.features),
+        ...(live.length > 1
+          ? [{ ...line!, geometry: { type: 'LineString' as const, coordinates: live } }, ...rest]
+          : shaped),
         ...highlightLines(trailHighlight),
       ],
-    }),
-    [previewLines, selectedLines, trailHighlight],
-  );
+    };
+  }, [previewLines, selectedLines, trailHighlight, drag, editHandles]);
   const points: Points = useMemo(
     () => previewPoints ?? detailPoints(selected),
     [previewPoints, selected],
@@ -237,45 +254,84 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
       >
         <TrackHandles />
       </TourMap>
+      {mode === 'route' || mode === 'draw' ? (
+        // The overlays at hand while a tour is planned or drawn (track-drawing): one tap each.
+        <SafeAreaView
+          edges={['top', 'left', 'right']}
+          style={styles.layers}
+          pointerEvents="box-none"
+          accessibilityRole="toolbar"
+          accessibilityLabel={t('map.plan.overlays.label')}
+        >
+          {TRAIL_OVERLAYS.map((overlay) => (
+            <GlassToggle
+              key={overlay.id}
+              label={t(overlay.labelKey as 'map.layers.overlays.hiking')}
+              icon={overlay.icon as IconName}
+              on={overlays.includes(overlay.id)}
+              onPress={() => {
+                void Haptics.selectionAsync();
+                useMapStore.getState().toggleOverlay(overlay.id);
+              }}
+            />
+          ))}
+        </SafeAreaView>
+      ) : null}
       {mode === 'browse' ? (
         <>
           <SafeAreaView
             edges={['bottom', 'left', 'right']}
-            style={styles.row}
+            style={styles.chrome}
             pointerEvents="box-none"
           >
-            <GlassCircleButton
-              label={t('map.search.title')}
-              hint={t('map.a11y.searchHint')}
-              icon="search"
-              onPress={() => router.push('/search')}
-            />
-            <GlassCapsule
-              label={t('map.actionBar.myTours')}
-              items={[
-                {
-                  id: 'tours',
-                  label: t('map.actionBar.myTours'),
-                  hint: t('map.a11y.toursHint'),
-                  icon: 'location_on',
-                  onPress: () => router.push('/tours'),
-                },
-                {
-                  id: 'add',
-                  label: t('map.actionBar.addTourAriaLabel'),
-                  hint: t('map.a11y.addHint'),
-                  icon: 'add_location_alt',
-                  iconOnly: true,
-                  onPress: () => router.push('/plan'),
-                },
-              ]}
-            />
-            <GlassCircleButton
-              label={t('map.overlay.mapLayers')}
-              hint={t('map.a11y.layersHint')}
-              icon="layers"
-              onPress={() => router.push('/map-layers')}
-            />
+            {Platform.OS === 'web' ? null : (
+              // The credit sits where Apple Maps puts "Legal": small, at the left edge, right above
+              // the controls; a tap says what it covers (the web map has its own control).
+              <Pressable
+                accessibilityRole="button"
+                accessibilityHint={t('map.a11y.creditHint')}
+                onPress={() => showAlert(t('map.credit.title'), t('map.credit.body'))}
+                style={styles.credit}
+              >
+                <Text variant="caption" style={styles.creditText}>
+                  {MAP_CREDIT}
+                </Text>
+              </Pressable>
+            )}
+            <View style={styles.row} pointerEvents="box-none">
+              <GlassCircleButton
+                label={t('map.search.title')}
+                hint={t('map.a11y.searchHint')}
+                icon="search"
+                onPress={() => router.push('/search')}
+              />
+              <GlassCapsule
+                label={t('map.actionBar.myTours')}
+                items={[
+                  {
+                    id: 'tours',
+                    label: t('map.actionBar.myTours'),
+                    hint: t('map.a11y.toursHint'),
+                    icon: 'location_on',
+                    onPress: () => router.push('/tours'),
+                  },
+                  {
+                    id: 'add',
+                    label: t('map.actionBar.addTourAriaLabel'),
+                    hint: t('map.a11y.addHint'),
+                    icon: 'add_location_alt',
+                    iconOnly: true,
+                    onPress: () => router.push('/plan'),
+                  },
+                ]}
+              />
+              <GlassCircleButton
+                label={t('map.overlay.mapLayers')}
+                hint={t('map.a11y.layersHint')}
+                icon="layers"
+                onPress={() => router.push('/map-layers')}
+              />
+            </View>
           </SafeAreaView>
           {children}
         </>
@@ -412,15 +468,36 @@ function useSelectedLines(tour: Tour | null): Lines {
 }
 
 const styles = StyleSheet.create({
-  row: {
+  chrome: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: space.lg,
     paddingBottom: space.sm,
+  },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  // Top left, clear of the compass on the right.
+  layers: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    flexDirection: 'row',
+    gap: space.xs,
+    paddingHorizontal: space.lg,
+    paddingTop: space.xs,
+  },
+  // A finger-sized target around a small line of text, flush with the search button's edge.
+  credit: {
+    alignSelf: 'flex-start',
+    minHeight: size.mapControl,
+    justifyContent: 'flex-end',
+    marginBottom: space.xs,
+  },
+  creditText: {
+    color: color.onSurface,
+    textShadowColor: color.background,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 3,
   },
 });

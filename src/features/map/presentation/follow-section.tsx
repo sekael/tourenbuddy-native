@@ -5,8 +5,8 @@ import type { Follow } from '@/features/map/domain/snap-network';
 
 /**
  * What the planned or drawn line follows (track-drawing "Snap network"): the hiking trails, the ski
- * routes, or straight across. The map's overlays stay as the user set them: the router loads the
- * ways itself, shown or not.
+ * routes, or straight across. The map's overlays stay as the user set them (the router loads the
+ * ways itself, shown or not); the chips over the map show or hide them during the step.
  */
 export function FollowSection({
   value,

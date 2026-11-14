@@ -183,3 +183,24 @@ export function legsAlong(
     .slice(1)
     .map((stop, i) => [stops[i]!, ...line.slice(cuts[i]! + 1, cuts[i + 1]!), stop]);
 }
+
+/**
+ * The line while one of its handles is dragged (track-drawing "Shape the line"): the legs either
+ * side of a dragged point, or a leg whose middle is pulled, run straight through the finger; the
+ * rest keeps its shape. Routing them along the ways waits for the drop.
+ */
+export function draggedLine(
+  legs: readonly LngLat[][],
+  target: { point: number } | { leg: number },
+  at: LngLat,
+): LngLat[] {
+  const live = legs.map((leg, i) => {
+    const [a, b] = [leg[0], leg.at(-1)];
+    if (!a || !b) return leg;
+    if ('leg' in target) return i === target.leg ? [a, at, b] : leg;
+    if (i === target.point - 1) return [a, at];
+    if (i === target.point) return [at, b];
+    return leg;
+  });
+  return trackLine({ points: [], legs: live });
+}

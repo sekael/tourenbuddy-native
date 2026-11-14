@@ -31,6 +31,8 @@ export type ScreenAction = {
   menu?: RowAction[];
   /** Shows its label instead of the icon: a word where an icon would leave the user guessing. */
   titled?: boolean;
+  /** iOS: at the bar's leading edge, so a title control sits centred with room on both sides. */
+  leading?: boolean;
 };
 
 export type PageProps = {

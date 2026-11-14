@@ -209,10 +209,12 @@ function ToursListPage({ onPush }: { onPush: (value: string) => void }) {
         onChange: (q) => store.setQuery(tab, q),
         prompt: t('tours.list.searchPlaceholder'),
       }}
-      onClose={() => router.back()}
+      // No close button: the sheet goes with a swipe down, as Apple Maps' sheets do. Filters on
+      // the left and add (or a friend's overlaps) on the right leave the switch room between.
       actions={[
         {
           id: 'filters',
+          leading: true,
           label:
             filterCount > 0
               ? t('tours.list.filtersActive', { count: filterCount })

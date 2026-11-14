@@ -25,6 +25,8 @@ const palette = {
   orange500: '#f97316',
 } as const;
 
+const IOS = Platform.OS === 'ios';
+
 export const color = {
   primary: palette.blue600,
   // Tonal controls: one step stronger than surfaceVariant, so they stand off white and tinted fills.
@@ -40,20 +42,24 @@ export const color = {
   fabGlass: 'rgba(29, 78, 216, 0.7)',
   /** Lifts white glyphs off clear glass over bright snow and glacier. */
   onGlassShadow: 'rgba(15, 23, 42, 0.55)',
+  /** The half of the blue glass capsule under the finger, lit as a system glass item is. */
+  onGlassPressed: 'rgba(255, 255, 255, 0.24)',
   /** A line between actions on the blue capsule. */
   onFabDivider: 'rgba(255, 255, 255, 0.45)',
   /** Clear glass over the map, breathed with the app's blue (iOS round map controls). */
   glassTint: 'rgba(37, 99, 235, 0.12)',
   background: palette.white,
-  onBackground: palette.slate900,
+  // iOS text in the system's label colours, as the SwiftUI lists beside it (light only for now).
+  onBackground: IOS ? '#000000' : palette.slate900,
   surface: palette.slate50,
-  onSurface: palette.slate900,
+  onSurface: IOS ? '#000000' : palette.slate900,
   surfaceVariant: palette.blue50,
-  onSurfaceVariant: palette.slate600,
+  // The system's secondary grey at its higher-contrast step, to keep 4.5:1 on every surface.
+  onSurfaceVariant: IOS ? '#6C6C70' : palette.slate600,
   neutralContainer: palette.slate100,
   divider: palette.slate200,
-  /** Borders of text fields. */
-  outlineVariant: palette.slate300,
+  /** Borders of text fields, days outside the month (iOS: the system separator grey). */
+  outlineVariant: IOS ? '#C6C6C8' : palette.slate300,
   error: palette.red600,
   success: palette.green800,
   /** A terrain profile's line, as the swisstopo app draws it under a tour. */
@@ -80,11 +86,26 @@ const fontFamily = Platform.select({
   web: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
 });
 
-/** Headings use medium (500), not bold, as in the Vue app. */
+/**
+ * Headings use medium (500), not bold, as in the Vue app; on iOS semibold and the system font's own
+ * tracking (it tightens large sizes itself), so they read as the SwiftUI headings beside them.
+ */
 export const type = {
   /** The product name over the sign-in photo. */
-  display: { fontFamily, fontSize: 40, lineHeight: 46, fontWeight: '600', letterSpacing: -1.2 },
-  title: { fontFamily, fontSize: 24, lineHeight: 30, fontWeight: '500', letterSpacing: -0.5 },
+  display: {
+    fontFamily,
+    fontSize: 40,
+    lineHeight: 46,
+    fontWeight: IOS ? '700' : '600',
+    letterSpacing: IOS ? 0 : -1.2,
+  },
+  title: {
+    fontFamily,
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: IOS ? '600' : '500',
+    letterSpacing: IOS ? 0 : -0.5,
+  },
   body: { fontFamily, fontSize: 16, lineHeight: 22, fontWeight: '400' },
   label: { fontFamily, fontSize: 16, lineHeight: 20, fontWeight: '500' },
   caption: { fontFamily, fontSize: 14, lineHeight: 20, fontWeight: '400' },

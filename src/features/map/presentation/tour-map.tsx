@@ -150,7 +150,8 @@ export function TourMap({
       accessibilityLabel={t('map.a11y.label')}
       accessibilityHint={t('map.a11y.hint')}
       mapStyle={style.style as string | StyleSpecification}
-      attributionPosition={{ bottom: padding.bottom + 4, left: 8 }}
+      // The credit is the map screen's own "© swisstopo" beside its controls.
+      attribution={false}
       logo={false}
       compass
       compassPosition={{ top: padding.top + 8, right: 12 }}

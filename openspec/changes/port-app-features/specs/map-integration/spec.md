@@ -11,7 +11,11 @@
 ## ADDED Requirements
 
 ### Requirement: Native map with Swisstopo tiles
-The Map tab SHALL show a full-screen Swisstopo map, rendered natively on iOS and Android and in the browser on the web, extending under the system bars, with Swisstopo's attribution visible. It SHALL offer the base maps Base, Aerial, Light and Classic, keep pan, pinch, rotate and tilt gestures, and show the compass when rotated.
+The Map tab SHALL show a full-screen Swisstopo map, rendered natively on iOS and Android and in the browser on the web, extending under the system bars, with Swisstopo's attribution visible (native: a small "© swisstopo" at the left edge right above the map controls, where Apple Maps puts "Legal", listing every source's credit when tapped). It SHALL offer the base maps Base, Aerial, Light and Classic, keep pan, pinch, rotate and tilt gestures, and show the compass when rotated.
+
+#### Scenario: Cluster counts in the app's font
+- **WHEN** tours close together show as one cluster circle
+- **THEN** its count stands centred in the circle, in the app's own font (iOS: the system font), "99+" beyond 99
 
 #### Scenario: Map under the tab bar
 - **WHEN** the Map tab is shown on iOS

@@ -82,6 +82,34 @@ export function GlassCircleButton({
   );
 }
 
+/** A layer switch over the map (the step's overlays): a chip, filled with the app's blue while on. */
+export function GlassToggle({
+  label,
+  icon,
+  on,
+  onPress,
+}: {
+  label: string;
+  icon: IconName;
+  on: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      role="checkbox"
+      aria-label={label}
+      aria-checked={on}
+      onPress={onPress}
+      style={({ pressed }) => [styles.chip, on && styles.chipOn, pressed && styles.statusPressed]}
+    >
+      <Icon name={icon} size={20} color={on ? color.onFab : color.primary} />
+      <Text variant="caption" style={[strong, { color: on ? color.onFab : color.onSurface }]}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 /** A status capsule over the app (offline, syncing); a button only when it leads somewhere. */
 export function GlassStatus({
   label,
@@ -135,6 +163,17 @@ const styles = StyleSheet.create({
   pressed: { backgroundColor: color.primary },
   scaled: { transform: [{ scale: motion.pressScale }] },
   disabled: { opacity: 0.38 },
+  chip: {
+    minHeight: size.touch,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.xxs + 2,
+    paddingHorizontal: space.md,
+    borderRadius: radius.pill,
+    backgroundColor: color.background,
+    boxShadow: shadow.md,
+  },
+  chipOn: { backgroundColor: color.fab },
   status: {
     flexDirection: 'row',
     alignItems: 'center',

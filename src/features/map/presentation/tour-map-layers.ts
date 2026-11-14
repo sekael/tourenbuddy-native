@@ -262,15 +262,19 @@ export function tourMapLayers({
         type: 'symbol',
         filter: IS_CLUSTER,
         layout: {
-          'icon-image': CLUSTER_FACE,
+          // The count is drawn into the face (`CLUSTER_COUNTS`).
+          'icon-image': [
+            'concat',
+            `${CLUSTER_FACE}|`,
+            [
+              'case',
+              ['>', ['get', 'point_count'], 99],
+              '99+',
+              ['to-string', ['get', 'point_count']],
+            ],
+          ],
           ...OVERLAP,
-          'text-field': ['to-string', ['get', 'point_count']],
-          'text-font': LABEL_FONT,
-          'text-size': ['step', ['get', 'point_count'], 12, 100, 10],
-          'text-allow-overlap': true,
-          'text-ignore-placement': true,
         },
-        paint: { 'text-color': '#1c1917' },
       },
     ],
     points: [

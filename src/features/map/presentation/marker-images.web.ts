@@ -148,6 +148,15 @@ function draw(d: MarkerDrawing, glyphs: Glyphs): WebMarkerImage {
         ctx.lineWidth = 2;
         ctx.stroke();
         circle(ctx, c, c, 9, 'rgba(255,255,255,0.95)');
+        // Centred on the digits' ink, in the app's font.
+        ctx.font = `600 ${d.count.length > 2 ? 9 : 12}px Inter, system-ui, sans-serif`;
+        const ink = ctx.measureText(d.count);
+        ctx.fillStyle = '#1c1917';
+        ctx.fillText(
+          d.count,
+          c - (ink.actualBoundingBoxRight - ink.actualBoundingBoxLeft) / 2,
+          c + (ink.actualBoundingBoxAscent - ink.actualBoundingBoxDescent) / 2,
+        );
       });
     case 'badge': {
       const size = BADGE + 2;

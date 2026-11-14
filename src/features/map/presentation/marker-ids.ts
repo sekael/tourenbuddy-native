@@ -27,6 +27,11 @@ export const ACTIVITY_PREFIX = 'activity|';
 export const BLANK_IMAGE = 'blank';
 export const CLUSTER_SHADOW = 'cluster-shadow';
 export const CLUSTER_FACE = 'cluster-face';
+/**
+ * The counts a cluster face is drawn with, the number in the app's own font and centred on its
+ * ink (map glyphs are the map's font and sit high); larger clusters read "99+".
+ */
+export const CLUSTER_COUNTS = [...Array.from({ length: 98 }, (_, i) => String(i + 2)), '99+'];
 export const SKI_BADGE_PREFIX = 'ski-badge|';
 export const COMPLETED_BADGE = 'badge-completed';
 export const FRIEND_BADGE = 'badge-friend';
@@ -96,7 +101,8 @@ const SAC_GRADES = ['L', 'WS', 'ZS', 'S', 'SS', 'AS', 'EX'].flatMap((g) => [`${g
 export type MarkerDrawing =
   | { kind: 'blank' }
   | { kind: 'clusterShadow' }
-  | { kind: 'clusterFace' }
+  /** The ring and the white disc with the cluster's tour count in it. */
+  | { kind: 'clusterFace'; count: string }
   /** A small round badge on a marker's edge: green check, friend or link. */
   | { kind: 'badge'; fill: string; glyph: IconName; glyphColor: string }
   /** Start ring and finish flag, white glyph on a dark dot (the detail rows' icons). */
@@ -113,7 +119,6 @@ export type MarkerDrawing =
 export function markerDrawings(): [string, MarkerDrawing][] {
   const all: [string, MarkerDrawing][] = [
     [CLUSTER_SHADOW, { kind: 'clusterShadow' }],
-    [CLUSTER_FACE, { kind: 'clusterFace' }],
     [BLANK_IMAGE, { kind: 'blank' }],
     [COMPLETED_BADGE, { kind: 'badge', fill: '#15803D', glyph: 'check', glyphColor: '#ffffff' }],
     [FRIEND_BADGE, { kind: 'badge', fill: '#ffffff', glyph: 'group', glyphColor: '#1F2937' }],
@@ -121,6 +126,9 @@ export function markerDrawings(): [string, MarkerDrawing][] {
     [START_ICON, { kind: 'point', glyph: 'trip_origin' }],
     [END_ICON, { kind: 'point', glyph: 'sports_score' }],
   ];
+  for (const count of CLUSTER_COUNTS) {
+    all.push([`${CLUSTER_FACE}|${count}`, { kind: 'clusterFace', count }]);
+  }
   for (const type of TOUR_TYPE_VALUES) {
     all.push([
       `${ACTIVITY_PREFIX}${type}`,

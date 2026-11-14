@@ -44,6 +44,45 @@ describe('app navigation (iOS map controls)', () => {
     expect(labels).toEqual(MAP_CONTROLS);
   });
 
+  it('should credit swisstopo beside the controls, as a button to the sources', async () => {
+    await renderRouter(routes);
+
+    expect(screen.getByRole('button', { name: '© swisstopo' })).toBeOnTheScreen();
+  });
+
+  it('should leave the tours sheet without a close button, filters and add apart', async () => {
+    await renderRouter(routes, { initialUrl: '/tours' });
+
+    // Swiped down to close; the switch in the middle keeps room on both sides.
+    expect(labelled('Close')).toEqual([]);
+    const placement = (label: string) => {
+      let node: Node | null = labelled(label)[0] ?? null;
+      while (node && !(node.props as Props).extraProps) node = node.parent;
+      return (node?.props as { extraProps?: { placement?: string } } | undefined)?.extraProps
+        ?.placement;
+    };
+    expect(placement('Filters')).toBe('topBarLeading');
+    expect(placement('Add tour')).toBe('topBarTrailing');
+  });
+
+  it('should put the trail overlays on the map while a tour is planned, one tap each', async () => {
+    useMapStore.setState({ overlays: [] });
+    await renderRouter(routes, { initialUrl: '/plan' });
+
+    // The map sits under the step's sheet, so the tree marks it hidden from the sheet's view.
+    const chip = () =>
+      screen.getByRole('button', { name: 'Hiking trails', includeHiddenElements: true });
+    expect(chip()).not.toBeSelected();
+    await act(() => fireEvent.press(chip()));
+
+    expect(useMapStore.getState().overlays).toEqual(['hiking']);
+    expect(chip()).toBeSelected();
+    // Browsing has its own controls, not these.
+    expect(
+      screen.queryByRole('button', { name: 'My Tours', includeHiddenElements: true }),
+    ).toBeNull();
+  });
+
   it.each(['/calendar', '/contacts', '/profile'])(
     'should show no map controls on %s',
     async (url) => {

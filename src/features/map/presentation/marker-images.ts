@@ -93,7 +93,22 @@ function drawWedge(bucket: number, steps: number): ImageEntry {
   });
 }
 
-function drawClusterFrame(face: boolean): ImageEntry {
+/** The app's font (iOS: the system font, as the UI's text), one per size. */
+const fonts = new Map<number, ReturnType<typeof matchFont>>();
+function appFont(size: number) {
+  let font = fonts.get(size);
+  if (!font) {
+    font = matchFont({
+      fontFamily: Platform.select({ ios: '.AppleSystemUIFont', default: 'sans-serif' }),
+      fontSize: size,
+      fontWeight: '600',
+    });
+    fonts.set(size, font);
+  }
+  return font;
+}
+
+function drawClusterFrame(face: boolean, count = ''): ImageEntry {
   return render(CLUSTER_SIZE, CLUSTER_SIZE, (canvas) => {
     const c = CLUSTER_SIZE / 2;
     if (!face) {
@@ -110,6 +125,16 @@ function drawClusterFrame(face: boolean): ImageEntry {
     const backdrop = paint('#ffffff');
     backdrop.setAlphaf(0.95);
     canvas.drawCircle(c, c, 9, backdrop);
+    // Centred on the digits' ink, not on the font's line box.
+    const font = appFont(count.length > 2 ? 9 : 12);
+    const ink = font.measureText(count);
+    canvas.drawText(
+      count,
+      c - ink.x - ink.width / 2,
+      c - ink.y - ink.height / 2,
+      paint('#1c1917'),
+      font,
+    );
   });
 }
 
@@ -157,15 +182,8 @@ function drawPoint(glyph: IconName): ImageEntry {
   });
 }
 
-let badgeFont: ReturnType<typeof matchFont> | null = null;
-
 function drawSkiBadge(label: string, color: string): ImageEntry {
-  badgeFont ??= matchFont({
-    fontFamily: Platform.select({ ios: 'Helvetica Neue', default: 'sans-serif' }),
-    fontSize: 12,
-    fontWeight: '600',
-  });
-  const font = badgeFont;
+  const font = appFont(12);
   const textWidth = label ? Math.ceil(font.measureText(label).width) : 0;
   const pill = label ? 6 + 14 + 4 + textWidth + 9 : BADGE_HEIGHT;
   return render(pill + 2 * BADGE_SHADOW, BADGE_HEIGHT + 2 * BADGE_SHADOW, (canvas) => {
@@ -233,7 +251,7 @@ function draw(d: MarkerDrawing): ImageEntry {
     case 'clusterShadow':
       return drawClusterFrame(false);
     case 'clusterFace':
-      return drawClusterFrame(true);
+      return drawClusterFrame(true, d.count);
     case 'badge':
       return drawBadge(d.fill, d.glyph, d.glyphColor);
     case 'point':

@@ -1093,7 +1093,10 @@
       "back": "Back to the details, without these changes",
       "fold": "Fold the route points away",
       "unfold": "Show the route points",
-      "editTitle": "Edit route"
+      "editTitle": "Edit route",
+      "overlays": {
+        "label": "Show on the map"
+      }
     },
     "a11y": {
       "label": "Map of Switzerland with your tours",
@@ -1102,11 +1105,16 @@
       "toursHint": "Lists your tours and your friends' tours.",
       "addHint": "Pick the goal on the map or search for a place.",
       "searchHint": "Finds a place on the map",
-      "layersHint": "Base map and trail overlays with previews, the legend and offline maps."
+      "layersHint": "Base map and trail overlays with previews, the legend and offline maps.",
+      "creditHint": "Lists the sources of the map"
     },
     "search": {
       "title": "Search places",
       "hint": "Search a place, hut or stop"
+    },
+    "credit": {
+      "title": "Map data",
+      "body": "Maps, hiking trails and ski routes: © swisstopo, Federal Office of Topography."
     }
   },
   "i18n": {

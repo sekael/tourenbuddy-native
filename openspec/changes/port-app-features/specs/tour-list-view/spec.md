@@ -37,6 +37,10 @@ The tours list SHALL open as a sheet over the map with a segmented control (Mine
 - **WHEN** the user types a partner's first name into the search field
 - **THEN** only tours with that partner remain and the sheet stands at its large height
 
+#### Scenario: An uncrowded bar
+- **WHEN** the user opens the tours list on an iPhone
+- **THEN** Filters stands at the bar's leading edge and Add at its trailing edge, the Mine | Friends switch between them, and there is no close button: the sheet closes with a swipe down
+
 #### Scenario: Swipe to complete
 - **WHEN** the user swipes an own tour row from the leading edge and taps Complete
 - **THEN** the tour is marked completed, as from its detail

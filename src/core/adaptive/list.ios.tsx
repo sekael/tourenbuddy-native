@@ -164,8 +164,11 @@ export function ListRow({
   accessibilityLabel,
 }: ListRowProps) {
   const showChevron = chevron ?? (!!onPress && !destructive && !menu);
+  // A button in a list paints its label in the tint; only a plain action ("Rundtour") keeps it.
+  // A row that opens something or is one of a choice reads in the label colour, as in Settings.
+  const action = !!onPress && !showChevron && checked === undefined;
   const label = (
-    <HStack spacing={12}>
+    <HStack spacing={12} modifiers={action ? undefined : [foregroundStyle('primary')]}>
       {icon ? <RowIcon name={icon} tint={iconColor ?? color.primary} /> : null}
       <VStack alignment="leading" spacing={2}>
         <SwiftText

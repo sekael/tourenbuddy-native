@@ -1093,7 +1093,10 @@
       "back": "Zurück zu den Details, ohne diese Änderungen",
       "fold": "Routenpunkte einklappen",
       "unfold": "Routenpunkte zeigen",
-      "editTitle": "Route ändern"
+      "editTitle": "Route ändern",
+      "overlays": {
+        "label": "Auf der Karte zeigen"
+      }
     },
     "a11y": {
       "label": "Karte der Schweiz mit deinen Touren",
@@ -1102,11 +1105,16 @@
       "toursHint": "Listet deine Touren und die deiner Freunde.",
       "addHint": "Wähle das Ziel auf der Karte oder suche einen Ort.",
       "searchHint": "Findet einen Ort auf der Karte",
-      "layersHint": "Grundkarte, Wanderwege und Skitouren mit Vorschau, Legende und Offline-Karten."
+      "layersHint": "Grundkarte, Wanderwege und Skitouren mit Vorschau, Legende und Offline-Karten.",
+      "creditHint": "Zeigt die Quellen der Karte"
     },
     "search": {
       "title": "Ort suchen",
       "hint": "Suche einen Ort, eine Hütte oder eine Haltestelle"
+    },
+    "credit": {
+      "title": "Kartendaten",
+      "body": "Karten, Wanderwege und Skitouren: © swisstopo, Bundesamt für Landestopografie."
     }
   },
   "i18n": {
