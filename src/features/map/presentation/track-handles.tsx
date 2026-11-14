@@ -1,0 +1,141 @@
+import { ViewAnnotation } from '@maplibre/maplibre-react-native';
+import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
+import { StyleSheet, View } from 'react-native';
+
+import { Icon } from '@/core/adaptive/icon';
+import { color, shadow } from '@/core/theme/tokens';
+import type { LngLat } from '@/features/map/domain/entities/trail';
+
+import { legHandle } from './leg-router';
+import { useMapStore, type HandleTarget } from './stores/map-store';
+
+const STOP_ICONS = { start: 'trip_origin', goal: 'flag', end: 'sports_score' } as const;
+
+/**
+ * The line's handles (track-drawing "Shape the line"): hold a point and drag it to move it; hold
+ * the dot halfway along a leg and drag it onto another way to send the line through there. A
+ * quick tap on a point takes it out (the step decides: the goal is picked instead, it turns blue
+ * and the next map tap moves it); a tap on a leg's dot picks it for the next map tap. While a
+ * handle is dragged the line runs straight through it; the drop routes the legs it touches anew.
+ */
+export function TrackHandles() {
+  const { t } = useTranslation();
+  const handles = useMapStore((s) => s.editHandles);
+  const zoom = useMapStore((s) => s.zoom) ?? 13;
+  const drag = useMapStore((s) => s.drag);
+  if (!handles) return null;
+  // A dragged point's legs run straight through the finger: their middle dots wait for the drop.
+  const moving = drag?.handles === handles ? drag.target : null;
+  const waits = (leg: number) =>
+    !!moving && 'point' in moving && (leg === moving.point - 1 || leg === moving.point);
+  const lngLat = (event: { nativeEvent: { lngLat: unknown } }) =>
+    event.nativeEvent.lngLat as LngLat;
+  const grab = () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  // The line follows the finger, straight through it (map-screen draws it from `drag`).
+  const follow = (target: HandleTarget) => (event: { nativeEvent: { lngLat: unknown } }) =>
+    useMapStore.setState({ drag: { handles, target, at: lngLat(event) } });
+
+  return (
+    <>
+      {handles.legs.map((leg, i) => {
+        const mid = leg.length > 1 && !waits(i) ? legHandle(leg, zoom) : null;
+        if (!mid) return null;
+        const picked =
+          handles.picked !== null && 'leg' in handles.picked && handles.picked.leg === i;
+        return (
+          <ViewAnnotation
+            key={`leg-${i}-${mid.join()}`}
+            id={`leg-${i}`}
+            lngLat={mid}
+            draggable
+            onDragStart={grab}
+            onDrag={follow({ leg: i })}
+            onDragEnd={(event) => handles.pull(i, lngLat(event))}
+            onPress={() => handles.pick({ leg: i })}
+          >
+            <View
+              style={styles.target}
+              accessibilityLabel={t('map.plan.hint.shape')}
+              accessibilityElementsHidden
+            >
+              <View style={[styles.mid, picked && styles.midPicked]} />
+            </View>
+          </ViewAnnotation>
+        );
+      })}
+      {handles.points.map((point, i) => {
+        const picked =
+          handles.picked !== null && 'point' in handles.picked && handles.picked.point === i;
+        return (
+          <ViewAnnotation
+            key={`point-${i}-${point.at.join()}`}
+            id={`point-${i}`}
+            lngLat={point.at}
+            draggable
+            onDragStart={grab}
+            onDrag={follow({ point: i })}
+            onDragEnd={(event) => handles.move(i, lngLat(event))}
+            onPress={() => (point.kind === 'via' ? handles.drop(i) : handles.pick({ point: i }))}
+          >
+            <View style={styles.target} accessibilityElementsHidden>
+              {point.kind === 'via' ? (
+                <View style={styles.via} />
+              ) : (
+                <View style={[styles.stop, picked && styles.stopPicked]}>
+                  <Icon
+                    name={STOP_ICONS[point.kind]}
+                    size={16}
+                    color={picked ? color.onContrast : color.primary}
+                  />
+                </View>
+              )}
+            </View>
+          </ViewAnnotation>
+        );
+      })}
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  // A finger-sized target around a small mark.
+  target: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  mid: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: color.background,
+    borderWidth: 3,
+    borderColor: color.onSurface,
+    boxShadow: shadow.md,
+  },
+  midPicked: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: color.primary,
+    borderColor: color.background,
+  },
+  via: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: color.background,
+    borderWidth: 4,
+    borderColor: color.primary,
+    boxShadow: shadow.md,
+  },
+  stop: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: color.background,
+    borderWidth: 2,
+    borderColor: color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: shadow.md,
+  },
+  stopPicked: { backgroundColor: color.primary, borderColor: color.background },
+});

@@ -38,7 +38,9 @@ describe('Button', () => {
 
 describe('TextField', () => {
   it('should be named by its label, not its placeholder, also once filled', async () => {
-    await render(<TextField label="Email address" placeholder="you@example.com" value="anna@x.ch" />);
+    await render(
+      <TextField label="Email address" placeholder="you@example.com" value="anna@x.ch" />,
+    );
 
     expect(screen.getByLabelText('Email address')).toHaveDisplayValue('anna@x.ch');
     expect(screen.queryByLabelText('you@example.com')).toBeNull();

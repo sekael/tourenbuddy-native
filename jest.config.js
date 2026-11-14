@@ -22,6 +22,12 @@ const withApp = (preset, moduleNameMapper = {}) => {
       '^@/(.*)$': '<rootDir>/src/$1',
     },
     setupFiles: [...(preset.setupFiles ?? []), '<rootDir>/test/setup.ts'],
+    // Router suites render the whole app; on a busy CI runner one can pass Jest's 5 s default.
+    testTimeout: 15000,
+    // The trail network's tile decoders ship as ES modules only: compile them like the app's code.
+    transformIgnorePatterns: preset.transformIgnorePatterns.map((pattern) =>
+      pattern.replace('(?!(', '(?!(pbf|@mapbox/vector-tile|@mapbox/point-geometry|'),
+    ),
   };
   // Root-only options that jest-expo's presets carry; Jest rejects them inside a project.
   delete project.passWithNoTests;

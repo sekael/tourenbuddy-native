@@ -1,8 +1,10 @@
-import { useTranslation } from 'react-i18next';
-
-import { PlaceholderScreen } from '@/features/shell/presentation/placeholder-screen';
+import { Screen } from '@/core/adaptive/screen';
+import { CalendarScreen } from '@/features/calendar/presentation/calendar-screen';
 
 export default function CalendarTab() {
-  const { t } = useTranslation();
-  return <PlaceholderScreen title={t('shell.tabs.calendar')} subtitle={t('shell.comingSoon')} />;
+  return (
+    <Screen>
+      <CalendarScreen />
+    </Screen>
+  );
 }

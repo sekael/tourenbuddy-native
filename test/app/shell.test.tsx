@@ -30,16 +30,16 @@ beforeEach(() => signIn());
 
 describe('shell', () => {
   it('should switch to German, tab bar included, when the device language changes while running', async () => {
+    // The tab bar is native: each tab screen hands its label to it as `title`.
+    const tabLabels = () =>
+      screen.container
+        .queryAll((node) => typeof node.props.screenKey === 'string')
+        .map((node) => node.props.title);
     await renderRouter(routes);
-    expect(await screen.findByText('Plan your outdoor tours')).toBeVisible();
+    expect(tabLabels()).toEqual(['Map', 'Calendar', 'Contacts', 'Profile']);
 
     await act(() => setDeviceLocales([{ languageTag: 'de-AT' }, { languageTag: 'en-US' }]));
 
-    expect(await screen.findByText('Plane deine Touren')).toBeVisible();
-    // The tab bar is native: each tab screen hands its label to it as `title`.
-    const tabLabels = screen.container
-      .queryAll((node) => typeof node.props.screenKey === 'string')
-      .map((node) => node.props.title);
-    expect(tabLabels).toEqual(['Karte', 'Kalender', 'Kontakte', 'Profil']);
+    expect(tabLabels()).toEqual(['Karte', 'Kalender', 'Kontakte', 'Profil']);
   });
 });

@@ -89,7 +89,10 @@ describe('authStorage', () => {
     mockKeychain.set('session', 'left by the earlier install');
     const { authStorage } = launch();
 
-    const reads = await Promise.all([authStorage.getItem('session'), authStorage.getItem('session')]);
+    const reads = await Promise.all([
+      authStorage.getItem('session'),
+      authStorage.getItem('session'),
+    ]);
     await authStorage.setItem('session', 'new');
 
     expect(reads).toEqual([null, null]);

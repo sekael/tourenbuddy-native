@@ -68,6 +68,7 @@ Apple's CDN, as for users), before submitting it for review. These need a real d
   | ----------------------- | ------------------------------------------------------------- |
   | `SUPABASE_URL`          | hosted project URL (as in the Vue repository)                  |
   | `SUPABASE_ANON_KEY`     | hosted project anon key                                       |
+  | `NOTIFY_HOOK_URL`       | the Worker's URL with `https://` (as in the Vue repository)   |
   | `CLOUDFLARE_API_TOKEN`  | Cloudflare API token with Account → Cloudflare Pages → Edit   |
   | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id                                         |
 
@@ -78,6 +79,18 @@ npx wrangler pages project create tourenbuddy-native --production-branch main
 ```
 
 A new project: the PWA keeps `tourenbuddy` until the cutover.
+
+**First-load budget (web).** #346 R3 allows 700 KB of gzipped JavaScript to a usable map. Measured
+on 2026-11-12 (local export, gzip -9): **about 1.3 MB**. That is the app bundle at 1148 KB plus the
+map worker at 143 KB. Splitting by route did not help, since the map route and the shared chunk
+load first anyway (about 1.24 MB). The web ships one bundle, so sheets still open after the connection
+drops. Over budget: the owner decides before the cutover (Phase 7). Candidates are loading
+`maplibre-gl` and the map after the first frame, and checking what the bundle pulls in that the web
+never uses. Measure again after each change:
+
+```sh
+npx expo export --platform web && gzip -9 -c dist/_expo/static/js/web/entry-*.js | wc -c
+```
 
 ### Expo (EAS)
 
@@ -99,6 +112,7 @@ Store the backend for builds made on EAS (the `production` and `development` env
 ```sh
 npx eas-cli env:create --environment production --name EXPO_PUBLIC_SUPABASE_URL --value <url> --visibility plaintext
 npx eas-cli env:create --environment production --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value <anon key> --visibility plaintext
+npx eas-cli env:create --environment production --name EXPO_PUBLIC_NOTIFY_HOOK_URL --value <worker url> --visibility plaintext
 ```
 
 Repeat with `--environment development` for development builds. The anon key ships inside every
@@ -123,6 +137,61 @@ app, so it is not a secret.
 4. Google Play accepts API uploads only after a first manual one:
    `npx eas-cli build --platform android --profile production`, download the `.aab` and upload it
    to Internal testing in the Play Console. From then on, releases submit on their own.
+
+### Public pages on tourenbuddy.ch
+
+The web export serves static pages from `public/` before the app: the privacy policy, terms of use,
+imprint and account deletion, in English at the root and in German under `/de/`
+(`/privacy`, `/de/privacy`, …), one stylesheet (`/legal.css`), and `/app-config.json`.
+
+Before the first store submission:
+
+1. **Legal review.** Have the privacy policy, terms and deletion page reviewed (Swiss FADP and GDPR)
+   and update `Last updated` / `Stand` on every page changed. The texts follow #346 section 9.
+2. **Imprint.** Replace the bracketed name and address in `public/imprint/index.html` and
+   `public/de/imprint/index.html`.
+3. **Store listings.** Use these URLs:
+
+   | Field                                  | URL                                         |
+   | -------------------------------------- | ------------------------------------------- |
+   | App Store privacy policy, Play policy  | `https://tourenbuddy.ch/privacy`            |
+   | Play Data safety: account deletion URL | `https://tourenbuddy.ch/account-deletion`   |
+   | Support / contact                      | `mailto:feedback@tourenbuddy.ch`            |
+
+4. **Android App Links.** After the first upload to Play, copy the app signing key's SHA-256 from
+   Play Console → Test and release → App integrity → App signing (not the upload key) into
+   `public/.well-known/assetlinks.json`:
+
+   ```json
+   [
+     {
+       "relation": ["delegate_permission/common.handle_all_urls"],
+       "target": {
+         "namespace": "android_app",
+         "package_name": "ch.tourenbuddy.app",
+         "sha256_cert_fingerprints": ["<SHA-256>"]
+       }
+     }
+   ]
+   ```
+
+   and give it `Content-Type: application/json` in `public/_headers`.
+
+**Universal Links.** `/.well-known/apple-app-site-association` lists both iOS apps for every path
+except the public pages, so a notification link (`https://tourenbuddy.ch/?notification=…`) opens
+the app and the legal pages open in Safari. Development builds read the file from the domain
+(`?mode=developer`); store builds read it through Apple's CDN, which can take a day after a change.
+
+**Update gate.** `app-config.json` holds the oldest app version each platform still supports.
+Raise `min_supported_ios` or `min_supported_android` (and set the store URLs once the listings
+exist) to send older apps to the store; Pages caches it for five minutes. Backend changes stay
+expand-then-contract until the minimum passes every app that uses the old shape. Until the apex
+serves `/app-config.json` (the native web app moves there in Phase 7), the request fails and the
+gate stays open: deploy the file with the first store build, or no app can be held back. The
+gate blocks only while the device is online (app-update: being offline never blocks): an app below
+the minimum keeps working offline and may queue writes in the old shape, which replay once it is
+updated. So a minimum raised for a breaking backend change still needs the old shape accepted until
+those queues drain, or the replays dead-letter.
 
 ### Supabase auth: passwords and passkeys
 

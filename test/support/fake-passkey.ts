@@ -6,7 +6,12 @@ export const assertion = {
   id: 'credential-1',
   rawId: 'credential-1',
   type: 'public-key',
-  response: { clientDataJSON: 'e30', authenticatorData: 'YXV0aA', signature: 'c2ln', userHandle: 'dXNlci0x' },
+  response: {
+    clientDataJSON: 'e30',
+    authenticatorData: 'YXV0aA',
+    signature: 'c2ln',
+    userHandle: 'dXNlci0x',
+  },
 };
 
 export const attestation = {

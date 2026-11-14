@@ -28,7 +28,8 @@ function localeProblems(source: Catalog, target: Catalog): string[] {
     else if (placeholders(text).join() !== placeholders(src.get(key)!).join())
       problems.push(`placeholders: ${key}`);
   }
-  for (const [key, text] of [...src, ...tgt]) if (VUE_SYNTAX.test(text)) problems.push(`vue syntax: ${key}`);
+  for (const [key, text] of [...src, ...tgt])
+    if (VUE_SYNTAX.test(text)) problems.push(`vue syntax: ${key}`);
   return problems;
 }
 
@@ -52,8 +53,8 @@ describe('locale catalogs', () => {
   });
 
   it('should report leftover vue-i18n syntax in either catalog', () => {
-    expect(
-      localeProblems({ p: '{count} day | {count} days' }, { p: "du{'@'}example.ch" }),
-    ).toEqual(['vue syntax: p', 'vue syntax: p']);
+    expect(localeProblems({ p: '{count} day | {count} days' }, { p: "du{'@'}example.ch" })).toEqual(
+      ['vue syntax: p', 'vue syntax: p'],
+    );
   });
 });
