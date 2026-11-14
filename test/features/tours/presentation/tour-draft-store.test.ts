@@ -52,25 +52,35 @@ describe('tour draft: one start and one end', () => {
   });
 });
 
-describe('tour draft: the activity follows the line', () => {
-  it('should make a guessed hike a ski tour once the line follows the ski routes', () => {
-    store().begin('create', null, { tourTypes: ['hiking'] });
-    store().followed('ski');
-    expect(store().draft.tourTypes).toEqual(['skitour']);
-    store().followed('hiking');
-    expect(store().draft.tourTypes).toEqual(['hiking']);
+describe('tour draft: ways up and down', () => {
+  it('should fly a glider down once it joins a hike, and keep a picked way as activities change', () => {
+    store().begin('create');
+    store().toggleType('hiking');
+    store().toggleType('paragliding');
+    expect(store().draft.legs).toEqual({ ascent: ['hiking'], descent: ['paragliding'] });
+
+    // Flown from the start in thermals; a bike added later keeps the glider both ways.
+    store().setWay('paragliding', 'both');
+    store().toggleType('mountain-biking');
+    expect(store().draft.legs).toEqual({
+      ascent: ['paragliding', 'hiking', 'mountain-biking'],
+      descent: ['paragliding'],
+    });
   });
 
-  it('should leave an activity the user picked', () => {
-    store().begin('create', null, { tourTypes: [] });
-    store().update({ tourTypes: ['trailrunning'] });
-    store().followed('ski');
-    expect(store().draft.tourTypes).toEqual(['trailrunning']);
-  });
-
-  it('should change nothing for a straight line', () => {
-    store().begin('create', null, { tourTypes: ['skitour'] });
-    store().followed('straight');
-    expect(store().draft.tourTypes).toEqual(['skitour']);
+  it('should keep an unsplit tour unsplit when editing adds an activity', () => {
+    const tour = {
+      id: 't1',
+      tourTypes: ['hiking', 'trailrunning'],
+      legs: null,
+      goal: { lng: 7.9, lat: 46.6 },
+    } as never;
+    store().begin('edit', tour);
+    store().toggleType('paragliding');
+    // The two already there go both ways as saved; only the newcomer takes its default, down.
+    expect(store().draft.legs).toEqual({
+      ascent: ['hiking', 'trailrunning'],
+      descent: ['paragliding', 'hiking', 'trailrunning'],
+    });
   });
 });

@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 
@@ -10,6 +10,7 @@ import { Page, Screen } from '@/core/adaptive/screen';
 import { useFormatter } from '@/core/i18n/format';
 import { isOnline } from '@/core/offline/online';
 import { legsAlong, lineLength } from '@/features/map/domain/drawn-track';
+import { NO_TYPE_COLOR, routeBands } from '@/features/map/domain/track-bands';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import {
   nextStep,
@@ -19,11 +20,11 @@ import {
   type RoutePoints,
   type RouteStep,
 } from '@/features/map/domain/route-plan';
-import { initialFollow, type Follow, type SnapNetwork } from '@/features/map/domain/snap-network';
+import { wayFollow, type Follow, type Way } from '@/features/map/domain/snap-network';
 import type { HandleTarget } from '@/features/map/presentation/stores/map-store';
-import { FollowSection } from '@/features/map/presentation/follow-section';
+import { FollowSection, followStatus } from '@/features/map/presentation/follow-section';
 import { openTour } from '@/features/map/presentation/open-tour';
-import { createLegRouter, isGap, legEnd, tapSnapM } from '@/features/map/presentation/leg-router';
+import { isGap, legEnd, legRouters, tapSnapM } from '@/features/map/presentation/leg-router';
 import { useMapStore } from '@/features/map/presentation/stores/map-store';
 import {
   resultKey,
@@ -32,23 +33,21 @@ import {
 } from '@/features/map/presentation/use-location-search';
 import { getElevation } from '@/features/tours/data/services/swisstopo-elevation-service';
 import { suggestTourName } from '@/features/tours/data/services/swisstopo-name-service';
-import { densify, getTrackProfile } from '@/features/tours/data/services/swisstopo-profile-service';
 import { loadGpxTrack } from '@/features/tours/data/services/gpx-track-service';
-import { gpxFromLine } from '@/features/tours/data/services/gpx-writer';
 import { isSameGoal } from '@/features/tours/domain/distance';
-import {
-  estimatedMinutes,
-  trackLines,
-  type RouteMetrics,
-} from '@/features/tours/domain/route-metrics';
+import { landsByAir } from '@/features/tours/domain/legs';
+import { tourMinutes, trackLines, type RouteMetrics } from '@/features/tours/domain/route-metrics';
 import { usePace } from '@/features/user/presentation/stores/user-profile-store';
 import { TOUR_TYPE_TRACK_COLORS } from '@/features/tours/data/models/tour-type';
 
 import { useTourDraftStore } from './stores/tour-draft-store';
+import { FLOWN_NOTE_M, gpxOf } from './replan-track';
 import { profiledMetrics } from './use-route-metrics';
 
 const STEP_ICONS = { start: 'trip_origin', goal: 'flag', end: 'sports_score' } as const;
 const at = (p: PlannedPoint): LngLat => [p.location.lng, p.location.lat];
+/** A leg's key: what it follows and both its ends. */
+const keyOf = (follow: Follow, a: LngLat, b: LngLat) => `${follow}|${a.join()}|${b.join()}`;
 
 /** Points pulled out of the legs, in order: between start and goal, and between goal and end. */
 type Vias = { start: LngLat[]; goal: LngLat[] };
@@ -118,21 +117,16 @@ export function PlanSheet({ back }: { back: boolean }) {
   const [active, setActive] = useState<RouteStep>(() =>
     points.goal ? 'goal' : points.start ? 'goal' : 'start',
   );
-  const [follow, setFollow] = useState<Follow>(() =>
-    initialFollow(overlays, draftState.draft.tourTypes),
-  );
-  /** A new tour's activity follows the line (ski routes: a ski tour) until the user picks one. */
-  const changeFollow = (next: Follow) => {
-    setFollow(next);
-    useTourDraftStore.getState().followed(next);
-  };
+  /** The legs follow the ways (the PWA's switch); off, straight lines between the points. */
+  const [following, setFollowing] = useState(true);
   const [vias, setVias] = useState<Vias>(() => initialVias());
-  const following = follow !== 'straight';
   /** A leg's dot picked by a tap: the next map tap sends the route through there. */
   const [pickedLeg, setPickedLeg] = useState<number | null>(null);
   const [legs, setLegs] = useState<Map<string, LngLat[]>>(new Map());
   /** The saved track's legs, by key: they win over routing until a point moves. */
   const [savedLegs, setSavedLegs] = useState<Map<string, LngLat[]>>(new Map());
+  /** The saved track is known: until then no leg routes or shows straight in its place. */
+  const [opened, setOpened] = useState(false);
   const [issue, setIssue] = useState<'unavailable' | null>(null);
   const [finishing, setFinishing] = useState(false);
   const pointsRef = useLatest(points);
@@ -148,11 +142,14 @@ export function PlanSheet({ back }: { back: boolean }) {
   const search = useLocationSearch(active);
 
   const tourTypes = draftState.draft.tourTypes;
-  const network = following ? (follow as SnapNetwork) : null;
-  const legRouter = useMemo(
-    () => createLegRouter({ network: () => network, maxTiles: 64 }),
-    [network],
-  );
+  /** What each way follows: its own activities' network, a flown way straight (activity-legs). */
+  const ways: Record<Way, Follow> = {
+    up: following ? wayFollow(overlays, draftState.draft, 'up') : 'straight',
+    down: following ? wayFollow(overlays, draftState.draft, 'down') : 'straight',
+  };
+  const [routerFor] = useState(() => legRouters(64));
+  /** The way down ends in a flight: the end is the landing (activity-legs, as the PWA's form). */
+  const landing = landsByAir(draftState.draft);
 
   /** A set point is named (unless a search named it) and measured at once. */
   function place(step: RouteStep, location: { lng: number; lat: number }, name?: string) {
@@ -209,16 +206,20 @@ export function PlanSheet({ back }: { back: boolean }) {
       place(where.step, { lng: to[0], lat: to[1] });
       return;
     }
-    void onWay(to).then((at) =>
+    void onWay(to, where.leg === 'start' ? 'up' : 'down').then((at) =>
       setVias((v) => ({ ...v, [where.leg]: v[where.leg].map((p, i) => (i === where.i ? at : p)) })),
     );
   }
 
-  /** A point between lands on the way nearest the finger, as a drawn point does. */
-  async function onWay(to: LngLat): Promise<LngLat> {
-    if (!following) return to;
+  /** A point between lands on the way nearest the finger, as a drawn point does (flown: where set). */
+  async function onWay(to: LngLat, way: Way): Promise<LngLat> {
+    if (ways[way] === 'straight') return to;
     const radius = tapSnapM(to[1], useMapStore.getState().zoom ?? 13);
-    return (await legRouter.resolve(null, to, radius).catch(() => ({ to }))).to;
+    return (
+      await routerFor(ways[way])
+        .resolve(null, to, radius)
+        .catch(() => ({ to }))
+    ).to;
   }
 
   /** A leg's middle dragged to `to`: the route goes through there. */
@@ -229,7 +230,7 @@ export function PlanSheet({ back }: { back: boolean }) {
     const first = pointsRef.current.start ? 1 : 0;
     const [part, i] =
       leg < r.goal ? (['start', leg + 1 - first] as const) : (['goal', leg - r.goal] as const);
-    void onWay(to).then((at) =>
+    void onWay(to, part === 'start' ? 'up' : 'down').then((at) =>
       setVias((v) => ({ ...v, [part]: [...v[part].slice(0, i), at, ...v[part].slice(i)] })),
     );
   }
@@ -289,11 +290,22 @@ export function PlanSheet({ back }: { back: boolean }) {
   useEffect(() => {
     let alive = true;
     void savedLine().then((saved) => {
+      if (!alive) return;
+      setOpened(true);
       const r = stopsOf(pointsRef.current, viasRef.current);
       const cut = saved && r ? legsAlong(saved, r.stops) : null;
-      if (!alive || !cut || !r || !network) return;
-      const key = (a: LngLat, b: LngLat) => `${network}|${a.join()}|${b.join()}`;
-      setSavedLegs(new Map(cut.map((leg, i) => [key(r.stops[i]!, r.stops[i + 1]!), leg])));
+      if (!cut || !r) return;
+      // A flown leg goes straight whatever the track held.
+      setSavedLegs(
+        new Map(
+          cut.flatMap((leg, i) => {
+            const follow = ways[i < r.goal ? 'up' : 'down'];
+            return follow === 'straight'
+              ? []
+              : [[keyOf(follow, r.stops[i]!, r.stops[i + 1]!), leg] as const];
+          }),
+        ),
+      );
     });
     return () => {
       alive = false;
@@ -302,28 +314,37 @@ export function PlanSheet({ back }: { back: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Legs along the ways, one at a time, keyed by network and both ends.
+  // Legs along the ways, one at a time, keyed by what they follow and both ends: the way up
+  // (start → goal) follows its activities' network, the way down its own, a flown way straight.
   const route = stopsOf(points, vias);
   const pairs = route ? route.stops.slice(1).map((b, i) => [route.stops[i]!, b] as const) : [];
-  const keyOf = (a: LngLat, b: LngLat) => `${network ?? 'ways'}|${a.join()}|${b.join()}`;
-  const legOf = (a: LngLat, b: LngLat) => savedLegs.get(keyOf(a, b)) ?? legs.get(keyOf(a, b));
-  const missing = following ? pairs.filter(([a, b]) => !legOf(a, b)) : [];
-  const missingKey = missing.map(([a, b]) => keyOf(a, b)).join(';');
+  const followOf = (i: number): Follow => ways[route && i < route.goal ? 'up' : 'down'];
+  const legOf = (i: number): LngLat[] | undefined => {
+    const [a, b] = pairs[i]!;
+    const follow = followOf(i);
+    if (follow === 'straight') return [a, b];
+    const key = keyOf(follow, a, b);
+    return savedLegs.get(key) ?? legs.get(key);
+  };
+  const missing = opened ? pairs.flatMap((_, i) => (legOf(i) ? [] : [i])) : [];
+  const missingKey = missing.map((i) => keyOf(followOf(i), ...pairs[i]!)).join(';');
   useEffect(() => {
     if (!missing.length || !route) return;
     let alive = true;
     void (async () => {
-      for (const [a, b] of missing) {
-        const i = route.stops.indexOf(a);
-        const leg = await legRouter
+      for (const i of missing) {
+        const [a, b] = pairs[i]!;
+        const follow = followOf(i);
+        const router = routerFor(follow);
+        const leg = await router
           .between(a, b, [
             legEnd(i, route.stops.length, route.goal),
             legEnd(i + 1, route.stops.length, route.goal),
           ])
           .catch(() => [a, b]);
         if (!alive) return;
-        setIssue(legRouter.issue());
-        setLegs((m) => new Map(m).set(keyOf(a, b), leg));
+        setIssue(router.issue());
+        setLegs((m) => new Map(m).set(keyOf(follow, a, b), leg));
       }
     })();
     return () => {
@@ -331,37 +352,55 @@ export function PlanSheet({ back }: { back: boolean }) {
     };
     // `missingKey` stands for `missing`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [missingKey, legRouter]);
+  }, [missingKey]);
 
-  const line: LngLat[] | null =
-    following && pairs.length
-      ? pairs.flatMap(([a, b], i) => {
-          const leg = legOf(a, b) ?? [a, b];
-          return i === 0 ? leg : leg.slice(1);
-        })
-      : null;
-  const finding = following && missing.length > 0;
-  const gap = following && pairs.some(([a, b]) => isGap(legOf(a, b) ?? []));
+  // Straight all through, the route is its points (no track); else the legs joined.
+  const line: LngLat[] | null = pairs.some((_, i) => followOf(i) !== 'straight')
+    ? pairs.flatMap((pair, i) => {
+        const leg = legOf(i) ?? [...pair];
+        return i === 0 ? leg : leg.slice(1);
+      })
+    : null;
+  const finding = missing.length > 0;
+  const gap = pairs.some((_, i) => followOf(i) !== 'straight' && isGap(legOf(i) ?? []));
 
   // What the map draws: the line (or straight dashes) and the points.
   useEffect(() => {
-    const color = tourTypes[0] ? TOUR_TYPE_TRACK_COLORS[tourTypes[0]] : '#334155';
+    const color = tourTypes[0] ? TOUR_TYPE_TRACK_COLORS[tourTypes[0]] : NO_TYPE_COLOR;
     const straight = route && route.stops.length > 1 ? route.stops : null;
+    // The line wears its ways' colours, the way down's from the goal on, as the saved tour will.
+    const up =
+      line && route && points.end
+        ? pairs.slice(0, route.goal).flatMap((pair, i) => {
+            const leg = legOf(i) ?? [...pair];
+            return i === 0 ? leg : leg.slice(1);
+          })
+        : null;
+    const total = line ? lineLength(line) : 0;
+    const bands = line
+      ? routeBands(line, draftState.draft, up && total > 0 ? lineLength(up) / total : null)
+      : [];
     useMapStore.setState({
       previewLines: {
         type: 'FeatureCollection',
-        features:
-          line || straight
-            ? [
-                {
-                  type: 'Feature',
-                  geometry: { type: 'LineString', coordinates: line ?? straight! },
-                  properties: line
-                    ? { color, width: 4, casing: true }
-                    : { color, width: 3, dashed: true },
-                },
-              ]
-            : [],
+        // Nothing until the saved track is known: no straight stand-in flashing before its shape.
+        features: !opened
+          ? []
+          : line
+            ? bands.map((band) => ({
+                type: 'Feature',
+                geometry: { type: 'LineString', coordinates: band.coordinates },
+                properties: { color: band.color, width: 4, casing: true },
+              }))
+            : straight
+              ? [
+                  {
+                    type: 'Feature',
+                    geometry: { type: 'LineString', coordinates: straight },
+                    properties: { color, width: 3, dashed: true },
+                  },
+                ]
+              : [],
       },
       // The points are handles to drag (`editHandles`); a leg's middle pulls the route elsewhere.
       // Before there is a goal, a set start or end is a plain marker.
@@ -395,7 +434,7 @@ export function PlanSheet({ back }: { back: boolean }) {
                       ? 'end'
                       : 'via',
             })),
-            legs: pairs.map(([a, b]) => (following ? (legOf(a, b) ?? [a, b]) : [a, b])),
+            legs: pairs.map((pair, i) => legOf(i) ?? [...pair]),
             move: (i, to) => moveRef.current(i, to),
             pull: (leg, to) => pullRef.current(leg, to),
             drop: (i) => dropRef.current(i),
@@ -411,7 +450,7 @@ export function PlanSheet({ back }: { back: boolean }) {
     });
     // Drawn from what the step holds; the line follows from points and legs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [points, vias, legs, follow, active, pickedLeg]);
+  }, [points, vias, legs, savedLegs, opened, following, active, pickedLeg]);
 
   // Climb and time measured along the line, as the saved tour will show them (route-planner in the
   // PWA). They appear once measured, never first as the points' estimate; that only when the line
@@ -424,7 +463,9 @@ export function PlanSheet({ back }: { back: boolean }) {
     if (!line || line.length < 2) return;
     let alive = true;
     const timer = setTimeout(() => {
-      void profiledMetrics(line).then((metrics) => {
+      // A flown way counts its height change alone, as the saved tour will.
+      const tour = { ...draftState.draft, goal: points.goal?.location };
+      void profiledMetrics(line, tour).then((metrics) => {
         if (alive) setProfiled({ key: lineKey, metrics });
       });
     }, 300);
@@ -437,8 +478,11 @@ export function PlanSheet({ back }: { back: boolean }) {
   }, [lineKey]);
   const measured = profiled?.key === lineKey ? profiled : null;
   const climb = measured?.metrics ?? (!line || measured || !isOnline() ? routeClimb(points) : null);
-  const distance = line ? lineLength(line) : null;
-  const minutes = measured?.metrics ? estimatedMinutes(measured.metrics, false, pace) : null;
+  // Measured, a flown way's line is no distance covered (activity-legs).
+  const distance = measured?.metrics ? measured.metrics.distance : line ? lineLength(line) : null;
+  /** The flight's share of the line, which the walked distance leaves out. */
+  const flown = line && distance !== null ? lineLength(line) - distance : 0;
+  const minutes = measured?.metrics ? tourMinutes(measured.metrics, draftState.draft, pace) : null;
   const numbers = [
     climb?.ascent ? `↑ ${formatElevation(climb.ascent)}` : null,
     climb?.descent ? `↓ ${formatElevation(climb.descent)}` : null,
@@ -481,17 +525,25 @@ export function PlanSheet({ back }: { back: boolean }) {
     setFinishing(true);
     const store = useTourDraftStore.getState();
     try {
-      const track = line && route ? { points: route.stops, legs: [], goal: route.goal } : null;
+      const track =
+        line && route
+          ? {
+              points: route.stops,
+              legs: pairs.map((pair, i) => legOf(i) ?? [...pair]),
+              goal: route.goal,
+            }
+          : null;
       store.setRoute({ points, track });
       if (line && line.length > 1) {
         // The line becomes the tour's GPX, with the terrain's heights when online.
-        const profiled = isOnline() ? await getTrackProfile(line).catch(() => null) : null;
         const name = store.draft.name?.trim() || points.goal.name || t('tours.form.gpxDrawn');
         store.setTrack({
-          text: gpxFromLine(profiled?.line ?? densify(line), profiled?.heights ?? null, name),
+          text: await gpxOf(line, name),
           label: t('tours.form.gpxDrawn'),
           line,
           drawing: track,
+          // The form routes a way anew when its activities change what it follows.
+          follows: following ? ways : null,
         });
       } else if (store.track?.drawing) {
         // A route gone straight takes a planned track away; an uploaded file stays.
@@ -503,17 +555,21 @@ export function PlanSheet({ back }: { back: boolean }) {
     }
   }
 
-  const followStatus = !following
-    ? t('map.plan.follow.straight')
-    : finding
-      ? t('map.plan.follow.finding')
-      : issue === 'unavailable'
-        ? t('map.plan.follow.unavailable')
-        : gap
-          ? t('map.plan.follow.gap')
-          : network === 'ski'
-            ? t('map.plan.follow.ski')
-            : t('map.plan.follow.hiking');
+  // The ways the route has: no start, its line is the way down alone.
+  const [first, second] = [points.start ? ways.up : null, points.end ? ways.down : null].filter(
+    (way): way is Follow => way !== null,
+  );
+  const status = followStatus(t, {
+    following,
+    up: first ?? ways.up,
+    down: second ?? null,
+    finding,
+    unavailable: issue === 'unavailable',
+    gap,
+  });
+  /** A step's name: the end of a flown way down is the landing. */
+  const stepName = (step: RouteStep) =>
+    step === 'end' && landing ? t('map.plan.step.landing') : t(`map.plan.step.${step}`);
 
   return (
     <Screen>
@@ -565,14 +621,27 @@ export function PlanSheet({ back }: { back: boolean }) {
         {numbers ? (
           // The route's climb, distance and time first, in view at the sheet's half height.
           <ListSection>
-            <ListRow title={numbers} icon="elevation" accessibilityLabel={numbers} />
+            <ListRow
+              title={numbers}
+              subtitle={
+                flown > FLOWN_NOTE_M
+                  ? t('map.plan.flightApart', { distance: formatDistance(flown) })
+                  : undefined
+              }
+              icon="elevation"
+              accessibilityLabel={numbers}
+            />
           </ListSection>
         ) : null}
 
         <ListSection
           title={t('map.plan.stepsLabel')}
           footer={[
-            pickedLeg !== null ? t('map.plan.hint.pull') : t(`map.plan.hint.${active}`),
+            pickedLeg !== null
+              ? t('map.plan.hint.pull')
+              : active === 'end' && landing
+                ? t('map.plan.hint.landing')
+                : t(`map.plan.hint.${active}`),
             route && route.stops.length > 1 ? t('map.plan.hint.shape') : null,
             vias.start.length + vias.goal.length ? t('map.plan.hint.via') : null,
           ]
@@ -585,7 +654,7 @@ export function PlanSheet({ back }: { back: boolean }) {
               step !== 'goal' && p
                 ? [
                     {
-                      label: t('map.plan.removeStep', { step: t(`map.plan.step.${step}`) }),
+                      label: t('map.plan.removeStep', { step: stepName(step) }),
                       icon: 'close',
                       destructive: true,
                       onPress: () => clear(step),
@@ -601,12 +670,12 @@ export function PlanSheet({ back }: { back: boolean }) {
                     ? p.loading
                       ? t('common.loading')
                       : (p.name ?? t('map.plan.unnamed'))
-                    : t(`map.plan.step.${step}`)
+                    : stepName(step)
                 }
                 subtitle={
                   p
                     ? [
-                        t(`map.plan.step.${step}`),
+                        stepName(step),
                         !p.loading && p.elevation != null ? formatElevation(p.elevation) : null,
                       ]
                         .filter(Boolean)
@@ -622,11 +691,11 @@ export function PlanSheet({ back }: { back: boolean }) {
                 onPress={() => setActive(step)}
                 swipeActions={actions.length ? actions : undefined}
                 contextActions={actions.length ? actions : undefined}
-                accessibilityLabel={`${t(`map.plan.step.${step}`)}: ${p?.name ?? (step === 'goal' ? t('map.plan.required') : t('map.plan.optional'))}`}
+                accessibilityLabel={`${stepName(step)}: ${p?.name ?? (step === 'goal' ? t('map.plan.required') : t('map.plan.optional'))}`}
               />
             );
           })}
-          {points.start && !points.end ? (
+          {points.start && !points.end && !landing ? (
             <ListRow
               title={t('map.plan.roundTrip')}
               icon="u_turn_left"
@@ -646,7 +715,7 @@ export function PlanSheet({ back }: { back: boolean }) {
           ) : null}
         </ListSection>
 
-        <FollowSection value={follow} onChange={changeFollow} status={followStatus} />
+        <FollowSection value={following} onChange={setFollowing} status={status} />
       </Page>
     </Screen>
   );

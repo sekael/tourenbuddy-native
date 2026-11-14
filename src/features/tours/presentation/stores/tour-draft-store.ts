@@ -1,16 +1,23 @@
 import { create } from 'zustand';
 
 import { newId } from '@/core/files';
+import type { Follows } from '@/features/map/domain/snap-network';
 import type { DrawnTrack } from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import type { RoutePlan, RoutePoints } from '@/features/map/domain/route-plan';
-import type { Follow } from '@/features/map/domain/snap-network';
 import { seasonsForDates } from '@/features/tours/data/models/season';
+import { TOUR_TYPE_VALUES, type TourType } from '@/features/tours/data/models/tour-type';
 import { getElevation } from '@/features/tours/data/services/swisstopo-elevation-service';
 import { suggestTourName } from '@/features/tours/data/services/swisstopo-name-service';
 import { isSameGoal } from '@/features/tours/domain/distance';
 import type { Tour, TourDraft } from '@/features/tours/domain/entities/tour';
-import { onSkis } from '@/features/tours/domain/route-metrics';
+import {
+  chosenDirection,
+  chosenLegs,
+  choicesOf,
+  type LegChoices,
+  type LegDirection,
+} from '@/features/tours/domain/legs';
 
 import { tourToDraft } from './tours-store';
 
@@ -31,6 +38,11 @@ export type PendingTrack = {
   line: LngLat[];
   /** The drawing it came from, kept so "Edit on map" continues it. */
   drawing: DrawnTrack | null;
+  /**
+   * What each way followed when it was planned on the map, so a change of activities routes it
+   * anew (`useReplannedTrack`); absent for a file, or a line drawn straight by choice.
+   */
+  follows?: Follows | null;
 };
 
 export const emptyDraft = (): TourDraft => ({
@@ -69,8 +81,8 @@ type DraftState = {
   gpxRemoved: boolean;
   /** Something changed since the draft began: closing asks first. */
   dirty: boolean;
-  /** The user picked the activities (the form): a line's network no longer changes them. */
-  typesChosen: boolean;
+  /** The ways up and down the user picked; the draft's legs follow them as activities change. */
+  legChoices: LegChoices;
   /** Where the step should continue: the route planned so far. */
   route: RoutePlan | null;
   /** Anchor of a new segment (Add segment): saved into its outing. */
@@ -79,6 +91,10 @@ type DraftState = {
   returnTo: string | null;
   begin: (mode: DraftMode, tour?: Tour | null, seed?: Partial<TourDraft>) => void;
   update: (patch: Partial<TourDraft>) => void;
+  /** An activity on or off; each activity keeps the way picked for it, a new one takes its default. */
+  toggleType: (type: TourType) => void;
+  /** The way one activity goes: start → goal, both, or goal → end. */
+  setWay: (type: TourType, way: LegDirection) => void;
   setRoute: (plan: RoutePlan) => void;
   setTrack: (track: PendingTrack | null) => void;
   /**
@@ -86,8 +102,6 @@ type DraftState = {
    * a second end: a point that moved is named and measured anew, one that stayed keeps its name.
    */
   setEnds: (start: LngLat | null, end: LngLat | null) => void;
-  /** The line follows `follow`: an activity the user has not picked follows it (ski routes, ski tour). */
-  followed: (follow: Follow) => void;
   removeTrack: () => void;
   setSegmentOf: (id: string | null) => void;
   reset: () => void;
@@ -104,26 +118,28 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
   track: null,
   gpxRemoved: false,
   dirty: false,
-  typesChosen: false,
+  legChoices: {},
   route: null,
   segmentOf: null,
   returnTo: null,
 
-  begin: (mode, tour = null, seed = {}) =>
+  begin: (mode, tour = null, seed = {}) => {
+    const draft = { ...(tour ? tourToDraft(tour) : emptyDraft()), ...seed };
     set({
       mode,
       tourId: tour?.id ?? newId(),
       draftId: newId(),
-      draft: { ...(tour ? tourToDraft(tour) : emptyDraft()), ...seed },
+      draft,
+      legChoices: choicesOf(draft),
       goal: tour ? { ...tour.goal } : null,
       track: null,
       gpxRemoved: false,
       dirty: false,
-      typesChosen: !!tour?.tourTypes.length,
       route: null,
       segmentOf: null,
       returnTo: null,
-    }),
+    });
+  },
 
   update: (patch) =>
     set((s) => {
@@ -135,7 +151,34 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
         const untouched = !s.draft.seasons?.length || same(s.draft.seasons, before);
         if (untouched) draft.seasons = auto.length ? auto : s.draft.seasons;
       }
-      return { draft, dirty: true, typesChosen: s.typesChosen || 'tourTypes' in patch };
+      return { draft, dirty: true };
+    }),
+
+  toggleType: (type) =>
+    set((s) => {
+      const types = s.draft.tourTypes;
+      const next = TOUR_TYPE_VALUES.filter((v) =>
+        v === type ? !types.includes(v) : types.includes(v),
+      );
+      return {
+        draft: { ...s.draft, tourTypes: next, legs: chosenLegs(next, s.legChoices) },
+        dirty: true,
+      };
+    }),
+
+  setWay: (type, way) =>
+    set((s) => {
+      const types = s.draft.tourTypes;
+      // A tap pins every line as shown, so later activities never move the ones seen.
+      const shown = Object.fromEntries(
+        types.map((t) => [t, chosenDirection(types, s.legChoices, t)]),
+      );
+      const legChoices = { ...s.legChoices, ...shown, [type]: way };
+      return {
+        legChoices,
+        draft: { ...s.draft, legs: chosenLegs(types, legChoices) },
+        dirty: true,
+      };
     }),
 
   setRoute: (plan) =>
@@ -207,13 +250,6 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
       });
   },
 
-  followed: (follow) =>
-    set((s) => {
-      const types = s.draft.tourTypes;
-      if (s.typesChosen || follow === 'straight' || (follow === 'ski') === onSkis(types)) return {};
-      return { draft: { ...s.draft, tourTypes: follow === 'ski' ? ['skitour'] : ['hiking'] } };
-    }),
-
   removeTrack: () => set((s) => ({ track: null, gpxRemoved: !!s.draft.gpxFilepath, dirty: true })),
   setSegmentOf: (segmentOf) => set({ segmentOf }),
   reset: () =>
@@ -226,7 +262,7 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
       track: null,
       gpxRemoved: false,
       dirty: false,
-      typesChosen: false,
+      legChoices: {},
       route: null,
       segmentOf: null,
       returnTo: null,

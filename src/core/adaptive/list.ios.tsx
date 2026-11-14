@@ -51,11 +51,13 @@ import {
 import { Children, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { color } from '@/core/theme/tokens';
+import { color, space } from '@/core/theme/tokens';
 
 import { Icon } from './icon';
 import { icons, type IconName } from './icons';
 import { InSwiftUIList } from './in-list';
+import { Segments } from './segments';
+import { Text } from './text';
 import { useFieldText } from './use-field-text';
 import type {
   ContentRowProps,
@@ -379,8 +381,26 @@ export function PickerRow<T extends string | number>({
   options,
   onChange,
   icon,
+  iconColor,
   style = 'menu',
 }: PickerRowProps<T>) {
+  if (style === 'segmented' && icon) {
+    // Headed by its glyph and title, in line with the rows' own; the parts are the app's, since
+    // the system's segmented control can't grey out one part.
+    return (
+      <ContentRow>
+        <View style={styles.choice}>
+          <View style={styles.choiceHead}>
+            <View style={styles.choiceIcon}>
+              <Icon name={icon} size={ROW_ICON} color={iconColor ?? color.primary} />
+            </View>
+            <Text numberOfLines={1}>{title}</Text>
+          </View>
+          <Segments label={title} options={options} value={value} onChange={onChange} />
+        </View>
+      </ContentRow>
+    );
+  }
   return (
     <Picker
       label={title}
@@ -494,4 +514,8 @@ export function EmptyState({ icon, title, description, actionLabel, onAction }: 
 const styles = StyleSheet.create({
   host: { flex: 1 },
   rowIcon: { width: ROW_ICON, height: ROW_ICON },
+  choice: { gap: space.sm, paddingVertical: space.xxs },
+  // The icon column and gap of a SwiftUI row (`iconFrame`, spacing 12), so titles line up.
+  choiceHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  choiceIcon: { width: 28, alignItems: 'center' },
 });

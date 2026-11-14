@@ -25,7 +25,7 @@ const seed: DrawnTrack = {
 };
 
 async function draw(start: DrawnTrack = seed) {
-  const hook = await renderHook(() => useTrackDrawing(start, 'straight'));
+  const hook = await renderHook(() => useTrackDrawing(start, { up: 'straight', down: 'straight' }));
   const step = async (run: () => void) => {
     const before = hook.result.current.track;
     await act(async () => run());

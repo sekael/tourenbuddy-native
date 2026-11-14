@@ -17,10 +17,17 @@ import { TRAIL_OVERLAYS } from '@/features/map/data/trail-overlays';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import { boundsAboveSheet, REGION_FRAME, type Bounds } from '@/features/map/domain/offline-regions';
 import { loadGpxTrack } from '@/features/tours/data/services/gpx-track-service';
-import { TOUR_TYPE_TRACK_COLORS } from '@/features/tours/data/models/tour-type';
+import { bandLine, type Band } from '@/features/map/domain/track-bands';
+import {
+  distinctTypeColors,
+  TOUR_TYPE_COLORS,
+  TOUR_TYPE_TRACK_COLORS,
+  type TourType,
+} from '@/features/tours/data/models/tour-type';
+import { isSameGoal } from '@/features/tours/domain/distance';
 import type { Tour } from '@/features/tours/domain/entities/tour';
 import { outingSegments } from '@/features/tours/domain/outing';
-import { trackLines } from '@/features/tours/domain/route-metrics';
+import { progressNearest, trackLines } from '@/features/tours/domain/route-metrics';
 import { useToursStore } from '@/features/tours/presentation/stores/tours-store';
 
 import { MAP_CREDIT } from './map-styles';
@@ -464,9 +471,18 @@ function detailPoints(tour: Tour | null): Points {
   return { type: 'FeatureCollection', features };
 }
 
+/** A line without activities (none chosen yet). */
+const NO_TYPE_COLOR = '#334155';
+
+/** The activities' colours in `palette`, each once; a slate grey for none. */
+const colorsOf = (types: readonly TourType[], palette: Record<TourType, string>) =>
+  types.length ? distinctTypeColors(types, palette) : [NO_TYPE_COLOR];
+
 /**
- * The open tour's lines: its GPX in the type's darker colour (gpx-tracks), else a dashed
- * connector start → goal → end (gpx-tracks "Direction connector for tours without a track").
+ * The open tour's lines in its activities' colours, per way as the PWA (activity-legs D5): the
+ * way up (start → goal) in its activities', the way down (goal → end) in its own, several
+ * alternating along the line. Its GPX in their darker track shades (gpx-tracks), switching where
+ * it passes nearest the goal; without one, straight legs start → goal → end in the markers' colours.
  */
 function useSelectedLines(tour: Tour | null): Lines {
   const [track, setTrack] = useState<{ id: string; lines: GeoJSON.Position[][] } | null>(null);
@@ -482,31 +498,46 @@ function useSelectedLines(tour: Tour | null): Lines {
   }, [tour?.id, tour?.gpxFilepath]);
 
   if (!tour) return noLines;
-  const color = tour.tourTypes[0] ? TOUR_TYPE_TRACK_COLORS[tour.tourTypes[0]] : '#334155';
-  if (tour.gpxFilepath && track?.id === tour.id) {
-    return {
-      type: 'FeatureCollection',
-      features: track.lines.map((coordinates) => ({
-        type: 'Feature',
-        geometry: { type: 'LineString', coordinates },
-        properties: { color, width: 4, casing: true },
-      })),
-    };
-  }
-  const path = [tour.startPoint, tour.goal, tour.endPoint]
-    .filter(Boolean)
-    .map((p) => [p!.lng, p!.lat]);
-  if (path.length < 2) return noLines;
-  return {
+  const up = tour.legs?.ascent ?? tour.tourTypes;
+  const down = tour.legs?.descent ?? tour.tourTypes;
+  const lines = (bands: Band[], props: Omit<LineProps, 'color'>): Lines => ({
     type: 'FeatureCollection',
-    features: [
-      {
-        type: 'Feature',
-        geometry: { type: 'LineString', coordinates: path },
-        properties: { color, width: 3, dashed: true },
-      },
-    ],
-  };
+    features: bands.map((band) => ({
+      type: 'Feature',
+      geometry: { type: 'LineString', coordinates: band.coordinates },
+      properties: { ...props, color: band.color },
+    })),
+  });
+  if (tour.gpxFilepath && track?.id === tour.id) {
+    // One line splits at the goal; a track in pieces can't tell which piece is the way down.
+    const [only] = track.lines;
+    const split =
+      tour.legs && only && track.lines.length === 1
+        ? { at: progressNearest(only, tour.goal), colors: colorsOf(down, TOUR_TYPE_TRACK_COLORS) }
+        : undefined;
+    return lines(
+      track.lines.flatMap((line) => bandLine(line, colorsOf(up, TOUR_TYPE_TRACK_COLORS), split)),
+      { width: 4, casing: true },
+    );
+  }
+  const leg = (
+    a: { lng: number; lat: number } | null,
+    b: { lng: number; lat: number } | null,
+    types: readonly TourType[],
+  ) =>
+    a && b && !isSameGoal(a, b)
+      ? bandLine(
+          [
+            [a.lng, a.lat],
+            [b.lng, b.lat],
+          ],
+          colorsOf(types, TOUR_TYPE_COLORS),
+        )
+      : [];
+  return lines([...leg(tour.startPoint, tour.goal, up), ...leg(tour.goal, tour.endPoint, down)], {
+    width: 3,
+    opacity: 0.85,
+  });
 }
 
 const styles = StyleSheet.create({

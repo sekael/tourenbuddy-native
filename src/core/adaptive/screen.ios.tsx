@@ -15,16 +15,20 @@ import {
   ToolbarItem,
 } from '@expo/ui/swift-ui';
 import {
+  accessibilityAddTraits,
   accessibilityLabel,
   animation,
   Animation,
   buttonStyle,
   disabled as disabledModifier,
+  font,
   frame,
+  lineLimit,
   listSectionMargins,
   listSectionSpacing,
   listStyle,
   menuStyle,
+  minimumScaleFactor,
   navigationBarTitleDisplayMode,
   navigationTitle,
   pickerStyle,
@@ -146,6 +150,21 @@ export function Page({
                 </SwiftText>
               ))}
             </Picker>
+          </ToolbarItem>
+        ) : !largeTitle && !titleInHeader && title ? (
+          <ToolbarItem placement="principal">
+            {/* The bar's own title, but shrinking at the largest text sizes rather than cut to
+                "Bearb…" between Cancel and Save. */}
+            <SwiftText
+              modifiers={[
+                font({ textStyle: 'headline' }),
+                lineLimit(1),
+                minimumScaleFactor(0.5),
+                accessibilityAddTraits(['isHeader']),
+              ]}
+            >
+              {title}
+            </SwiftText>
           </ToolbarItem>
         ) : null}
         {cancel ? (

@@ -39,6 +39,57 @@ export function waysCovered(
   return types.some((t) => direction(t) !== 'down') && types.some((t) => direction(t) !== 'up');
 }
 
+/** The ways the user picked (as the PWA's form): a tap pins every line shown, so a way stays put. */
+export type LegChoices = Partial<Record<TourType, LegDirection>>;
+
+/** A lone glider: walked or ridden up to its launch ('down'), or flown from the start ('both'). */
+export function soloFlight(types: readonly TourType[]): boolean {
+  return types.length === 1 && types[0] === 'paragliding';
+}
+
+/**
+ * An activity's way: the user's pick, else its default. Picks outlive their activity, so one
+ * removed and added back keeps its way; should the picks leave a way without an activity, the
+ * defaults show (and save) instead. A lone glider flies down unless picked to fly both ways.
+ */
+export function chosenDirection(
+  types: readonly TourType[],
+  choices: LegChoices,
+  type: TourType,
+): LegDirection {
+  if (soloFlight(types)) return choices.paragliding === 'both' ? 'both' : 'down';
+  const chosen = (t: TourType) => choices[t] ?? defaultDirection(t, types);
+  return waysCovered(types, chosen) ? chosen(type) : defaultDirection(type, types);
+}
+
+/** A way the line may take: never the last activity out of a way; a lone glider never only up. */
+export function wayAllowed(
+  types: readonly TourType[],
+  choices: LegChoices,
+  type: TourType,
+  way: LegDirection,
+): boolean {
+  if (soloFlight(types)) return way !== 'up';
+  return waysCovered(types, (t) => (t === type ? way : chosenDirection(types, choices, t)));
+}
+
+/** The legs the picks give; a lone glider flown from the start has the glider both ways. */
+export function chosenLegs(types: readonly TourType[], choices: LegChoices): TourLegs | null {
+  if (soloFlight(types)) {
+    return chosenDirection(types, choices, 'paragliding') === 'both'
+      ? { ascent: ['paragliding'], descent: ['paragliding'] }
+      : null;
+  }
+  return types.length > 1 ? legsFrom(types, (t) => chosenDirection(types, choices, t)) : null;
+}
+
+/** A tour's legs as picks: a split tour's ways as stored; an unsplit one stays unsplit until changed. */
+export function choicesOf(tour: LegTour): LegChoices {
+  if (soloFlight(tour.tourTypes)) return { paragliding: tour.legs ? 'both' : 'down' };
+  if (tour.tourTypes.length < 2) return {};
+  return Object.fromEntries(tour.tourTypes.map((t) => [t, directionOf(tour.legs ?? null, t)]));
+}
+
 /** The legs a way per activity gives; null when nothing differs or a leg would be empty. */
 export function legsFrom(
   types: readonly TourType[],

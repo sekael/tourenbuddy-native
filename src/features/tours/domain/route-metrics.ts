@@ -169,8 +169,8 @@ function wayMetrics(line: GeoJSON.Position[], flown: boolean): RouteMetrics {
  * ponytail: a multi-line track, or a way flown only in part, counts the whole track, thermals
  * included — cutting the flight out of a way needs the launch.
  */
-function flownTrackMetrics(
-  tour: HeightPoints,
+export function flownTrackMetrics(
+  tour: Partial<Pick<Tour, 'goal' | 'legs' | 'tourTypes'>>,
   track: GeoJSON.FeatureCollection,
 ): RouteMetrics | null {
   const geometry = track.features.length === 1 ? track.features[0]!.geometry : null;

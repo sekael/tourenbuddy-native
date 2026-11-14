@@ -4,6 +4,7 @@ import {
   Platform,
   Text as RNText,
   StyleSheet,
+  useWindowDimensions,
   type TextProps as RNTextProps,
 } from 'react-native';
 
@@ -44,9 +45,13 @@ function bolder(weight: unknown) {
 /** Text in the app's type scale and font (Inter on Android and web, the system font on iOS). */
 export function Text({ variant = 'body', level, style, ...props }: TextProps) {
   const bold = useSyncExternalStore(subscribe, getBoldText);
+  // A text size changed in Settings while the app runs reaches React Native's scale, but drawn
+  // text keeps its size until laid out anew: a new text per scale lays it out at once.
+  const { fontScale } = useWindowDimensions();
   const base = [type[variant], { color: color.onBackground }, style];
   return (
     <RNText
+      key={fontScale}
       {...props}
       {...(level && { 'aria-level': level })}
       style={bold ? [base, { fontWeight: bolder(StyleSheet.flatten(base)?.fontWeight) }] : base}

@@ -1025,13 +1025,6 @@
     "draw": {
       "title": "Draw track",
       "followLabel": "The line follows",
-      "status": {
-        "hiking": "The line follows hiking trails, then roads and paths.",
-        "ski": "The line follows ski routes, then roads and paths.",
-        "byActivity": "(matches the tour’s activity)",
-        "ways": "The line follows roads and paths.",
-        "unavailable": "Couldn’t load the trails (offline?), so this part is drawn straight."
-      },
       "hint": {
         "start": "Tap the map to set the start.",
         "next": "Tap along the way to add points. Drag a point to move it.",
@@ -1058,7 +1051,8 @@
         "move": "Now tap the map where the point should go.",
         "shape": "To change the way, tap a line’s middle dot (or a point), then the map – or hold and drag it.",
         "via": "Tap a point you pulled out to remove it again.",
-        "pull": "Now tap the map where the way should go."
+        "pull": "Now tap the map where the way should go.",
+        "landing": "Where do you land? Tap the map or search – or continue without."
       },
       "required": "Required",
       "optional": "Optional",
@@ -1071,13 +1065,14 @@
       "step": {
         "start": "Start",
         "goal": "Goal",
-        "end": "End"
+        "end": "End",
+        "landing": "Landing"
       },
       "removeStep": "Remove {{step}}",
       "measuring": "Working out the route…",
       "nextDay": "Next day",
       "follow": {
-        "label": "Line follows",
+        "label": "Follow the trails",
         "hiking": "Follows the hiking trails",
         "ski": "Follows the ski routes",
         "ways": "Follows roads and paths",
@@ -1089,8 +1084,10 @@
         "option": {
           "hiking": "Trails",
           "ski": "Ski routes",
-          "straight": "Straight"
-        }
+          "flown": "Straight (flown)"
+        },
+        "flown": "Flown: a straight line between the points",
+        "perWay": "Up: {{up}} · Down: {{down}}"
       },
       "back": "Back to the details, without these changes",
       "fold": "Fold the route points away",
@@ -1098,7 +1095,8 @@
       "editTitle": "Edit route",
       "overlays": {
         "label": "Show on the map"
-      }
+      },
+      "flightApart": "Plus {{distance}} flown in a straight line, not in the distance"
     },
     "a11y": {
       "label": "Map of Switzerland with your tours",
@@ -1287,7 +1285,7 @@
       },
       "addLocation": {
         "title": "Plan a tour",
-        "body": "Tap here, then tap your start, goal and end on the map — or search for them. The route follows the trails or ski routes and becomes your track; hold and drag a point or a line’s middle dot to change the way. Staying overnight, tap “Next day” to plan the next stage right away."
+        "body": "Tap here, then tap your start, goal and end on the map — or search for them. Each way follows the trails or ski routes of its activity, a flight straight to the landing, and becomes your track; hold and drag a point or a line’s middle dot to change the way. Staying overnight, tap “Next day” to plan the next stage right away."
       },
       "mapLayers": {
         "title": "Map layers",
@@ -1348,7 +1346,7 @@
     },
     "index": {
       "intro": "Here's what TourenBuddy does. Tap a row to go there.",
-      "addLocation": "Tap your start, goal and end on the map, or search for them. The route follows the trails.",
+      "addLocation": "Tap your start, goal and end on the map, or search for them. The route follows your activity’s trails, a flight straight to the landing.",
       "mapLayers": "Choose a base map and add hiking trails or ski routes with their difficulty.",
       "offlineMap": "Download a region, or all of Switzerland, before you head out.",
       "tours": "Your tours and your friends' tours, as a list or on the map.",

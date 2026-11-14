@@ -250,7 +250,7 @@ function ToursListPage({ onPush }: { onPush: (value: string) => void }) {
       {empty ?? (
         <ListSection
           footer={
-            filterCount > 0 ? t('tours.list.filteredFooter', { count: filtered.length }) : undefined
+            filterCount > 0 ? t('tours.list.filteredFooter', { count: entries.length }) : undefined
           }
         >
           {entries.map((entry) => {
@@ -321,7 +321,8 @@ function TourFiltersPage({ onDone }: { onDone: () => void }) {
     void Haptics.selectionAsync();
   };
   const source = tab === 'friends' ? friendTours : tours;
-  const resultCount = filterTours(source, tabState, names).length;
+  // What the list will show: an outing's stages are one row, so one result.
+  const resultCount = listEntries(filterTours(source, tabState, names), source).length;
 
   const owners = useMemo(() => {
     const ids = [...new Set(friendTours.map((tour) => tour.userId))];

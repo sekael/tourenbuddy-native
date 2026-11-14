@@ -1,15 +1,26 @@
 ## ADDED Requirements
 
-### Requirement: The user picks what the line follows
-The route step and the drawing SHALL offer a choice of what the line follows: the hiking trails, the ski routes, or a straight line. It SHALL start from the tour's activity (ski routes for an activity on skis, hiking trails for any other), else from the overlays shown. The choice SHALL leave the map's overlays as the user set them (the line follows a network whether it shows or not); legs already set SHALL follow the new choice.
+### Requirement: Each way follows its activities
+The route step and the drawing SHALL route each way (start → goal, goal → end) along the network of its own activities, by the PWA's priority: the ski routes on skis, else the hiking trails, the overlays shown while the tour has no activity. A way flown whole (the glider alone on it) SHALL go straight. The step SHALL say what each way follows, and leave the map's overlays as they were.
+
+#### Scenario: Hike & fly
+- **WHEN** the user plans a tour of hiking up and paragliding down from start over the summit to a landing in the valley
+- **THEN** the way up follows the hiking trails, the way down runs straight from the summit to the landing, the step reads "Hinauf: Wanderwege · Hinunter: Luftlinie (geflogen)", and the saved track keeps both
+
+#### Scenario: Activities picked after the route
+- **WHEN** the user plans start, goal and landing before any activity, then picks hiking and paragliding in the form
+- **THEN** the planned track's way down is flown straight before the tour can be saved, its way up keeps its trail; a file's or a saved tour's track stays as it is
 
 #### Scenario: A ski tour follows the ski routes
 - **WHEN** the user plans a tour whose activity is ski touring, with only the hiking overlay shown
 - **THEN** the line follows the ski routes, and the overlays stay as they were (only hiking shown)
 
-#### Scenario: Ski routes make a ski tour
-- **WHEN** a user whose tours are hikes adds a tour and switches the line to follow the ski routes before picking an activity
-- **THEN** the new tour's activity becomes ski touring; once the user picks an activity in the form, the line's choice no longer changes it
+### Requirement: Following can be switched off
+A switch "Den Wegen folgen" SHALL turn following off, every leg straight, and on again.
+
+#### Scenario: Straight by choice
+- **WHEN** the user switches "Den Wegen folgen" off
+- **THEN** every leg runs straight between its points, and switched on again the ways are followed as before
 
 #### Scenario: Overlays at hand
 - **WHEN** the user is in the route step or drawing and taps the "Skitouren" chip at the top of the map

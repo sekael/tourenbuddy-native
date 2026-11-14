@@ -87,7 +87,9 @@ export const TOUR_TYPE_TRACK_COLORS: Record<TourType, string> = {
   skitour: '#312E81',
   splitboarding: '#312E81',
   'ski-mountaineering': '#312E81',
-  paragliding: '#804604',
+  // Amber darkened as far as the others turns brown (the alpine group's hue): orange-600 keeps the
+  // glider orange on the topo map, a step redder than its marker instead of darker.
+  paragliding: '#EA580C',
   hiking: '#90132E',
   mountaineering: '#7C2D12',
   climbing: '#7C2D12',

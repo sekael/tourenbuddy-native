@@ -14,6 +14,7 @@ import { color, fieldType, radius, size, space, type as typeScale } from '@/core
 
 import { Icon } from './icon';
 import type { IconName } from './icons';
+import { Segments } from './segments';
 import { Text } from './text';
 
 /**
@@ -104,7 +105,12 @@ export type TextRowProps = {
   onSubmit?: () => void;
 };
 
-export type PickerOption<T extends string | number> = { value: T; label: string };
+export type PickerOption<T extends string | number> = {
+  value: T;
+  label: string;
+  /** Shown greyed, not to be picked (say why in the section's footer). */
+  disabled?: boolean;
+};
 
 export type PickerRowProps<T extends string | number> = {
   title: string;
@@ -112,7 +118,12 @@ export type PickerRowProps<T extends string | number> = {
   options: PickerOption<T>[];
   onChange: (value: T) => void;
   icon?: IconName;
-  /** `menu` (default) pops a menu from the row; `segmented` shows the options inline. */
+  /** The icon's colour (an activity's); the brand colour by default. */
+  iconColor?: string;
+  /**
+   * `menu` (default) pops a menu from the row; `segmented` shows the options inline, under the
+   * row's icon and title when it has an icon (a section's only choice needs neither).
+   */
   style?: 'menu' | 'segmented';
 };
 
@@ -389,6 +400,7 @@ export function PickerRow<T extends string | number>({
   options,
   onChange,
   icon,
+  iconColor,
   style = 'menu',
 }: PickerRowProps<T>) {
   const [open, setOpen] = useState(false);
@@ -396,31 +408,19 @@ export function PickerRow<T extends string | number>({
   if (style === 'segmented') {
     return (
       <View style={styles.fieldRow}>
-        <Text variant="caption" style={styles.muted}>
-          {title}
-        </Text>
-        <View role="radiogroup" aria-label={title} style={styles.segments}>
-          {options.map((option) => {
-            const selected = option.value === value;
-            return (
-              <Pressable
-                key={String(option.value)}
-                role="radio"
-                aria-checked={selected}
-                onPress={() => onChange(option.value)}
-                style={[styles.segment, selected && styles.segmentSelected]}
-              >
-                <Text
-                  variant="caption"
-                  style={selected ? styles.segmentSelectedText : styles.muted}
-                  numberOfLines={1}
-                >
-                  {option.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        {icon ? (
+          <View style={styles.dateLine}>
+            <Icon name={icon} size={22} color={iconColor ?? color.primary} />
+            <Text style={styles.title} numberOfLines={1}>
+              {title}
+            </Text>
+          </View>
+        ) : (
+          <Text variant="caption" style={styles.muted}>
+            {title}
+          </Text>
+        )}
+        <Segments label={title} options={options} value={value} onChange={onChange} />
       </View>
     );
   }
@@ -636,22 +636,6 @@ const styles = StyleSheet.create({
   },
   multiline: { minHeight: 96, textAlignVertical: 'top' },
   error: { color: color.error },
-  segments: {
-    flexDirection: 'row',
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: color.outlineVariant,
-    overflow: 'hidden',
-  },
-  segment: {
-    flex: 1,
-    minHeight: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: space.xs,
-  },
-  segmentSelected: { backgroundColor: color.secondaryContainer },
-  segmentSelectedText: { color: color.onSecondaryContainer },
   dateLine: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   dateInput: { flex: 1 },
   stepper: { flexDirection: 'row', gap: space.xs },

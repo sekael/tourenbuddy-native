@@ -721,7 +721,7 @@
       "downloadGpxBtn": "GPX herunterladen",
       "startShort": "Start",
       "endShort": "Ende",
-      "landingShort": "Landung",
+      "landingShort": "Landeplatz",
       "wayUp": "Hinauf",
       "wayDown": "Hinunter",
       "landingOpen": "noch offen",
@@ -1025,13 +1025,6 @@
     "draw": {
       "title": "Track zeichnen",
       "followLabel": "Die Linie folgt",
-      "status": {
-        "hiking": "Die Linie folgt den Wanderwegen, dann Strassen und Wegen.",
-        "ski": "Die Linie folgt den Skitouren, dann Strassen und Wegen.",
-        "byActivity": "(passend zur Aktivität der Tour)",
-        "ways": "Die Linie folgt Strassen und Wegen.",
-        "unavailable": "Die Wege konnten nicht geladen werden (offline?), dieser Abschnitt ist deshalb gerade."
-      },
       "hint": {
         "start": "Tippe auf die Karte, um den Start zu setzen.",
         "next": "Tippe entlang des Wegs, um Punkte zu setzen. Ziehe einen Punkt, um ihn zu verschieben.",
@@ -1058,7 +1051,8 @@
         "move": "Tippe jetzt auf die Karte, wohin der Punkt soll.",
         "shape": "Um den Weg zu ändern, tippe auf den Punkt in der Mitte einer Linie (oder einen Routenpunkt) und dann auf die Karte – oder halte und ziehe ihn.",
         "via": "Tippe einen herausgezogenen Punkt an, um ihn wieder zu entfernen.",
-        "pull": "Tippe jetzt auf die Karte, wo der Weg durchgehen soll."
+        "pull": "Tippe jetzt auf die Karte, wo der Weg durchgehen soll.",
+        "landing": "Wo landest du? Auf die Karte tippen oder suchen – oder ohne Landeplatz weiter."
       },
       "required": "Erforderlich",
       "optional": "Optional",
@@ -1071,13 +1065,14 @@
       "step": {
         "start": "Start",
         "goal": "Ziel",
-        "end": "Ende"
+        "end": "Ende",
+        "landing": "Landeplatz"
       },
       "removeStep": "{{step}} entfernen",
       "measuring": "Route wird berechnet …",
       "nextDay": "Nächster Tag",
       "follow": {
-        "label": "Linie folgt",
+        "label": "Den Wegen folgen",
         "hiking": "Folgt den Wanderwegen",
         "ski": "Folgt den Skitouren",
         "ways": "Folgt Strassen und Wegen",
@@ -1089,8 +1084,10 @@
         "option": {
           "hiking": "Wanderwege",
           "ski": "Skitouren",
-          "straight": "Luftlinie"
-        }
+          "flown": "Luftlinie (geflogen)"
+        },
+        "flown": "Geflogen: Luftlinie zwischen den Punkten",
+        "perWay": "Hinauf: {{up}} · Hinunter: {{down}}"
       },
       "back": "Zurück zu den Details, ohne diese Änderungen",
       "fold": "Routenpunkte einklappen",
@@ -1098,7 +1095,8 @@
       "editTitle": "Route ändern",
       "overlays": {
         "label": "Auf der Karte zeigen"
-      }
+      },
+      "flightApart": "Dazu {{distance}} Flug in Luftlinie, nicht in der Distanz"
     },
     "a11y": {
       "label": "Karte der Schweiz mit deinen Touren",
@@ -1287,7 +1285,7 @@
       },
       "addLocation": {
         "title": "Tour planen",
-        "body": "Tippe hier und dann auf der Karte auf Start, Ziel und Ende – oder suche sie. Die Route folgt den Wanderwegen oder Skitouren und wird dein Track; halte und ziehe einen Punkt oder die Mitte einer Linie, um den Weg zu ändern. Mit Übernachtung planst du mit «Nächster Tag» gleich die nächste Etappe."
+        "body": "Tippe hier und dann auf der Karte auf Start, Ziel und Ende – oder suche sie. Jeder Weg folgt den Wanderwegen oder Skitouren seiner Aktivität, ein Flug gerade zum Landeplatz, und wird dein Track; halte und ziehe einen Punkt oder die Mitte einer Linie, um den Weg zu ändern. Mit Übernachtung planst du mit «Nächster Tag» gleich die nächste Etappe."
       },
       "mapLayers": {
         "title": "Kartenebenen",
@@ -1348,7 +1346,7 @@
     },
     "index": {
       "intro": "Das kann TourenBuddy. Tippe auf eine Zeile, um dorthin zu gelangen.",
-      "addLocation": "Tippe Start, Ziel und Ende auf die Karte oder suche danach. Die Route folgt den Wanderwegen.",
+      "addLocation": "Tippe Start, Ziel und Ende auf die Karte oder suche danach. Die Route folgt den Wegen deiner Aktivität, ein Flug gerade zum Landeplatz.",
       "mapLayers": "Wähle eine Grundkarte und blende Wanderwege oder Skitouren mit ihrer Schwierigkeit ein.",
       "offlineMap": "Lade eine Region oder die ganze Schweiz herunter, bevor du losziehst.",
       "tours": "Deine Touren und die deiner Freunde, als Liste oder auf der Karte.",

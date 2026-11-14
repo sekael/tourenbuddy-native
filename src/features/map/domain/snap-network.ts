@@ -1,4 +1,6 @@
 import type { TrailOverlayId } from '@/features/map/data/trail-overlays';
+import type { TourType } from '@/features/tours/data/models/tour-type';
+import { flight, type TourLegs } from '@/features/tours/domain/legs';
 import { onSkis } from '@/features/tours/domain/route-metrics';
 
 /** What a drawn line follows first, before the base map's roads and paths; null = those ways alone. */
@@ -33,4 +35,25 @@ export function initialFollow(
   if (onSkis(tourTypes)) return 'ski';
   if (tourTypes.length) return 'hiking';
   return snapNetworkFor(overlays, tourTypes) ?? 'hiking';
+}
+
+/** A route's two ways: start → goal (up) and goal → end (down). */
+export type Way = 'up' | 'down';
+
+/** What each way of a route follows. */
+export type Follows = Record<Way, Follow>;
+
+/**
+ * What a way's legs follow (activity-legs): a straight line where the way is flown whole (the
+ * glider alone on it), else the network its own activities go on, as `initialFollow` picks it —
+ * hike & fly walks up the hiking trails and flies straight to the landing.
+ */
+export function wayFollow(
+  overlays: readonly TrailOverlayId[],
+  tour: { tourTypes: readonly TourType[]; legs?: TourLegs | null },
+  way: Way,
+): Follow {
+  if (flight(tour)[way]?.length === 1) return 'straight';
+  const types = (way === 'up' ? tour.legs?.ascent : tour.legs?.descent) ?? tour.tourTypes;
+  return initialFollow(overlays, types);
 }

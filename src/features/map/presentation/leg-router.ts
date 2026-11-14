@@ -5,7 +5,7 @@ import { loadNetworkLines, TooFarError } from '@/features/map/data/services/trai
 import { SKI_ROUTES_TILEJSON } from '@/features/map/data/trail-overlays';
 import { lineLength, pointAlong } from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
-import type { SnapNetwork } from '@/features/map/domain/snap-network';
+import type { Follow, SnapNetwork } from '@/features/map/domain/snap-network';
 import {
   buildNetwork,
   metersPerUnit,
@@ -190,4 +190,21 @@ export function createLegRouter({
   };
 
   return { issue: () => issue, resolve, between };
+}
+
+/**
+ * A router per network, each made when first needed, straight lines for 'straight': a route's
+ * two ways can follow different ones (hike up the trails, fly straight down).
+ */
+export function legRouters(maxTiles?: number): (follow: Follow) => LegRouter {
+  const made = new Map<SnapNetwork, LegRouter>();
+  return (follow) => {
+    if (follow === 'straight') return straightRouter;
+    let router = made.get(follow);
+    if (!router) {
+      router = createLegRouter({ network: () => follow, maxTiles });
+      made.set(follow, router);
+    }
+    return router;
+  };
 }

@@ -23,6 +23,7 @@ import { newId, readText } from '@/core/files';
 import { useFormatter } from '@/core/i18n/format';
 import { createLogger } from '@/core/logging/logger';
 import { isOnline } from '@/core/offline/online';
+import { haversineMeters } from '@/core/utils/haversine';
 import { stageText } from '@/core/offline/staged-files';
 import { resolveContactName } from '@/features/contacts/domain/entities/contact';
 import { useContactsStore } from '@/features/contacts/presentation/stores/contacts-store';
@@ -41,10 +42,10 @@ import { GpxFileTooLargeError, parseGpxText } from '@/features/tours/data/servic
 import { gpxStorageKey, uploadGpxToKey } from '@/features/tours/data/services/gpx-storage-service';
 import type { TourDraft } from '@/features/tours/domain/entities/tour';
 import {
-  defaultDirection,
-  directionOf,
-  legsFrom,
-  waysCovered,
+  chosenDirection,
+  landsByAir,
+  soloFlight,
+  wayAllowed,
   type LegDirection,
 } from '@/features/tours/domain/legs';
 import { trackLines } from '@/features/tours/domain/route-metrics';
@@ -52,6 +53,7 @@ import { buildSuggestionItems } from '@/features/tours/domain/suggestion-diff';
 
 import { AttachmentsSection, usePickActions } from './attachments-section';
 import { useTourAttachmentsStore } from './stores/tour-attachments-store';
+import { useReplannedTrack } from './replan-track';
 import { useTourDraftStore } from './stores/tour-draft-store';
 import { useTourSuggestionsStore } from './stores/tour-suggestions-store';
 import { useToursStore } from './stores/tours-store';
@@ -61,6 +63,8 @@ import type { Contact } from '@/features/contacts/domain/entities/contact';
 
 const log = createLogger('TourForm');
 const GPX_MAX_BYTES = 2 * 1024 * 1024;
+/** A start or landing farther from the goal than this may be the wrong place. */
+const FAR_FROM_GOAL_M = 20_000;
 
 const typeLabel = (t: TFunction, type: TourType) =>
   t(`tours.type.${TOUR_TYPE_I18N_KEYS[type]}` as 'tours.type.hiking');
@@ -79,13 +83,7 @@ export function TourFormScreen() {
       path={path}
       onPathChange={setPath}
       renderPage={(value) =>
-        value === 'activities' ? (
-          <ActivitiesPage />
-        ) : value === 'grade' ? (
-          <GradePage />
-        ) : value === 'partners' ? (
-          <PartnersPage />
-        ) : null
+        value === 'grade' ? <GradePage /> : value === 'partners' ? <PartnersPage /> : null
       }
     >
       <FormPage onPush={(v) => setPath((p) => [...p, v])} />
@@ -101,6 +99,19 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
   const draftId = useTourDraftStore((s) => s.draftId);
   const draft = useTourDraftStore((s) => s.draft);
   const goal = useTourDraftStore((s) => s.goal);
+  // A planned track follows the ways as the activities now say (a hike made a hike & fly).
+  const replanning = useReplannedTrack();
+  /**
+   * A start's or landing's row names how far it lies from the goal (activity-legs, the PWA's):
+   * a search hit in the wrong valley shows at a glance, and past 20 km it asks.
+   * ponytail: one threshold; a cross-country flight that lands farther just reads the question.
+   */
+  const withDistance = (label: string, at: { lng: number; lat: number } | null) => {
+    if (!at || !goal) return label;
+    const metres = haversineMeters([goal.lng, goal.lat], [at.lng, at.lat]);
+    const distance = formatDistance(metres);
+    return `${label} · ${metres > FAR_FROM_GOAL_M ? t('tours.form.farFromGoal', { distance }) : t('tours.form.fromGoal', { distance })}`;
+  };
   const track = useTourDraftStore((s) => s.track);
   const gpxRemoved = useTourDraftStore((s) => s.gpxRemoved);
   const dirty = useTourDraftStore((s) => s.dirty);
@@ -291,13 +302,6 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
   const types = draft.tourTypes;
   const scales = gradeScales(types);
 
-  /** An activity on or off; the ways up and down go back to their defaults. */
-  function toggleType(type: TourType) {
-    const next = TOUR_TYPE_VALUES.filter((v) =>
-      v === type ? !types.includes(v) : types.includes(v),
-    );
-    update({ tourTypes: next, legs: legsFrom(next, (x) => defaultDirection(x, next)) });
-  }
   const partners = draft.partnerIds
     .map((id) => contacts.find((c) => c.id === id))
     .filter((c) => c !== undefined)
@@ -328,7 +332,7 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
         label:
           mode === 'suggest' ? t('tours.suggestions.submitBtn') : t('tours.infoSheet.saveLabel'),
         onPress: () => void save(),
-        disabled: saving || uploading || !goal || !draft.name?.trim(),
+        disabled: saving || uploading || replanning || !goal || !draft.name?.trim(),
       }}
     >
       <ListSection>
@@ -357,10 +361,11 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
               iconColor: TOUR_TYPE_COLORS[type],
             }))}
             selected={types}
-            onToggle={toggleType}
+            onToggle={store.toggleType}
           />
         </ContentRow>
       </ListSection>
+      <LegsSection />
 
       <ListSection
         title={t('tours.form.gradeLabel')}
@@ -450,7 +455,7 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
       <ListSection title={t('tours.form.routeSectionLabel')} footer={gpxError ?? undefined}>
         <ListRow
           title={point(draft.startPoint, draft.startPointName, draft.startPointElevation)}
-          subtitle={t('tours.form.startPointLabel')}
+          subtitle={withDistance(t('tours.form.startPointLabel'), draft.startPoint)}
           icon="trip_origin"
           chevron={false}
         />
@@ -467,18 +472,14 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
         />
         <ListRow
           title={point(draft.endPoint, draft.endPointName, draft.endPointElevation)}
-          subtitle={t('tours.form.endPointLabel')}
+          // The way down ends in a flight: the end is the landing (activity-legs, as the PWA).
+          subtitle={withDistance(
+            landsByAir(draft) ? t('tours.form.landingLabel') : t('tours.form.endPointLabel'),
+            draft.endPoint,
+          )}
           icon="sports_score"
           chevron={false}
         />
-        {/* Below the activities, so a second one never pushes the grade under the thumb. */}
-        {types.length > 1 ? (
-          <ListRow
-            title={t('tours.form.legs.label')}
-            icon="swap_vert"
-            onPress={() => onPush('activities')}
-          />
-        ) : null}
         <ListRow
           title={t('tours.form.changeRouteBtn')}
           icon="edit"
@@ -486,7 +487,13 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
         />
         <ListRow
           title={trackLabel}
-          subtitle={track?.line ? formatDistance(lineLength(track.line)) : t('tours.form.gpxLabel')}
+          subtitle={
+            replanning
+              ? t('map.plan.measuring')
+              : track?.line
+                ? formatDistance(lineLength(track.line))
+                : t('tours.form.gpxLabel')
+          }
           icon="route"
           menu={[
             {
@@ -697,40 +704,49 @@ function DraftAttachments({
   );
 }
 
-/** With several activities, which way each goes (activity-legs). */
-function ActivitiesPage() {
+/**
+ * With several activities (or a lone glider), which way each goes, right under the activities as
+ * in the PWA (activity-legs): a line per activity in its glyph and colour, flying last, each a
+ * tap of up, both or down. A way never loses its last activity: that choice shows greyed.
+ */
+function LegsSection() {
   const { t } = useTranslation();
-  const draft = useTourDraftStore((s) => s.draft);
-  const update = useTourDraftStore.getState().update;
-  const types = draft.tourTypes;
-  const direction = (type: TourType): LegDirection =>
-    draft.legs ? directionOf(draft.legs, type) : defaultDirection(type, types);
-
-  function setDirection(type: TourType, way: LegDirection) {
-    const pick = (x: TourType) => (x === type ? way : direction(x));
-    if (!waysCovered(types, pick)) return;
-    update({ legs: legsFrom(types, pick) });
-  }
-
+  const types = useTourDraftStore((s) => s.draft.tourTypes);
+  const choices = useTourDraftStore((s) => s.legChoices);
+  const { setWay } = useTourDraftStore.getState();
+  const solo = soloFlight(types);
+  if (types.length < 2 && !solo) return null;
+  const ways = (['up', 'both', 'down'] as const).filter((way) => !solo || way !== 'up');
+  // Flying comes last: it is how the day ends.
+  const rows = [...types].sort((a, b) => Number(a === 'paragliding') - Number(b === 'paragliding'));
+  const blocked = types.some((type) => ways.some((way) => !wayAllowed(types, choices, type, way)));
   return (
-    <Page title={t('tours.form.legs.label')}>
-      <ListSection footer={t('tours.form.legs.hint')}>
-        {types.map((type) => (
-          <PickerRow<LegDirection>
-            key={type}
-            title={typeLabel(t, type)}
-            icon={TOUR_TYPE_ICONS[type] as IconName}
-            value={direction(type)}
-            onChange={(way) => setDirection(type, way)}
-            options={[
-              { value: 'up', label: t('tours.form.legs.up') },
-              { value: 'both', label: t('tours.form.legs.both') },
-              { value: 'down', label: t('tours.form.legs.down') },
-            ]}
-          />
-        ))}
-      </ListSection>
-    </Page>
+    <ListSection
+      title={t('tours.form.legs.label')}
+      footer={[
+        t(solo ? 'tours.form.legs.soloHint' : 'tours.form.legs.hint'),
+        ...(blocked ? [t('tours.form.legs.needsOne')] : []),
+      ].join(' ')}
+    >
+      {rows.map((type) => (
+        <PickerRow<LegDirection>
+          key={type}
+          style="segmented"
+          title={typeLabel(t, type)}
+          icon={TOUR_TYPE_ICONS[type] as IconName}
+          iconColor={TOUR_TYPE_COLORS[type]}
+          value={chosenDirection(types, choices, type)}
+          onChange={(way) => {
+            if (wayAllowed(types, choices, type, way)) setWay(type, way);
+          }}
+          options={ways.map((way) => ({
+            value: way,
+            label: t(`tours.form.legs.${way}`),
+            disabled: !wayAllowed(types, choices, type, way),
+          }))}
+        />
+      ))}
+    </ListSection>
   );
 }
 

@@ -1,4 +1,7 @@
 import {
+  choicesOf,
+  chosenDirection,
+  chosenLegs,
   defaultDirection,
   directionOf,
   flight,
@@ -8,6 +11,7 @@ import {
   legsMatch,
   routeOrder,
   sumFlight,
+  wayAllowed,
   waysCovered,
 } from '@/features/tours/domain/legs';
 
@@ -151,5 +155,60 @@ describe('legsApart', () => {
   it('should read a glider flown the whole way as one activity', () => {
     expect(legsApart({ ascent: ['paragliding'], descent: ['paragliding'] })).toBeNull();
     expect(legsApart({ ascent: ['hiking'], descent: ['paragliding'] })).not.toBeNull();
+  });
+});
+
+describe('picked ways (the form, as the PWA)', () => {
+  it('should keep a picked way when another activity comes, the newcomer taking its default', () => {
+    const picks = { hiking: 'both', paragliding: 'down' } as const;
+    const types = ['paragliding', 'hiking', 'mountain-biking'] as const;
+    expect(chosenDirection(types, picks, 'hiking')).toBe('both');
+    // A glider in the mix: the bike is no longer the way down by default.
+    expect(chosenDirection(types, picks, 'mountain-biking')).toBe('up');
+  });
+
+  it('should show and save the defaults when the picks leave a way without an activity', () => {
+    // Hiking was the only way up; with the glider gone too, the bike alone is left to go down.
+    const picks = { hiking: 'down', 'mountain-biking': 'down' } as const;
+    const types = ['hiking', 'mountain-biking'] as const;
+    expect(chosenDirection(types, picks, 'hiking')).toBe('up');
+    expect(chosenLegs(types, picks)).toEqual({ ascent: ['hiking'], descent: ['mountain-biking'] });
+  });
+
+  it('should grey the way that would take the last activity out of a way', () => {
+    const types = ['mountaineering', 'paragliding'] as const;
+    expect(wayAllowed(types, {}, 'paragliding', 'up')).toBe(false);
+    expect(wayAllowed(types, {}, 'paragliding', 'both')).toBe(true);
+    expect(wayAllowed(types, {}, 'mountaineering', 'down')).toBe(false);
+  });
+
+  it('should fly a lone glider down unless picked to fly the whole way, never only up', () => {
+    expect(chosenDirection(['paragliding'], {}, 'paragliding')).toBe('down');
+    expect(chosenLegs(['paragliding'], {})).toBeNull();
+    expect(chosenLegs(['paragliding'], { paragliding: 'both' })).toEqual({
+      ascent: ['paragliding'],
+      descent: ['paragliding'],
+    });
+    expect(wayAllowed(['paragliding'], {}, 'paragliding', 'up')).toBe(false);
+  });
+
+  it('should leave nothing split when every activity goes both ways', () => {
+    expect(chosenLegs(['hiking', 'trailrunning'], {})).toBeNull();
+    expect(chosenLegs(['hiking'], { hiking: 'up' })).toBeNull();
+  });
+
+  it('should read an unsplit tour as both ways, so editing keeps it unsplit', () => {
+    expect(choicesOf({ tourTypes: ['hiking', 'paragliding'], legs: null })).toEqual({
+      hiking: 'both',
+      paragliding: 'both',
+    });
+    expect(choicesOf({ tourTypes: ['paragliding'], legs: null })).toEqual({ paragliding: 'down' });
+    expect(
+      choicesOf({
+        tourTypes: ['paragliding'],
+        legs: { ascent: ['paragliding'], descent: ['paragliding'] },
+      }),
+    ).toEqual({ paragliding: 'both' });
+    expect(choicesOf({ tourTypes: [], legs: null })).toEqual({});
   });
 });

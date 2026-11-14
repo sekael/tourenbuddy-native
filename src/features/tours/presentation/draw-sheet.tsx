@@ -9,6 +9,7 @@ import { Page, Screen } from '@/core/adaptive/screen';
 import { useFormatter } from '@/core/i18n/format';
 import { isOnline } from '@/core/offline/online';
 import {
+  lineLength,
   routeStops,
   trackFromLine,
   trackLine,
@@ -16,18 +17,18 @@ import {
   type DrawnTrack,
 } from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
-import { initialFollow, type Follow } from '@/features/map/domain/snap-network';
+import { wayFollow, type Follow, type Way } from '@/features/map/domain/snap-network';
+import { routeBands } from '@/features/map/domain/track-bands';
 import { tapSnapM } from '@/features/map/presentation/leg-router';
 import { useMapStore, type HandleTarget } from '@/features/map/presentation/stores/map-store';
 import { ElevationProfile } from '@/features/map/presentation/elevation-profile';
-import { FollowSection } from '@/features/map/presentation/follow-section';
-import { useTrackDrawing } from '@/features/map/presentation/use-track-drawing';
-import { TOUR_TYPE_TRACK_COLORS } from '@/features/tours/data/models/tour-type';
-import { gpxFromLine } from '@/features/tours/data/services/gpx-writer';
-import { densify, getTrackProfile } from '@/features/tours/data/services/swisstopo-profile-service';
-import { estimatedMinutes, onSkis } from '@/features/tours/domain/route-metrics';
+import { FollowSection, followStatus } from '@/features/map/presentation/follow-section';
+import { profileMetrics, useTrackDrawing } from '@/features/map/presentation/use-track-drawing';
+import { landsByAir } from '@/features/tours/domain/legs';
+import { tourMinutes } from '@/features/tours/domain/route-metrics';
 import { usePace } from '@/features/user/presentation/stores/user-profile-store';
 
+import { FLOWN_NOTE_M, gpxOf } from './replan-track';
 import { useTourDraftStore } from './stores/tour-draft-store';
 
 /** Where the drawing starts: the draft's drawing or track, else its start, goal and end. */
@@ -55,15 +56,16 @@ export function DrawSheet() {
   const { formatElevation, formatDistance, formatDuration } = useFormatter();
   const overlays = useMapStore((s) => s.overlays);
   const pace = usePace();
-  const types = useTourDraftStore.getState().draft.tourTypes;
-  const [follow, setFollow] = useState<Follow>(() => initialFollow(overlays, types));
-  /** A new tour's activity follows the line (ski routes: a ski tour) until the user picks one. */
-  const changeFollow = (next: Follow) => {
-    setFollow(next);
-    useTourDraftStore.getState().followed(next);
+  const draft = useTourDraftStore.getState().draft;
+  /** The legs follow the ways (the PWA's switch); off, straight lines between the points. */
+  const [following, setFollowing] = useState(true);
+  /** Each way follows its own activities' network, a flown way straight (activity-legs). */
+  const ways: Record<Way, Follow> = {
+    up: following ? wayFollow(overlays, draft, 'up') : 'straight',
+    down: following ? wayFollow(overlays, draft, 'down') : 'straight',
   };
   const [seed] = useState(seedTrack);
-  const drawing = useTrackDrawing(seed, follow);
+  const drawing = useTrackDrawing(seed, ways);
   const [saving, setSaving] = useState(false);
   const drawingRef = useLatest(drawing);
   /** A point or leg's dot picked by a tap: the next map tap moves it or sends the leg there. */
@@ -90,20 +92,26 @@ export function DrawSheet() {
       setPicked(null);
       drawingRef.current.drop(index);
     };
-    const color = types[0] ? TOUR_TYPE_TRACK_COLORS[types[0]] : '#334155';
     const line = trackLine(track);
+    // The line wears its ways' colours, the way down's from the goal on, as the saved tour will.
+    const { goal } = track;
+    const total = lineLength(line);
+    const at =
+      goal != null && goal < track.points.length - 1 && total > 0
+        ? lineLength(
+            trackLine({ points: track.points.slice(0, goal + 1), legs: track.legs.slice(0, goal) }),
+          ) / total
+        : null;
     useMapStore.setState({
       previewLines: {
         type: 'FeatureCollection',
         features:
           line.length > 1
-            ? [
-                {
-                  type: 'Feature',
-                  geometry: { type: 'LineString', coordinates: line },
-                  properties: { color, width: 4, casing: true },
-                },
-              ]
+            ? routeBands(line, draft, at).map((band) => ({
+                type: 'Feature',
+                geometry: { type: 'LineString', coordinates: band.coordinates },
+                properties: { color: band.color, width: 4, casing: true },
+              }))
             : [],
       },
       // The points are handles (`editHandles`); a tap still waiting for its leg shows here.
@@ -145,10 +153,17 @@ export function DrawSheet() {
         picked,
       },
     });
-  }, [track, queued, types, drawingRef, picked]);
+  }, [track, queued, draft, drawingRef, picked]);
 
-  const { metrics } = drawing;
-  const minutes = estimatedMinutes(metrics, onSkis(types), pace);
+  // A flown way counts its height change alone, as the saved tour will.
+  const goalAt = track.goal != null ? track.points[track.goal] : undefined;
+  const metrics = profileMetrics(trackLine(track), drawing.profile, {
+    ...draft,
+    goal: goalAt && { lng: goalAt[0], lat: goalAt[1] },
+  });
+  const minutes = tourMinutes(metrics, draft, pace);
+  /** The flight's share of the line (and its profile), which the walked distance leaves out. */
+  const flown = metrics.distance !== null ? lineLength(trackLine(track)) - metrics.distance : 0;
   const numbers = [
     metrics.distance ? formatDistance(metrics.distance) : null,
     metrics.ascent ? `↑ ${formatElevation(metrics.ascent)}` : null,
@@ -168,13 +183,14 @@ export function DrawSheet() {
     }
     setSaving(true);
     try {
-      const profiled = isOnline() ? await getTrackProfile(line).catch(() => null) : null;
       const name = store.draft.name?.trim() || t('tours.form.gpxDrawn');
       store.setTrack({
-        text: gpxFromLine(profiled?.line ?? densify(line), profiled?.heights ?? null, name),
+        text: await gpxOf(line, name),
         label: t('tours.form.gpxDrawn'),
         line,
         drawing: track,
+        // The form routes a way anew when its activities change what it follows.
+        follows: following ? ways : null,
       });
       // One start and one end, where the line begins and ends (a goal at either end is the goal).
       if (track.goal == null) store.setEnds(line[0]!, line.at(-1)!);
@@ -188,14 +204,12 @@ export function DrawSheet() {
     }
   }
 
-  const status =
-    follow === 'straight'
-      ? t('map.plan.follow.straight')
-      : drawing.issue === 'unavailable'
-        ? t('map.draw.status.unavailable')
-        : follow === 'ski'
-          ? t('map.draw.status.ski')
-          : t('map.draw.status.hiking');
+  const status = followStatus(t, {
+    following,
+    up: ways.up,
+    down: track.goal != null && track.goal < track.points.length - 1 ? ways.down : null,
+    unavailable: drawing.issue === 'unavailable',
+  });
 
   return (
     <Screen>
@@ -249,11 +263,14 @@ export function DrawSheet() {
                 ? isOnline()
                   ? t('map.draw.hint.profileLoading')
                   : t('map.draw.hint.profileOffline')
-                : undefined
+                : flown > FLOWN_NOTE_M
+                  ? t('map.plan.flightApart', { distance: formatDistance(flown) })
+                  : undefined
             }
             icon="route"
           />
-          {!drawing.closed && track.legs.length > 0 ? (
+          {/* The same way back can't be flown: a flight down ends at its landing (as the form). */}
+          {!drawing.closed && track.legs.length > 0 && !landsByAir(draft) ? (
             <ListRow
               title={t('map.draw.returnToStart')}
               subtitle={t('map.draw.returnToStartHint')}
@@ -271,7 +288,7 @@ export function DrawSheet() {
             />
           ) : null}
         </ListSection>
-        <FollowSection value={follow} onChange={changeFollow} status={status} />
+        <FollowSection value={following} onChange={setFollowing} status={status} />
       </Page>
     </Screen>
   );

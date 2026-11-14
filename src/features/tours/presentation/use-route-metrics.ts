@@ -6,6 +6,7 @@ import { getTrackProfile } from '@/features/tours/data/services/swisstopo-profil
 import { loadGpxTrack } from '@/features/tours/data/services/gpx-track-service';
 import type { Tour } from '@/features/tours/domain/entities/tour';
 import {
+  flownTrackMetrics,
   routeMetrics,
   trackLines,
   trackMetrics,
@@ -40,9 +41,13 @@ async function withHeights(track: GeoJSON.FeatureCollection): Promise<GeoJSON.Fe
 
 /**
  * A line's numbers measured along the terrain, as the saved tour will have them (its GPX gets the
- * same profile); null offline or when the profile can't be had.
+ * same profile; a way `tour` flies whole counts its height change alone); null offline or when the
+ * profile can't be had.
  */
-export async function profiledMetrics(line: LngLat[]): Promise<RouteMetrics | null> {
+export async function profiledMetrics(
+  line: LngLat[],
+  tour?: Parameters<typeof flownTrackMetrics>[0],
+): Promise<RouteMetrics | null> {
   if (line.length < 2 || !isOnline()) return null;
   const track = await withHeights({
     type: 'FeatureCollection',
@@ -50,7 +55,7 @@ export async function profiledMetrics(line: LngLat[]): Promise<RouteMetrics | nu
       { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: line } },
     ],
   }).catch(() => null);
-  const metrics = track ? trackMetrics(track) : null;
+  const metrics = track ? ((tour && flownTrackMetrics(tour, track)) ?? trackMetrics(track)) : null;
   return metrics?.ascent !== null ? metrics : null;
 }
 
