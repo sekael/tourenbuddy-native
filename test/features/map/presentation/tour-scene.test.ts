@@ -134,6 +134,21 @@ describe('focusPoints', () => {
     ]);
   });
 
+  it('should name a round trip once: its end is its start', () => {
+    const at = { lng: 7.9, lat: 46.6 };
+    const loop = tour({
+      id: 'loop',
+      startPoint: at,
+      startPointName: 'Mürren',
+      endPoint: { ...at },
+      endPointName: 'Mürren',
+    });
+    const scene = tourScene({ ...base, owned: [loop], selectedId: 'loop' });
+    expect(focusPoints(scene, t).features.map((f) => f.properties)).toEqual([
+      { kind: 'start', label: 'Mürren' },
+    ]);
+  });
+
   it('should put the "+N" chip on the open tour spot with every tour there', () => {
     const scene = tourScene({ ...base, owned: [lone, nearLone], selectedId: 'lone' });
     const more = focusPoints(scene, t).features.find((f) => f.properties.kind === 'more');

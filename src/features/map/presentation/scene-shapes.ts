@@ -226,7 +226,8 @@ export function focusPoints(scene: TourScene, t: TFunction): Points {
       ...(tour.startPointName ? { label: tour.startPointName } : {}),
     });
   }
-  if (tour?.endPoint) {
+  // A round trip's end is its start: one marker, one name.
+  if (tour?.endPoint && !(tour.startPoint && isSameGoal(tour.endPoint, tour.startPoint))) {
     point(tour.endPoint, {
       kind: 'end',
       ...(tour.endPointName ? { label: tour.endPointName } : {}),

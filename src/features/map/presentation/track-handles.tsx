@@ -39,7 +39,10 @@ export function TrackHandles() {
   return (
     <>
       {handles.legs.map((leg, i) => {
-        const mid = leg.length > 1 && !waits(i) ? legHandle(leg, zoom) : null;
+        const mid =
+          leg.length > 1 && !waits(i) && i < (handles.upTo ?? Infinity)
+            ? legHandle(leg, zoom)
+            : null;
         if (!mid) return null;
         const picked =
           handles.picked !== null && 'leg' in handles.picked && handles.picked.leg === i;
@@ -65,6 +68,7 @@ export function TrackHandles() {
         );
       })}
       {handles.points.map((point, i) => {
+        if (i > (handles.upTo ?? Infinity)) return null;
         const picked =
           handles.picked !== null && 'point' in handles.picked && handles.picked.point === i;
         return (

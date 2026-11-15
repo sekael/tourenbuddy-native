@@ -22,6 +22,8 @@ export type RoutePoints = Record<RouteStep, PlannedPoint | null>;
 export interface RoutePlan {
   points: RoutePoints;
   track: DrawnTrack | null;
+  /** A round trip whose way back is the way up reversed («Rundtour»): it stays so when reshaped. */
+  backSame?: boolean;
 }
 
 /** The step after `from` still open, in order; `from` itself once every later one is set. */

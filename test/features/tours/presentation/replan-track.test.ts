@@ -41,6 +41,37 @@ describe('replanned', () => {
     ]);
   });
 
+  it('should send a round trip back the way it now goes up, through its points between', async () => {
+    // Routed on its own, a leg turns at a corner that depends on its direction.
+    const corner: LegRouter = { ...straightRouter, between: async (a, b) => [a, [a[0], b[1]], b] };
+    const routeFor = (follow: string) => (follow === 'straight' ? straightRouter : corner);
+    const loop = { points: [A, C, B, C, A], legs: [], goal: 2 };
+    const next = await replanned(
+      loop,
+      [A, C, B, C, A],
+      trails,
+      { up: 'ski', down: 'ski' },
+      routeFor,
+    );
+    const up = [
+      [A, [A[0], C[1]], C],
+      [C, [C[0], B[1]], B],
+    ];
+    expect(next?.legs).toEqual([...up, up[1]!.slice().reverse(), up[0]!.slice().reverse()]);
+    // Flown back, the way down goes straight whatever the way up does.
+    const flown = await replanned(
+      loop,
+      [A, C, B, C, A],
+      trails,
+      { up: 'ski', down: 'straight' },
+      routeFor,
+    );
+    expect(flown?.legs.slice(2)).toEqual([
+      [B, C],
+      [C, A],
+    ]);
+  });
+
   it('should leave a track as it is when nothing changed, or it has no goal to part its ways', async () => {
     expect(await replanned(hike, line, trails, trails, routerFor)).toBeNull();
     const { goal: _, ...noGoal } = hike;

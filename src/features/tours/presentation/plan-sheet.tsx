@@ -113,13 +113,23 @@ export function PlanSheet({ back }: { back: boolean }) {
   const draftState = useTourDraftStore.getState();
   const overlays = useMapStore((s) => s.overlays);
 
-  const [points, setPoints] = useState<RoutePoints>(() => initialPoints());
+  const [placed, setPoints] = useState<RoutePoints>(() => initialPoints());
+  /**
+   * «Rundtour»: the end is the start and the way back the way up reversed, its points and legs, as
+   * the way up is shaped. An end of its own, or the start or end removed, ends it.
+   */
+  const [backSame, setBackSame] = useState(() => !!useTourDraftStore.getState().route?.backSame);
+  const points: RoutePoints = backSame && placed.start ? { ...placed, end: placed.start } : placed;
   const [active, setActive] = useState<RouteStep>(() =>
     points.goal ? 'goal' : points.start ? 'goal' : 'start',
   );
   /** The legs follow the ways (the PWA's switch); off, straight lines between the points. */
   const [following, setFollowing] = useState(true);
-  const [vias, setVias] = useState<Vias>(() => initialVias());
+  /** The end is back at the start: its row says so, and the map marks the place once. */
+  const roundTripSet =
+    !!points.start && !!points.end && isSameGoal(points.start.location, points.end.location, 1);
+  const [drawnVias, setVias] = useState<Vias>(() => initialVias());
+  const vias: Vias = backSame ? { ...drawnVias, goal: [...drawnVias.start].reverse() } : drawnVias;
   /** A leg's dot picked by a tap: the next map tap sends the route through there. */
   const [pickedLeg, setPickedLeg] = useState<number | null>(null);
   const [legs, setLegs] = useState<Map<string, LngLat[]>>(new Map());
@@ -169,6 +179,8 @@ export function PlanSheet({ back }: { back: boolean }) {
   }
 
   function setAndAdvance(step: RouteStep, location: { lng: number; lat: number }, name?: string) {
+    // An end of its own: the way back goes its own way.
+    if (step === 'end') setBackSame(false);
     place(step, location, name);
     const next = { ...pointsRef.current, [step]: { location } as PlannedPoint };
     setActive(nextStep(next, step));
@@ -176,6 +188,7 @@ export function PlanSheet({ back }: { back: boolean }) {
   }
 
   function clear(step: RouteStep) {
+    if (step !== 'goal') setBackSame(false);
     lookups.abort(step);
     setPoints((p) => ({ ...p, [step]: null }));
     // Points between a removed end and the goal go with it.
@@ -319,14 +332,22 @@ export function PlanSheet({ back }: { back: boolean }) {
   const route = stopsOf(points, vias);
   const pairs = route ? route.stops.slice(1).map((b, i) => [route.stops[i]!, b] as const) : [];
   const followOf = (i: number): Follow => ways[route && i < route.goal ? 'up' : 'down'];
+  /** A round trip's leg back: the way up's leg it retraces, else null. */
+  const mirrorOf = (i: number) =>
+    backSame && points.start && route && i >= route.goal ? pairs.length - 1 - i : null;
   const legOf = (i: number): LngLat[] | undefined => {
+    const up = mirrorOf(i);
+    if (up !== null) return legOf(up)?.slice().reverse();
     const [a, b] = pairs[i]!;
     const follow = followOf(i);
     if (follow === 'straight') return [a, b];
     const key = keyOf(follow, a, b);
     return savedLegs.get(key) ?? legs.get(key);
   };
-  const missing = opened ? pairs.flatMap((_, i) => (legOf(i) ? [] : [i])) : [];
+  // A leg back waits for the leg up it retraces.
+  const missing = opened
+    ? pairs.flatMap((_, i) => (legOf(i) || mirrorOf(i) !== null ? [] : [i]))
+    : [];
   const missingKey = missing.map((i) => keyOf(followOf(i), ...pairs[i]!)).join(';');
   useEffect(() => {
     if (!missing.length || !route) return;
@@ -409,7 +430,7 @@ export function PlanSheet({ back }: { back: boolean }) {
         : {
             type: 'FeatureCollection',
             features: (['start', 'end'] as const).flatMap((kind) => {
-              const p = points[kind];
+              const p = kind === 'end' && roundTripSet ? null : points[kind];
               return p
                 ? [
                     {
@@ -435,6 +456,8 @@ export function PlanSheet({ back }: { back: boolean }) {
                       : 'via',
             })),
             legs: pairs.map((pair, i) => legOf(i) ?? [...pair]),
+            // A round trip's way back follows the way up: only the way up takes a finger.
+            ...(backSame ? { upTo: route.goal } : {}),
             move: (i, to) => moveRef.current(i, to),
             pull: (leg, to) => pullRef.current(leg, to),
             drop: (i) => dropRef.current(i),
@@ -450,7 +473,7 @@ export function PlanSheet({ back }: { back: boolean }) {
     });
     // Drawn from what the step holds; the line follows from points and legs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [points, vias, legs, savedLegs, opened, following, active, pickedLeg]);
+  }, [points, vias, legs, savedLegs, opened, following, active, pickedLeg, backSame]);
 
   // Climb and time measured along the line, as the saved tour will show them (route-planner in the
   // PWA). They appear once measured, never first as the points' estimate; that only when the line
@@ -495,8 +518,6 @@ export function PlanSheet({ back }: { back: boolean }) {
     .join('  ');
 
   const waiting = ROUTE_STEPS.some((s) => points[s]?.loading);
-  const roundTripSet =
-    !!points.start && !!points.end && isSameGoal(points.start.location, points.end.location, 1);
 
   function cancel() {
     if (back) {
@@ -533,7 +554,7 @@ export function PlanSheet({ back }: { back: boolean }) {
               goal: route.goal,
             }
           : null;
-      store.setRoute({ points, track });
+      store.setRoute({ points, track, backSame });
       if (line && line.length > 1) {
         // The line becomes the tour's GPX, with the terrain's heights when online.
         const name = store.draft.name?.trim() || points.goal.name || t('tours.form.gpxDrawn');
@@ -700,9 +721,8 @@ export function PlanSheet({ back }: { back: boolean }) {
               title={t('map.plan.roundTrip')}
               icon="u_turn_left"
               onPress={() => {
-                const start = points.start!;
-                lookups.abort('end');
-                setPoints((p) => ({ ...p, end: { ...start, location: { ...start.location } } }));
+                void Haptics.selectionAsync();
+                setBackSame(true);
               }}
             />
           ) : null}
@@ -747,14 +767,16 @@ function initialVias(): Vias {
   const last = route.points.end ? track.points.length - 1 : track.points.length;
   return {
     start: track.points.slice(first, track.goal),
-    goal: track.points.slice(track.goal + 1, last),
+    // A round trip's way back is the way up's, not points of its own.
+    goal: route.backSame ? [] : track.points.slice(track.goal + 1, last),
   };
 }
 
 /** The points to start from: the draft's (from the form), else none. */
 function initialPoints(): RoutePoints {
   const { draft, goal, route } = useTourDraftStore.getState();
-  if (route) return route.points;
+  // A round trip's end is its start (`backSame`), not a point of its own.
+  if (route) return route.backSame ? { ...route.points, end: null } : route.points;
   const planned = (
     location: { lng: number; lat: number } | null,
     name: string | null,

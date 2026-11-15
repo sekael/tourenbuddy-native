@@ -45,6 +45,8 @@ export type HandleTarget = { point: number } | { leg: number };
 export type EditHandles = {
   points: { at: LngLat; kind: 'start' | 'goal' | 'end' | 'via' }[];
   legs: LngLat[][];
+  /** Only the points up to this one and the legs between them take a finger (a round trip's way back follows the way up). */
+  upTo?: number;
   move: (index: number, to: LngLat) => void;
   pull: (leg: number, at: LngLat) => void;
   drop: (index: number) => void;
