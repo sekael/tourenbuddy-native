@@ -69,6 +69,13 @@ export type MapState = {
   trailHighlight: { trails: Trail[]; selectedId: string | null } | null;
   /** Tours sharing one spot, from a stack tap: the stack list sheet shows them. */
   stack: string[] | null;
+  /**
+   * The tours a narrowed tour list shows, while it is open (#351): only those keep their markers.
+   * Null: the list is closed, or nothing narrows it.
+   */
+  listedTourIds: ReadonlySet<string> | null;
+  /** A stage tapped on the map inside its open outing: the outing's page opens it (D15). */
+  segmentRequest: { id: string; at: number } | null;
   /** The planned or drawn line's handles while the route or draw step runs. */
   editHandles: EditHandles | null;
   /**
@@ -122,6 +129,8 @@ export type MapState = {
   showTrails: (candidates: Trail[], more: number) => void;
   selectTrail: (id: string | null) => void;
   showStack: (ids: string[] | null) => void;
+  setListedTourIds: (ids: ReadonlySet<string> | null) => void;
+  requestSegment: (id: string) => void;
   requestCamera: (request: CameraRequest) => void;
   consumeCamera: () => CameraRequest | null;
   /** `bounds`: west, south, east, north of what the map shows. */
@@ -155,6 +164,8 @@ export const useMapStore = create<MapState>()((set, get) => ({
   editHandles: null,
   drag: null,
   stack: null,
+  listedTourIds: null,
+  segmentRequest: null,
   camera: null,
   center: null,
   zoom: null,
@@ -205,6 +216,8 @@ export const useMapStore = create<MapState>()((set, get) => ({
     if (card) set({ trailCard: { ...card, selectedId: id } });
   },
   showStack: (stack) => set({ stack }),
+  setListedTourIds: (listedTourIds) => set({ listedTourIds }),
+  requestSegment: (id) => set({ segmentRequest: { id, at: Date.now() } }),
 
   requestCamera: (camera) => set({ camera }),
   consumeCamera: () => {

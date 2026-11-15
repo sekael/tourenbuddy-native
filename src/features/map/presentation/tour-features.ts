@@ -9,29 +9,43 @@ import {
   bucketOf,
   FALLBACK_COLOR,
   pieImageId,
+  SEGMENT_MAX,
+  SEGMENT_PREFIX,
 } from './marker-images';
 
 /**
  * Tours as the map's GeoJSON (map-integration): one point per tour at its goal, with what the
- * layers draw: the colour (or a pie for several), the activity glyph, badges, the label, and the
- * per-colour weights the clustered source sums into its pies (each tour counts once, split evenly
- * between its colours, so a cluster pie weights tours by their colours).
+ * layers draw: the colour (or a pie for several), the activity glyph, badges, the name and the
+ * line under it, an open outing's stage number, and the per-colour weights the clustered source
+ * sums into its pies (each tour counts once, split evenly between its colours, so a cluster pie
+ * weights tours by their colours) plus `doneW`, which it sums into the cluster's done count.
  */
 export type TourFeatureProps = {
   id: string;
   name: string;
+  /** The line under the name: stage, height, date or done (the PWA's label, D4). */
+  sub: string;
   color: string;
   pie: string | null;
   activity: string;
   completed: boolean;
+  doneW: number;
   friend: boolean;
   linked: boolean;
   selected: boolean;
+  /** The open outing's number badge (`segment|<n>`), absent elsewhere. */
+  segment?: string;
 } & Record<`w${number}`, number>;
 
 export function tourFeatures(
   tours: readonly Tour[],
-  opts: { selectedId?: string | null; linkedIds?: ReadonlySet<string> } = {},
+  opts: {
+    selectedId?: string | null;
+    linkedIds?: ReadonlySet<string>;
+    /** The open outing's stages in order: numbered on their markers. */
+    segmentIds?: readonly string[];
+    describe?: (tour: Tour) => { name: string; sub: string };
+  } = {},
 ): GeoJSON.FeatureCollection<GeoJSON.Point, TourFeatureProps> {
   return {
     type: 'FeatureCollection',
@@ -41,20 +55,27 @@ export function tourFeatures(
       const weights = Object.fromEntries(
         BUCKET_COLORS.map((_, b) => [`w${b}`, buckets.includes(b) ? 1 / buckets.length : 0]),
       ) as Record<`w${number}`, number>;
+      const stage = opts.segmentIds?.indexOf(tour.id) ?? -1;
+      const label = opts.describe?.(tour) ?? { name: tour.name ?? '', sub: '' };
       return {
         type: 'Feature',
         id: tour.id,
         geometry: { type: 'Point', coordinates: [tour.goal.lng, tour.goal.lat] },
         properties: {
           id: tour.id,
-          name: tour.name ?? '',
+          name: label.name,
+          sub: label.sub,
           color: types[0] ? TOUR_TYPE_COLORS[types[0]] : FALLBACK_COLOR,
           pie: pieImageId(types),
           activity: types[0] ? `${ACTIVITY_PREFIX}${types[0]}` : BLANK_IMAGE,
           completed: !!tour.completed,
+          doneW: tour.completed ? 1 : 0,
           friend: !!tour.isFriendTour,
           linked: !!opts.linkedIds?.has(tour.id),
           selected: tour.id === opts.selectedId,
+          ...(stage >= 0
+            ? { segment: `${SEGMENT_PREFIX}${Math.min(stage + 1, SEGMENT_MAX)}` }
+            : {}),
           ...weights,
         },
       };

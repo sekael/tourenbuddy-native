@@ -250,6 +250,64 @@ function draw(d: MarkerDrawing, glyphs: Glyphs): WebMarkerImage {
         }
       });
     }
+    case 'chip': {
+      const font = `600 ${d.check || d.text.length > 1 ? 9 : 11}px Inter, system-ui, sans-serif`;
+      const measure = document.createElement('canvas').getContext('2d')!;
+      measure.font = font;
+      const textWidth = d.text ? Math.ceil(measure.measureText(d.text).width) : 0;
+      const content = (d.check ? 9 : 0) + (d.check && d.text ? 1 : 0) + textWidth;
+      const width = Math.max(d.height, content + 7);
+      return render(width, d.height, (ctx) => {
+        pill(ctx, 0, 0, width, d.height);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        pill(ctx, 1.5, 1.5, width - 3, d.height - 3);
+        ctx.fillStyle = d.fill;
+        ctx.fill();
+        let x = (width - content) / 2;
+        if (d.check) {
+          ctx.save();
+          ctx.translate(x, (d.height - 9) / 2);
+          ctx.scale(9 / 24, 9 / 24);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 4;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.stroke(new Path2D('M4.5 12.5L9.5 17.5L19.5 7'));
+          ctx.restore();
+          x += 10;
+        }
+        if (d.text) {
+          ctx.font = font;
+          ctx.fillStyle = '#ffffff';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(d.text, x, d.height / 2 + 0.5);
+        }
+      });
+    }
+    case 'dot':
+      return render(d.size, d.size, (ctx) =>
+        circle(ctx, d.size / 2, d.size / 2, d.size / 2, d.color),
+      );
+    case 'arrow': {
+      const w = d.both ? 40 : 10;
+      return render(w, 10, (ctx) => {
+        ctx.strokeStyle = d.color;
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(w - 6, 2);
+        ctx.lineTo(w - 2, 5);
+        ctx.lineTo(w - 6, 8);
+        if (d.both) {
+          ctx.moveTo(6, 2);
+          ctx.lineTo(2, 5);
+          ctx.lineTo(6, 8);
+        }
+        ctx.stroke();
+      });
+    }
   }
 }
 

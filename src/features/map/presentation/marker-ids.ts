@@ -38,6 +38,21 @@ export const FRIEND_BADGE = 'badge-friend';
 export const LINK_BADGE = 'badge-link';
 export const START_ICON = 'detail-start';
 export const END_ICON = 'detail-end';
+/** An open outing's stage number on its marker: `segment|<n>`. */
+export const SEGMENT_PREFIX = 'segment|';
+/** Stages an outing's numbers go up to; a longer outing shows the last number's badge beyond. */
+export const SEGMENT_MAX = 30;
+/** A cluster's done tours: `done|<n>` (✓ and the count), `done|all` (✓ alone, every tour done). */
+export const DONE_PREFIX = 'done|';
+export const DONE_MAX = 99;
+/** "+N" beside an open tour: the other tours on its spot (`more|<n>`, capped at `MORE_MAX`). */
+export const MORE_PREFIX = 'more|';
+export const MORE_MAX = 20;
+/** A straight leg's direction, one chevron or two (`arrow|<colour>`, `arrow2|<colour>`). */
+export const ARROW_PREFIX = 'arrow|';
+/** One dot of an outing's chain of goals. */
+export const CHAIN_DOT = 'chain-dot';
+export const ARROW_BOTH_PREFIX = 'arrow2|';
 
 /** Sizes in points, as the PWA's markers. */
 export const MARKER_RADIUS = 14;
@@ -113,7 +128,15 @@ export type MarkerDrawing =
   | { kind: 'wedge'; bucket: number; steps: number }
   | { kind: 'skiBadge'; label: string; color: string }
   /** Equal slices clockwise from 12 o'clock, white ring like the plain circle's stroke. */
-  | { kind: 'pie'; weights: number[] };
+  | { kind: 'pie'; weights: number[] }
+  /**
+   * A small pill with a white ring and white text: a stage number (round), a cluster's done count
+   * (green, with a check) or the "+N" of an open tour's spot.
+   */
+  | { kind: 'chip'; text: string; fill: string; check: boolean; height: number }
+  /** A thin chevron pointing along the line (+x); `both` adds the mirrored one. */
+  | { kind: 'arrow'; color: string; both: boolean }
+  | { kind: 'dot'; color: string; size: number };
 
 /** Every image the map's layers can ask for. */
 export function markerDrawings(): [string, MarkerDrawing][] {
@@ -125,6 +148,7 @@ export function markerDrawings(): [string, MarkerDrawing][] {
     [LINK_BADGE, { kind: 'badge', fill: '#ffffff', glyph: 'link', glyphColor: '#1F2937' }],
     [START_ICON, { kind: 'point', glyph: 'trip_origin' }],
     [END_ICON, { kind: 'point', glyph: 'sports_score' }],
+    [CHAIN_DOT, { kind: 'dot', color: '#1F2937', size: 4.5 }],
   ];
   for (const count of CLUSTER_COUNTS) {
     all.push([`${CLUSTER_FACE}|${count}`, { kind: 'clusterFace', count }]);
@@ -145,6 +169,32 @@ export function markerDrawings(): [string, MarkerDrawing][] {
       SKI_BADGE_PREFIX + label,
       { kind: 'skiBadge', label, color: gradeColor(skiDifficultyGrade(label || null)) },
     ]);
+  }
+  for (let n = 1; n <= SEGMENT_MAX; n++) {
+    all.push([
+      `${SEGMENT_PREFIX}${n}`,
+      { kind: 'chip', text: String(n), fill: '#1F2937', check: false, height: 18 },
+    ]);
+  }
+  all.push([
+    `${DONE_PREFIX}all`,
+    { kind: 'chip', text: '', fill: '#15803D', check: true, height: 16 },
+  ]);
+  for (let n = 1; n <= DONE_MAX; n++) {
+    all.push([
+      `${DONE_PREFIX}${n}`,
+      { kind: 'chip', text: String(n), fill: '#15803D', check: true, height: 16 },
+    ]);
+  }
+  for (let n = 1; n <= MORE_MAX; n++) {
+    all.push([
+      `${MORE_PREFIX}${n}`,
+      { kind: 'chip', text: `+${n}`, fill: '#1F2937', check: false, height: 20 },
+    ]);
+  }
+  for (const color of new Set([...Object.values(TOUR_TYPE_COLORS), FALLBACK_COLOR])) {
+    all.push([`${ARROW_PREFIX}${color}`, { kind: 'arrow', color, both: false }]);
+    all.push([`${ARROW_BOTH_PREFIX}${color}`, { kind: 'arrow', color, both: true }]);
   }
   // Each mix of two or more colour buckets; the untyped grey never mixes.
   const n = BUCKET_COLORS.length - 1;

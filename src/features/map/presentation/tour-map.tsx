@@ -29,6 +29,7 @@ import { BASE_STYLES } from './map-styles';
 import type { TourFeatureProps } from './tour-features';
 import {
   framePadding,
+  labelPoints,
   overlaySourceId,
   SKI_SOURCE,
   TOURS_CLUSTER,
@@ -52,20 +53,31 @@ export type LineProps = {
   color: string;
   width?: number;
   dashed?: boolean;
+  /** An outing's chain of goals: round dots. */
+  dotted?: boolean;
   casing?: boolean;
   opacity?: number;
+  /** A straight leg's direction arrows (`arrow|<colour>` image). */
+  arrow?: string;
 };
 export type PointProps = {
-  /** `start`, `end` or a preview colour circle. */
-  kind: 'start' | 'end' | 'preview';
+  /**
+   * `start`, `end`, a preview colour circle, an outing's hand-over ring (`via`) or the "+N" chip
+   * of an open tour's spot (`more`, its `image`, the tours there in `ids`).
+   */
+  kind: 'start' | 'end' | 'preview' | 'via' | 'more';
   color?: string;
   label?: string;
+  image?: string;
+  ids?: string;
 };
 
 export type TourMapProps = {
   styleIndex: number;
   overlays: readonly TrailOverlayId[];
   tours: GeoJSON.FeatureCollection<GeoJSON.Point, TourFeatureProps>;
+  /** The open tour or the open outing's stages: never clustered (D15). */
+  focus?: GeoJSON.FeatureCollection<GeoJSON.Point, TourFeatureProps>;
   lines?: GeoJSON.FeatureCollection<GeoJSON.LineString, LineProps>;
   points?: GeoJSON.FeatureCollection<GeoJSON.Point, PointProps>;
   /** Areas outlined on the map (saved offline regions; native only). */
@@ -91,7 +103,7 @@ export type TourMapProps = {
   toursSourceRef?: Ref<GeoJSONSourceRef>;
 };
 
-export { CLUSTER_LAYER, SKI_HALO_LAYER, TOUR_LAYERS } from './tour-map-layers';
+export { CLUSTER_LAYER, MORE_LAYER, SKI_HALO_LAYER, TOUR_LAYERS } from './tour-map-layers';
 
 const EMPTY: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 
@@ -103,6 +115,7 @@ export function TourMap({
   styleIndex,
   overlays,
   tours,
+  focus,
   lines,
   points,
   areas,
@@ -143,6 +156,7 @@ export function TourMap({
   }));
 
   const layers = useMemo(() => tourMapLayers({ overlays, dimTrails }), [overlays, dimTrails]);
+  const labels = useMemo(() => labelPoints(points, focus), [points, focus]);
 
   return (
     <Map
@@ -211,6 +225,30 @@ export function TourMap({
 
       <GeoJSONSource id="points" data={points ?? EMPTY}>
         {layers.points.map((layer) => (
+          <Layer key={layer.id} {...layer} />
+        ))}
+      </GeoJSONSource>
+
+      <GeoJSONSource id="focus" data={focus ?? EMPTY}>
+        {layers.focus.map((layer) => (
+          <Layer key={layer.id} {...layer} />
+        ))}
+      </GeoJSONSource>
+
+      <GeoJSONSource id="focus-names" data={focus ?? EMPTY}>
+        {layers.focusNames.map((layer) => (
+          <Layer key={layer.id} {...layer} />
+        ))}
+      </GeoJSONSource>
+
+      <GeoJSONSource id="labels" data={labels}>
+        {layers.labels.map((layer) => (
+          <Layer key={layer.id} {...layer} />
+        ))}
+      </GeoJSONSource>
+
+      <GeoJSONSource id="footprints" data={labels}>
+        {layers.footprints.map((layer) => (
           <Layer key={layer.id} {...layer} />
         ))}
       </GeoJSONSource>

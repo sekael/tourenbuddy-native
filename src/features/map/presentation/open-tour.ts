@@ -12,3 +12,14 @@ export function openTour(id: string) {
   useMapStore.getState().selectTour(id);
   router.push({ pathname: '/tour/[id]', params: { id } });
 }
+
+/**
+ * Opens an outing's overview over the map (a stage's marker tapped, D15): the whole outing on the
+ * map, its sheet listing the stages. `via` is the stage that led there.
+ */
+export function openOuting(key: string, via: string) {
+  if (router.canDismiss()) router.dismissAll();
+  router.navigate('/');
+  useMapStore.getState().selectOuting(key);
+  router.push({ pathname: '/tour/[id]', params: { id: via, outing: key } });
+}

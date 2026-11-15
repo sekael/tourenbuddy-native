@@ -36,11 +36,13 @@ import {
   type TourType,
 } from '@/features/tours/data/models/tour-type';
 import type { Tour } from '@/features/tours/domain/entities/tour';
+import { useMapStore } from '@/features/map/presentation/stores/map-store';
 
 import { shareTourGpx } from './share-gpx';
 import {
   activeFilterCount,
   filterTours,
+  listedTourIds,
   listEntries,
   useTourFiltersStore,
   type CompletionFilter,
@@ -68,6 +70,7 @@ export function ToursSheet() {
     if (tab !== 'friends') useTourFiltersStore.getState().setTab('owned');
   });
   const push = (value: string) => setPath((p) => opened(p, value));
+  useListedOnMap();
 
   return (
     <Screen
@@ -107,6 +110,26 @@ function useNames() {
     }),
     [contacts, phoneMap],
   );
+}
+
+/**
+ * While the list is open, the map shows what it lists (#351): its search and filters thin the
+ * markers and clusters, an outing row standing for all its stages; closed, every tour is back.
+ */
+function useListedOnMap() {
+  const tab = useTourFiltersStore((s) => s.tab);
+  const tabState = useTourFiltersStore((s) => s[s.tab]);
+  const tours = useToursStore((s) => s.tours);
+  const friendTours = useToursStore((s) => s.friendTours);
+  const names = useNames();
+  const listed = useMemo(() => {
+    const source = tab === 'friends' ? friendTours : tours;
+    return listedTourIds(filterTours(source, tabState, names), source, tabState);
+  }, [tab, tabState, tours, friendTours, names]);
+  useEffect(() => {
+    useMapStore.getState().setListedTourIds(listed);
+  }, [listed]);
+  useEffect(() => () => useMapStore.getState().setListedTourIds(null), []);
 }
 
 function ToursListPage({ onPush }: { onPush: (value: string) => void }) {

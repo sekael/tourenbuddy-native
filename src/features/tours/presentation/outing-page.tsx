@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import { EmptyState, ListRow, ListSection, TextRow } from '@/core/adaptive/list';
+import { usePageOnTop } from '@/core/adaptive/page-on-top';
 import { Page } from '@/core/adaptive/screen';
 import { Text } from '@/core/adaptive/text';
 import { useFormatter } from '@/core/i18n/format';
@@ -27,6 +28,9 @@ import { tourIcon } from './tour-rows';
 
 const log = createLogger('OutingPage');
 
+/** A stage tap older than this found no outing page to open it: it is dropped. */
+const STALE_REQUEST_MS = 1500;
+
 /**
  * A whole outing (tour-outings): its days and segments, the way from first start to last finish,
  * and its segments in order, each a tap away; the owner renames it, moves a segment up or down,
@@ -35,9 +39,12 @@ const log = createLogger('OutingPage');
 export function OutingPage({
   outingKey,
   onOpenTour,
+  onClose,
 }: {
   outingKey: string;
   onOpenTour: (id: string) => void;
+  /** As a sheet's root: its close button. */
+  onClose?: () => void;
 }) {
   const { t } = useTranslation();
   const { formatDate, formatDateRange } = useFormatter();
@@ -50,18 +57,33 @@ export function OutingPage({
   const [name, setName] = useState(first?.outing?.name ?? '');
   const [busy, setBusy] = useState(false);
 
+  // The map shows the whole outing while this page is the one showing; a stage opened over it
+  // takes the map, and Back gives it back.
+  const onTop = usePageOnTop();
   useEffect(() => {
+    if (!onTop) return;
     useMapStore.getState().selectOuting(outingKey);
     return () => {
       if (useMapStore.getState().selectedOutingKey === outingKey) {
         useMapStore.getState().selectOuting(null);
       }
     };
-  }, [outingKey]);
+  }, [outingKey, onTop]);
+
+  // A stage's marker tapped on the map while the outing shows: that stage opens over this page.
+  const request = useMapStore((s) => s.segmentRequest);
+  useEffect(() => {
+    if (!onTop || !request || Date.now() - request.at > STALE_REQUEST_MS) return;
+    if (!segments.some((s) => s.id === request.id)) return;
+    useMapStore.setState({ segmentRequest: null });
+    onOpenTour(request.id);
+    // A new request, not new props.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request]);
 
   if (!first) {
     return (
-      <Page title={t('tours.infoSheet.unnamedTour')}>
+      <Page title={t('tours.infoSheet.unnamedTour')} onClose={onClose}>
         <EmptyState icon="search_off" title={t('tours.infoSheet.gone')} />
       </Page>
     );
@@ -118,6 +140,7 @@ export function OutingPage({
     <Page
       title={outingDisplayName(segments) ?? t('tours.infoSheet.unnamedTour')}
       titleInHeader
+      onClose={onClose}
       header={hero}
     >
       {isOwner ? (

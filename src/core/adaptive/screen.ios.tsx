@@ -47,6 +47,7 @@ import { useReducedMotion } from '@/core/theme/use-reduced-motion';
 import { icons, type IconName } from './icons';
 import { InSwiftUIList } from './in-list';
 import { PageBanner } from './page-banner';
+import { PageOnTop } from './page-on-top';
 import { useFieldText } from './use-field-text';
 import type { PageProps, ScreenProps } from './screen';
 
@@ -59,10 +60,12 @@ export function Screen({ children, path, onPathChange, renderPage }: ScreenProps
   return (
     <Host style={styles.host}>
       <NavigationStack path={path} onPathChange={onPathChange}>
-        {children}
-        {(path ?? []).map((value) => (
+        <PageOnTop.Provider value={!path?.length}>{children}</PageOnTop.Provider>
+        {(path ?? []).map((value, i, all) => (
           <NavigationDestination key={value} value={value}>
-            {renderPage?.(value)}
+            <PageOnTop.Provider value={i === all.length - 1}>
+              {renderPage?.(value)}
+            </PageOnTop.Provider>
           </NavigationDestination>
         ))}
       </NavigationStack>

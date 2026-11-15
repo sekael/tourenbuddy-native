@@ -1,7 +1,7 @@
 import type { GeoJSONSourceRef } from '@maplibre/maplibre-react-native';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,33 +16,26 @@ import { draggedLine } from '@/features/map/domain/drawn-track';
 import { TRAIL_OVERLAYS } from '@/features/map/data/trail-overlays';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import { boundsAboveSheet, REGION_FRAME, type Bounds } from '@/features/map/domain/offline-regions';
-import { loadGpxTrack } from '@/features/tours/data/services/gpx-track-service';
-import { bandLine, type Band } from '@/features/map/domain/track-bands';
-import {
-  distinctTypeColors,
-  TOUR_TYPE_COLORS,
-  TOUR_TYPE_TRACK_COLORS,
-  type TourType,
-} from '@/features/tours/data/models/tour-type';
-import { isSameGoal } from '@/features/tours/domain/distance';
-import type { Tour } from '@/features/tours/domain/entities/tour';
-import { outingSegments } from '@/features/tours/domain/outing';
-import { progressNearest, trackLines } from '@/features/tours/domain/route-metrics';
+import { useTourLinksStore } from '@/features/tour-links/presentation/stores/tour-links-store';
+import { outingKey, outingSegments } from '@/features/tours/domain/outing';
 import { useToursStore } from '@/features/tours/presentation/stores/tours-store';
 
 import { MAP_CREDIT } from './map-styles';
-import { openTour } from './open-tour';
+import { openOuting, openTour } from './open-tour';
+import { chainLines, focusPoints, useDescribeTour, useFocusLines } from './scene-shapes';
 import { useMapStore, type MapState } from './stores/map-store';
 import { useOfflineMapsStore } from './stores/offline-maps-store';
 import { sameSpot, tourFeatures } from './tour-features';
 import {
   CLUSTER_LAYER,
+  MORE_LAYER,
   TOUR_LAYERS,
   TourMap,
   type LineProps,
   type PointProps,
   type TourMapHandle,
 } from './tour-map';
+import { tourScene } from './tour-scene';
 import { legHandle, metersPerPixel } from './leg-router';
 import { TrackHandles } from './track-handles';
 import { lookupSkiRoutes } from './trail-lookup';
@@ -53,7 +46,6 @@ const SWITZERLAND_ZOOM = 6.6;
 
 type Lines = GeoJSON.FeatureCollection<GeoJSON.LineString, LineProps>;
 type Points = GeoJSON.FeatureCollection<GeoJSON.Point, PointProps>;
-const noLines: Lines = { type: 'FeatureCollection', features: [] };
 
 /**
  * The Map tab (map-integration): the live Swisstopo map with every own and friends' tour, and its
@@ -88,13 +80,39 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
     [regionsShown, offlineRegions],
   );
 
+  const listed = useMapStore((s) => s.listedTourIds);
+  const groupIdByTourId = useTourLinksStore((s) => s.groupIdByTourId);
   const allTours = useMemo(() => [...tours, ...friendTours], [tours, friendTours]);
-  const selected = allTours.find((tour) => tour.id === selectedTourId) ?? null;
-  const features = useMemo(
-    () => tourFeatures(allTours, { selectedId: selectedTourId }),
-    [allTours, selectedTourId],
+  // What shows (the PWA's map): a narrowed list thins the markers, an open tour or outing is all
+  // there is (D15), closed outings chain their goals (D8).
+  const scene = useMemo(
+    () =>
+      tourScene({
+        owned: tours,
+        friends: friendTours,
+        selectedId: selectedTourId,
+        outing: selectedOutingKey,
+        listed,
+      }),
+    [tours, friendTours, selectedTourId, selectedOutingKey, listed],
   );
-  const selectedLines = useSelectedLines(selected);
+  const describe = useDescribeTour(allTours);
+  const linkedIds = useMemo(() => new Set(groupIdByTourId.keys()), [groupIdByTourId]);
+  const features = useMemo(
+    () => tourFeatures(scene.clustered, { selectedId: selectedTourId, linkedIds, describe }),
+    [scene, selectedTourId, linkedIds, describe],
+  );
+  const focusFeatures = useMemo(
+    () =>
+      tourFeatures(scene.focus, {
+        selectedId: selectedTourId,
+        linkedIds,
+        segmentIds: scene.segmentIds,
+        describe,
+      }),
+    [scene, selectedTourId, linkedIds, describe],
+  );
+  const focusLines = useFocusLines(scene.focus, scene.segmentIds.length > 0);
 
   // A sheet over the map covers its lower half (medium detent): frame what is left above it.
   const sheetOpen =
@@ -128,7 +146,7 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
   // keeps it, or dragging the sheet, never moves the map (map-integration "Calm camera flights").
   const editHandles = useMapStore((s) => s.editHandles);
   const extent = useMemo(() => {
-    const framed = selected ? [selected] : outingSegments(allTours, selectedOutingKey);
+    const framed = scene.focus;
     const stops =
       mode === 'browse'
         ? framed.flatMap((tour) =>
@@ -140,23 +158,13 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
             ...(editHandles?.points.map((p) => p.at) ?? []),
             ...(previewPoints?.features.map((f) => f.geometry.coordinates as LngLat) ?? []),
           ];
-    const line = (previewLines?.features ?? selectedLines.features).flatMap(
+    const line = (previewLines?.features ?? focusLines.features).flatMap(
       (f) => f.geometry.coordinates as LngLat[],
     );
     // A ski route picked from the lookup shows whole, as a tour does.
     const chosen = trailHighlight?.trails.find((trail) => trail.id === trailHighlight.selectedId);
     return boxOf([...stops, ...line, ...(chosen?.lines.flat() ?? [])]);
-  }, [
-    mode,
-    selected,
-    allTours,
-    selectedOutingKey,
-    editHandles,
-    previewLines,
-    previewPoints,
-    selectedLines,
-    trailHighlight,
-  ]);
+  }, [mode, scene, editHandles, previewLines, previewPoints, focusLines, trailHighlight]);
   const extentKey = extent
     ?.flat()
     .map((n) => n.toFixed(4))
@@ -188,14 +196,26 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
     if (regionFrame) return;
     const map = mapRef.current;
     if (!map) return;
-    const [hit] = await map.queryAt(point, [CLUSTER_LAYER, ...TOUR_LAYERS, 'tour-activity']);
+    const [hit] = await map.queryAt(point, [
+      MORE_LAYER,
+      CLUSTER_LAYER,
+      ...TOUR_LAYERS,
+      'tour-activity',
+      'focus-activity',
+    ]);
     const props = hit?.properties ?? {};
+    // The "+N" beside an open tour: every tour on its spot, as a list.
+    if (props.kind === 'more' && typeof props.ids === 'string') {
+      useMapStore.getState().showStack(props.ids.split(','));
+      router.push('/stack');
+      return;
+    }
     if (props.cluster_id != null) {
       await openCluster(Number(props.cluster_id), Number(props.point_count), hit!);
       return;
     }
     if (typeof props.id === 'string') {
-      openTour(props.id);
+      openTapped(props.id);
       return;
     }
     // A ski route under the tap (trail-lookup): only where the ski overlay shows.
@@ -209,6 +229,29 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
     }
     // A tap on the open map closes the sheets on it, as Apple Maps lets go of a place.
     if (router.canDismiss()) router.dismissAll();
+  }
+
+  /**
+   * A tapped marker (the PWA's `handleTourClicked`): a stage of an outing not open yet shows the
+   * whole outing first (D15); inside the open outing it opens that stage, Back returning to the
+   * outing; any other tour opens as itself. The open tour's own marker leaves its sheet be.
+   */
+  function openTapped(id: string) {
+    const { selectedTourId: open, selectedOutingKey: openOutingKey } = useMapStore.getState();
+    if (id === open) return;
+    const tour = allTours.find((t) => t.id === id);
+    const key = tour ? outingKey(tour) : null;
+    const openOne = open ? allTours.find((t) => t.id === open) : undefined;
+    const focused = openOutingKey ?? (openOne ? outingKey(openOne) : null);
+    if (key && key !== focused && outingSegments(allTours, key).length > 0) {
+      openOuting(key, id);
+      return;
+    }
+    if (key && key === openOutingKey) {
+      useMapStore.getState().requestSegment(id);
+      return;
+    }
+    openTour(id);
   }
 
   async function openCluster(clusterId: number, count: number, hit: GeoJSON.Feature) {
@@ -231,8 +274,9 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
   // While a handle is dragged, the step's line runs straight through the finger; the step's own
   // line (and so the framing) changes only once the drop is routed.
   const drag = useMapStore((s) => s.drag);
+  const chains = useMemo(() => chainLines(scene.chains), [scene]);
   const lines: Lines = useMemo(() => {
-    const shaped = previewLines?.features ?? selectedLines.features;
+    const shaped = previewLines?.features ?? focusLines.features;
     const [line, ...rest] = shaped;
     const live =
       drag && drag.handles === editHandles && line
@@ -241,16 +285,17 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
     return {
       type: 'FeatureCollection',
       features: [
+        ...chains,
         ...(live.length > 1
           ? [{ ...line!, geometry: { type: 'LineString' as const, coordinates: live } }, ...rest]
           : shaped),
         ...highlightLines(trailHighlight),
       ],
     };
-  }, [previewLines, selectedLines, trailHighlight, drag, editHandles]);
+  }, [previewLines, focusLines, chains, trailHighlight, drag, editHandles]);
   const points: Points = useMemo(
-    () => previewPoints ?? detailPoints(selected),
-    [previewPoints, selected],
+    () => previewPoints ?? focusPoints(scene, t),
+    [previewPoints, scene, t],
   );
 
   return (
@@ -261,6 +306,7 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
         styleIndex={styleIndex}
         overlays={overlays}
         tours={features}
+        focus={focusFeatures}
         lines={lines}
         points={points}
         areas={areas}
@@ -319,7 +365,7 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
                 onPress={() => showAlert(t('map.credit.title'), t('map.credit.body'))}
                 style={styles.credit}
               >
-                <Text variant="caption" style={styles.creditText}>
+                <Text variant="caption" style={styles.creditText} maxFontSizeMultiplier={1.3}>
                   {MAP_CREDIT}
                 </Text>
               </Pressable>
@@ -452,94 +498,6 @@ function regionAreas(regions: Bounds[]): GeoJSON.FeatureCollection<GeoJSON.Polyg
   };
 }
 
-function detailPoints(tour: Tour | null): Points {
-  const features: Points['features'] = [];
-  if (tour?.startPoint) {
-    features.push({
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: [tour.startPoint.lng, tour.startPoint.lat] },
-      properties: { kind: 'start', ...(tour.startPointName ? { label: tour.startPointName } : {}) },
-    });
-  }
-  if (tour?.endPoint) {
-    features.push({
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: [tour.endPoint.lng, tour.endPoint.lat] },
-      properties: { kind: 'end', ...(tour.endPointName ? { label: tour.endPointName } : {}) },
-    });
-  }
-  return { type: 'FeatureCollection', features };
-}
-
-/** A line without activities (none chosen yet). */
-const NO_TYPE_COLOR = '#334155';
-
-/** The activities' colours in `palette`, each once; a slate grey for none. */
-const colorsOf = (types: readonly TourType[], palette: Record<TourType, string>) =>
-  types.length ? distinctTypeColors(types, palette) : [NO_TYPE_COLOR];
-
-/**
- * The open tour's lines in its activities' colours, per way as the PWA (activity-legs D5): the
- * way up (start → goal) in its activities', the way down (goal → end) in its own, several
- * alternating along the line. Its GPX in their darker track shades (gpx-tracks), switching where
- * it passes nearest the goal; without one, straight legs start → goal → end in the markers' colours.
- */
-function useSelectedLines(tour: Tour | null): Lines {
-  const [track, setTrack] = useState<{ id: string; lines: GeoJSON.Position[][] } | null>(null);
-  useEffect(() => {
-    if (!tour?.gpxFilepath) return;
-    let alive = true;
-    void loadGpxTrack({ id: tour.id, gpxFilepath: tour.gpxFilepath }).then((geojson) => {
-      if (alive && geojson) setTrack({ id: tour.id, lines: trackLines(geojson) });
-    });
-    return () => {
-      alive = false;
-    };
-  }, [tour?.id, tour?.gpxFilepath]);
-
-  if (!tour) return noLines;
-  const up = tour.legs?.ascent ?? tour.tourTypes;
-  const down = tour.legs?.descent ?? tour.tourTypes;
-  const lines = (bands: Band[], props: Omit<LineProps, 'color'>): Lines => ({
-    type: 'FeatureCollection',
-    features: bands.map((band) => ({
-      type: 'Feature',
-      geometry: { type: 'LineString', coordinates: band.coordinates },
-      properties: { ...props, color: band.color },
-    })),
-  });
-  if (tour.gpxFilepath && track?.id === tour.id) {
-    // One line splits at the goal; a track in pieces can't tell which piece is the way down.
-    const [only] = track.lines;
-    const split =
-      tour.legs && only && track.lines.length === 1
-        ? { at: progressNearest(only, tour.goal), colors: colorsOf(down, TOUR_TYPE_TRACK_COLORS) }
-        : undefined;
-    return lines(
-      track.lines.flatMap((line) => bandLine(line, colorsOf(up, TOUR_TYPE_TRACK_COLORS), split)),
-      { width: 4, casing: true },
-    );
-  }
-  const leg = (
-    a: { lng: number; lat: number } | null,
-    b: { lng: number; lat: number } | null,
-    types: readonly TourType[],
-  ) =>
-    a && b && !isSameGoal(a, b)
-      ? bandLine(
-          [
-            [a.lng, a.lat],
-            [b.lng, b.lat],
-          ],
-          colorsOf(types, TOUR_TYPE_COLORS),
-        )
-      : [];
-  return lines([...leg(tour.startPoint, tour.goal, up), ...leg(tour.goal, tour.endPoint, down)], {
-    width: 3,
-    opacity: 0.85,
-  });
-}
-
 const styles = StyleSheet.create({
   regionFrame: {
     position: 'absolute',
@@ -560,7 +518,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.lg,
     paddingBottom: space.sm,
   },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: space.xs,
+  },
   // Top left, clear of the compass on the right.
   layers: {
     position: 'absolute',

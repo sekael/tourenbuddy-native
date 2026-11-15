@@ -4,6 +4,8 @@ import {
   matchFont,
   PaintStyle,
   Skia,
+  StrokeCap,
+  StrokeJoin,
   TileMode,
   type SkCanvas,
 } from '@shopify/react-native-skia';
@@ -244,6 +246,66 @@ function drawSkiBadge(label: string, color: string): ImageEntry {
   });
 }
 
+/** The PWA's check mark, in a 24 box. */
+const CHECK = [
+  [4.5, 12.5],
+  [9.5, 17.5],
+  [19.5, 7],
+] as const;
+
+function drawChip(text: string, fill: string, check: boolean, height: number): ImageEntry {
+  const font = appFont(check ? 9 : text.length > 2 || /^\d\d$/.test(text) ? 9 : 11);
+  const ink = text ? font.measureText(text) : null;
+  const checkSize = 9;
+  const content =
+    (check ? checkSize : 0) + (check && ink ? 1 : 0) + (ink ? Math.ceil(ink.width) : 0);
+  const width = Math.max(height, content + 7);
+  return render(width, height, (canvas) => {
+    const ring = Skia.RRectXY(Skia.XYWHRect(0, 0, width, height), height / 2, height / 2);
+    canvas.drawRRect(ring, paint('#ffffff'));
+    const inner = Skia.RRectXY(
+      Skia.XYWHRect(1.5, 1.5, width - 3, height - 3),
+      height / 2 - 1.5,
+      height / 2 - 1.5,
+    );
+    canvas.drawRRect(inner, paint(fill));
+    let x = (width - content) / 2;
+    if (check) {
+      const stroke = paint('#ffffff');
+      stroke.setStyle(PaintStyle.Stroke);
+      stroke.setStrokeWidth((4 * checkSize) / 24);
+      stroke.setStrokeCap(StrokeCap.Round);
+      stroke.setStrokeJoin(StrokeJoin.Round);
+      const y0 = (height - checkSize) / 2;
+      const d = CHECK.map(
+        ([px, py], i) =>
+          `${i ? 'L' : 'M'}${x + (px * checkSize) / 24} ${y0 + (py * checkSize) / 24}`,
+      ).join(' ');
+      const path = Skia.Path.MakeFromSVGString(d);
+      if (path) canvas.drawPath(path, stroke);
+      x += checkSize + 1;
+    }
+    if (ink) {
+      canvas.drawText(text, x - ink.x, height / 2 - ink.y - ink.height / 2, paint('#ffffff'), font);
+    }
+  });
+}
+
+function drawArrow(color: string, both: boolean): ImageEntry {
+  const w = both ? 40 : 10;
+  return render(w, 10, (canvas) => {
+    const stroke = paint(color);
+    stroke.setStyle(PaintStyle.Stroke);
+    stroke.setStrokeWidth(2);
+    stroke.setStrokeCap(StrokeCap.Round);
+    stroke.setStrokeJoin(StrokeJoin.Round);
+    const path = Skia.Path.MakeFromSVGString(
+      `M${w - 6} 2 L${w - 2} 5 L${w - 6} 8${both ? ' M6 2 L2 5 L6 8' : ''}`,
+    );
+    if (path) canvas.drawPath(path, stroke);
+  });
+}
+
 function draw(d: MarkerDrawing): ImageEntry {
   switch (d.kind) {
     case 'blank':
@@ -264,6 +326,14 @@ function draw(d: MarkerDrawing): ImageEntry {
       return drawSkiBadge(d.label, d.color);
     case 'pie':
       return drawPie(d.weights);
+    case 'chip':
+      return drawChip(d.text, d.fill, d.check, d.height);
+    case 'arrow':
+      return drawArrow(d.color, d.both);
+    case 'dot':
+      return render(d.size, d.size, (canvas) =>
+        canvas.drawCircle(d.size / 2, d.size / 2, d.size / 2, paint(d.color)),
+      );
   }
 }
 

@@ -21,6 +21,9 @@ import { Text } from './text';
 
 export type { CapsuleItem } from './map-controls';
 
+/** How far a control's text grows with the text size: the map's controls keep their place. */
+const MAX_FONT_SCALE = 1.3;
+
 /**
  * One half of the capsule. The whole glass answers a touch (interactive glass); the half under the
  * finger lights up at once and fades as it lifts, as a system glass toolbar's item does, so a press
@@ -50,7 +53,16 @@ function Segment({ item }: { item: CapsuleItem }) {
         <Icon name={item.icon} size={22} color={color.onFab} />
       </View>
       {item.iconOnly ? null : (
-        <Text variant="label" style={styles.label} numberOfLines={1}>
+        // As a system toolbar's title: it grows with the text size only so far, then shrinks to
+        // the room the row leaves it, so the controls beside it stay on screen.
+        <Text
+          variant="label"
+          style={styles.label}
+          numberOfLines={1}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
           {item.label}
         </Text>
       )}
@@ -138,7 +150,12 @@ export function GlassToggle({
         <View style={on && styles.glyph}>
           <Icon name={icon} size={20} color={on ? color.onFab : color.primary} />
         </View>
-        <Text variant="label" style={on ? styles.label : styles.chipLabel} numberOfLines={1}>
+        <Text
+          variant="label"
+          style={on ? styles.label : styles.chipLabel}
+          numberOfLines={1}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+        >
           {label}
         </Text>
       </Pressable>
@@ -202,10 +219,15 @@ const styles = StyleSheet.create({
     height: size.mapControl,
     borderRadius: size.mapControl / 2,
     overflow: 'hidden',
+    // Between the round controls: narrower rather than past the screen's edge.
+    flexShrink: 1,
+    minWidth: 0,
   },
-  segmentRow: { flexDirection: 'row', alignItems: 'center' },
+  segmentRow: { flexDirection: 'row', alignItems: 'center', flexShrink: 1, minWidth: 0 },
   divider: { width: StyleSheet.hairlineWidth * 2, height: 22, backgroundColor: color.onFabDivider },
   segment: {
+    flexShrink: 1,
+    minWidth: 0,
     height: size.mapControl,
     paddingHorizontal: space.md,
     flexDirection: 'row',
@@ -213,7 +235,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: space.xs,
   },
-  iconOnly: { width: size.mapControl + space.sm, paddingHorizontal: 0 },
+  iconOnly: { width: size.mapControl + space.sm, paddingHorizontal: 0, flexShrink: 0 },
   label: {
     color: color.onFab,
     textShadowColor: color.onGlassShadow,

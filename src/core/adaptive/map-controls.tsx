@@ -46,7 +46,12 @@ export function GlassCapsule({ items, label }: { items: CapsuleItem[]; label: st
           >
             <Icon name={item.icon} color={color.onFab} />
             {item.iconOnly ? null : (
-              <Text variant="label" style={styles.label}>
+              <Text
+                variant="label"
+                style={styles.label}
+                numberOfLines={1}
+                maxFontSizeMultiplier={1.3}
+              >
                 {item.label}
               </Text>
             )}

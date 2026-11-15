@@ -8,6 +8,7 @@ import { Linking, StyleSheet, View } from 'react-native';
 import { Icon } from '@/core/adaptive/icon';
 import type { IconName } from '@/core/adaptive/icons';
 import { ContentRow, EmptyState, ListRow, ListSection, ToggleRow } from '@/core/adaptive/list';
+import { usePageOnTop } from '@/core/adaptive/page-on-top';
 import { Page } from '@/core/adaptive/screen';
 import { Text } from '@/core/adaptive/text';
 import { useFormatter } from '@/core/i18n/format';
@@ -36,6 +37,7 @@ import { useAuthStore } from '@/features/auth/presentation/stores/auth-store';
 import { ActivityDisc } from './activity-disc';
 import { AttachmentsSection } from './attachments-section';
 import { LinkedToursSection } from './linked-tours-section';
+import { OutingNavigator } from './outing-navigator';
 import { useRouteNumbers } from './route-numbers';
 import { shareTourGpx } from './share-gpx';
 import { useTourSuggestionsStore } from './stores/tour-suggestions-store';
@@ -103,12 +105,16 @@ export function TourDetailPage({
         .length,
   );
 
+  // The map shows this tour while its page is the one showing: a page pushed over it takes the
+  // map, and Back gives it back.
+  const onTop = usePageOnTop();
   useEffect(() => {
+    if (!onTop) return;
     useMapStore.getState().selectTour(id);
     return () => {
       if (useMapStore.getState().selectedTourId === id) useMapStore.getState().selectTour(null);
     };
-  }, [id]);
+  }, [id, onTop]);
 
   const { metrics, numbers } = useRouteNumbers(tour, (m) =>
     tour ? tourMinutes(m, tour, pace) : null,
@@ -337,7 +343,22 @@ export function TourDetailPage({
       title={name}
       titleInHeader
       onClose={onClose}
-      header={hero}
+      header={
+        segments.length > 0 ? (
+          // A stage starts with where it sits in its outing, in reach with the sheet low.
+          <View style={styles.heroBlock}>
+            <OutingNavigator
+              segments={segments}
+              index={segmentIndex}
+              onOpenOuting={() => onOpenOuting(key!)}
+              onStep={setId}
+            />
+            {hero}
+          </View>
+        ) : (
+          hero
+        )
+      }
       // The track is shared from its row under Route; the bar says in a word what it does.
       actions={[
         ...(isOwner
@@ -381,42 +402,6 @@ export function TourDetailPage({
             icon={tour.completed ? 'check_circle' : 'radio_button_unchecked'}
             iconColor={color.success}
           />
-        </ListSection>
-      ) : null}
-
-      {segments.length > 0 ? (
-        <ListSection>
-          <ListRow
-            title={t('tours.outing.segmentOf', { n: segmentIndex + 1, count: segments.length })}
-            subtitle={segments[0]?.outing?.name ?? undefined}
-            icon="timeline"
-            onPress={() => onOpenOuting(key!)}
-          />
-          {[
-            {
-              to: segments[segmentIndex - 1],
-              label: t('tours.outing.previous'),
-              icon: 'arrow_back',
-            },
-            {
-              to: segments[segmentIndex + 1],
-              label: t('tours.outing.next'),
-              icon: 'arrow_forward',
-            },
-          ].map(({ to, label, icon }) =>
-            to ? (
-              <ListRow
-                key={label}
-                title={label}
-                subtitle={to.name ?? t('tours.infoSheet.unnamedTour')}
-                icon={icon as IconName}
-                onPress={() => {
-                  void Haptics.selectionAsync();
-                  setId(to.id);
-                }}
-              />
-            ) : null,
-          )}
         </ListSection>
       ) : null}
 

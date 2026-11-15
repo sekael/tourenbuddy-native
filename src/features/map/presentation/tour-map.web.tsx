@@ -24,6 +24,7 @@ import { BASE_STYLES } from './map-styles';
 import type { TourMapProps } from './tour-map';
 import {
   framePadding,
+  labelPoints,
   overlaySourceId,
   SKI_SOURCE,
   TOURS_CLUSTER,
@@ -31,7 +32,7 @@ import {
   type TourMapLayers,
 } from './tour-map-layers';
 
-export { CLUSTER_LAYER, SKI_HALO_LAYER, TOUR_LAYERS } from './tour-map-layers';
+export { CLUSTER_LAYER, MORE_LAYER, SKI_HALO_LAYER, TOUR_LAYERS } from './tour-map-layers';
 
 const log = createLogger('TourMap');
 const EMPTY: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
@@ -46,6 +47,10 @@ const allLayers = (layers: TourMapLayers) => [
   ...layers.lines,
   ...layers.tours,
   ...layers.points,
+  ...layers.focus,
+  ...layers.focusNames,
+  ...layers.labels,
+  ...layers.footprints,
 ];
 
 /**
@@ -57,6 +62,7 @@ export function TourMap({
   styleIndex,
   overlays,
   tours,
+  focus,
   lines,
   points,
   dimTrails = false,
@@ -74,7 +80,16 @@ export function TourMap({
   const appliedStyle = useRef<unknown>(null);
   const style = (BASE_STYLES[styleIndex] ?? BASE_STYLES[0]!).style as string | StyleSpecification;
   const layers = useMemo(() => tourMapLayers({ overlays, dimTrails }), [overlays, dimTrails]);
-  const latest = useLatest({ layers, tours, lines, points, padding, onPress, onRegionDidChange });
+  const latest = useLatest({
+    layers,
+    tours,
+    focus,
+    lines,
+    points,
+    padding,
+    onPress,
+    onRegionDidChange,
+  });
   const initial = useLatest({ style, initialCenter, initialZoom });
 
   useEffect(() => {
@@ -98,7 +113,13 @@ export function TourMap({
 
     // Every style load, the first and each base map switch, starts without the app's layers.
     map.on('style.load', () => {
-      const { layers: now, tours: data, lines: track, points: pins } = latest.current;
+      const {
+        layers: now,
+        tours: data,
+        focus: pinned,
+        lines: track,
+        points: pins,
+      } = latest.current;
       try {
         TRAIL_OVERLAYS.forEach((overlay) =>
           map.addSource(overlaySourceId(overlay.id), {
@@ -112,6 +133,10 @@ export function TourMap({
         map.addSource('lines', { type: 'geojson', data: track ?? EMPTY });
         map.addSource('tours', { type: 'geojson', data, ...TOURS_CLUSTER });
         map.addSource('points', { type: 'geojson', data: pins ?? EMPTY });
+        map.addSource('focus', { type: 'geojson', data: pinned ?? EMPTY });
+        map.addSource('labels', { type: 'geojson', data: labelPoints(pins, pinned) });
+        map.addSource('focus-names', { type: 'geojson', data: pinned ?? EMPTY });
+        map.addSource('footprints', { type: 'geojson', data: labelPoints(pins, pinned) });
         allLayers(now).forEach((layer) => map.addLayer(layer));
       } catch (error) {
         log.error('Adding the map layers failed', error);
@@ -174,6 +199,13 @@ export function TourMap({
   useEffect(() => {
     mapRef.current?.getSource<GeoJSONSource>('points')?.setData(points ?? EMPTY);
   }, [points]);
+  useEffect(() => {
+    mapRef.current?.getSource<GeoJSONSource>('focus')?.setData(focus ?? EMPTY);
+    const labels = labelPoints(points, focus);
+    mapRef.current?.getSource<GeoJSONSource>('labels')?.setData(labels);
+    mapRef.current?.getSource<GeoJSONSource>('footprints')?.setData(labels);
+    mapRef.current?.getSource<GeoJSONSource>('focus-names')?.setData(focus ?? EMPTY);
+  }, [focus, points]);
 
   useEffect(() => {
     const zoom = mapRef.current?.doubleClickZoom;
