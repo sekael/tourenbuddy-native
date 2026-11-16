@@ -41,10 +41,10 @@
       "emptyState": "Noch keine Touren – füge welche hinzu, um deine Saisonübersicht zu sehen",
       "scrollHint": "Scrollen für das ganze Jahr",
       "range": {
-        "winter": "DEZ – FEB",
-        "spring": "MÄR – MAI",
-        "summer": "JUN – AUG",
-        "autumn": "SEP – NOV"
+        "winter": "Dez – Feb",
+        "spring": "Mär – Mai",
+        "summer": "Jun – Aug",
+        "autumn": "Sep – Nov"
       }
     },
     "tour": {
@@ -413,7 +413,6 @@
       "removePhoneTooltip": "Telefon entfernen",
       "addPhoneBtn": "Telefon hinzufügen",
       "primaryPhoneRequired": "Wähle ein Haupttelefon aus, wenn mehrere Telefonnummern eingetragen sind",
-      "clearToRemove": "Leere eine Nummer, um sie zu entfernen.",
       "addEmailBtn": "E-Mail hinzufügen",
       "newTitle": "Neuer Kontakt"
     },
@@ -710,6 +709,8 @@
       "saveFailed": "Speichern fehlgeschlagen",
       "deleteFailed": "Löschen fehlgeschlagen",
       "backToTours": "Touren",
+      "backToCalendar": "Zurück zum Kalender",
+      "backToSeasons": "Zurück zu den Saisons",
       "saveLabel": "Speichern",
       "iconTooltipType": "Aktivitätstyp",
       "iconTooltipElevation": "Höhe",
@@ -1138,8 +1139,8 @@
     "accept": "Annehmen",
     "deny": "Ablehnen",
     "cancel": "Abbrechen",
-    "requestFrom": "Anfrage von",
-    "requestTo": "Anfrage an",
+    "requestFrom": "Anfragen an dich",
+    "requestTo": "Deine Anfragen",
     "verifyPhoneHint": "Verifiziere Deine Telefonnummer, um dich mit anderen Nutzern zu vernetzen.",
     "friendsListLink": "Freundschaftsanfragen",
     "requestsTab": "Anfragen",

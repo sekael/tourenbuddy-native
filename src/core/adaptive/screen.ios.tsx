@@ -13,12 +13,14 @@ import {
   Text as SwiftText,
   Toolbar,
   ToolbarItem,
+  ZStack,
 } from '@expo/ui/swift-ui';
 import {
   accessibilityAddTraits,
   accessibilityLabel,
   animation,
   Animation,
+  background,
   buttonStyle,
   disabled as disabledModifier,
   font,
@@ -86,6 +88,7 @@ export function Page({
   onRefresh,
   header,
   titleInHeader,
+  body,
   children,
 }: PageProps) {
   const { t } = useTranslation();
@@ -118,6 +121,8 @@ export function Page({
           }),
         ]
       : []),
+  ];
+  const bar = [
     navigationTitle(titleInHeader ? '' : title),
     navigationBarTitleDisplayMode(largeTitle ? 'large' : 'inline'),
     tint(color.primary),
@@ -125,18 +130,27 @@ export function Page({
 
   return (
     <Toolbar>
-      <Container key={searches} modifiers={modifiers}>
-        {banner}
-        {header ? (
-          // Close under the bar's buttons: the header is the page's top, not a section after it.
-          <Section modifiers={[listSectionMargins({ edges: 'top', length: 0 })]}>
-            <RNHostView matchContents={{ vertical: true }}>
-              <HostedWidth>{header}</HostedWidth>
-            </RNHostView>
-          </Section>
-        ) : null}
-        <InSwiftUIList.Provider value>{children}</InSwiftUIList.Provider>
-      </Container>
+      {body ? (
+        // The app's own scroll view fills the page; the grouped background runs under the bars.
+        <ZStack modifiers={[...bar, background(color.groupedBackground)]}>
+          <RNHostView>
+            <View style={styles.host}>{body}</View>
+          </RNHostView>
+        </ZStack>
+      ) : (
+        <Container key={searches} modifiers={[...modifiers, ...bar]}>
+          {banner}
+          {header ? (
+            // Close under the bar's buttons: the header is the page's top, not a section after it.
+            <Section modifiers={[listSectionMargins({ edges: 'top', length: 0 })]}>
+              <RNHostView matchContents={{ vertical: true }}>
+                <HostedWidth>{header}</HostedWidth>
+              </RNHostView>
+            </Section>
+          ) : null}
+          <InSwiftUIList.Provider value>{children}</InSwiftUIList.Provider>
+        </Container>
+      )}
       <Toolbar.Content>
         {titleControl ? (
           <ToolbarItem placement="principal">

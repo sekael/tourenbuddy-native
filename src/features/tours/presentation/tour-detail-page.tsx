@@ -76,6 +76,7 @@ export function TourDetailPage({
   onOpenOuting,
   onOpenTour,
   onClose,
+  back,
 }: {
   id: string;
   /** The tour is gone (deleted here or elsewhere): leave the page. */
@@ -85,6 +86,8 @@ export function TourDetailPage({
   onOpenTour: (id: string) => void;
   /** As a sheet's root: its close button. */
   onClose?: () => void;
+  /** As a sheet's root opened from elsewhere (the calendar): the way back there. */
+  back?: { label: string; onPress: () => void };
 }) {
   const { t } = useTranslation();
   const { formatDate, formatDateRange, formatElevation } = useFormatter();
@@ -120,9 +123,13 @@ export function TourDetailPage({
     tour ? tourMinutes(m, tour, pace) : null,
   );
 
+  const backAction = back
+    ? [{ id: 'back', icon: 'arrow_back' as const, leading: true, ...back }]
+    : [];
+
   if (!tour) {
     return (
-      <Page title={t('tours.infoSheet.unnamedTour')} onClose={onClose}>
+      <Page title={t('tours.infoSheet.unnamedTour')} onClose={onClose} actions={backAction}>
         <EmptyState
           icon="search_off"
           title={t('tours.infoSheet.gone')}
@@ -361,6 +368,7 @@ export function TourDetailPage({
       }
       // The track is shared from its row under Route; the bar says in a word what it does.
       actions={[
+        ...backAction,
         ...(isOwner
           ? [
               {

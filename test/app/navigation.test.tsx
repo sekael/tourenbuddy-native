@@ -3,7 +3,11 @@ import { router, Slot } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
 import { openTour } from '@/features/map/presentation/open-tour';
+import type { InboxNotification } from '@/features/notifications/domain/entities/inbox-notification';
+import { openInboxEntry } from '@/features/notifications/presentation/inbox-navigation';
 import { useMapStore } from '@/features/map/presentation/stores/map-store';
+
+import i18n from '@/core/i18n';
 
 import { signIn } from '../support/auth';
 import { routes as appRoutes } from './routes';
@@ -146,5 +150,43 @@ describe('app navigation (iOS map controls)', () => {
     // Closing it shows the map, not the inbox or Profile.
     await press(labelled('Close')[0]);
     expect(screen).toHavePathname('/');
+  });
+
+  it('should take a tour opened from the seasons back to the calendar, the map left as it was', async () => {
+    await renderRouter(routes, { initialUrl: '/calendar' });
+
+    await act(() => openTour('t1', 'seasons'));
+    expect(screen).toHavePathname('/tour/t1');
+
+    await press(labelled('Back to the seasons')[0]);
+    expect(screen).toHavePathname('/calendar');
+    expect(useMapStore.getState().selectedTourId).toBeNull();
+  });
+
+  it('should open friend requests from the inbox in the Contacts tab, ready to open again', async () => {
+    const app = await renderRouter(routes, { initialUrl: '/profile' });
+    const received = { action: 'received', ref: {}, tourId: null } as unknown as InboxNotification;
+    await act(() => router.push('/inbox'));
+
+    await act(() => openInboxEntry(received, i18n.t));
+
+    // The inbox sheet closed, not a second set of tabs inside it.
+    expect(screen).toHavePathname('/contacts');
+    expect(app.getRouterState()!.routes[0]!.state!.routes.map((r) => r.name)).toEqual(['(tabs)']);
+    // The requests page (asking an unverified user to verify), its request used up: the tab
+    // stays mounted, and the next notification's request must differ from what it last saw.
+    expect(nodes((p) => p.title === 'Verify your phone to connect with other users.')).toHaveLength(
+      1,
+    );
+    expect(screen).toHaveSearchParams({});
+  });
+
+  it('should offer no way back to the calendar on a tour opened on the map', async () => {
+    await renderRouter(routes);
+
+    await act(() => openTour('t1'));
+
+    expect(labelled('Back to the calendar')).toEqual([]);
+    expect(labelled('Back to the seasons')).toEqual([]);
   });
 });

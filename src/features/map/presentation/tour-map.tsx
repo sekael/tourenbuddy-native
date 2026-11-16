@@ -22,6 +22,8 @@ import {
   wmtsTileUrl,
   type TrailOverlayId,
 } from '@/features/map/data/trail-overlays';
+import { useReducedMotion } from '@/core/theme/use-reduced-motion';
+import { fittedView, flight, type CameraView } from '@/features/map/domain/camera-flight';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 
 import { markerImages } from './marker-images';
@@ -136,13 +138,23 @@ export function TourMap({
   const images = useMemo(() => markerImages(), []);
   const style = BASE_STYLES[styleIndex] ?? BASE_STYLES[0]!;
 
+  // Where the camera is and how big the map is, for how long a move there takes.
+  const view = useRef<CameraView>({ center: initialCenter, zoom: initialZoom });
+  const size = useRef({ width: 0, height: 0 });
+  const reducedMotion = useReducedMotion();
+  const move = (to: CameraView) =>
+    reducedMotion ? { duration: 0, easing: undefined } : flight(view.current, to, size.current);
+
   useImperativeHandle(ref, () => ({
-    flyTo: (center, zoom) => cameraRef.current?.easeTo({ center, zoom, padding, duration: 600 }),
-    fitBounds: (sw, ne) =>
-      cameraRef.current?.fitBounds([sw[0], sw[1], ne[0], ne[1]], {
-        padding: framePadding(padding),
-        duration: 600,
-      }),
+    flyTo: (center, zoom) => {
+      const to = { center, zoom: zoom ?? view.current.zoom };
+      cameraRef.current?.easeTo({ center, zoom, padding, ...move(to) });
+    },
+    fitBounds: (sw, ne) => {
+      const framed = framePadding(padding);
+      const to = fittedView(sw, ne, size.current, framed);
+      cameraRef.current?.fitBounds([sw[0], sw[1], ne[0], ne[1]], { padding: framed, ...move(to) });
+    },
     queryAt: async ([x, y], ids) =>
       (await mapRef.current?.queryRenderedFeatures(
         [
@@ -177,13 +189,17 @@ export function TourMap({
       onPress={(event) =>
         onPress?.(event.nativeEvent.lngLat as LngLat, event.nativeEvent.point as [number, number])
       }
-      onRegionDidChange={(event) =>
+      onLayout={(event) => {
+        size.current = event.nativeEvent.layout;
+      }}
+      onRegionDidChange={(event) => {
+        view.current = { center: event.nativeEvent.center as LngLat, zoom: event.nativeEvent.zoom };
         onRegionDidChange?.(
           event.nativeEvent.center as LngLat,
           event.nativeEvent.zoom,
           event.nativeEvent.bounds as [number, number, number, number],
-        )
-      }
+        );
+      }}
     >
       <Camera ref={cameraRef} initialViewState={{ center: initialCenter, zoom: initialZoom }} />
       <Images images={images} />

@@ -41,10 +41,10 @@
       "emptyState": "No tours yet — add some to see your seasonal overview",
       "scrollHint": "Scroll to view full year",
       "range": {
-        "winter": "DEC – FEB",
-        "spring": "MAR – MAY",
-        "summer": "JUN – AUG",
-        "autumn": "SEP – NOV"
+        "winter": "Dec – Feb",
+        "spring": "Mar – May",
+        "summer": "Jun – Aug",
+        "autumn": "Sep – Nov"
       }
     },
     "tour": {
@@ -413,7 +413,6 @@
       "removePhoneTooltip": "Remove phone",
       "addPhoneBtn": "Add phone",
       "primaryPhoneRequired": "Select one primary phone when multiple phones are entered",
-      "clearToRemove": "Clear a number to remove it.",
       "addEmailBtn": "Add email",
       "newTitle": "New contact"
     },
@@ -710,6 +709,8 @@
       "saveFailed": "Failed to save",
       "deleteFailed": "Failed to delete",
       "backToTours": "Tours",
+      "backToCalendar": "Back to the calendar",
+      "backToSeasons": "Back to the seasons",
       "saveLabel": "Save",
       "iconTooltipType": "Tour type",
       "iconTooltipElevation": "Elevation",
@@ -1138,8 +1139,8 @@
     "accept": "Accept",
     "deny": "Deny",
     "cancel": "Cancel",
-    "requestFrom": "Request from",
-    "requestTo": "Request to",
+    "requestFrom": "Requests to you",
+    "requestTo": "Your requests",
     "verifyPhoneHint": "Verify your phone to connect with other users.",
     "friendsListLink": "Friend requests",
     "requestsTab": "Requests",

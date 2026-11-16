@@ -530,8 +530,8 @@ export function StepperRow({
         <Pressable
           role="button"
           aria-label={`${title} −`}
-          disabled={value - step < min}
-          onPress={() => onChange(Math.max(min, value - step))}
+          disabled={value - step < min - step / 2}
+          onPress={() => onChange(Math.max(min, Number((value - step).toFixed(6))))}
           style={styles.stepperButton}
         >
           <Text style={styles.title}>−</Text>
@@ -539,8 +539,8 @@ export function StepperRow({
         <Pressable
           role="button"
           aria-label={`${title} +`}
-          disabled={value + step > max}
-          onPress={() => onChange(Math.min(max, value + step))}
+          disabled={value + step > max + step / 2}
+          onPress={() => onChange(Math.min(max, Number((value + step).toFixed(6))))}
           style={styles.stepperButton}
         >
           <Text style={styles.title}>+</Text>

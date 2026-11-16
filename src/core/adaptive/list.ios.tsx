@@ -25,8 +25,8 @@ import {
 import {
   accessibilityHidden,
   accessibilityLabel as a11yLabel,
+  accessibilityValue,
   autocorrectionDisabled,
-  badge,
   buttonStyle,
   datePickerStyle,
   disabled as disabledModifier,
@@ -171,7 +171,7 @@ export function ListRow({
   onPress,
   chevron,
   destructive,
-  badge: badgeValue,
+  badge: count,
   checked,
   disabled,
   swipeActions,
@@ -208,6 +208,9 @@ export function ListRow({
       </VStack>
       <Spacer />
       {value ? <SwiftText modifiers={[secondary, lineLimit(1)]}>{value}</SwiftText> : null}
+      {/* A count as Settings shows one, before the chevron: text in the row, not SwiftUI's badge,
+          a modifier that comes and goes with the count. */}
+      {count ? <SwiftText modifiers={[secondary, lineLimit(1)]}>{count}</SwiftText> : null}
       {checked ? <Image systemName="checkmark" size={15} color={color.primary} /> : null}
       {showChevron ? (
         <Image
@@ -235,10 +238,9 @@ export function ListRow({
   );
 
   const modifiers = [
-    ...(badgeValue !== undefined && badgeValue !== '' && badgeValue !== 0
-      ? [badge(String(badgeValue))]
-      : []),
-    ...(disabled ? [disabledModifier(true)] : []),
+    // Always there, only its value changes: a modifier that comes and goes rebuilds the row, and
+    // its app-drawn icon with it stays blank (a contact's delete row while a number saves).
+    disabledModifier(!!disabled),
     ...(accessibilityLabel ? [a11yLabel(accessibilityLabel)] : []),
   ];
 
@@ -296,7 +298,7 @@ export function ToggleRow({
     <Toggle
       isOn={value}
       onIsOnChange={onValueChange}
-      modifiers={[tint(color.primary), ...(disabled ? [disabledModifier(true)] : [])]}
+      modifiers={[tint(color.primary), disabledModifier(!!disabled)]}
     >
       <VStack alignment="leading" spacing={2}>
         <SwiftText modifiers={[wraps]}>{title}</SwiftText>
@@ -471,14 +473,18 @@ export function StepperRow({
   step = 1,
   format,
 }: StepperRowProps) {
+  // SwiftUI's Stepper here counts in whole numbers: count in steps, so 0.5–1.5 by 0.1 works.
+  const steps = (n: number) => Math.round(n / step);
   return (
     <Stepper
       label={format ? `${title}: ${format(value)}` : `${title}: ${value}`}
-      value={value}
-      step={step}
-      min={min}
-      max={max}
-      onValueChange={onChange}
+      value={steps(value)}
+      step={1}
+      min={min === undefined ? undefined : steps(min)}
+      max={max === undefined ? undefined : steps(max)}
+      onValueChange={(n) => onChange(Number((n * step).toFixed(6)))}
+      // VoiceOver reads the value as shown ("1.1×"), not the count of steps.
+      modifiers={[accessibilityValue(format ? format(value) : String(value))]}
     />
   );
 }

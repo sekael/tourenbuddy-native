@@ -4,40 +4,38 @@ import '@/core/i18n';
 import { SeasonsChart } from '@/features/calendar/presentation/seasons-chart';
 import type { Tour } from '@/features/tours/domain/entities/tour';
 
-const tour = (
-  id: string,
-  name: string,
-  seasons: Tour['seasons'],
-  tourTypes: Tour['tourTypes'] = [],
-) => ({ id, name, seasons, tourTypes }) as Tour;
-
-const bars = () =>
-  screen.container.queryAll(
-    (n) =>
-      n.type === 'View' && typeof (n.props.style as { width?: unknown }[])?.[1]?.width === 'string',
-  );
+const tour = (id: string, name: string | null, seasons: string[] | null) =>
+  ({ id, name, seasons, tourTypes: ['hiking'] }) as unknown as Tour;
 
 describe('SeasonsChart', () => {
-  it('should split seasons that are not adjacent and say when a tour has none', async () => {
-    const open = jest.fn();
+  it('should order tours along the axis, a tour without seasons last and saying so', async () => {
     await render(
       <SeasonsChart
-        tours={[tour('a', 'Piz Ela', ['winter', 'summer'], ['skitour']), tour('b', 'Someday', [])]}
-        onOpen={open}
+        tours={[
+          tour('a', 'Anywhere', null),
+          tour('s', 'Summer', ['summer']),
+          tour('w', 'Winter and summer', ['summer', 'winter']),
+          tour('b', 'Bike', ['spring', 'summer', 'autumn']),
+        ]}
+        onOpen={jest.fn()}
       />,
     );
 
-    expect(bars()).toHaveLength(2);
-    expect(screen.getByText('No seasons scheduled')).toBeOnTheScreen();
-
-    await fireEvent.press(screen.getByRole('button', { name: 'Someday, No seasons scheduled' }));
-    expect(open).toHaveBeenCalledWith('b');
+    const rows = screen.getAllByRole('button').map((row) => row.props.accessibilityLabel);
+    expect(rows).toEqual([
+      // Winter before summer, whatever order the tour lists them in.
+      'Winter and summer, Hiking, Winter, Summer',
+      'Bike, Hiking, Spring, Summer, Autumn',
+      'Summer, Hiking, Summer',
+      'Anywhere, Hiking, No seasons scheduled',
+    ]);
   });
 
-  it('should merge adjacent seasons into one bar', async () => {
-    await render(
-      <SeasonsChart tours={[tour('a', 'Hike', ['spring', 'summer'])]} onOpen={jest.fn()} />,
-    );
-    expect(bars()).toHaveLength(1);
+  it('should open an unnamed tour by its id', async () => {
+    const onOpen = jest.fn();
+    await render(<SeasonsChart tours={[tour('x', null, ['autumn'])]} onOpen={onOpen} />);
+
+    await fireEvent.press(screen.getByRole('button'));
+    expect(onOpen).toHaveBeenCalledWith('x');
   });
 });

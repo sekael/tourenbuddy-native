@@ -54,6 +54,8 @@ export const color = {
   // iOS text in the system's label colours, as the SwiftUI lists beside it (light only for now).
   onBackground: IOS ? '#000000' : palette.slate900,
   surface: palette.slate50,
+  /** Behind grouped content the app draws itself, as behind the system's grouped lists. */
+  groupedBackground: IOS ? '#F2F2F7' : palette.slate50,
   onSurface: IOS ? '#000000' : palette.slate900,
   surfaceVariant: palette.blue50,
   // The system's secondary grey at its higher-contrast step, to keep 4.5:1 on every surface.
@@ -111,6 +113,8 @@ export const type = {
   body: { fontFamily, fontSize: 16, lineHeight: 22, fontWeight: '400' },
   label: { fontFamily, fontSize: 16, lineHeight: 20, fontWeight: '500' },
   caption: { fontFamily, fontSize: 14, lineHeight: 20, fontWeight: '400' },
+  /** A chart's axis: the months under a season (the PWA's 10 px). */
+  axis: { fontFamily, fontSize: 11, lineHeight: 14, fontWeight: '400' },
 } as const;
 
 /** Emphasis within running text: an email address, the active tab's label. */

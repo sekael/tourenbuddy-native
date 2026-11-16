@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Linking, Platform } from 'react-native';
 
@@ -26,7 +26,7 @@ import {
   type ImportResult,
 } from './contact-import';
 import { confirmDeleteContact } from './contact-delete';
-import { useContactLinks } from './contact-links';
+import { phoneKey, useContactLinks } from './contact-links';
 import { useContactsStore } from './stores/contacts-store';
 
 const log = createLogger('ContactsList');
@@ -189,7 +189,7 @@ export function ContactsListPage({
                 key={contact.id}
                 title={resolveContactName(contact)}
                 subtitle={phone ? formatPhoneDisplay(phone) : undefined}
-                icon={blocked ? 'block' : friend ? 'verified' : 'person'}
+                icon={blocked ? 'block' : friend ? 'person_heart' : 'person'}
                 iconColor={blocked ? color.error : friend ? color.primary : color.onSurfaceVariant}
                 accessibilityLabel={[
                   resolveContactName(contact),
@@ -224,9 +224,68 @@ export function ContactsListPage({
   );
 }
 
-/** What an import did (contact-import): the counts, then each card with its outcome. */
+/**
+ * Who on TourenBuddy the imported cards' main numbers belong to, asked once for all of them
+ * (contact-account-linking): row index and user, friends left out. The directory already leaves
+ * out anyone the user blocks or who blocks them.
+ */
+function useImportMatches(results: ImportResult[]) {
+  const [matches, setMatches] = useState<{ index: number; userId: string }[]>([]);
+  useEffect(() => {
+    const phones = [...new Set(results.flatMap((r) => (r.primaryPhone ? [r.primaryPhone] : [])))];
+    if (!phones.length || !isPhoneVerified()) return;
+    let live = true;
+    void useFriendshipsStore
+      .getState()
+      .findUsersByPhones(phones)
+      .then((found) => {
+        if (!live) return;
+        const byPhone = new Map(found.map((f) => [phoneKey(f.phone), f.userId]));
+        const friends = useFriendshipsStore.getState().friendUserIds;
+        setMatches(
+          results.flatMap((r, index) => {
+            const userId = r.primaryPhone ? byPhone.get(phoneKey(r.primaryPhone)) : undefined;
+            return userId && !friends.has(userId) ? [{ index, userId }] : [];
+          }),
+        );
+      });
+    return () => {
+      live = false;
+    };
+  }, [results]);
+  return matches;
+}
+
+/**
+ * What an import did (contact-import): the counts, then each card with its outcome; a card whose
+ * number belongs to someone on TourenBuddy offers to connect, as a contact's page does.
+ */
 export function ImportResultsPage({ results }: { results: ImportResult[] }) {
   const { t } = useTranslation();
+  const matches = useImportMatches(results);
+  const incoming = useFriendshipsStore((s) => s.incoming);
+  const [answered, setAnswered] = useState<Map<string, 'sent' | 'accepted' | 'dismissed'>>(
+    new Map(),
+  );
+  const [busy, setBusy] = useState<string | null>(null);
+  const answer = (userId: string, state: 'sent' | 'accepted' | 'dismissed') =>
+    setAnswered((m) => new Map(m).set(userId, state));
+
+  async function connect(userId: string, acceptId: string | null) {
+    setBusy(userId);
+    try {
+      const store = useFriendshipsStore.getState();
+      if (acceptId) await store.accept(acceptId);
+      else await store.sendRequest(userId);
+      answer(userId, acceptId ? 'accepted' : 'sent');
+    } catch (error) {
+      log.error('Connect from import failed', error);
+      Alert.alert(t('friendships.sendFailedRetry'));
+    } finally {
+      setBusy(null);
+    }
+  }
+
   const count = (pred: (r: ImportResult) => boolean) => results.filter(pred).length;
   const summary = [
     t('contacts.addDialog.summaryImported', { count: count((r) => r.status === 'imported') }),
@@ -271,6 +330,54 @@ export function ImportResultsPage({ results }: { results: ImportResult[] }) {
           );
         })}
       </ListSection>
+      {matches.map(({ index, userId }) => {
+        const result = results[index]!;
+        const state = answered.get(userId);
+        if (state === 'dismissed') return null;
+        // They asked first: the request becomes an accept (friendships).
+        const acceptId =
+          incoming.find((r) => r.fromUserId === userId && r.status === 'pending')?.id ?? null;
+        return (
+          <ListSection
+            key={userId}
+            title={t('friendships.prompt.title')}
+            footer={state ? undefined : t('friendships.prompt.securityNote')}
+          >
+            <ListRow
+              title={[result.firstName, result.lastName].filter(Boolean).join(' ')}
+              subtitle={formatPhoneDisplay(result.primaryPhone!)}
+              icon="person"
+              chevron={false}
+            />
+            {state ? (
+              <ListRow
+                title={
+                  state === 'sent' ? t('friendships.requestSent') : t('friendships.nowFriends')
+                }
+                icon="check_circle"
+                iconColor={color.success}
+                chevron={false}
+              />
+            ) : (
+              <>
+                <ListRow
+                  title={acceptId ? t('friendships.accept') : t('friendships.sendRequest')}
+                  icon="person_add"
+                  chevron={false}
+                  disabled={busy === userId}
+                  onPress={() => void connect(userId, acceptId)}
+                />
+                <ListRow
+                  title={t('friendships.justSaveContact')}
+                  chevron={false}
+                  disabled={busy === userId}
+                  onPress={() => answer(userId, 'dismissed')}
+                />
+              </>
+            )}
+          </ListSection>
+        );
+      })}
     </Page>
   );
 }

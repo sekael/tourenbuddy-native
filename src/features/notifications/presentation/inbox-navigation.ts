@@ -27,7 +27,8 @@ export function canOpenTour(tourId: string): boolean {
  * Where an entry leads (notification-inbox D7: acting happens on the subject), shared by a tap in
  * the inbox and a tapped push: the calendar for a weekly summary, friend requests or the contacts
  * for a friend request, the overlaps for a backfill, else the tour on the map, if the user may
- * still open it.
+ * still open it. A tab is reached with `dismissTo`: from the inbox sheet `navigate` would stack a
+ * second set of tabs inside the sheet.
  */
 export async function openInboxEntry(entry: InboxNotification, t: TFunction) {
   if (entry.action === 'weekly') {
@@ -37,15 +38,15 @@ export async function openInboxEntry(entry: InboxNotification, t: TFunction) {
       .filter((d): d is string => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d))
       .sort()
       .find((d) => d >= today);
-    router.navigate(day ? { pathname: '/calendar', params: { day } } : '/calendar');
+    router.dismissTo(day ? { pathname: '/calendar', params: { day } } : '/calendar');
     return;
   }
   if (entry.action === 'received') {
-    router.navigate({ pathname: '/contacts', params: { open: 'requests' } });
+    router.dismissTo({ pathname: '/contacts', params: { open: 'requests' } });
     return;
   }
   if (entry.action === 'responded') {
-    router.navigate('/contacts');
+    router.dismissTo('/contacts');
     return;
   }
   if (entry.action === 'backfill' && typeof entry.ref.friendship_id === 'string') {

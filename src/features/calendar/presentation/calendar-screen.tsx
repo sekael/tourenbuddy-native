@@ -158,12 +158,13 @@ export function CalendarScreen() {
           ? { label: t('calendar.availability.save'), onPress: () => void save(), disabled: saving }
           : undefined
       }
+      body={
+        view === 'seasons' && tours.length ? (
+          <SeasonsChart tours={tours} onOpen={(id) => openTour(id, 'seasons')} />
+        ) : undefined
+      }
       header={
-        view === 'seasons' ? (
-          tours.length ? (
-            <SeasonsChart tours={tours} onOpen={openTour} />
-          ) : undefined
-        ) : (
+        view === 'seasons' ? undefined : (
           <MonthGrid
             month={month}
             onMonth={setMonth}
@@ -180,7 +181,7 @@ export function CalendarScreen() {
       }
     >
       {view === 'seasons' ? (
-        <SeasonsView tours={tours} />
+        <EmptyState icon="wb_sunny" title={t('calendar.seasons.emptyState')} />
       ) : editing ? (
         <ListSection
           footer={[
@@ -199,13 +200,7 @@ export function CalendarScreen() {
       ) : (
         <>
           {showTip ? <CalendarTip /> : null}
-          <ListSection>
-            <ListRow
-              title={t('calendar.availability.edit')}
-              icon="event_available"
-              onPress={store.enterEdit}
-            />
-          </ListSection>
+          {/* The picked day's tours right under the month, where a tap on a day looks. */}
           <ListSection
             title={formatDate(selectedDate, { weekday: 'long', day: 'numeric', month: 'long' })}
           >
@@ -217,7 +212,7 @@ export function CalendarScreen() {
                   span={
                     entry.dayCount > 1 ? { day: entry.dayIndex, total: entry.dayCount } : undefined
                   }
-                  onPress={() => openTour(entry.tour.id)}
+                  onPress={() => openTour(entry.tour.id, 'calendar')}
                 />
               ))
             ) : (
@@ -247,6 +242,13 @@ export function CalendarScreen() {
               })}
             </ListSection>
           ) : null}
+          <ListSection>
+            <ListRow
+              title={t('calendar.availability.edit')}
+              icon="event_available"
+              onPress={store.enterEdit}
+            />
+          </ListSection>
         </>
       )}
     </Page>
@@ -287,13 +289,4 @@ function CalendarTip() {
       />
     </ListSection>
   );
-}
-
-/** Tours by season (calendar-view "Seasons view"): the chart, or a hint without tours. */
-function SeasonsView({ tours }: { tours: Tour[] }) {
-  const { t } = useTranslation();
-  if (!tours.length) {
-    return <EmptyState icon="wb_sunny" title={t('calendar.seasons.emptyState')} />;
-  }
-  return null;
 }

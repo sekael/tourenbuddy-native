@@ -59,7 +59,12 @@ export type PageProps = {
   header?: ReactNode;
   /** The header shows the title (a contact's name under their avatar): the bar leaves it out. */
   titleInHeader?: boolean;
-  children: ReactNode;
+  /**
+   * App-drawn content that fills the page and scrolls on its own, in place of the list (a chart
+   * with a pinned header). `children` are left out while it is set.
+   */
+  body?: ReactNode;
+  children?: ReactNode;
   testID?: string;
 };
 
@@ -103,6 +108,17 @@ export function Page(page: PageProps) {
         ) : page.cancel ? (
           <TextButton label={page.cancel.label} onPress={page.cancel.onPress} />
         ) : null}
+        {page.actions
+          ?.filter((action) => action.leading && action.onPress)
+          .map((action) => (
+            <IconButton
+              key={action.id}
+              icon={action.icon}
+              label={action.label}
+              onPress={action.onPress!}
+              disabled={action.disabled}
+            />
+          ))}
         {page.titleInHeader ? (
           <View style={styles.title} />
         ) : (
@@ -110,27 +126,29 @@ export function Page(page: PageProps) {
             {page.title}
           </Text>
         )}
-        {page.actions?.map((action) => {
-          const onPress = action.menu?.length
-            ? () => setOpenMenu((open) => (open === action.id ? null : action.id))
-            : (action.onPress ?? (() => {}));
-          return action.titled ? (
-            <TextButton
-              key={action.id}
-              label={action.label}
-              onPress={onPress}
-              disabled={action.disabled}
-            />
-          ) : (
-            <IconButton
-              key={action.id}
-              icon={action.icon}
-              label={action.label}
-              onPress={onPress}
-              disabled={action.disabled}
-            />
-          );
-        })}
+        {page.actions
+          ?.filter((action) => !(action.leading && action.onPress))
+          .map((action) => {
+            const onPress = action.menu?.length
+              ? () => setOpenMenu((open) => (open === action.id ? null : action.id))
+              : (action.onPress ?? (() => {}));
+            return action.titled ? (
+              <TextButton
+                key={action.id}
+                label={action.label}
+                onPress={onPress}
+                disabled={action.disabled}
+              />
+            ) : (
+              <IconButton
+                key={action.id}
+                icon={action.icon}
+                label={action.label}
+                onPress={onPress}
+                disabled={action.disabled}
+              />
+            );
+          })}
         {page.confirm ? (
           <TextButton
             label={page.confirm.label}
@@ -206,18 +224,22 @@ export function Page(page: PageProps) {
           />
         </View>
       ) : null}
-      <GroupedList
-        header={
-          <>
-            {banner}
-            {page.header}
-          </>
-        }
-        onRefresh={page.onRefresh}
-        form={page.form}
-      >
-        {page.children}
-      </GroupedList>
+      {page.body ? (
+        <View style={styles.body}>{page.body}</View>
+      ) : (
+        <GroupedList
+          header={
+            <>
+              {banner}
+              {page.header}
+            </>
+          }
+          onRefresh={page.onRefresh}
+          form={page.form}
+        >
+          {page.children}
+        </GroupedList>
+      )}
     </SafeAreaView>
   );
 }
@@ -281,6 +303,7 @@ function TextButton({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.surface },
+  body: { flex: 1 },
   bar: {
     flexDirection: 'row',
     alignItems: 'center',

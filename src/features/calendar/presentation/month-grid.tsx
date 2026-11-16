@@ -61,6 +61,7 @@ export function MonthGrid({
           variant="title"
           role="heading"
           style={styles.month}
+          maxFontSizeMultiplier={GRID_SCALE}
           numberOfLines={1}
           adjustsFontSizeToFit
           minimumFontScale={0.8}
@@ -81,7 +82,11 @@ export function MonthGrid({
               !awayFromToday && styles.hidden,
             ]}
           >
-            <Text variant="caption" style={styles.todayButtonLabel}>
+            <Text
+              variant="caption"
+              style={styles.todayButtonLabel}
+              maxFontSizeMultiplier={GRID_SCALE}
+            >
               {t('calendar.today')}
             </Text>
           </Pressable>
@@ -105,7 +110,7 @@ export function MonthGrid({
       </View>
       <View style={styles.row} importantForAccessibility="no-hide-descendants">
         {weekdays.map((day, i) => (
-          <Text key={i} variant="caption" style={styles.weekday}>
+          <Text key={i} variant="caption" style={styles.weekday} maxFontSizeMultiplier={GRID_SCALE}>
             {day}
           </Text>
         ))}
@@ -148,6 +153,7 @@ export function MonthGrid({
               >
                 <View style={[styles.day, isSelected && styles.daySelected]}>
                   <Text
+                    maxFontSizeMultiplier={GRID_SCALE}
                     style={[
                       styles.dayText,
                       !inMonth && styles.outside,
@@ -175,7 +181,11 @@ export function MonthGrid({
                     />
                   ))}
                   {friends ? (
-                    <Text variant="caption" style={styles.friends}>
+                    <Text
+                      variant="caption"
+                      style={styles.friends}
+                      maxFontSizeMultiplier={GRID_SCALE}
+                    >
                       {`+${friends}`}
                     </Text>
                   ) : null}
@@ -191,6 +201,11 @@ export function MonthGrid({
 
 const DAY = 32;
 const DOT = 6;
+/**
+ * Seven days share a phone's width and each sits in its circle: the grid grows with Dynamic Type
+ * only so far, as the system calendar's month and a tab bar's labels do.
+ */
+const GRID_SCALE = 1.4;
 
 const styles = StyleSheet.create({
   grid: { gap: space.xxs, paddingBottom: space.xs },

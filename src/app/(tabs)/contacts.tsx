@@ -1,5 +1,5 @@
-import { useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useEffect, useState } from 'react';
 
 import { Screen } from '@/core/adaptive/screen';
 import { ContactDetailPage } from '@/features/contacts/presentation/contact-detail-page';
@@ -16,13 +16,18 @@ export default function ContactsTab() {
   const [results, setResults] = useState<ImportResult[]>([]);
   const push = (value: string) => setPath((p) => [...p, value]);
   const pop = () => setPath((p) => p.slice(0, -1));
-  // A friend request's notification opens the requests.
+  // A friend request's notification opens the requests; a contact just added opens it.
   const { open } = useLocalSearchParams<{ open?: string }>();
+  const navigation = useNavigation();
   const [opened, setOpened] = useState<string | undefined>(undefined);
   if (open !== opened) {
     setOpened(open);
-    if (open === 'requests') setPath(['requests']);
+    if (open === 'requests' || open?.startsWith('contact:')) setPath([open]);
   }
+  // Used once: a second notification for the same page opens it again.
+  useEffect(() => {
+    if (open) navigation.setParams({ open: undefined } as never);
+  }, [open, navigation]);
 
   return (
     <Screen

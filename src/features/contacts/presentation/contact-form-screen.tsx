@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 
-import { ListRow, ListSection, PickerRow, TextRow } from '@/core/adaptive/list';
+import { ListRow, ListSection, TextRow } from '@/core/adaptive/list';
 import { Page } from '@/core/adaptive/screen';
 import { sessionUser } from '@/core/auth/session-user';
 import { DuplicateContactAcrossContactsError } from '@/core/exceptions';
 import { newId } from '@/core/files';
 import { createLogger } from '@/core/logging/logger';
+import { color } from '@/core/theme/tokens';
 import { normalizePhone } from '@/core/utils/phone-normalize';
 import {
   formatPhoneDisplay,
@@ -205,9 +206,10 @@ export function ContactFormScreen({ id }: { id: string | null }) {
       for (const userId of evictFriends)
         await useFriendshipsStore.getState().removeFriendship(userId);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      // A new contact opens, so a number on TourenBuddy offers to connect right away.
+      // A new contact opens in the Contacts tab, as a tap on it would, so a number on TourenBuddy
+      // offers to connect right away.
       if (existing) router.back();
-      else router.replace({ pathname: '/contact/[id]', params: { id: contactId } });
+      else router.dismissTo({ pathname: '/contacts', params: { open: `contact:${contactId}` } });
     } catch (error) {
       log.error('Save contact failed', error);
       Alert.alert(
@@ -221,6 +223,8 @@ export function ContactFormScreen({ id }: { id: string | null }) {
   }
 
   const filledPhones = phones.filter((p) => p.value.trim());
+  // The number saved as the main one: the chosen one while it has a number, else the first.
+  const mainId = filledPhones.some((p) => p.id === primaryId) ? primaryId : filledPhones[0]?.id;
 
   return (
     <Page
@@ -260,27 +264,61 @@ export function ContactFormScreen({ id }: { id: string | null }) {
           textContentType="nickname"
         />
       </ListSection>
-      <ListSection title={t('contacts.form.phonesLabel')} footer={t('contacts.form.clearToRemove')}>
-        {phones.flatMap((row) => [
-          <TextRow
-            key={`${row.id}:value`}
-            label={t('contacts.detailView.phoneTypeBtn')}
-            placeholder={t('contacts.form.phonePlaceholder')}
-            value={row.value}
-            onChangeText={editRow(setPhones, row.id, 'value')}
-            keyboardType="phone-pad"
-            textContentType="telephoneNumber"
-            error={errors[row.id] || undefined}
-          />,
-          <TextRow
-            key={`${row.id}:label`}
-            label={t('contacts.detailView.labelPlaceholder')}
-            placeholder={t('contacts.form.labelPlaceholder')}
-            value={row.label}
-            onChangeText={editRow(setPhones, row.id, 'label')}
-            autoCapitalize="words"
-          />,
-        ])}
+      {/* One card per number, its description under it, as the PWA groups them: which number
+          is the main one and removing it sit in its own card. */}
+      {phones.map((row, i) => {
+        const main = row.id === mainId;
+        const shown = row.value.trim() || t('contacts.detailView.phoneTypeBtn');
+        return (
+          <ListSection key={row.id} title={i === 0 ? t('contacts.form.phonesLabel') : undefined}>
+            <TextRow
+              label={t('contacts.detailView.phoneTypeBtn')}
+              placeholder={t('contacts.form.phonePlaceholder')}
+              value={row.value}
+              onChangeText={editRow(setPhones, row.id, 'value')}
+              keyboardType="phone-pad"
+              textContentType="telephoneNumber"
+              error={errors[row.id] || undefined}
+            />
+            <TextRow
+              label={t('contacts.detailView.labelPlaceholder')}
+              placeholder={t('contacts.form.labelPlaceholder')}
+              value={row.label}
+              onChangeText={editRow(setPhones, row.id, 'label')}
+              autoCapitalize="words"
+            />
+            {filledPhones.length > 1 && row.value.trim() ? (
+              <ListRow
+                title={
+                  main
+                    ? t('contacts.form.primaryPhoneTooltip')
+                    : t('contacts.form.setAsPrimaryTooltip')
+                }
+                icon={main ? 'star_filled' : 'star'}
+                chevron={false}
+                accessibilityLabel={`${main ? t('contacts.form.primaryPhoneTooltip') : t('contacts.form.setAsPrimaryTooltip')}, ${shown}`}
+                // Pressable when it is the main one too: a row that turns from a button into
+                // text is built anew, and its star with it.
+                onPress={() => edit(setPrimaryId)(row.id)}
+              />
+            ) : null}
+            {phones.length > 1 ? (
+              <ListRow
+                title={t('contacts.form.removePhoneTooltip')}
+                icon="remove_circle_outline"
+                iconColor={color.error}
+                destructive
+                accessibilityLabel={`${t('contacts.form.removePhoneTooltip')}, ${shown}`}
+                onPress={() => {
+                  setPhones((rows) => rows.filter((r) => r.id !== row.id));
+                  setDirty(true);
+                }}
+              />
+            ) : null}
+          </ListSection>
+        );
+      })}
+      <ListSection>
         <ListRow
           title={t('contacts.form.addPhoneBtn')}
           icon="add"
@@ -288,19 +326,6 @@ export function ContactFormScreen({ id }: { id: string | null }) {
           onPress={() => setPhones((rows) => [...rows, blankRow()])}
         />
       </ListSection>
-      {filledPhones.length > 1 ? (
-        <ListSection>
-          <PickerRow
-            title={t('contacts.form.primaryPhoneTooltip')}
-            value={filledPhones.some((p) => p.id === primaryId) ? primaryId : filledPhones[0]!.id}
-            options={filledPhones.map((p) => ({
-              value: p.id,
-              label: p.label.trim() ? `${p.value} (${p.label.trim()})` : p.value,
-            }))}
-            onChange={edit(setPrimaryId)}
-          />
-        </ListSection>
-      ) : null}
       <ListSection title={t('contacts.detailView.emailTypeBtn')}>
         {emails.map((row) => (
           <TextRow

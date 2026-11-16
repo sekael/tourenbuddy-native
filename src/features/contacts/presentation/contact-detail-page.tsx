@@ -49,7 +49,7 @@ async function dismissConnect(contactId: string) {
 
 /**
  * Who a contact's numbers belong to on TourenBuddy, once per open (friendships): the first one a
- * non-friend user has registered, for the connect prompt, unless a request to them is pending.
+ * non-friend user has registered who does not block the user, for the connect prompt.
  */
 function useMatchedUser(contact: Contact | undefined, friend: string | null) {
   const phones = contact ? contactPhones(contact).join(',') : '';
@@ -70,7 +70,11 @@ function useMatchedUser(contact: Contact | undefined, friend: string | null) {
       for (const phone of phones.split(',').filter(Boolean)) {
         const userId = await useFriendshipsStore.getState().findUserByPhone(phone);
         if (!live) return;
-        if (userId && !useFriendshipsStore.getState().friendUserIds.has(userId)) {
+        if (!userId || useFriendshipsStore.getState().friendUserIds.has(userId)) continue;
+        // Someone who blocks the user is offered neither a request nor a block (user-blocks).
+        const blockedBy = await useUserBlocksStore.getState().isBlockedBy(userId);
+        if (!live) return;
+        if (!blockedBy) {
           setFound({ key, userId });
           return;
         }
@@ -239,7 +243,7 @@ export function ContactDetailPage({
         </View>
       ) : isFriend ? (
         <View style={styles.badge}>
-          <Icon name="verified" size={16} color={color.primary} />
+          <Icon name="person_heart" size={16} color={color.primary} />
           <Text variant="caption" style={{ color: color.primary }}>
             {t('friendships.tooltip')}
           </Text>
@@ -323,9 +327,11 @@ export function ContactDetailPage({
     >
       {phones.length ? (
         <ListSection title={t('contacts.form.phonesLabel')}>
-          {phones.map((method) => (
+          {phones.map((method, i) => (
             <ListRow
-              key={method.id}
+              // By place, not by number: a new main number takes the first row's content, where
+              // a moved row kept its old height, cut off, for a couple of seconds.
+              key={i}
               title={formatPhoneDisplay(method.value)}
               subtitle={
                 method.isValid

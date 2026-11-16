@@ -209,7 +209,12 @@ export default function RootLayout() {
           <Stack.Screen name="draw" options={stepSheetOptions} />
           <Stack.Screen name="stack" options={mapSheetOptions} dangerouslySingular />
           <Stack.Screen name="trail" options={mapSheetOptions} dangerouslySingular />
-          <Stack.Screen name="contact/[id]" options={mapSheetOptions} />
+          {/* Dimmed: a contact has nothing to do with what is behind it, and a live Contacts tab
+              under it would open the same contact again, full screen. */}
+          <Stack.Screen
+            name="contact/[id]"
+            options={{ ...mapSheetOptions, sheetLargestUndimmedDetentIndex: 'none' }}
+          />
           <Stack.Screen name="contact/edit" options={formModalOptions} />
           <Stack.Screen name="inbox" options={mapSheetOptions} />
           <Stack.Screen name="offline-maps" options={mapSheetOptions} />

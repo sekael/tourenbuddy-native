@@ -17,6 +17,7 @@ import {
   TRAIL_OVERLAYS,
   wmtsTileUrl,
 } from '@/features/map/data/trail-overlays';
+import { fittedView, flight, type CameraView } from '@/features/map/domain/camera-flight';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 
 import { loadMarkerImages } from './marker-images.web';
@@ -222,14 +223,34 @@ export function TourMap({
     if (top) top.style.marginTop = `${padding.top}px`;
   }, [padding.bottom, padding.top]);
 
+  // The native map's timing (`camera-flight`); MapLibre GL jumps by itself under reduced motion.
+  const timed = (to: CameraView) => {
+    const map = mapRef.current!;
+    const from = { center: map.getCenter().toArray() as LngLat, zoom: map.getZoom() };
+    const size = { width: map.getContainer().clientWidth, height: map.getContainer().clientHeight };
+    return flight(from, to, size);
+  };
+
   useImperativeHandle(ref, () => ({
-    flyTo: (center, zoom) =>
-      mapRef.current?.easeTo({ center, zoom, padding: latest.current.padding, duration: 600 }),
-    fitBounds: (sw, ne) =>
-      mapRef.current?.fitBounds([sw, ne], {
-        padding: framePadding(latest.current.padding),
-        duration: 600,
-      }),
+    flyTo: (center, zoom) => {
+      const map = mapRef.current;
+      if (!map) return;
+      const { easing, duration } = timed({ center, zoom: zoom ?? map.getZoom() });
+      const options = { center, zoom, padding: latest.current.padding, duration };
+      if (easing === 'fly') map.flyTo(options);
+      else map.easeTo(options);
+    },
+    fitBounds: (sw, ne) => {
+      const map = mapRef.current;
+      if (!map) return;
+      const padding = framePadding(latest.current.padding);
+      const size = {
+        width: map.getContainer().clientWidth,
+        height: map.getContainer().clientHeight,
+      };
+      const { easing, duration } = timed(fittedView(sw, ne, size, padding));
+      map.fitBounds([sw, ne], { padding, duration, linear: easing === 'ease' });
+    },
     queryAt: async ([x, y], ids) => {
       const map = mapRef.current;
       const present = ids.filter((id) => map?.getLayer(id));

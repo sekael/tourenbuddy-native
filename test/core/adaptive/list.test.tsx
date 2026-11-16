@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { useEffect } from 'react';
 
-import { ListRow, ListSection, PickerRow } from '@/core/adaptive/list';
+import { ListRow, ListSection, PickerRow, StepperRow } from '@/core/adaptive/list';
 
 describe('ListSection on iOS', () => {
   it('should remount its rows when the footer comes or goes, so their drawn icons show again', async () => {
@@ -42,6 +42,49 @@ describe('ListRow on iOS', () => {
     expect(swipe!.props.modifiers).toEqual([expect.objectContaining({ $type: 'tint' })]);
   });
 
+  it('should keep its modifiers while disabled comes and goes, so its drawn icon stays', async () => {
+    const row = (disabled: boolean) => (
+      <ListRow
+        title="Delete contact"
+        icon="delete"
+        destructive
+        disabled={disabled}
+        onPress={jest.fn()}
+      />
+    );
+    const types = () =>
+      screen.container
+        .queryAll((node) => Array.isArray(node.props.modifiers) && !!node.props.onButtonPress)[0]!
+        .props.modifiers.map((m: { $type: string }) => m.$type);
+
+    const view = await render(row(false));
+    const before = types();
+    await view.rerender(row(true));
+
+    // A modifier added or dropped makes SwiftUI build the row anew, and the icon with it blank.
+    expect(types()).toEqual(before);
+  });
+
+  it('should show a count as text, its modifiers kept as it drops to none', async () => {
+    const row = (count: number) => (
+      <ListRow title="Friend requests" icon="group" badge={count} onPress={jest.fn()} />
+    );
+    const types = () =>
+      screen.container
+        .queryAll((node) => Array.isArray(node.props.modifiers) && !!node.props.onButtonPress)[0]!
+        .props.modifiers.map((m: { $type: string }) => m.$type);
+    const counts = () => screen.container.queryAll((node) => node.props.text === '1');
+
+    const view = await render(row(1));
+    const before = types();
+    expect(counts()).toHaveLength(1);
+    await view.rerender(row(0));
+
+    // SwiftUI's badge would come and go with the count: the row built anew, its icon blank.
+    expect(types()).toEqual(before);
+    expect(counts()).toHaveLength(0);
+  });
+
   it('should keep the destructive role in a menu, where it only paints the item red', async () => {
     const remove = {
       label: 'Delete region',
@@ -53,6 +96,21 @@ describe('ListRow on iOS', () => {
 
     const [item] = screen.container.queryAll((node) => node.props.label === 'Delete region');
     expect(item!.props.role).toBe('destructive');
+  });
+});
+
+describe('StepperRow on iOS', () => {
+  it('should count tenths in whole steps, as the system stepper only steps whole numbers', async () => {
+    const onChange = jest.fn();
+    await render(
+      <StepperRow title="Tempo" value={1} min={0.5} max={1.5} step={0.1} onChange={onChange} />,
+    );
+
+    const [stepper] = screen.container.queryAll((node) => node.props.label === 'Tempo: 1');
+    // Whole numbers would make 0.5–1.5 by 0.1 into 0–1 by 0: a pace the profile can't save.
+    expect(stepper!.props).toMatchObject({ value: 10, min: 5, max: 15, step: 1 });
+    await fireEvent(stepper!, 'valueChange', { nativeEvent: { value: 11 } });
+    expect(onChange).toHaveBeenCalledWith(1.1);
   });
 });
 
