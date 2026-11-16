@@ -23,6 +23,7 @@ const palette = {
   swisstopoRed: '#e3061b',
   green800: '#166534',
   orange500: '#f97316',
+  amber700: '#b45309',
 } as const;
 
 const IOS = Platform.OS === 'ios';
@@ -38,12 +39,16 @@ export const color = {
   onFab: palette.white,
   /** A picked ski route on the map: orange, since swisstopo draws the routes themselves blue. */
   trailHighlight: palette.orange500,
-  /** The blue capsule as frosted glass (iOS): blue enough for white glyphs over snow (3:1). */
+  /** A blue glass chip (iOS, a layer switch that's on): blue enough for white glyphs over snow. */
   fabGlass: 'rgba(29, 78, 216, 0.7)',
+  /**
+   * The tint of the map's controls in Liquid Glass (iOS: the capsule, search and the map button):
+   * 60 % blue, so the map still shows through as through the tab bar and the white glyphs and
+   * words (with `onGlassShadow`) read over snow.
+   */
+  fabGlassTint: 'rgba(29, 78, 216, 0.6)',
   /** Lifts white glyphs off clear glass over bright snow and glacier. */
   onGlassShadow: 'rgba(15, 23, 42, 0.55)',
-  /** The half of the blue glass capsule under the finger, lit as a system glass item is. */
-  onGlassPressed: 'rgba(255, 255, 255, 0.24)',
   /** A line between actions on the blue capsule. */
   onFabDivider: 'rgba(255, 255, 255, 0.45)',
   /** An area marked on the map (an offline region): the app's blue, faint enough to read through. */
@@ -66,6 +71,8 @@ export const color = {
   outlineVariant: IOS ? '#C6C6C8' : palette.slate300,
   error: palette.red600,
   success: palette.green800,
+  /** Needs the user's eye, nothing broke (a number an import couldn't add); 4.5:1 on white. */
+  warning: palette.amber700,
   /** A terrain profile's line, as the swisstopo app draws it under a tour. */
   elevation: palette.swisstopoRed,
   elevationFill: 'rgba(227, 6, 27, 0.12)',

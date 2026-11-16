@@ -16,10 +16,12 @@
     "planned": {
       "prevMonth": "Previous month",
       "nextMonth": "Next month",
-      "tourCount": "{{count}} tours",
+      "tourCount_one": "{{count}} tour",
+      "tourCount_other": "{{count}} tours",
       "dayCounter": "{{day}}/{{total}}",
       "dayCounterLabel": "Day {{day}} of {{total}}",
-      "friendCount": "{{count}} friends",
+      "friendCount_one": "{{count}} friend",
+      "friendCount_other": "{{count}} friends",
       "toursHeading": "Tours",
       "friendsHeading": "Available friends",
       "noTours": "No tours this day"
@@ -437,6 +439,7 @@
       "extraPhones": "+{{count}} more",
       "unparseableTooltip": "Could not read: {{values}}",
       "discardedPhones": "Number not added",
+      "fixNumberHint": "Tap to correct the number",
       "fileError": {
         "emptyFile": "That file is empty. Export your contacts again and pick the new file.",
         "notVCard": "That is not a vCard file. Export a .vcf from your contacts app and try again.",
@@ -546,6 +549,7 @@
       "ownedByLabel": "by {{name}}",
       "aFriend": "a friend",
       "viewBackfillCollisionsBtn": "Review tour overlaps",
+      "overlapsHint": "Find and link the tours you share with friends",
       "friendsOnMap_zero": "None of these on the map – you're a partner on none",
       "friendsOnMap_one": "Only 1 of these on the map – the one you're a partner on",
       "friendsOnMap_other": "Only {{count}} of these on the map – the ones you're a partner on",

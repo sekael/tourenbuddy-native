@@ -17,7 +17,13 @@ import {
   TRAIL_OVERLAYS,
   wmtsTileUrl,
 } from '@/features/map/data/trail-overlays';
-import { fittedView, flight, type CameraView } from '@/features/map/domain/camera-flight';
+import {
+  fittedView,
+  flight,
+  MAP_COVERAGE,
+  minZoomFor,
+  type CameraView,
+} from '@/features/map/domain/camera-flight';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 
 import { loadMarkerImages } from './marker-images.web';
@@ -100,6 +106,12 @@ export function TourMap({
       style: first,
       center,
       zoom,
+      // Out to Switzerland whole; GL JS keeps the screen itself on the base map.
+      minZoom: minZoomFor(container.current!.clientHeight),
+      maxBounds: [
+        [MAP_COVERAGE[0], MAP_COVERAGE[1]],
+        [MAP_COVERAGE[2], MAP_COVERAGE[3]],
+      ],
       attributionControl: { compact: true },
     });
     appliedStyle.current = first;
@@ -240,7 +252,7 @@ export function TourMap({
       if (easing === 'fly') map.flyTo(options);
       else map.easeTo(options);
     },
-    fitBounds: (sw, ne) => {
+    fitBounds: (sw, ne, maxZoom = Infinity) => {
       const map = mapRef.current;
       if (!map) return;
       const padding = framePadding(latest.current.padding);
@@ -248,17 +260,23 @@ export function TourMap({
         width: map.getContainer().clientWidth,
         height: map.getContainer().clientHeight,
       };
-      const { easing, duration } = timed(fittedView(sw, ne, size, padding));
-      map.fitBounds([sw, ne], { padding, duration, linear: easing === 'ease' });
+      const fit = fittedView(sw, ne, size, padding);
+      const { easing, duration } = timed({ ...fit, zoom: Math.min(fit.zoom, maxZoom) });
+      map.fitBounds([sw, ne], {
+        padding,
+        duration,
+        linear: easing === 'ease',
+        ...(Number.isFinite(maxZoom) && { maxZoom }),
+      });
     },
-    queryAt: async ([x, y], ids) => {
+    queryAt: async ([x, y], ids, reach = 12) => {
       const map = mapRef.current;
       const present = ids.filter((id) => map?.getLayer(id));
       if (!map || !present.length) return [];
       return map.queryRenderedFeatures(
         [
-          [x - 12, y - 12],
-          [x + 12, y + 12],
+          [x - reach, y - reach],
+          [x + reach, y + reach],
         ],
         { layers: present },
       );

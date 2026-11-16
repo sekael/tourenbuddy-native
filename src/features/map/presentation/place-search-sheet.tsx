@@ -40,10 +40,15 @@ export function PlaceSearchSheet() {
               icon={result.origin === 'stop' ? 'directions_bus' : 'location_on'}
               onPress={() => {
                 search.take(result);
+                // A pin where the place is: an address or a stop is a spot, not a whole view.
+                useMapStore
+                  .getState()
+                  .showPlace({ at: [result.lng, result.lat], name: result.name });
                 useMapStore.getState().requestCamera({
                   kind: 'fly',
                   center: [result.lng, result.lat],
-                  zoom: Math.max(result.zoom ?? 13, 13),
+                  // The place's own zoom (the PWA's): a village closer than a region.
+                  zoom: result.zoom,
                 });
                 router.back();
               }}

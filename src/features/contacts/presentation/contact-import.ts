@@ -5,7 +5,7 @@ import { File } from 'expo-file-system';
 import { normalizePhone } from '@/core/utils/phone-normalize';
 import { dedupePhones, dedupeRawPhones } from '@/features/contacts/domain/utils/dedupe';
 import { parseContactName } from '@/features/contacts/domain/utils/parse-contact-name';
-import { parseVCard } from '@/features/contacts/domain/utils/vcard';
+import { parseVCard, UNNAMED_CONTACT } from '@/features/contacts/domain/utils/vcard';
 
 import { useContactsStore, type PhoneEntry } from './stores/contacts-store';
 
@@ -110,7 +110,8 @@ export async function pickDeviceContact(): Promise<ParsedImportItem | null> {
   }
   const unique = dedupePhones(phones);
   return {
-    firstName: name.firstName || picked.name || '',
+    // A card with a company only, or no name at all: named as a vCard without one is.
+    firstName: name.firstName || picked.name || UNNAMED_CONTACT,
     lastName: name.lastName,
     phones: unique,
     rawPhoneNumbers: dedupeRawPhones(raw),

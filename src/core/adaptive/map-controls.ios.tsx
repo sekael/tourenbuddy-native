@@ -1,18 +1,34 @@
-import { Button, HStack, Host, Label } from '@expo/ui/swift-ui';
 import {
+  Button,
+  HStack,
+  Host,
+  Label,
+  Rectangle,
+  RNHostView,
+  Text as SwiftText,
+} from '@expo/ui/swift-ui';
+import {
+  accessibilityHint,
   accessibilityLabel,
   buttonBorderShape,
   buttonStyle,
+  contentShape,
   controlSize,
+  disabled as disabledModifier,
   font,
+  foregroundStyle,
+  frame,
   glassEffect,
+  lineLimit,
+  minimumScaleFactor,
   padding,
+  shadow as swiftShadow,
+  shapes,
 } from '@expo/ui/swift-ui/modifiers';
 import { GlassView } from 'expo-glass-effect';
-import { useState } from 'react';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
-import { color, motion, shadow, size, space } from '@/core/theme/tokens';
+import { color, shadow, size, space } from '@/core/theme/tokens';
 
 import { Icon } from './icon';
 import { icons, type IconName } from './icons';
@@ -25,77 +41,96 @@ export type { CapsuleItem } from './map-controls';
 const MAX_FONT_SCALE = 1.3;
 
 /**
- * One half of the capsule. The whole glass answers a touch (interactive glass); the half under the
- * finger lights up at once and fades as it lifts, as a system glass toolbar's item does, so a press
- * on "+" never reads as one on "Meine Touren". Only light changes: nothing moves under Reduce Motion.
+ * The capsule of the map's main actions (D6) in true Liquid Glass, the system tab bar's material
+ * tinted with the app's blue: one interactive glass pill drawn by SwiftUI, a system button for each
+ * part (the wide «Meine Touren», the narrow «+»), the app's own glyphs in white. The glass answers a
+ * touch as the tab bar does; the part under the finger dims as a system button does. Nothing of
+ * ours moves, so Reduce Motion has nothing to undo; the system follows Reduce Transparency.
  */
-function Segment({ item }: { item: CapsuleItem }) {
-  const [lit] = useState(() => new Animated.Value(0));
-  const fade = (to: number, duration: number) =>
-    Animated.timing(lit, { toValue: to, duration, useNativeDriver: true }).start();
+export function GlassCapsule({ items }: { items: CapsuleItem[]; label: string }) {
+  const { width, fontScale } = useWindowDimensions();
+  // As a system toolbar's title: the words grow with the text size only so far, and the pill
+  // never grows past the room the round controls leave it (the words shrink to fit instead).
+  const room = width - 2 * space.lg - 2 * size.mapControl - 2 * space.xs;
+  const labelSize = Math.round(17 * Math.min(fontScale, MAX_FONT_SCALE));
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={item.label}
-      accessibilityHint={item.hint}
-      disabled={item.disabled}
-      onPress={item.onPress}
-      onPressIn={() => fade(1, 0)}
-      onPressOut={() => fade(0, motion.medium)}
-      hitSlop={{ top: 4, bottom: 4 }}
-      style={[styles.segment, item.iconOnly && styles.iconOnly, item.disabled && styles.disabled]}
-    >
-      <Animated.View
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFill, styles.lit, { opacity: lit }]}
-      />
-      <View style={styles.glyph}>
-        <Icon name={item.icon} size={22} color={color.onFab} />
-      </View>
-      {item.iconOnly ? null : (
-        // As a system toolbar's title: it grows with the text size only so far, then shrinks to
-        // the room the row leaves it, so the controls beside it stay on screen.
-        <Text
-          variant="label"
-          style={styles.label}
-          numberOfLines={1}
-          maxFontSizeMultiplier={MAX_FONT_SCALE}
-          adjustsFontSizeToFit
-          minimumFontScale={0.7}
-        >
-          {item.label}
-        </Text>
-      )}
-    </Pressable>
+    <Host matchContents style={styles.capsuleHost}>
+      <HStack
+        spacing={0}
+        modifiers={[
+          frame({ maxWidth: room }),
+          glassEffect({
+            glass: { variant: 'regular', tint: color.fabGlassTint, interactive: true },
+            shape: 'capsule',
+          }),
+        ]}
+      >
+        {items.flatMap((item, index) => [
+          ...(index > 0
+            ? [
+                <Rectangle
+                  key={`${item.id}-divider`}
+                  modifiers={[frame({ width: 1, height: 22 }), foregroundStyle(color.onFabDivider)]}
+                />,
+              ]
+            : []),
+          <Button
+            key={item.id}
+            onPress={item.onPress}
+            modifiers={[
+              buttonStyle('plain'),
+              disabledModifier(!!item.disabled),
+              accessibilityLabel(item.label),
+              ...(item.hint ? [accessibilityHint(item.hint)] : []),
+            ]}
+          >
+            <HStack
+              spacing={space.xs - 2}
+              modifiers={[
+                padding({ horizontal: item.iconOnly ? 0 : space.md }),
+                frame({
+                  width: item.iconOnly ? size.mapControl + space.sm : undefined,
+                  height: size.mapControl,
+                }),
+                // The whole part answers a tap, not only its glyph and words.
+                contentShape(shapes.rectangle()),
+              ]}
+            >
+              <RNHostView matchContents>
+                <View pointerEvents="none" style={styles.glyph}>
+                  <Icon name={item.icon} size={22} color={color.onFab} />
+                </View>
+              </RNHostView>
+              {item.iconOnly ? null : (
+                <SwiftText
+                  modifiers={[
+                    font({ size: labelSize, weight: 'semibold' }),
+                    foregroundStyle(color.onFab),
+                    lineLimit(1),
+                    minimumScaleFactor(0.7),
+                    // Lifts the white words off the glass where snow shines through it.
+                    swiftShadow({
+                      radius: shadow.glyph.radius,
+                      y: shadow.glyph.offset.height,
+                      color: color.onGlassShadow,
+                    }),
+                  ]}
+                >
+                  {item.label}
+                </SwiftText>
+              )}
+            </HStack>
+          </Button>,
+        ])}
+      </HStack>
+    </Host>
   );
 }
 
 /**
- * Liquid Glass over the map (D6), compact and tinted: the capsule of the map's main actions in
- * frosted glass tinted with the app's blue (as the PWA's bar; white glyphs on a soft shadow stay
- * legible over snow), the round controls beside it in faintly tinted glass with a blue glyph.
- * Real system glass samples the map and follows Reduce Transparency; interactive glass gives the
- * press its own feedback (no scaling of ours, so Reduce Motion has nothing to undo).
+ * A round map control (search, the map button) in the capsule's own blue Liquid Glass, so the row
+ * reads as one: a system button in an interactive glass circle, the app's glyph in white.
  */
-export function GlassCapsule({ items, label }: { items: CapsuleItem[]; label: string }) {
-  return (
-    <GlassView
-      isInteractive
-      tintColor={color.fabGlass}
-      style={styles.capsule}
-      accessibilityRole="toolbar"
-      accessibilityLabel={label}
-    >
-      {items.map((item, index) => (
-        <View key={item.id} style={styles.segmentRow}>
-          {index > 0 ? <View style={styles.divider} /> : null}
-          <Segment item={item} />
-        </View>
-      ))}
-    </GlassView>
-  );
-}
-
 export function GlassCircleButton({
   label,
   hint,
@@ -108,18 +143,33 @@ export function GlassCircleButton({
   onPress: () => void;
 }) {
   return (
-    <GlassView isInteractive tintColor={color.glassTint} style={styles.circle}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={label}
-        accessibilityHint={hint}
+    <Host matchContents style={styles.circle}>
+      <Button
         onPress={onPress}
-        hitSlop={4}
-        style={styles.circlePress}
+        modifiers={[
+          buttonStyle('plain'),
+          accessibilityLabel(label),
+          ...(hint ? [accessibilityHint(hint)] : []),
+        ]}
       >
-        <Icon name={icon} size={22} color={color.primary} />
-      </Pressable>
-    </GlassView>
+        <HStack
+          modifiers={[
+            frame({ width: size.mapControl, height: size.mapControl }),
+            contentShape(shapes.circle()),
+            glassEffect({
+              glass: { variant: 'regular', tint: color.fabGlassTint, interactive: true },
+              shape: 'circle',
+            }),
+          ]}
+        >
+          <RNHostView matchContents>
+            <View pointerEvents="none" style={styles.glyph}>
+              <Icon name={icon} size={22} color={color.onFab} />
+            </View>
+          </RNHostView>
+        </HStack>
+      </Button>
+    </Host>
   );
 }
 
@@ -213,29 +263,8 @@ export function GlassStatus({
 }
 
 const styles = StyleSheet.create({
-  capsule: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: size.mapControl,
-    borderRadius: size.mapControl / 2,
-    overflow: 'hidden',
-    // Between the round controls: narrower rather than past the screen's edge.
-    flexShrink: 1,
-    minWidth: 0,
-  },
-  segmentRow: { flexDirection: 'row', alignItems: 'center', flexShrink: 1, minWidth: 0 },
-  divider: { width: StyleSheet.hairlineWidth * 2, height: 22, backgroundColor: color.onFabDivider },
-  segment: {
-    flexShrink: 1,
-    minWidth: 0,
-    height: size.mapControl,
-    paddingHorizontal: space.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space.xs,
-  },
-  iconOnly: { width: size.mapControl + space.sm, paddingHorizontal: 0, flexShrink: 0 },
+  // Between the round controls: narrower rather than past the screen's edge.
+  capsuleHost: { flexShrink: 1, minWidth: 0, height: size.mapControl },
   label: {
     color: color.onFab,
     textShadowColor: color.onGlassShadow,
@@ -249,15 +278,7 @@ const styles = StyleSheet.create({
     shadowOffset: shadow.glyph.offset,
     shadowRadius: shadow.glyph.radius,
   },
-  lit: { backgroundColor: color.onGlassPressed },
-  disabled: { opacity: 0.38 },
-  circle: {
-    width: size.mapControl,
-    height: size.mapControl,
-    borderRadius: size.mapControl / 2,
-    overflow: 'hidden',
-  },
-  circlePress: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  circle: { width: size.mapControl, height: size.mapControl },
   chip: { height: size.mapControl, borderRadius: size.mapControl / 2, overflow: 'hidden' },
   chipPress: {
     flex: 1,

@@ -147,6 +147,19 @@ function ToursListPage({ onPush }: { onPush: (value: string) => void }) {
   const filtered = useMemo(() => filterTours(source, tabState, names), [source, tabState, names]);
   const entries = useMemo(() => listEntries(filtered, source), [filtered, source]);
   const filterCount = activeFilterCount(tabState.filters);
+  // The map marks only friends' tours you're a partner on (map-integration): a narrowed Friends
+  // list says how many of its tours the map shows, else "Tim's tours" reads as broken on the map.
+  // Counted as the list shows them: an outing is one row, on the map when you're on any stage.
+  const narrowed = useMapStore((s) => s.listedTourIds) !== null;
+  const marked =
+    tab === 'friends' && narrowed
+      ? entries.filter((entry) =>
+          entry.kind === 'outing'
+            ? entry.segments.some((tour) => tour.isPartner === true)
+            : entry.tour.isPartner === true,
+        ).length
+      : null;
+  const friendsOnMap = marked !== null && marked < entries.length ? marked : null;
 
   // Friends' tours refetch when their tab opens.
   useEffect(() => {
@@ -234,7 +247,8 @@ function ToursListPage({ onPush }: { onPush: (value: string) => void }) {
         prompt: t('tours.list.searchPlaceholder'),
       }}
       // No close button: the sheet goes with a swipe down, as Apple Maps' sheets do. Filters on
-      // the left and add (or a friend's overlaps) on the right leave the switch room between.
+      // the left (blue while some are on) and add on the right leave the switch room between; a
+      // friend's overlaps are a row of their own at the end of Friends, said in words.
       actions={[
         {
           id: 'filters',
@@ -244,25 +258,19 @@ function ToursListPage({ onPush }: { onPush: (value: string) => void }) {
               ? t('tours.list.filtersActive', { count: filterCount })
               : t('tours.list.filtersBtn'),
           icon: 'tune',
+          selected: filterCount > 0,
           onPress: () => onPush('filters'),
         },
-        ...(tab === 'friends' && hasFriends
+        ...(tab === 'owned'
           ? [
-              {
-                id: 'backfill',
-                label: t('tours.list.viewBackfillCollisionsBtn'),
-                icon: 'sync_alt' as const,
-                onPress: () => router.push('/tour-overlaps'),
-              },
-            ]
-          : [
               {
                 id: 'add',
                 label: t('tours.list.addTourAriaLabel'),
                 icon: 'add' as const,
                 onPress: () => router.replace('/plan'),
               },
-            ]),
+            ]
+          : []),
       ]}
       onRefresh={() =>
         tab === 'friends'
@@ -273,7 +281,12 @@ function ToursListPage({ onPush }: { onPush: (value: string) => void }) {
       {empty ?? (
         <ListSection
           footer={
-            filterCount > 0 ? t('tours.list.filteredFooter', { count: entries.length }) : undefined
+            [
+              filterCount > 0 ? t('tours.list.filteredFooter', { count: entries.length }) : null,
+              friendsOnMap !== null ? t('tours.list.friendsOnMap', { count: friendsOnMap }) : null,
+            ]
+              .filter(Boolean)
+              .join('\n') || undefined
           }
         >
           {entries.map((entry) => {
@@ -301,6 +314,16 @@ function ToursListPage({ onPush }: { onPush: (value: string) => void }) {
           })}
         </ListSection>
       )}
+      {tab === 'friends' && hasFriends && !empty ? (
+        <ListSection>
+          <ListRow
+            title={t('tours.list.viewBackfillCollisionsBtn')}
+            subtitle={t('tours.list.overlapsHint')}
+            icon="link"
+            onPress={() => router.push('/tour-overlaps')}
+          />
+        </ListSection>
+      ) : null}
     </Page>
   );
 }

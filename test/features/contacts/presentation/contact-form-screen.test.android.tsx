@@ -74,4 +74,22 @@ describe('ContactFormScreen', () => {
       expect.objectContaining({ value: '+41780000102', label: 'Work', isPrimary: true }),
     ]);
   });
+
+  it('should flag an imported card\'s invalid numbers at once and save once they are fixed', async () => {
+    await render(
+      <ContactFormScreen
+        id={null}
+        draft={{ first: 'John', last: 'Appleseed', phones: ['888-555-5512', '+41 78 000 01 03'] }}
+      />,
+    );
+
+    expect(fields('First Name')[0]).toHaveDisplayValue('John');
+    expect(screen.getAllByText('Invalid number — enter a valid phone to fix')).toHaveLength(1);
+    await fireEvent.press(screen.getByText('Save'));
+    expect(saveContact).not.toHaveBeenCalled();
+
+    await fireEvent.changeText(fields('Phone')[0]!, '+41 78 000 01 04');
+    await fireEvent.press(screen.getByText('Save'));
+    expect(saved().map((m) => m.value)).toEqual(['+41780000104', '+41780000103']);
+  });
 });

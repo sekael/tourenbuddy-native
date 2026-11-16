@@ -35,7 +35,7 @@ export default function ContactsTab() {
       onPathChange={setPath}
       renderPage={(value) => {
         if (value === 'requests') return <FriendRequestsPage />;
-        if (value === 'import') return <ImportResultsPage results={results} />;
+        if (value === 'import') return <ImportResultsPage results={results} onDone={pop} />;
         if (value.startsWith('contact:'))
           return <ContactDetailPage id={value.slice(8)} onGone={pop} />;
         return null;

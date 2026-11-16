@@ -41,14 +41,23 @@ const blankRow = (): Row => ({ id: newId(), value: '', label: '' });
  * contact (offering to edit that one), warns before a changed or removed number ends a friendship
  * or cancels a pending request, then saves the whole contact at once. Clearing a field removes it.
  */
-export function ContactFormScreen({ id }: { id: string | null }) {
+export function ContactFormScreen({
+  id,
+  draft,
+}: {
+  id: string | null;
+  /** A new contact's starting values: an import's card whose numbers need correcting. */
+  draft?: { first: string; last: string; phones: string[] };
+}) {
   const { t } = useTranslation();
   const existing = useContactsStore((s) => (id ? s.contacts.find((c) => c.id === id) : undefined));
-  const [first, setFirst] = useState(existing?.firstName ?? '');
-  const [last, setLast] = useState(existing?.lastName ?? '');
+  const [first, setFirst] = useState(existing?.firstName ?? draft?.first ?? '');
+  const [last, setLast] = useState(existing?.lastName ?? draft?.last ?? '');
   const [display, setDisplay] = useState(existing?.displayName ?? '');
   const [phones, setPhones] = useState<Row[]>(() => {
-    const rows = existing ? orderedPhoneMethods(existing).map(rowOf) : [];
+    const rows = existing
+      ? orderedPhoneMethods(existing).map(rowOf)
+      : (draft?.phones ?? []).map((value) => ({ ...blankRow(), value }));
     return rows.length ? rows : [blankRow()];
   });
   const [primaryId, setPrimaryId] = useState<string>(
@@ -59,7 +68,16 @@ export function ContactFormScreen({ id }: { id: string | null }) {
   const [emails, setEmails] = useState<Row[]>(
     () => existing?.contactMethods.filter((m) => m.methodType === 'email').map(rowOf) ?? [],
   );
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // A draft's numbers that aren't phone numbers say so at once, where they're to be fixed.
+  const [errors, setErrors] = useState<Record<string, string>>(() =>
+    draft
+      ? Object.fromEntries(
+          phones
+            .filter((row) => row.value.trim() && !normalizePhone(row.value.trim()).ok)
+            .map((row) => [row.id, t('contacts.detailView.invalidPhoneHint')]),
+        )
+      : {},
+  );
   const [dirty, setDirty] = useState(false);
   // Unsaved, the form can't be swiped away: Cancel asks first.
   const navigation = useNavigation();

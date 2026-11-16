@@ -33,6 +33,8 @@ export type ScreenAction = {
   titled?: boolean;
   /** iOS: at the bar's leading edge, so a title control sits centred with room on both sides. */
   leading?: boolean;
+  /** On (filters that narrow the list): the glyph in the brand blue. */
+  selected?: boolean;
 };
 
 export type PageProps = {
@@ -117,6 +119,7 @@ export function Page(page: PageProps) {
               label={action.label}
               onPress={action.onPress!}
               disabled={action.disabled}
+              selected={action.selected}
             />
           ))}
         {page.titleInHeader ? (
@@ -146,6 +149,7 @@ export function Page(page: PageProps) {
                 label={action.label}
                 onPress={onPress}
                 disabled={action.disabled}
+                selected={action.selected}
               />
             );
           })}
@@ -249,16 +253,19 @@ function IconButton({
   label,
   onPress,
   disabled,
+  selected,
 }: {
   icon: IconName;
   label: string;
   onPress: () => void;
   disabled?: boolean;
+  selected?: boolean;
 }) {
   return (
     <Pressable
       role="button"
       aria-label={label}
+      aria-selected={selected}
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => [
@@ -267,7 +274,7 @@ function IconButton({
         disabled && styles.disabled,
       ]}
     >
-      <Icon name={icon} color={color.onSurface} />
+      <Icon name={icon} color={selected ? color.primary : color.onSurface} />
     </Pressable>
   );
 }

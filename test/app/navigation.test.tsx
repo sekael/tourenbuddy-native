@@ -41,10 +41,15 @@ describe('app navigation (iOS map controls)', () => {
   it('should hold the map controls in one row: search, my tours, add tour, map', async () => {
     await renderRouter(routes);
 
-    const labels = screen
-      .getAllByRole('button')
-      .map((b) => b.props.accessibilityLabel as string | undefined)
-      .filter((label) => label && MAP_CONTROLS.includes(label));
+    // The round controls are React Native buttons; the capsule's two parts are SwiftUI buttons
+    // in one glass pill, named by their modifiers.
+    const name = (p: Props) =>
+      (p.accessibilityRole === 'button'
+        ? p.accessibilityLabel
+        : p.modifiers?.find((m) => m.$type === 'accessibilityLabel')?.label) as string | undefined;
+    const labels = nodes((p) => MAP_CONTROLS.includes(name(p) ?? ''))
+      .map((node) => name(node.props as Props))
+      .filter((label, i, all) => label !== all[i - 1]);
     expect(labels).toEqual(MAP_CONTROLS);
   });
 
@@ -59,12 +64,16 @@ describe('app navigation (iOS map controls)', () => {
 
     // Swiped down to close; the switch in the middle keeps room on both sides.
     expect(labelled('Close')).toEqual([]);
-    const placement = (label: string) => {
-      let node: Node | null = labelled(label)[0] ?? null;
-      while (node && !(node.props as Props).extraProps) node = node.parent;
-      return (node?.props as { extraProps?: { placement?: string } } | undefined)?.extraProps
-        ?.placement;
-    };
+    // The toolbar's button, not the map capsule's part of the same name under the sheet.
+    const placement = (label: string) =>
+      labelled(label)
+        .map((found) => {
+          let node: Node | null = found;
+          while (node && !(node.props as Props).extraProps) node = node.parent;
+          return (node?.props as { extraProps?: { placement?: string } } | undefined)?.extraProps
+            ?.placement;
+        })
+        .find(Boolean);
     expect(placement('Filters')).toBe('topBarLeading');
     expect(placement('Add tour')).toBe('topBarTrailing');
   });
@@ -114,7 +123,8 @@ describe('app navigation (iOS map controls)', () => {
   it('should open the map button as a sheet and close back to the map', async () => {
     await renderRouter(routes);
 
-    await act(() => fireEvent.press(screen.getByRole('button', { name: 'Map layers' })));
+    // The round map controls are SwiftUI buttons in blue glass, as the capsule's parts.
+    await press(labelled('Map layers')[0]!);
     expect(screen).toHavePathname('/map-layers');
 
     await press(labelled('Close')[0]);

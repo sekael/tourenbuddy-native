@@ -16,10 +16,12 @@
     "planned": {
       "prevMonth": "Vorheriger Monat",
       "nextMonth": "Nächster Monat",
-      "tourCount": "{{count}} Touren",
+      "tourCount_one": "{{count}} Tour",
+      "tourCount_other": "{{count}} Touren",
       "dayCounter": "{{day}}/{{total}}",
       "dayCounterLabel": "Tag {{day}} von {{total}}",
-      "friendCount": "{{count}} Freunde",
+      "friendCount_one": "{{count}} Freund",
+      "friendCount_other": "{{count}} Freunde",
       "toursHeading": "Touren",
       "friendsHeading": "Verfügbare Freunde",
       "noTours": "Keine Touren an diesem Tag"
@@ -437,6 +439,7 @@
       "extraPhones": "+{{count}} weitere",
       "unparseableTooltip": "Nicht lesbar: {{values}}",
       "discardedPhones": "Nummer nicht hinzugefügt",
+      "fixNumberHint": "Tippen, um die Nummer zu korrigieren",
       "fileError": {
         "emptyFile": "Diese Datei ist leer. Exportiere deine Kontakte nochmals und wähle die neue Datei.",
         "notVCard": "Das ist keine vCard-Datei. Exportiere eine .vcf aus deiner Kontakte-App und versuche es nochmals.",
@@ -546,6 +549,7 @@
       "ownedByLabel": "von {{name}}",
       "aFriend": "einem Freund",
       "viewBackfillCollisionsBtn": "Tour-Überschneidungen prüfen",
+      "overlapsHint": "Gleiche Touren wie deine Freunde finden und verknüpfen",
       "friendsOnMap_zero": "Keine davon auf der Karte – du bist bei keiner Partner",
       "friendsOnMap_one": "Nur 1 davon auf der Karte – die, bei der du Partner bist",
       "friendsOnMap_other": "Nur {{count}} davon auf der Karte – die, bei denen du Partner bist",

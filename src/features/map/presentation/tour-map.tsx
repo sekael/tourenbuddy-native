@@ -14,7 +14,7 @@ import {
 } from '@maplibre/maplibre-react-native';
 import { useImperativeHandle, useMemo, useRef, type ReactNode, type Ref } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 
 import {
   SKI_ROUTES_TILEJSON,
@@ -22,8 +22,17 @@ import {
   wmtsTileUrl,
   type TrailOverlayId,
 } from '@/features/map/data/trail-overlays';
+import { createLogger } from '@/core/logging/logger';
+import { isOnline } from '@/core/offline/online';
+import { motion } from '@/core/theme/tokens';
 import { useReducedMotion } from '@/core/theme/use-reduced-motion';
-import { fittedView, flight, type CameraView } from '@/features/map/domain/camera-flight';
+import {
+  fittedView,
+  flight,
+  keptOnMap,
+  minZoomFor,
+  type CameraView,
+} from '@/features/map/domain/camera-flight';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 
 import { markerImages } from './marker-images';
@@ -44,9 +53,14 @@ import {
  */
 export type TourMapHandle = {
   flyTo: (center: LngLat, zoom?: number) => void;
-  fitBounds: (sw: LngLat, ne: LngLat) => void;
-  /** Features under a point, from the given layers (hit-testing a tap). */
-  queryAt: (point: [number, number], layers: string[]) => Promise<GeoJSON.Feature[]>;
+  /** Show the box whole beside the chrome and sheets, no closer than `maxZoom`. */
+  fitBounds: (sw: LngLat, ne: LngLat, maxZoom?: number) => void;
+  /** Features within `reach` points of a tap (12 by default), from the given layers. */
+  queryAt: (
+    point: [number, number],
+    layers: string[],
+    reach?: number,
+  ) => Promise<GeoJSON.Feature[]>;
   center: () => Promise<LngLat>;
   zoom: () => Promise<number>;
 };
@@ -109,9 +123,26 @@ export { CLUSTER_LAYER, MORE_LAYER, SKI_HALO_LAYER, TOUR_LAYERS } from './tour-m
 
 const EMPTY: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 
-// WMTS answers 400 for tiles outside Switzerland; the PWA swallowed them, here they would flood the
-// log. Swallow those, log the rest.
-LogManager.onLog(({ message }) => /source overlay-\w+: HTTP status code 400/.test(message));
+const mapLog = createLogger('Map');
+
+/**
+ * MapLibre's own log, before it reaches the console, where an error opens the red overlay in
+ * development. WMTS answers 400 for tiles outside Switzerland: swallowed, as the PWA did. A request
+ * that failed (a tile, glyph, sprite or source) is the network's doing: a warning online, a debug
+ * line offline, where every one fails and the offline banner already says so. The rest goes through.
+ */
+export function onMapLog({ tag, message }: { tag: string; message: string }): boolean {
+  if (/source overlay-\w+: HTTP status code 400/.test(message)) return true;
+  if (
+    !tag.includes('MLNNetworkConfiguration') &&
+    !/Failed to load (tile|glyph|sprite|source)/.test(message)
+  )
+    return false;
+  if (isOnline()) mapLog.warn(message);
+  else mapLog.debug(message);
+  return true;
+}
+LogManager.onLog(onMapLog);
 
 export function TourMap({
   styleIndex,
@@ -136,6 +167,7 @@ export function TourMap({
   const mapRef = useRef<MapRef>(null);
   const cameraRef = useRef<CameraRef>(null);
   const images = useMemo(() => markerImages(), []);
+  const { height: windowHeight } = useWindowDimensions();
   const style = BASE_STYLES[styleIndex] ?? BASE_STYLES[0]!;
 
   // Where the camera is and how big the map is, for how long a move there takes.
@@ -150,16 +182,25 @@ export function TourMap({
       const to = { center, zoom: zoom ?? view.current.zoom };
       cameraRef.current?.easeTo({ center, zoom, padding, ...move(to) });
     },
-    fitBounds: (sw, ne) => {
+    fitBounds: (sw, ne, maxZoom = Infinity) => {
       const framed = framePadding(padding);
-      const to = fittedView(sw, ne, size.current, framed);
-      cameraRef.current?.fitBounds([sw[0], sw[1], ne[0], ne[1]], { padding: framed, ...move(to) });
+      const fit = fittedView(sw, ne, size.current, framed);
+      if (fit.zoom <= maxZoom) {
+        cameraRef.current?.fitBounds([sw[0], sw[1], ne[0], ne[1]], {
+          padding: framed,
+          ...move(fit),
+        });
+        return;
+      }
+      // Closer than allowed (a lone goal, a short tour): its middle at the ceiling instead.
+      const to = { center: fit.center, zoom: maxZoom };
+      cameraRef.current?.easeTo({ ...to, padding: framed, ...move(to) });
     },
-    queryAt: async ([x, y], ids) =>
+    queryAt: async ([x, y], ids, reach = 12) =>
       (await mapRef.current?.queryRenderedFeatures(
         [
-          [x - 12, y - 12],
-          [x + 12, y + 12],
+          [x - reach, y - reach],
+          [x + reach, y + reach],
         ] as never,
         { layers: ids },
       )) ?? [],
@@ -194,6 +235,17 @@ export function TourMap({
       }}
       onRegionDidChange={(event) => {
         view.current = { center: event.nativeEvent.center as LngLat, zoom: event.nativeEvent.zoom };
+        // Panned or pinched past the base map's edge: back onto it, as a scroll view bounces.
+        const back = event.nativeEvent.userInteraction
+          ? keptOnMap(view.current, size.current)
+          : null;
+        if (back) {
+          cameraRef.current?.easeTo({
+            center: back,
+            duration: reducedMotion ? 0 : motion.medium,
+            easing: 'ease',
+          });
+        }
         onRegionDidChange?.(
           event.nativeEvent.center as LngLat,
           event.nativeEvent.zoom,
@@ -201,7 +253,14 @@ export function TourMap({
         );
       }}
     >
-      <Camera ref={cameraRef} initialViewState={{ center: initialCenter, zoom: initialZoom }} />
+      <Camera
+        ref={cameraRef}
+        initialViewState={{ center: initialCenter, zoom: initialZoom }}
+        // Out to Switzerland whole, never into the white past the base map (a pan past its edge
+        // settles back, `keptOnMap`; MapLibre's maxBounds would hold only the centre, and cut a
+        // fling short without the settle).
+        minZoom={minZoomFor(windowHeight)}
+      />
       <Images images={images} />
 
       {TRAIL_OVERLAYS.map((overlay, i) => (

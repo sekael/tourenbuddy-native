@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { router } from 'expo-router';
 
 import '@/core/i18n';
 import { useAuthStore } from '@/features/auth/presentation/stores/auth-store';
@@ -61,7 +62,7 @@ beforeEach(() => {
 
 describe('ImportResultsPage', () => {
   it('should ask the directory once, offering to connect with the non-friends it knows', async () => {
-    await render(<ImportResultsPage results={results} />);
+    await render(<ImportResultsPage results={results} onDone={jest.fn()} />);
     await screen.findByText('Send request');
 
     expect(findUsersByPhones).toHaveBeenCalledTimes(1);
@@ -81,9 +82,43 @@ describe('ImportResultsPage', () => {
 
   it('should offer nothing to a user whose own phone is unverified', async () => {
     useAuthStore.setState({ user: { phone_confirmed_at: null } as never });
-    await render(<ImportResultsPage results={results} />);
+    await render(<ImportResultsPage results={results} onDone={jest.fn()} />);
 
     expect(findUsersByPhones).not.toHaveBeenCalled();
     expect(screen.queryByText('Send request')).toBeNull();
+  });
+
+  it('should name the invalid numbers, skip a card that has only those and offer to fix it', async () => {
+    const onDone = jest.fn();
+    await render(
+      <ImportResultsPage
+        onDone={onDone}
+        results={[
+          {
+            ...card('John', null),
+            lastName: 'Appleseed',
+            rawPhoneNumbers: ['888-555-5512', '888-555-1212'],
+            status: 'skipped',
+            skipReason: 'unparseable',
+          },
+          { ...card('Mixed', '+41790000305'), rawPhoneNumbers: ['12345'] },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText('1 imported')).toBeOnTheScreen();
+    expect(screen.getByText('1 unparseable')).toBeOnTheScreen();
+    expect(screen.getByText(/Could not add invalid phone number: 888-555-5512 \+1 more/)).toBeOnTheScreen();
+    // The mixed card was saved with its good number; only the bad one is reported as left out.
+    expect(screen.getByText(/Number not added: 12345/)).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByText('John Appleseed'));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/contact/edit',
+      params: { first: 'John', last: 'Appleseed', phones: '888-555-5512\n888-555-1212' },
+    });
+    // An imported card is no way into a form: it already exists.
+    await fireEvent.press(screen.getByText('Mixed'));
+    expect(router.push).toHaveBeenCalledTimes(1);
   });
 });

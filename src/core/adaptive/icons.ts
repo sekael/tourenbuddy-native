@@ -434,7 +434,8 @@ export const icons = {
     md: 'M8.125 21.213q-1.825-.788-3.187-2.15t-2.15-3.188T2 11.988t.788-3.875t2.15-3.175t3.187-2.15T12.013 2t3.875.788t3.175 2.15t2.15 3.175t.787 3.875t-.787 3.887t-2.15 3.188t-3.175 2.15t-3.875.787t-3.888-.787m8.125-4.963Q18 14.5 18 12t-1.75-4.25T12 6T7.75 7.75T6 12t1.75 4.25T12 18t4.25-1.75',
   },
   tune: {
-    sf: 'line.3.horizontal.decrease.circle',
+    // The bar's glass button is the circle already.
+    sf: 'line.3.horizontal.decrease',
     md: 'M11 21v-6h2v2h8v2h-8v2zm-8-2v-2h6v2zm4-4v-2H3v-2h4V9h2v6zm4-2v-2h10v2zm4-4V3h2v2h4v2h-4v2zM3 7V5h10v2z',
   },
   u_turn_left: {

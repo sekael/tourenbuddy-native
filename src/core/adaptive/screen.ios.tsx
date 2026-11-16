@@ -24,6 +24,7 @@ import {
   buttonStyle,
   disabled as disabledModifier,
   font,
+  foregroundStyle,
   frame,
   lineLimit,
   listSectionMargins,
@@ -195,6 +196,7 @@ export function Page({
           const look = [
             ...(sized ? [buttonStyle('plain')] : []),
             accessibilityLabel(action.label),
+            ...(action.selected ? [tint(color.primary)] : []),
             ...(action.disabled ? [disabledModifier(true)] : []),
           ];
           const systemImage = sized || action.titled ? undefined : icons[action.icon].sf;
@@ -205,7 +207,9 @@ export function Page({
             >
               {action.menu?.length ? (
                 <Menu
-                  label={sized ? <BarIcon icon={action.icon} /> : action.label}
+                  label={
+                    sized ? <BarIcon icon={action.icon} selected={action.selected} /> : action.label
+                  }
                   systemImage={systemImage}
                   modifiers={sized ? [menuStyle('button'), ...look] : look}
                 >
@@ -226,7 +230,7 @@ export function Page({
                   onPress={action.onPress}
                   modifiers={look}
                 >
-                  {sized ? <BarIcon icon={action.icon} /> : undefined}
+                  {sized ? <BarIcon icon={action.icon} selected={action.selected} /> : undefined}
                 </Button>
               )}
             </ToolbarItem>
@@ -289,14 +293,23 @@ function HostedWidth({ children }: { children: ReactNode }) {
 
 /**
  * A bar's icon button: the glyph centred in a full touch target (the bar's own style would hold
- * it to 35 pt). Plain, so the bar's glass is the only glass around it.
+ * it to 35 pt). Plain, so the bar's glass is the only glass around it. The glyph at the size of
+ * the bar's words (body), as the system's own bar buttons: unsized, it drew half again as big
+ * and heavier than a segmented control beside it. In the brand blue while `selected`.
  */
 const TARGET = size.touch;
 const TITLE_CONTROL_WIDTH = 264;
 
-function BarIcon({ icon }: { icon: IconName }) {
+function BarIcon({ icon, selected = false }: { icon: IconName; selected?: boolean }) {
   return (
-    <Image systemName={icons[icon].sf} modifiers={[frame({ width: TARGET, height: TARGET })]} />
+    <Image
+      systemName={icons[icon].sf}
+      modifiers={[
+        font({ textStyle: 'body' }),
+        frame({ width: TARGET, height: TARGET }),
+        ...(selected ? [foregroundStyle(color.primary)] : []),
+      ]}
+    />
   );
 }
 

@@ -12,6 +12,13 @@ import { GlassCapsule, GlassCircleButton, GlassToggle } from '@/core/adaptive/ma
 import { Text } from '@/core/adaptive/text';
 import { color, radius, size, space } from '@/core/theme/tokens';
 import { haversineMeters } from '@/core/utils/haversine';
+import {
+  aboutFramed,
+  clusterView,
+  fittedView,
+  ROUTE_ZOOM,
+  TOUR_ZOOM,
+} from '@/features/map/domain/camera-flight';
 import { draggedLine } from '@/features/map/domain/drawn-track';
 import { TRAIL_OVERLAYS } from '@/features/map/data/trail-overlays';
 import type { LngLat } from '@/features/map/domain/entities/trail';
@@ -35,6 +42,7 @@ import {
   type PointProps,
   type TourMapHandle,
 } from './tour-map';
+import { framePadding } from './tour-map-layers';
 import { tourScene } from './tour-scene';
 import { legHandle, metersPerPixel } from './leg-router';
 import { TrackHandles } from './track-handles';
@@ -56,7 +64,7 @@ type Points = GeoJSON.FeatureCollection<GeoJSON.Point, PointProps>;
 export function MapScreen({ children }: { children?: React.ReactNode }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const mapRef = useRef<TourMapHandle>(null);
   const toursSourceRef = useRef<GeoJSONSourceRef>(null);
 
@@ -169,10 +177,24 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
     ?.flat()
     .map((n) => n.toFixed(4))
     .join();
+  const routeChosen = !!trailHighlight?.selectedId;
   useEffect(() => {
     if (!extent) return;
     const timer = setTimeout(() => {
       const [[west, south], [east, north]] = extent;
+      if (mode === 'browse') {
+        // The PWA's framing (responsive-overlay "Opening a tour frames its points"): a lone goal
+        // centred at TOUR_ZOOM, more points shown whole and no closer, a chosen ski route no closer
+        // than ROUTE_ZOOM; a view that already shows it about so stays put.
+        const maxZoom = routeChosen ? ROUTE_ZOOM : TOUR_ZOOM;
+        const fit = fittedView(extent[0], extent[1], { width, height }, framePadding(padding));
+        const to = { center: fit.center, zoom: Math.min(fit.zoom, maxZoom) };
+        const { zoom, bounds } = useMapStore.getState();
+        const visible = bounds && boundsAboveSheet(bounds, padding.bottom / height);
+        if (zoom !== null && visible && aboutFramed(extent, visible, zoom, to)) return;
+        mapRef.current?.fitBounds(extent[0], extent[1], maxZoom);
+        return;
+      }
       const lone = west === east && south === north;
       // A lone point and a drawing (the user's own taps) move the map only once out of view.
       if ((lone || mode === 'draw') && inView(extent, padding.bottom / height)) return;
@@ -196,13 +218,16 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
     if (regionFrame) return;
     const map = mapRef.current;
     if (!map) return;
-    const [hit] = await map.queryAt(point, [
-      MORE_LAYER,
-      CLUSTER_LAYER,
-      ...TOUR_LAYERS,
-      'tour-activity',
-      'focus-activity',
-    ]);
+    // The "+N" chip is small and sits on the open tour's marker: a thumb anywhere near it means it.
+    const [more] = await map.queryAt(point, [MORE_LAYER], 26);
+    const [hit] = more
+      ? [more]
+      : await map.queryAt(point, [
+          CLUSTER_LAYER,
+          ...TOUR_LAYERS,
+          'tour-activity',
+          'focus-activity',
+        ]);
     const props = hit?.properties ?? {};
     // The "+N" beside an open tour: every tour on its spot, as a list.
     if (props.kind === 'more' && typeof props.ids === 'string') {
@@ -228,6 +253,7 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
       }
     }
     // A tap on the open map closes the sheets on it, as Apple Maps lets go of a place.
+    useMapStore.getState().showPlace(null);
     if (router.canDismiss()) router.dismissAll();
   }
 
@@ -267,8 +293,17 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
       router.push('/stack');
       return;
     }
-    const zoom = await source.getClusterExpansionZoom(clusterId);
-    mapRef.current?.flyTo((hit.geometry as GeoJSON.Point).coordinates as LngLat, zoom);
+    const split = await source.getClusterExpansionZoom(clusterId);
+    const at = (hit.geometry as GeoJSON.Point).coordinates as LngLat;
+    const to = clusterView(
+      spots,
+      at,
+      split,
+      useMapStore.getState().zoom ?? split - 1,
+      { width, height },
+      padding,
+    );
+    mapRef.current?.flyTo(to.center, to.zoom);
   }
 
   // While a handle is dragged, the step's line runs straight through the finger; the step's own
@@ -293,10 +328,24 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
       ],
     };
   }, [previewLines, focusLines, chains, trailHighlight, drag, editHandles]);
-  const points: Points = useMemo(
-    () => previewPoints ?? focusPoints(scene, t),
-    [previewPoints, scene, t],
-  );
+  // The searched place, pinned on the plain map (not over an open tour, nor a step's own points).
+  const place = useMapStore((s) => s.place);
+  const points: Points = useMemo(() => {
+    if (previewPoints) return previewPoints;
+    const shown = focusPoints(scene, t);
+    if (!place || mode !== 'browse' || scene.focus.length) return shown;
+    return {
+      type: 'FeatureCollection',
+      features: [
+        ...shown.features,
+        {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: place.at },
+          properties: { kind: 'preview', color: color.primary, label: place.name },
+        },
+      ],
+    };
+  }, [previewPoints, scene, t, place, mode]);
 
   return (
     <View style={StyleSheet.absoluteFill}>
@@ -539,7 +588,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     minHeight: size.mapControl,
     justifyContent: 'flex-end',
-    marginBottom: space.xs,
+    marginBottom: space.md,
   },
   creditText: {
     color: color.onSurface,

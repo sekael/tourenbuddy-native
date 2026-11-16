@@ -260,7 +260,13 @@ function useImportMatches(results: ImportResult[]) {
  * What an import did (contact-import): the counts, then each card with its outcome; a card whose
  * number belongs to someone on TourenBuddy offers to connect, as a contact's page does.
  */
-export function ImportResultsPage({ results }: { results: ImportResult[] }) {
+export function ImportResultsPage({
+  results,
+  onDone,
+}: {
+  results: ImportResult[];
+  onDone: () => void;
+}) {
   const { t } = useTranslation();
   const matches = useImportMatches(results);
   const incoming = useFriendshipsStore((s) => s.incoming);
@@ -287,48 +293,130 @@ export function ImportResultsPage({ results }: { results: ImportResult[] }) {
   }
 
   const count = (pred: (r: ImportResult) => boolean) => results.filter(pred).length;
+  // The PWA's summary box: one line per outcome that happened.
   const summary = [
-    t('contacts.addDialog.summaryImported', { count: count((r) => r.status === 'imported') }),
-    ...(['phoneDuplicate', 'nameDuplicate', 'unparseable'] as const)
-      .map((reason) => ({ reason, n: count((r) => r.skipReason === reason) }))
-      .filter(({ n }) => n > 0)
-      .map(({ reason, n }) =>
-        t(
-          `contacts.addDialog.summary${reason.charAt(0).toUpperCase()}${reason.slice(1)}` as 'contacts.addDialog.summaryImported',
-          { count: n },
-        ),
-      ),
-  ].join(' · ');
+    {
+      n: count((r) => r.status === 'imported'),
+      icon: count((r) => r.status === 'imported') ? ('check_circle' as const) : ('info' as const),
+      key: 'Imported',
+    },
+    {
+      n: count((r) => r.skipReason === 'phoneDuplicate'),
+      icon: 'info' as const,
+      key: 'PhoneDuplicate',
+    },
+    {
+      n: count((r) => r.skipReason === 'nameDuplicate'),
+      icon: 'info' as const,
+      key: 'NameDuplicate',
+    },
+    {
+      n: count((r) => r.skipReason === 'unparseable'),
+      icon: 'warning' as const,
+      key: 'Unparseable',
+    },
+  ].filter(({ n, key }) => n > 0 || key === 'Imported');
 
   return (
-    <Page title={t('contacts.addDialog.title')}>
-      <ListSection footer={summary}>
+    <Page
+      title={t('contacts.addDialog.title')}
+      confirm={{ label: t('contacts.addDialog.doneBtn'), onPress: onDone }}
+    >
+      <ListSection>
+        {summary.map(({ n, icon, key }) => (
+          <ListRow
+            key={key}
+            title={t(`contacts.addDialog.summary${key}` as 'contacts.addDialog.summaryImported', {
+              count: n,
+            })}
+            icon={icon}
+            iconColor={
+              icon === 'check_circle'
+                ? color.success
+                : icon === 'warning'
+                  ? color.warning
+                  : color.onSurfaceVariant
+            }
+            chevron={false}
+          />
+        ))}
+      </ListSection>
+      <ListSection>
         {results.map((result, index) => {
           const name = [result.firstName, result.lastName].filter(Boolean).join(' ');
-          const phone = result.primaryPhone ? formatPhoneDisplay(result.primaryPhone) : null;
-          const extra = result.extraPhoneCount
-            ? t('contacts.addDialog.extraPhones', { count: result.extraPhoneCount })
+          const phone = result.primaryPhone
+            ? [
+                formatPhoneDisplay(result.primaryPhone),
+                result.extraPhoneCount
+                  ? t('contacts.addDialog.extraPhones', { count: result.extraPhoneCount })
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(' ')
             : null;
-          const reason =
-            result.skipReason === 'phoneDuplicate'
-              ? t('contacts.addDialog.summaryPhoneDuplicateBadge')
-              : result.skipReason
-                ? t('contacts.addDialog.skippedLabel')
-                : null;
-          const discarded = result.rawPhoneNumbers.length
-            ? `${t('contacts.addDialog.discardedPhones')}: ${result.rawPhoneNumbers.join(', ')}`
-            : null;
+          // Numbers that aren't phone numbers: named, so the user knows which to fix (the PWA's ⚠).
+          const [first, ...more] = result.rawPhoneNumbers;
+          const invalid =
+            first && result.skipReason !== 'nameDuplicate' && result.skipReason !== 'phoneDuplicate'
+              ? `${
+                  result.status === 'imported'
+                    ? t('contacts.addDialog.discardedPhones')
+                    : t('contacts.list.invalidPhoneWarning')
+                }: ${[first, more.length ? t('contacts.addDialog.extraPhones', { count: more.length }) : null].filter(Boolean).join(' ')}`
+              : null;
+          const status =
+            result.status === 'imported'
+              ? t('contacts.addDialog.importedLabel')
+              : result.skipReason === 'phoneDuplicate'
+                ? t('contacts.addDialog.summaryPhoneDuplicateBadge')
+                : t('contacts.addDialog.skippedLabel');
+          // Nothing was saved for it: a tap opens it in the form, its numbers there to correct.
+          const fixable = result.skipReason === 'unparseable';
           return (
             <ListRow
               key={`${name}:${index}`}
               title={name}
-              subtitle={[reason, phone, extra, discarded].filter(Boolean).join(' · ') || undefined}
-              icon={result.status === 'imported' ? 'check_circle' : 'warning'}
-              iconColor={result.status === 'imported' ? color.success : color.onSurfaceVariant}
-              chevron={false}
+              subtitle={[
+                [status, phone].filter(Boolean).join(' · '),
+                invalid,
+                fixable ? t('contacts.addDialog.fixNumberHint') : null,
+              ]
+                .filter(Boolean)
+                .join('\n')}
+              icon={result.status === 'imported' ? 'check_circle' : fixable ? 'warning' : 'info'}
+              iconColor={
+                result.status === 'imported'
+                  ? color.success
+                  : fixable
+                    ? color.warning
+                    : color.onSurfaceVariant
+              }
+              chevron={fixable}
+              onPress={
+                fixable
+                  ? () =>
+                      router.push({
+                        pathname: '/contact/edit',
+                        params: {
+                          first: result.firstName,
+                          last: result.lastName ?? '',
+                          phones: result.rawPhoneNumbers.join('\n'),
+                        },
+                      })
+                  : undefined
+              }
+              accessibilityLabel={[name, status, phone, invalid].filter(Boolean).join(', ')}
             />
           );
         })}
+      </ListSection>
+      <ListSection>
+        <ListRow
+          title={t('contacts.addDialog.addManuallyBtn')}
+          icon="person_add"
+          chevron={false}
+          onPress={() => router.push('/contact/edit')}
+        />
       </ListSection>
       {matches.map(({ index, userId }) => {
         const result = results[index]!;
