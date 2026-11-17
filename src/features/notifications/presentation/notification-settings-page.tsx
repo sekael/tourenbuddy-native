@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking, Platform } from 'react-native';
+import { useEffect } from 'react';
+import { Alert, AppState, Linking, Platform } from 'react-native';
 import { useStore } from 'zustand';
 
 import { ListRow, ListSection, ToggleRow } from '@/core/adaptive/list';
@@ -24,9 +25,18 @@ export function NotificationSettingsPage() {
   const pushAvailable = Platform.OS !== 'web';
   const allOff = !pushEnabled && !prefs?.notifEmailEnabled;
 
+  // Back from the Settings app (where a denied permission is fixed), the page reads it anew.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void useNotificationsStore.getState().ensurePushToken();
+    });
+    return () => sub.remove();
+  }, []);
+
   const fail = (error: unknown) => {
     if (error) Alert.alert(t('common.genericError'));
   };
+  const pushFailed = () => Alert.alert(t('notifications.pushFailed'));
 
   return (
     <Page title={t('notifications.sectionTitle')}>
@@ -35,10 +45,12 @@ export function NotificationSettingsPage() {
           !pushAvailable
             ? t('notifications.pushUnavailable')
             : denied
-              ? t('notifications.deniedHint')
-              : allOff
-                ? t('notifications.allOffDisclaimer')
-                : undefined
+              ? t('notifications.deniedHintApp')
+              : !online
+                ? t('notifications.pushOffline')
+                : allOff
+                  ? t('notifications.allOffDisclaimer')
+                  : undefined
         }
       >
         <ToggleRow
@@ -47,7 +59,7 @@ export function NotificationSettingsPage() {
           icon="notifications"
           value={pushEnabled}
           disabled={!pushAvailable || !online || denied}
-          onValueChange={(on) => void store.setPushEnabled(on).catch(fail)}
+          onValueChange={(on) => void store.setPushEnabled(on).catch(pushFailed)}
         />
         <ToggleRow
           title={t('notifications.emailLabel')}
@@ -75,8 +87,9 @@ export function NotificationSettingsPage() {
                 ? t(`notifications.typeDescription.${type}` as never)
                 : undefined
             }
-            value={!prefs?.notifMutedTypes.includes(type)}
-            disabled={!prefs}
+            // With push and email off nothing alerts: the kinds show off and wait (as in the PWA).
+            value={!allOff && !prefs?.notifMutedTypes.includes(type)}
+            disabled={!prefs || allOff}
             onValueChange={(on) => void store.setTypeMuted(type, !on).catch(fail)}
           />
         ))}

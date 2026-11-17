@@ -2,11 +2,12 @@ import { create } from 'zustand';
 
 import { sessionUser } from '@/core/auth/session-user';
 import { InvalidPhoneNumberError, PhoneAlreadyRegisteredError } from '@/core/exceptions';
+import i18n from '@/core/i18n';
 import { createLogger } from '@/core/logging/logger';
 import { cachedLoad } from '@/core/offline/cached-load';
 import { mutate } from '@/core/offline/mutate';
 import { flushThenRefetch, PermanentReplayError, registerReplay } from '@/core/offline/replay';
-import type { WriteQueueEntry } from '@/core/offline/write-queue';
+import { forgetUser, type WriteQueueEntry } from '@/core/offline/write-queue';
 import { subscribeRealtime } from '@/core/realtime/subscribe';
 import { supabase } from '@/core/supabase';
 import { normalizePhone } from '@/core/utils/phone-normalize';
@@ -18,8 +19,8 @@ import type { UserProfile } from '@/features/user/domain/entities/user-profile';
  * The signed-in user's profile (user-profile), ported from the PWA's store: hydrate from the
  * cache, create the row on first load, every edit through `mutate()` (queued offline, last write
  * wins on replay), phone verification through auth, account deletion through the Worker. The app's
- * language follows the device (iOS sets it per app in Settings), so the profile's `locale` is only
- * seeded for the server's emails, never read to switch the app.
+ * language follows the device (iOS sets it per app in Settings); the profile's `locale` follows it
+ * for the server's emails and pushes (`syncLocale`), never read to switch the app.
  */
 const log = createLogger('UserProfileStore');
 const repository = new UserProfileRepositoryImpl();
@@ -208,9 +209,11 @@ export const useUserProfileStore = create<State>()((set, get) => {
       }),
 
     deleteAccount: async () => {
+      const me = uid();
       set({ error: null });
       try {
         await repository.deleteAccount();
+        if (me) await forgetUser(me).catch((e) => log.warn('Could not drop queued writes', e));
         return true;
       } catch (err) {
         log.error('Account deletion failed', err);
@@ -233,6 +236,26 @@ export const useUserProfileStore = create<State>()((set, get) => {
         log.error('Failed to dismiss the calendar tour', e),
       ),
   };
+});
+
+/**
+ * The app's language (iOS sets it per app, in Settings) into the profile, where the Worker reads
+ * it for push and email copy, and into the session's metadata, where the email-code hook reads it:
+ * what the PWA's language switch writes. Once per change, when the profile is there to compare.
+ */
+function syncLocale() {
+  const profile = useUserProfileStore.getState().profile;
+  const code = i18n.language;
+  if (!profile || profile.locale === code) return;
+  void useUserProfileStore.getState().setLocale(code);
+  void supabase.auth
+    .updateUser({ data: { locale: code.split('-')[0] } })
+    .then(({ error }) => error && log.warn('Could not save the language for email codes', error))
+    .catch((error: unknown) => log.warn('Could not save the language for email codes', error));
+}
+i18n.on('languageChanged', syncLocale);
+useUserProfileStore.subscribe((state, previous) => {
+  if (state.profile && state.profile.locale !== previous.profile?.locale) syncLocale();
 });
 
 /** The user's pace factor (0.5–1.5) for estimated times; 1 until the profile loads. */

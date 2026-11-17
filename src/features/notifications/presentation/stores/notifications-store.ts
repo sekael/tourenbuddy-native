@@ -57,12 +57,21 @@ type NotificationsState = {
 
 let unsubscribe: (() => void) | null = null;
 
+/**
+ * The APNs environment of this install's token (backend design D3): the provisioning profile's
+ * `aps-environment`. A build without a profile reads null: App Store and TestFlight builds (Apple
+ * strips the profile) send production tokens, the Simulator sandbox ones.
+ */
+async function apnsEnvironment(): Promise<'development' | 'production'> {
+  const fromProfile = await Application.getIosPushNotificationServiceEnvironmentAsync();
+  if (fromProfile) return fromProfile;
+  const release = await Application.getIosApplicationReleaseTypeAsync();
+  return release === Application.ApplicationReleaseType.SIMULATOR ? 'development' : 'production';
+}
+
 async function registerToken(): Promise<string> {
   const { data: token } = await Notifications.getDevicePushTokenAsync();
-  const environment =
-    Platform.OS === 'ios'
-      ? await Application.getIosPushNotificationServiceEnvironmentAsync()
-      : null;
+  const environment = Platform.OS === 'ios' ? await apnsEnvironment() : null;
   const { error } = await supabase.rpc('register_device_push_token', {
     p_token: String(token),
     p_platform: Platform.OS,
@@ -176,7 +185,8 @@ export const useNotificationsStore = create<NotificationsState>()((set, get) => 
         await registerToken();
         set({ pushEnabled: true });
       } catch (error) {
-        log.error('Push toggle failed', error);
+        // The page tells the user; a developer error screen over it would hide that.
+        log.warn('Push toggle failed', error);
         throw error;
       }
     },

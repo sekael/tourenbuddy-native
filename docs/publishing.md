@@ -148,8 +148,13 @@ Before the first store submission:
 
 1. **Legal review.** Have the privacy policy, terms and deletion page reviewed (Swiss FADP and GDPR)
    and update `Last updated` / `Stand` on every page changed. The texts follow #346 section 9.
+   The app shows the privacy policy, terms and imprint itself (Profile → About), word for word
+   from the locales' `about.*`: change a sentence in both places; `about-content.test.ts` fails
+   until they match.
 2. **Imprint.** Replace the bracketed name and address in `public/imprint/index.html` and
-   `public/de/imprint/index.html`.
+   `public/de/imprint/index.html`, and put the same lines (name, street and number, postcode and
+   place) into `OPERATOR` in `src/features/user/presentation/about-pages.tsx`; until then the app's
+   imprint leaves its "operated by" lines out.
 3. **Store listings.** Use these URLs:
 
    | Field                                  | URL                                         |

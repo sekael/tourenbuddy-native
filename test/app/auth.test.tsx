@@ -5,7 +5,7 @@ import { renderRouter } from 'expo-router/testing-library';
 
 import { resetAuth, signIn } from '../support/auth';
 import { fakeAuth, supabase, testSession } from '../support/fake-supabase';
-import { pressSwift } from '../support/swift-ui';
+import { pressSwift, swiftButton } from '../support/swift-ui';
 import { routes } from './routes';
 
 // Sign-in and the routes following the session, on iOS (SwiftUI buttons, see support/swift-ui).
@@ -170,7 +170,8 @@ describe('signed in', () => {
 
   it('should sign out from the Profile tab', async () => {
     await renderRouter(routes, { initialUrl: '/profile' });
-    expect(screen.getByText('anna@example.com')).toBeOnTheScreen();
+    // Who is signed in: the identity row, a SwiftUI button (no name yet: the email).
+    expect(() => swiftButton('anna@example.com')).not.toThrow();
 
     await press('Sign out');
 

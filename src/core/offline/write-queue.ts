@@ -97,6 +97,13 @@ export async function discardDeadLetter(entityId: string): Promise<void> {
   await (await tables()).delete('dead', entityId);
 }
 
+/** A deleted account's writes can never replay: its queued writes and dead letters go with it. */
+export async function forgetUser(userId: string): Promise<void> {
+  const db = await tables();
+  for (const entry of await peekAllOrdered(userId)) await db.delete('queue', entry.entityId);
+  for (const entry of await listDeadLetters(userId)) await db.delete('dead', entry.entityId);
+}
+
 /** Moves a dead letter back to the queue with a fresh attempt budget. */
 export async function retryDeadLetter(entityId: string): Promise<void> {
   await transaction(async (tx) => {

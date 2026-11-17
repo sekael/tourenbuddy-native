@@ -1,4 +1,6 @@
-import { coalesce, type WriteQueueEntry } from '@/core/offline/write-queue';
+import { serialize } from '@/core/offline/entity-cache';
+import { tables } from '@/core/offline/tables';
+import { coalesce, forgetUser, type WriteQueueEntry } from '@/core/offline/write-queue';
 
 // Ported from the PWA's write-queue.test.ts: the coalescing rules (DC1).
 const entry = (over: Partial<WriteQueueEntry>): WriteQueueEntry => ({
@@ -75,5 +77,22 @@ describe('coalesce', () => {
 
   it('should never revive a deleted entity', () => {
     expect(coalesce(entry({ op: 'delete' }), entry({ op: 'update' }))?.op).toBe('delete');
+  });
+});
+
+describe('forgetUser', () => {
+  it("should drop a deleted account's queued writes and dead letters, nobody else's", async () => {
+    const db = await tables();
+    await db.put('queue', 'gone-1', serialize(entry({ entityId: 'gone-1', userId: 'gone' })));
+    await db.put('dead', 'gone-2', serialize(entry({ entityId: 'gone-2', userId: 'gone' })));
+    await db.put('queue', 'other-1', serialize(entry({ entityId: 'other-1', userId: 'other' })));
+    await db.put('dead', 'other-2', serialize(entry({ entityId: 'other-2', userId: 'other' })));
+
+    await forgetUser('gone');
+
+    expect([...(await db.all('queue')), ...(await db.all('dead'))].map((r) => r.key)).toEqual([
+      'other-1',
+      'other-2',
+    ]);
   });
 });

@@ -1,14 +1,15 @@
 import deCH from '@/locales/de-CH.json';
 import en from '@/locales/en.json';
 
-type Catalog = { [key: string]: string | Catalog };
+// Arrays (the About pages' sections) flatten by index.
+type Catalog = { [key: string]: string | Catalog | Catalog[] };
 
 function flatten(catalog: Catalog, prefix = ''): Map<string, string> {
   const out = new Map<string, string>();
   for (const [k, v] of Object.entries(catalog)) {
     const key = prefix ? `${prefix}.${k}` : k;
     if (typeof v === 'string') out.set(key, v);
-    else for (const [nk, nv] of flatten(v, key)) out.set(nk, nv);
+    else for (const [nk, nv] of flatten(v as Catalog, key)) out.set(nk, nv);
   }
   return out;
 }
@@ -35,7 +36,7 @@ function localeProblems(source: Catalog, target: Catalog): string[] {
 
 describe('locale catalogs', () => {
   it('should have the same keys, placeholders and no vue-i18n syntax', () => {
-    expect(localeProblems(en, deCH)).toEqual([]);
+    expect(localeProblems(en as unknown as Catalog, deCH as unknown as Catalog)).toEqual([]);
   });
 
   it('should report a key missing from the translation', () => {

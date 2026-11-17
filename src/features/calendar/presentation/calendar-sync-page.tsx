@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import type { TFunction } from 'i18next';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Platform, Share } from 'react-native';
+import { Alert, Linking, Platform } from 'react-native';
 
 import {
   ContentRow,
@@ -57,7 +57,15 @@ export function CalendarSyncPage({ onHelp }: { onHelp: () => void }) {
   const [url, setUrl] = useState('');
   const [label, setLabel] = useState('');
   const [adding, setAdding] = useState(false);
+  const [copied, setCopied] = useState(false);
   const link = outboundUrl(settings);
+
+  // «Kopiert» for a moment, then the action again.
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
 
   useEffect(() => {
     void useCalendarFeedStore.getState().load();
@@ -113,10 +121,22 @@ export function CalendarSyncPage({ onHelp }: { onHelp: () => void }) {
             ),
         },
         {
-          label: t('calendar.sync.removeFeed', { host: feed.host }),
+          label: t('calendar.sync.removeFeed', { host: feed.label || feed.host }),
           icon: 'delete',
           destructive: true,
-          onPress: () => void store.removeFeed(feed.id),
+          onPress: () =>
+            Alert.alert(
+              t('calendar.sync.removeFeed', { host: feed.label || feed.host }),
+              t('calendar.sync.removeFeedConfirm'),
+              [
+                { text: t('common.cancel'), style: 'cancel' },
+                {
+                  text: t('calendar.sync.disconnect'),
+                  style: 'destructive',
+                  onPress: () => void store.removeFeed(feed.id),
+                },
+              ],
+            ),
         },
       ]}
     />
@@ -194,20 +214,29 @@ export function CalendarSyncPage({ onHelp }: { onHelp: () => void }) {
           footer={t('calendar.sync.outboundHint')}
         >
           <ListRow
-            title={t('calendar.sync.copy')}
-            icon="content_copy"
+            title={copied ? t('calendar.sync.copied') : t('calendar.sync.copy')}
+            icon={copied ? 'check' : 'content_copy'}
             chevron={false}
             onPress={() => {
               void Clipboard.setStringAsync(link);
               void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              setCopied(true);
             }}
           />
-          <ListRow
-            title={t('calendar.sync.share')}
-            icon="share"
-            chevron={false}
-            onPress={() => void Share.share({ url: link, message: link })}
-          />
+          {Platform.OS === 'android' ? null : (
+            <ListRow
+              title={t('calendar.sync.subscribe')}
+              icon="calendar_today"
+              chevron={false}
+              // `webcal:` hands the link to the calendar app, which offers to subscribe; nothing is
+              // sent to anyone (the link shows the tours to whoever has it). Android has no taker.
+              onPress={() =>
+                void Linking.openURL(link.replace(/^https?:/, 'webcal:')).catch(() =>
+                  Alert.alert(t('calendar.sync.subscribeFailed')),
+                )
+              }
+            />
+          )}
           <ListRow
             title={t('calendar.sync.regenerate')}
             icon="replay"

@@ -38,6 +38,18 @@ jest.mock('@expo/ui/swift-ui', () => {
   };
 });
 // No push service: permission undetermined, no taps, no token unless a test gives one.
+// The device's key-value store (the language picked in the app), in memory.
+jest.mock('expo-sqlite/kv-store', () => {
+  const items = new Map<string, string>();
+  return {
+    __esModule: true,
+    default: {
+      getItemSync: (key: string) => items.get(key) ?? null,
+      setItemSync: (key: string, value: string) => void items.set(key, value),
+      clear: () => items.clear(),
+    },
+  };
+});
 jest.mock('expo-notifications', () => ({
   setNotificationHandler: jest.fn(),
   getPermissionsAsync: jest.fn(async () => ({ status: 'undetermined' })),

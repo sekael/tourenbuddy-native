@@ -30,6 +30,8 @@ const IOS = Platform.OS === 'ios';
 
 export const color = {
   primary: palette.blue600,
+  /** Words and glyphs on a brand-blue fill (the profile's avatar). */
+  onPrimary: palette.white,
   // Tonal controls: one step stronger than surfaceVariant, so they stand off white and tinted fills.
   secondaryContainer: palette.blue100,
   secondaryContainerPressed: palette.blue200,
@@ -148,6 +150,8 @@ export const size = {
   fab: 56,
   /** A floating control over the map (glass on iOS): compact, still a full touch target. */
   mapControl: 44,
+  /** The round initial beside who the user is (the profile's first row), as in Settings. */
+  avatar: 48,
   /** Widest a form or an account card gets on a tablet or a desktop window. */
   form: 400,
   /** Outline of a text field. */

@@ -49,10 +49,11 @@ import {
   tint,
 } from '@expo/ui/swift-ui/modifiers';
 import { Children, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { color, space } from '@/core/theme/tokens';
 
+import { Avatar } from './avatar';
 import { Icon } from './icon';
 import { icons, type IconName } from './icons';
 import { InSwiftUIList } from './in-list';
@@ -85,6 +86,8 @@ const iconFrame = frame({ width: 28 });
 // A second line wraps in full: beside a switch, SwiftUI would rather cut it with "…".
 const wraps = fixedSize({ horizontal: false, vertical: true });
 const ROW_ICON = 22;
+/** iOS's first accessibility text size (AX1) as React Native's font scale; the larger ones beyond. */
+const ACCESSIBILITY_SCALE = 1.7;
 
 /**
  * A row's icon: the app's own glyph set (the PWA's Material Symbols), drawn by React Native inside
@@ -168,6 +171,7 @@ export function ListRow({
   progress,
   icon,
   iconColor,
+  avatar,
   onPress,
   chevron,
   destructive,
@@ -181,13 +185,25 @@ export function ListRow({
   accessory,
   accessibilityLabel,
 }: ListRowProps) {
+  const { fontScale } = useWindowDimensions();
+  // At the accessibility text sizes a value beside the title leaves neither room (Kalen-der-Sy…):
+  // it goes under the title instead, as Settings does.
+  const stacked = !!value && fontScale >= ACCESSIBILITY_SCALE;
   const showChevron = chevron ?? (!!onPress && !destructive && !menu);
   // A button in a list paints its label in the tint; only a plain action ("Rundtour") keeps it.
   // A row that opens something or is one of a choice reads in the label colour, as in Settings.
   const action = !!onPress && !showChevron && checked === undefined;
   const label = (
     <HStack spacing={12} modifiers={action ? undefined : [foregroundStyle('primary')]}>
-      {icon ? <RowIcon name={icon} tint={iconColor ?? color.primary} /> : null}
+      {avatar ? (
+        <RNHostView matchContents>
+          <View pointerEvents="none">
+            <Avatar letters={avatar} />
+          </View>
+        </RNHostView>
+      ) : icon ? (
+        <RowIcon name={icon} tint={iconColor ?? color.primary} />
+      ) : null}
       <VStack alignment="leading" spacing={2}>
         <SwiftText
           modifiers={[
@@ -202,12 +218,15 @@ export function ListRow({
             {subtitle}
           </SwiftText>
         ) : null}
+        {stacked ? <SwiftText modifiers={[secondary, wraps]}>{value}</SwiftText> : null}
         {progress !== undefined ? (
           <ProgressView value={Math.min(Math.max(progress, 0), 1)} />
         ) : null}
       </VStack>
       <Spacer />
-      {value ? <SwiftText modifiers={[secondary, lineLimit(1)]}>{value}</SwiftText> : null}
+      {value && !stacked ? (
+        <SwiftText modifiers={[secondary, lineLimit(1)]}>{value}</SwiftText>
+      ) : null}
       {/* A count as Settings shows one, before the chevron: text in the row, not SwiftUI's badge,
           a modifier that comes and goes with the count. */}
       {count ? <SwiftText modifiers={[secondary, lineLimit(1)]}>{count}</SwiftText> : null}

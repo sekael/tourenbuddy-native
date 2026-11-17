@@ -12,6 +12,7 @@ import {
 
 import { color, fieldType, radius, size, space, type as typeScale } from '@/core/theme/tokens';
 
+import { Avatar } from './avatar';
 import { Icon } from './icon';
 import type { IconName } from './icons';
 import { Segments } from './segments';
@@ -53,6 +54,8 @@ export type ListRowProps = {
   icon?: IconName;
   /** The icon's tint; the brand colour by default. */
   iconColor?: string;
+  /** A round brand badge with these letters in place of the icon (who the user is, as Settings). */
+  avatar?: string;
   onPress?: () => void;
   /** Disclosure chevron; on by default for a row that navigates (`onPress`, not destructive). */
   chevron?: boolean;
@@ -207,6 +210,7 @@ export function ListRow({
   progress,
   icon,
   iconColor,
+  avatar,
   onPress,
   chevron,
   destructive,
@@ -230,7 +234,11 @@ export function ListRow({
   const press = tapMenu?.length ? () => setMenu((open) => !open) : onPress;
   const content = (
     <View style={styles.row}>
-      {icon ? <Icon name={icon} color={iconColor ?? color.primary} /> : null}
+      {avatar ? (
+        <Avatar letters={avatar} />
+      ) : icon ? (
+        <Icon name={icon} color={iconColor ?? color.primary} />
+      ) : null}
       <View style={styles.rowText}>
         <Text style={[styles.title, destructive && styles.destructive]} numberOfLines={2}>
           {title}

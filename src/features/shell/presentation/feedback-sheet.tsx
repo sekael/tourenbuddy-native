@@ -32,7 +32,15 @@ export function FeedbackSheet() {
             icon="flag"
             onPress={open(BUG_REPORT_GITHUB_ISSUE_URL)}
           />
-          <ListRow title={FEEDBACK_EMAIL} icon="mail" onPress={open(`mailto:${FEEDBACK_EMAIL}`)} />
+          <ListRow
+            title={FEEDBACK_EMAIL}
+            icon="mail"
+            onPress={() =>
+              void Linking.openURL(`mailto:${FEEDBACK_EMAIL}`).catch(() =>
+                Alert.alert(t('core.feedback.sheet.errorMail', { email: FEEDBACK_EMAIL })),
+              )
+            }
+          />
         </ListSection>
       </Page>
     </Screen>

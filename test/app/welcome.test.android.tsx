@@ -14,7 +14,8 @@ const newAccount = {
   id: 'user-1',
   firstName: null,
   lastName: null,
-  locale: null,
+  // The app's language already: no language write to tell apart from the name's.
+  locale: 'en',
   onboardingTourShowAtSignIn: true,
   onboardingTourLastStep: 0,
   calendarTourShowOnFirstOpen: true,

@@ -2,16 +2,26 @@ import * as Application from 'expo-application';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { AsYouType } from 'libphonenumber-js/min';
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking, StyleSheet, View } from 'react-native';
+import { Alert } from 'react-native';
 
-import { ListRow, ListSection, StepperRow, TextRow, ToggleRow } from '@/core/adaptive/list';
+import {
+  ListRow,
+  ListSection,
+  PickerRow,
+  StepperRow,
+  TextRow,
+  ToggleRow,
+} from '@/core/adaptive/list';
 import { Page } from '@/core/adaptive/screen';
-import { Text } from '@/core/adaptive/text';
 import { PhoneAlreadyRegisteredError } from '@/core/exceptions';
+import { env } from '@/core/env';
+import { setAppLanguage } from '@/core/i18n';
+import { SUPPORTED_LOCALES } from '@/core/i18n/supported';
 import { createLogger } from '@/core/logging/logger';
 import { isReachable } from '@/core/offline/online';
-import { color, space } from '@/core/theme/tokens';
+import { color } from '@/core/theme/tokens';
 import { formatPhoneForDisplay, normalizePhone } from '@/core/utils/phone-normalize';
 import { passkeysSupported, useAuthStore } from '@/features/auth/presentation/stores/auth-store';
 import { useCalendarFeedStore } from '@/features/calendar/presentation/stores/calendar-feed-store';
@@ -22,7 +32,6 @@ import { useNotificationsStore } from '@/features/notifications/presentation/sto
 import { useUserProfileStore } from './stores/user-profile-store';
 
 const log = createLogger('Profile');
-const SITE = 'https://tourenbuddy.ch';
 
 /** Signs out after this device's push token is gone, while the session can still delete it. */
 export async function signOutEverywhereHere() {
@@ -30,26 +39,36 @@ export async function signOutEverywhereHere() {
   await useAuthStore.getState().signOut();
 }
 
-/**
- * The Profile tab (user-profile): who the user is and their phone (verified or not), the inbox,
- * notifications and calendar sync, password and passkeys, feedback, the legal pages, sign-out
- * and account deletion, as iOS Settings lays such a list out.
- */
 /** The pace's range, a speed factor on every estimated time: tortoise to hare (as in the PWA). */
 const PACE_MIN = 0.5;
 const PACE_MAX = 1.5;
 
+/** The phone as the profile shows it: the number, or nothing. */
+function usePhone() {
+  const phone = useAuthStore((s) => s.user?.phone || null);
+  const verified = useAuthStore((s) => s.user?.phone_confirmed_at != null);
+  return {
+    phone: phone ? formatPhoneForDisplay(`+${phone.replace(/^\+/, '')}`) || phone : null,
+    verified,
+  };
+}
+
+/**
+ * The Profile tab (user-profile): who the user is (as the PWA's identity card, opening the edit
+ * page), the inbox, notifications, calendar sync and language, the pace, password and passkeys, the
+ * guided tour and feedback, «Über» (privacy, terms, imprint, inside the app), sign-out and account
+ * deletion, as iOS Settings lays such a list out.
+ */
 export function ProfilePage({ onPush }: { onPush: (page: string) => void }) {
   const { t, i18n } = useTranslation();
   const profile = useUserProfileStore((s) => s.profile);
   const email = useAuthStore((s) => s.user?.email);
-  const phone = useAuthStore((s) => s.user?.phone || null);
-  const verified = useAuthStore((s) => s.user?.phone_confirmed_at != null);
+  const { phone, verified } = usePhone();
   const attention = useInboxAttention();
   const prefs = useNotificationsStore((s) => s.prefs);
   const pushEnabled = useNotificationsStore((s) => s.pushEnabled);
   const feeds = useCalendarFeedStore((s) => s.feeds);
-  const de = i18n.language.startsWith('de');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     void useCalendarFeedStore.getState().loadFeeds();
@@ -65,41 +84,17 @@ export function ProfilePage({ onPush }: { onPush: (page: string) => void }) {
           ? 'email'
           : 'off';
   const feedProblem = feeds.some((f) => f.lastError);
-  const legal = (path: string) => () => void Linking.openURL(`${SITE}${de ? '/de' : ''}/${path}`);
-
-  function confirmRemovePhone() {
-    const { hasFriendship, hasPending } = useFriendshipsStore
-      .getState()
-      .currentUserHasAnyRelationship();
-    const warning =
-      hasFriendship && hasPending
-        ? t('user.profile.removePhoneBothWarning')
-        : hasFriendship
-          ? t('user.profile.removePhoneFriendshipWarning')
-          : hasPending
-            ? t('user.profile.removePhonePendingWarning')
-            : null;
-    Alert.alert(
-      t('user.profile.removePhoneConfirmTitle'),
-      [t('user.profile.removePhoneDisclaimer'), warning].filter(Boolean).join('\n\n'),
-      [
-        { text: t('user.profile.removePhoneCancelBtn'), style: 'cancel' },
-        {
-          text: t('user.profile.removePhoneConfirmBtn'),
-          style: 'destructive',
-          onPress: () =>
-            void useUserProfileStore
-              .getState()
-              .deletePhone()
-              .catch(() => Alert.alert(t('user.profile.removePhoneFailed'))),
-        },
-      ],
-    );
-  }
+  const phoneLine = phone
+    ? `${phone} · ${verified ? t('user.profile.verifiedTooltip') : t('user.profile.notVerified')}`
+    : t('user.profile.addPhoneBtn');
 
   function confirmDeleteAccount() {
     if (!isReachable()) {
       Alert.alert(t('user.profile.deleteAccount.offline'));
+      return;
+    }
+    if (!env.EXPO_PUBLIC_NOTIFY_HOOK_URL) {
+      Alert.alert(t('user.profile.deleteAccount.unavailable'));
       return;
     }
     Alert.alert(
@@ -110,64 +105,37 @@ export function ProfilePage({ onPush }: { onPush: (page: string) => void }) {
         {
           text: t('user.profile.deleteAccount.confirmBtn'),
           style: 'destructive',
-          onPress: () =>
-            void (async () => {
-              await useNotificationsStore.getState().removeThisDevice();
-              if (await useUserProfileStore.getState().deleteAccount()) {
-                await useAuthStore.getState().signOut();
-              } else {
-                Alert.alert(t('user.profile.deleteAccount.failed'));
-              }
-            })(),
+          onPress: () => void deleteAccount(),
         },
       ],
     );
   }
 
-  const hero = (
-    <View style={styles.hero}>
-      <Text variant="title" role="heading">
-        {name || email || ' '}
-      </Text>
-      {name && email ? <Text style={styles.muted}>{email}</Text> : null}
-    </View>
-  );
+  async function deleteAccount() {
+    setDeleting(true);
+    await useNotificationsStore.getState().removeThisDevice();
+    if (!(await useUserProfileStore.getState().deleteAccount())) {
+      setDeleting(false);
+      Alert.alert(t('user.profile.deleteAccount.failed'), undefined, [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('common.retry'), onPress: () => void deleteAccount() },
+      ]);
+      return;
+    }
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    await useAuthStore.getState().signOut();
+    Alert.alert(t('user.profile.deleteAccount.done'));
+  }
 
   return (
-    <Page largeTitle title={t('user.profile.title')} header={hero}>
+    <Page largeTitle title={t('user.profile.title')}>
       <ListSection>
-        <ListRow title={t('user.profile.editBtn')} icon="person" onPress={() => onPush('edit')} />
-        {phone ? (
-          <ListRow
-            title={formatPhoneForDisplay(`+${phone.replace(/^\+/, '')}`) || phone}
-            subtitle={verified ? t('user.profile.verifiedTooltip') : t('user.profile.notVerified')}
-            icon={verified ? 'verified' : 'warning'}
-            iconColor={verified ? color.primary : color.error}
-            menu={[
-              ...(verified
-                ? []
-                : [
-                    {
-                      label: t('user.phoneVerification.verifyBtn'),
-                      icon: 'verified' as const,
-                      onPress: () => onPush('phone'),
-                    },
-                  ]),
-              {
-                label: t('user.profile.removePhoneBtn'),
-                icon: 'delete' as const,
-                destructive: true,
-                onPress: confirmRemovePhone,
-              },
-            ]}
-          />
-        ) : (
-          <ListRow
-            title={t('user.profile.addPhoneBtn')}
-            icon="phone"
-            onPress={() => onPush('phone')}
-          />
-        )}
+        <ListRow
+          title={name || email || ' '}
+          subtitle={[name ? email : null, phoneLine].filter(Boolean).join('\n')}
+          avatar={(name || email || '?').charAt(0).toUpperCase()}
+          onPress={() => onPush('edit')}
+        />
       </ListSection>
       <ListSection>
         <ListRow
@@ -192,11 +160,12 @@ export function ProfilePage({ onPush }: { onPush: (page: string) => void }) {
           }
           onPress={() => onPush('sync')}
         />
-        <ListRow
+        <PickerRow
           title={t('user.profile.languageLabel')}
           icon="language"
-          value={de ? 'Deutsch' : 'English'}
-          onPress={() => void Linking.openSettings()}
+          value={i18n.language}
+          options={SUPPORTED_LOCALES.map((l) => ({ value: l.code, label: l.label }))}
+          onChange={setAppLanguage}
         />
       </ListSection>
       <ListSection footer={t('user.profile.paceHint')}>
@@ -242,21 +211,35 @@ export function ProfilePage({ onPush }: { onPush: (page: string) => void }) {
           version: Application.nativeApplicationVersion ?? '–',
         })}
       >
-        <ListRow title={t('user.profile.privacy')} icon="privacy_tip" onPress={legal('privacy')} />
-        <ListRow title={t('user.profile.terms')} icon="description" onPress={legal('terms')} />
-        <ListRow title={t('user.profile.imprint')} icon="info" onPress={legal('imprint')} />
+        <ListRow
+          title={t('user.profile.privacy')}
+          icon="privacy_tip"
+          onPress={() => onPush('privacy')}
+        />
+        <ListRow
+          title={t('user.profile.terms')}
+          icon="description"
+          onPress={() => onPush('terms')}
+        />
+        <ListRow title={t('user.profile.imprint')} icon="info" onPress={() => onPush('imprint')} />
       </ListSection>
       <ListSection>
         <ListRow
           title={t('user.profile.signOutBtn')}
           icon="logout"
           destructive
+          disabled={deleting}
           onPress={() => void signOutEverywhereHere()}
         />
         <ListRow
-          title={t('user.profile.deleteAccount.entryBtn')}
+          title={
+            deleting
+              ? t('user.profile.deleteAccount.deleting')
+              : t('user.profile.deleteAccount.entryBtn')
+          }
           icon="delete"
           destructive
+          disabled={deleting}
           onPress={confirmDeleteAccount}
         />
       </ListSection>
@@ -264,10 +247,20 @@ export function ProfilePage({ onPush }: { onPush: (page: string) => void }) {
   );
 }
 
-/** Edit the name the user's friends see (user-profile). */
-export function EditProfilePage({ onDone }: { onDone: () => void }) {
+/**
+ * Who the user is (user-profile): the name their friends see, and their phone (verify it or
+ * remove it, or add one), as the PWA's edit form.
+ */
+export function EditProfilePage({
+  onDone,
+  onPush,
+}: {
+  onDone: () => void;
+  onPush: (page: string) => void;
+}) {
   const { t } = useTranslation();
   const profile = useUserProfileStore((s) => s.profile);
+  const { phone, verified } = usePhone();
   const [first, setFirst] = useState(profile?.firstName ?? '');
   const [last, setLast] = useState(profile?.lastName ?? '');
   const [saving, setSaving] = useState(false);
@@ -290,6 +283,36 @@ export function EditProfilePage({ onDone }: { onDone: () => void }) {
     } finally {
       setSaving(false);
     }
+  }
+
+  function confirmRemovePhone() {
+    const { hasFriendship, hasPending } = useFriendshipsStore
+      .getState()
+      .currentUserHasAnyRelationship();
+    const warning =
+      hasFriendship && hasPending
+        ? t('user.profile.removePhoneBothWarning')
+        : hasFriendship
+          ? t('user.profile.removePhoneFriendshipWarning')
+          : hasPending
+            ? t('user.profile.removePhonePendingWarning')
+            : null;
+    Alert.alert(
+      t('user.profile.removePhoneConfirmTitle'),
+      [t('user.profile.removePhoneDisclaimer'), warning].filter(Boolean).join('\n\n'),
+      [
+        { text: t('user.profile.removePhoneCancelBtn'), style: 'cancel' },
+        {
+          text: t('user.profile.removePhoneConfirmBtn'),
+          style: 'destructive',
+          onPress: () =>
+            void useUserProfileStore
+              .getState()
+              .deletePhone()
+              .catch(() => Alert.alert(t('user.profile.removePhoneFailed'))),
+        },
+      ],
+    );
   }
 
   return (
@@ -316,6 +339,40 @@ export function EditProfilePage({ onDone }: { onDone: () => void }) {
           textContentType="familyName"
         />
       </ListSection>
+      <ListSection
+        title={`${t('user.shared.phoneLabel')} ${t('user.shared.optional')}`}
+        footer={t('user.profile.phoneHint')}
+      >
+        {phone ? (
+          <ListRow
+            title={phone}
+            subtitle={verified ? t('user.profile.verifiedTooltip') : t('user.profile.notVerified')}
+            icon={verified ? 'verified' : 'warning'}
+            iconColor={verified ? color.primary : color.error}
+          />
+        ) : null}
+        {phone && !verified ? (
+          <ListRow
+            title={t('user.phoneVerification.verifyBtn')}
+            icon="verified"
+            onPress={() => onPush('phone')}
+          />
+        ) : null}
+        {phone ? (
+          <ListRow
+            title={t('user.profile.removePhoneBtn')}
+            icon="delete"
+            destructive
+            onPress={confirmRemovePhone}
+          />
+        ) : (
+          <ListRow
+            title={t('user.profile.addPhoneBtn')}
+            icon="phone"
+            onPress={() => onPush('phone')}
+          />
+        )}
+      </ListSection>
     </Page>
   );
 }
@@ -329,7 +386,9 @@ const RESEND_SECONDS = 60;
 export function PhonePage({ onDone }: { onDone: () => void }) {
   const { t } = useTranslation();
   const current = useAuthStore((s) => s.user?.phone || '');
-  const [phone, setPhone] = useState(current ? `+${current.replace(/^\+/, '')}` : '');
+  const [phone, setPhone] = useState(
+    current ? formatPhoneForDisplay(`+${current.replace(/^\+/, '')}`) || `+${current}` : '',
+  );
   const [understood, setUnderstood] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [code, setCode] = useState('');
@@ -449,7 +508,9 @@ export function PhonePage({ onDone }: { onDone: () => void }) {
           placeholder={t('user.shared.phonePlaceholder')}
           value={phone}
           onChangeText={(text) => {
-            setPhone(text);
+            // Grouped as it's typed (+41 79 123 45 67), as in the PWA; a deletion stays as typed,
+            // or a removed space would come straight back.
+            setPhone(text.length < phone.length ? text : new AsYouType('CH').input(text));
             setError(null);
           }}
           keyboardType="phone-pad"
@@ -470,8 +531,3 @@ export function PhonePage({ onDone }: { onDone: () => void }) {
     </Page>
   );
 }
-
-const styles = StyleSheet.create({
-  hero: { gap: space.xxs, paddingVertical: space.xs },
-  muted: { color: color.onSurfaceVariant },
-});
