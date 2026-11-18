@@ -76,29 +76,6 @@ The inbox SHALL render entry text client-side from the stored type, action and s
 - **WHEN** the user switches the app language from English to German
 - **THEN** existing inbox entries re-render in German
 
-### Requirement: Inbox entry point with attention badge
-The map page SHALL NOT gain new permanent controls. The inbox SHALL be an item in the speed-dial menu. The menu item and the speed-dial trigger SHALL both show the same numeric badge (display capped at "9+"), hidden at zero. The count SHALL be the number of entries that are unread AND not stale. Activating the item SHALL open the inbox as a bottom sheet on mobile and a dialog on desktop, replacing any other open sheet.
-
-#### Scenario: Unread entries
-- **WHEN** the user has 3 unread, non-stale entries
-- **THEN** the speed-dial trigger and the inbox menu item both show a "3" badge
-
-#### Scenario: All read
-- **WHEN** the user has no unread entries
-- **THEN** neither the trigger nor the menu item shows a badge
-
-#### Scenario: Stale entries are not counted
-- **WHEN** the user has 2 unread entries, one being a friend request they already answered on another device
-- **THEN** the badge shows "1"
-
-#### Scenario: Many unread
-- **WHEN** the user has 30 unread, non-stale entries
-- **THEN** the badge shows "9+" even though only the newest 20 entries are listed
-
-#### Scenario: Open on desktop
-- **WHEN** a desktop user activates the inbox menu entry
-- **THEN** the inbox opens as a dialog fitted to its content
-
 ### Requirement: Inbox list
 The inbox SHALL list the user's entries newest first, showing the newest 20 initially and a "Load more" control that appends the next 20 while older entries exist. It SHALL show an empty state when there are no entries.
 
@@ -280,3 +257,10 @@ Entries older than 90 days SHALL be deleted automatically.
 #### Scenario: Old entry
 - **WHEN** an entry's creation time is more than 90 days ago
 - **THEN** it no longer appears in the inbox after the next daily purge
+
+### Requirement: Inbox opens from Profile
+The Profile tab SHALL hold an Inbox row with the badge count (unread, not stale, capped at "9+", hidden at zero) that opens the inbox as a sheet. Rows SHALL support swipe to delete and a context menu with Mark as read; the sheet's navigation bar SHALL offer Mark all read and Clear.
+
+#### Scenario: Stale entries are not counted
+- **WHEN** the user has 2 unread entries, one being a friend request already answered on another device
+- **THEN** the Inbox row shows "1"

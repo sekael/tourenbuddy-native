@@ -4,21 +4,9 @@ Animated icon-morph transition for the speed-dial action button as it opens and 
 
 ## Requirements
 
-### Requirement: Speed dial trigger shows context-appropriate icon
+### Requirement: FAB menu trigger icon on Android and web
+On Android and the web the map menu's floating button SHALL show a `menu` icon when closed and a `close` icon when open, changing with a quarter turn timed by the motion tokens and without travel under Reduce Motion. On iOS the glass circle SHALL keep its icon while the system menu opens from it.
 
-The speed dial trigger SHALL display a `menu` icon when closed and a `close` icon when open. The change between icons SHALL be a cross-fade in which the outgoing icon turns a quarter and shrinks slightly while the incoming one turns back into place, timed by the motion tokens. No slide SHALL be applied to either icon.
-
-#### Scenario: Closed state shows menu icon
-
-- **WHEN** the speed dial is closed (`isOpen` is `false`)
-- **THEN** the `menu` icon is fully visible (`opacity: 1`) and the `close` icon is hidden (`opacity: 0`)
-
-#### Scenario: Open state shows close icon
-
-- **WHEN** the speed dial is open (`isOpen` is `true`)
-- **THEN** the `close` icon is fully visible (`opacity: 1`) and the `menu` icon is hidden (`opacity: 0`)
-
-#### Scenario: Transition is a fade
-
-- **WHEN** the open state toggles
-- **THEN** the icons cross-fade while turning a quarter (hidden icon at `rotate(±90deg) scale(0.8)`), with no slide
+#### Scenario: Open on Android
+- **WHEN** the user opens the map menu on Android
+- **THEN** the button's icon turns into a close icon

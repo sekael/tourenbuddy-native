@@ -45,3 +45,10 @@ In read-only tour info contexts, the contact chip SHALL NOT render inline phone 
 
 - **WHEN** a phone number is rendered anywhere the chip interaction surfaces (for example, inside an action menu row)
 - **THEN** the displayed value SHALL be produced via `formatPhoneForDisplay`
+
+### Requirement: Phone actions open the system apps
+Call, message, WhatsApp and email actions SHALL open the phone, Messages, WhatsApp and Mail apps through the operating system; when WhatsApp is not installed the action SHALL open WhatsApp's web link instead.
+
+#### Scenario: WhatsApp missing
+- **WHEN** the user taps WhatsApp on a device without WhatsApp
+- **THEN** the system browser opens the contact's WhatsApp web link

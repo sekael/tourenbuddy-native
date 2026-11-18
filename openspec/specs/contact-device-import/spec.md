@@ -109,28 +109,6 @@ SHALL show its count and enough context to identify what it refers to.
 - **WHEN** an import produces no unparseable and no skipped-duplicate entries
 - **THEN** those categories are not rendered in the summary box
 
-### Requirement: Importing via Contact Picker
-
-The contact creation dialog SHALL display import options based on platform capabilities (the
-"Import from contacts" button only where the Contact Picker API exists), run every parsed
-contact through `useContactImport().importContacts`, and then switch to the import-results
-view.
-
-#### Scenario: Importing via Contact Picker
-
-- **WHEN** the user taps "Import from contacts" and selects device contacts
-- **THEN** the app SHALL create a TourenBuddy contact for each importable selected contact, with one `contact_methods` phone row per non-duplicate entry in its `phones` array, and SHALL show the import-results view
-
-#### Scenario: Importing via vCard file
-
-- **WHEN** the user taps "Import from file" and selects a `.vcf` file
-- **THEN** the app SHALL parse the file, create a TourenBuddy contact for each importable vCard entry with one `contact_methods` phone row per non-duplicate phone, and SHALL show the import-results view
-
-#### Scenario: Import with duplicate prevention
-
-- **WHEN** an imported contact (from either method) matches an existing TourenBuddy contact by first name AND last name (case-insensitive)
-- **THEN** the import SHALL skip that contact and the results summary SHALL count it as a name duplicate
-
 ### Requirement: Import results surface unparseable phones
 
 Only valid phones are ever stored, so the import-results row SHALL surface the numbers that
@@ -426,15 +404,6 @@ A `TEL` entry carrying a preference marker (vCard 3.0 `TYPE=PREF` or vCard 4.0 `
 - **WHEN** a vCard contains `TEL;TYPE=CELL:+41 79 123 45 67` followed by `TEL;TYPE=HOME;PREF=1:+41 44 222 33 44`
 - **THEN** the second entry SHALL have `isPrimary: true`
 
-### Requirement: Contact Picker opens the native picker
-
-The `useContactPicker` composable SHALL provide a `pickContacts()` method that opens the native contact picker requesting the `name` and `tel` properties with multi-select enabled.
-
-#### Scenario: User cancels picker
-
-- **WHEN** the user dismisses the native contact picker without selecting, or the API is unsupported
-- **THEN** the composable SHALL return an empty array
-
 ### Requirement: Contact Picker phone normalization
 
 Each `tel` entry returned by the platform whose value normalizes successfully via `normalizePhone` SHALL be included in the contact's `phones` array with `value` set to its E.164 form. Entries whose value cannot be normalized SHALL NOT appear in `phones`; their trimmed raw value SHALL instead be appended to `rawPhoneNumbers`. `label` SHALL be `null` for every entry.
@@ -462,3 +431,18 @@ The first parseable `tel` entry (in source order) SHALL be marked `isPrimary: tr
 
 - **WHEN** the user selects a contact whose device record has two phone numbers
 - **THEN** the composable SHALL return that contact with two `phones` entries, the first having `isPrimary: true` and the second `isPrimary: false`
+
+### Requirement: Import from the system contact picker
+The Contacts tab SHALL offer "Import from Contacts" on iOS and Android, which opens the system contact picker without asking for the Contacts permission, and "Import vCard file" on every platform, which opens the file picker for `.vcf`. Every picked or parsed contact SHALL run through the same import rules (dedupe, invalid phones, existing holders, name duplicates) and end on the import-results screen.
+
+#### Scenario: Pick from Contacts
+- **WHEN** the user picks a contact in the system picker
+- **THEN** no permission prompt appears, the contact is imported with its phones, and the results screen shows it
+
+#### Scenario: Cancel the picker
+- **WHEN** the user closes the picker without picking
+- **THEN** nothing is imported and no results screen opens
+
+#### Scenario: Name duplicate
+- **WHEN** an imported contact matches an existing one by first and last name (case-insensitive)
+- **THEN** it is skipped and counted as a name duplicate
