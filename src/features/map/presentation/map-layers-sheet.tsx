@@ -33,7 +33,7 @@ const OVERLAY_PREVIEWS: Record<TrailOverlayId, { image: ImageSourcePropType; chi
 export function MapLayersSheet() {
   const [path, setPath] = useState<string[]>([]);
   return (
-    <Screen path={path} onPathChange={setPath} renderPage={() => <LegendPage />}>
+    <Screen fit path={path} onPathChange={setPath} renderPage={() => <LegendPage />}>
       <LayersPage onLegend={() => setPath(['legend'])} />
     </Screen>
   );
@@ -153,8 +153,6 @@ function LayerTile({
         variant="caption"
         style={[styles.label, selected && styles.labelSelected]}
         numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.8}
       >
         {label}
       </Text>
@@ -165,11 +163,19 @@ function LayerTile({
 const THUMB = 64;
 
 const styles = StyleSheet.create({
-  groups: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: space.xs },
+  // Side by side; at large text sizes the overlays go under the base maps rather than off the card.
+  groups: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: space.md,
+    paddingVertical: space.xs,
+  },
   group: { gap: space.xs },
   groupTitle: { color: color.onSurfaceVariant },
-  tiles: { flexDirection: 'row', gap: space.xs },
-  tile: { width: THUMB + space.xs, alignItems: 'center', gap: space.xxs },
+  tiles: { flexDirection: 'row', gap: space.sm },
+  // As wide as its name, so every name shows whole and at one size.
+  tile: { minWidth: THUMB + space.xs, alignItems: 'center', gap: space.xxs },
   thumb: {
     width: THUMB,
     height: THUMB,

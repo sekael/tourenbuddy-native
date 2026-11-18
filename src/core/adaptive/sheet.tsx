@@ -46,6 +46,21 @@ export const stepSheetOptions: NativeStackNavigationOptions = {
   gestureEnabled: false,
 };
 
+/**
+ * iOS: the sheet as tall as its page (`Screen`'s `fit`), so a few options show no empty half sheet
+ * below them; it grows with the page, up to the screen. Android keeps the heights above.
+ */
+const fitted: NativeStackNavigationOptions =
+  Platform.OS === 'ios'
+    ? {
+        sheetAllowedDetents: 'fitToContents',
+        sheetInitialDetentIndex: 0,
+        sheetLargestUndimmedDetentIndex: 0,
+      }
+    : {};
+export const fitSheetOptions = { ...mapSheetOptions, ...fitted };
+export const fitStepSheetOptions = { ...stepSheetOptions, ...fitted };
+
 /** Data entry: a full-height modal with its own navigation bar (Cancel, Save). */
 export const formModalOptions: NativeStackNavigationOptions = {
   presentation: 'modal',

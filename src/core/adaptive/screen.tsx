@@ -8,8 +8,9 @@ import { color, fieldType, radius, size, space } from '@/core/theme/tokens';
 import { CloseButton } from './close-button';
 import { Icon } from './icon';
 import type { IconName } from './icons';
-import { GroupedList, type RowAction } from './list';
+import { GroupedList, ListRow, ListSection, type RowAction } from './list';
 import { PageBanner } from './page-banner';
+import { PageReturn } from './page-return';
 import { Text } from './text';
 import { useEscape } from './use-escape';
 
@@ -78,6 +79,11 @@ export type ScreenProps = {
   onPathChange?: (path: string[]) => void;
   /** The page for a pushed value: a component rendering a `Page`. */
   renderPage?: (value: string) => ReactNode;
+  /**
+   * iOS: the sheet is as tall as its top page's list (`fitSheetOptions`), up to the screen, so it
+   * shows no empty band under the last card; it grows and shrinks with the list.
+   */
+  fit?: boolean;
 };
 
 const BackContext = createContext<(() => void) | null>(null);
@@ -101,6 +107,7 @@ export function Page(page: PageProps) {
   const menu = page.actions?.find((a) => a.id === openMenu)?.menu;
   useEscape(onBack ?? page.onClose ?? page.cancel?.onPress);
   const banner = useContext(PageBanner);
+  const wayBack = useContext(PageReturn);
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.screen} testID={page.testID}>
@@ -241,6 +248,16 @@ export function Page(page: PageProps) {
           onRefresh={page.onRefresh}
           form={page.form}
         >
+          {wayBack ? (
+            <ListSection>
+              <ListRow
+                title={wayBack.label}
+                icon="help"
+                chevron={false}
+                onPress={wayBack.onPress}
+              />
+            </ListSection>
+          ) : null}
           {page.children}
         </GroupedList>
       )}

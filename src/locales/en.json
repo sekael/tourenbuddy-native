@@ -1341,7 +1341,8 @@
         "previous": "Back",
         "done": "Done",
         "finish": "Finish tour",
-        "reopen": "Show app tour"
+        "reopen": "Show app tour",
+        "back": "Back to the app tour"
       },
       "openCalendar": {
         "title": "Open the calendar",

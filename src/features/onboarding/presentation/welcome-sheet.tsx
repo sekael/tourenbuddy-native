@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { IconName } from '@/core/adaptive/icons';
@@ -7,11 +7,14 @@ import { ListRow, ListSection, TextRow } from '@/core/adaptive/list';
 import { Page, Screen } from '@/core/adaptive/screen';
 import { useUserProfileStore } from '@/features/user/presentation/stores/user-profile-store';
 
+import { useTourReturn } from './tour-return';
+
 /**
  * Welcome (onboarding-tour, D12 as revised): the name step a new account needs, then what the app
  * does, the PWA's guided-tour steps as an index in their order. A row closes the sheet and opens its
- * place. Done stops it showing at sign-in; swiping it away only skips it for this launch. Reopened
- * from Profile ("Show app tour"), it starts at the index.
+ * place, and the tab bar's accessory leads back here. Done stops it showing at sign-in; swiping it
+ * away only skips it for this launch. Reopened from Profile ("Show app tour"), it starts at the index;
+ * back from a feature (`resume`), at the index with the controls it had.
  */
 type Feature = {
   key:
@@ -46,7 +49,8 @@ const FEATURES: Feature[] = [
   { key: 'openCalendar', icon: 'calendar_today', href: '/calendar' },
 ];
 
-function open(feature: Feature) {
+function open(feature: Feature, start: 'resume' | 'features') {
+  useTourReturn.setState({ start });
   router.back();
   if (feature.overMap) {
     router.navigate('/');
@@ -60,8 +64,10 @@ export function WelcomeSheet() {
   const { t } = useTranslation();
   const { start } = useLocalSearchParams<{ start?: string }>();
   const profile = useUserProfileStore((s) => s.profile);
-  const needsName = start !== 'features' && !!profile && !profile.firstName?.trim();
+  const needsName = !start && !!profile && !profile.firstName?.trim();
   const [path, setPath] = useState<string[]>([]);
+  // Open, it is its own way back; closed without picking a place, the tour is over.
+  useLayoutEffect(() => useTourReturn.setState({ start: null }), []);
 
   const done = () => {
     void useUserProfileStore.getState().dismissTourAtSignIn();
@@ -95,7 +101,7 @@ export function WelcomeSheet() {
             }
             subtitle={t(`onboarding.index.${feature.key}`)}
             icon={feature.icon}
-            onPress={() => open(feature)}
+            onPress={() => open(feature, fromSignIn ? 'resume' : 'features')}
           />
         ))}
       </ListSection>

@@ -5,7 +5,10 @@ import { sessionTrust } from '@/core/auth/session-trust';
 import { sessionUser } from '@/core/auth/session-user';
 import { connectivity } from '@/core/offline/online';
 import { supabase } from '@/core/supabase';
-import { useNotificationsStore } from '@/features/notifications/presentation/stores/notifications-store';
+import {
+  setAppBadge,
+  useNotificationsStore,
+} from '@/features/notifications/presentation/stores/notifications-store';
 
 jest.mock('expo-application', () => ({
   applicationId: 'ch.tourenbuddy.app',
@@ -59,5 +62,20 @@ describe('turning push on (iOS)', () => {
     await expect(useNotificationsStore.getState().setPushEnabled(true)).rejects.toThrow();
 
     expect(useNotificationsStore.getState().pushEnabled).toBe(false);
+  });
+});
+
+describe('app icon badge', () => {
+  it('should clear the badge on sign-out, so a signed-out phone counts nothing', () => {
+    useNotificationsStore.getState().clear();
+
+    expect(Notifications.setBadgeCountAsync).toHaveBeenCalledWith(0);
+  });
+
+  it('should not throw when iOS refuses the badge (notifications not allowed)', async () => {
+    jest.mocked(Notifications.setBadgeCountAsync).mockRejectedValueOnce(new Error('not allowed'));
+
+    expect(() => setAppBadge(3)).not.toThrow();
+    await Promise.resolve();
   });
 });

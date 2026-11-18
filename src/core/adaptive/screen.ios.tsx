@@ -39,18 +39,22 @@ import {
   searchable,
   tag,
   tint,
+  useScrollGeometryChange,
 } from '@expo/ui/swift-ui/modifiers';
-import { useContext, useState, type ReactNode } from 'react';
+import { useContext, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
-import { color, size } from '@/core/theme/tokens';
+import { color, size, space } from '@/core/theme/tokens';
 import { useReducedMotion } from '@/core/theme/use-reduced-motion';
 
 import { icons, type IconName } from './icons';
 import { InSwiftUIList } from './in-list';
+import { ListRow } from './list';
 import { PageBanner } from './page-banner';
+import { PageFit } from './page-fit';
 import { PageOnTop } from './page-on-top';
+import { PageReturn } from './page-return';
 import { useFieldText } from './use-field-text';
 import type { PageProps, ScreenProps } from './screen';
 
@@ -59,19 +63,27 @@ import type { PageProps, ScreenProps } from './screen';
  * search field in the bar, large titles that fold on scroll and the push transition are the
  * system's own. Pushed pages are `NavigationDestination`s for the values in `path`.
  */
-export function Screen({ children, path, onPathChange, renderPage }: ScreenProps) {
+export function Screen({ children, path, onPathChange, renderPage, fit }: ScreenProps) {
+  // Fitted, the sheet (`fitSheetOptions`) takes the host's height: the top page's list, up to
+  // the sheet's largest height (a longer list scrolls). Below the status bar and the sheet's gap
+  // above it on every iPhone, so the list's end never hides under the sheet's edge.
+  const [height, setHeight] = useState<number>();
+  const window = useWindowDimensions().height;
+  const style = fit ? { height: Math.min(height ?? window / 2, window * 0.9) } : styles.host;
   return (
-    <Host style={styles.host}>
-      <NavigationStack path={path} onPathChange={onPathChange}>
-        <PageOnTop.Provider value={!path?.length}>{children}</PageOnTop.Provider>
-        {(path ?? []).map((value, i, all) => (
-          <NavigationDestination key={value} value={value}>
-            <PageOnTop.Provider value={i === all.length - 1}>
-              {renderPage?.(value)}
-            </PageOnTop.Provider>
-          </NavigationDestination>
-        ))}
-      </NavigationStack>
+    <Host style={style}>
+      <PageFit.Provider value={fit ? setHeight : null}>
+        <NavigationStack path={path} onPathChange={onPathChange}>
+          <PageOnTop.Provider value={!path?.length}>{children}</PageOnTop.Provider>
+          {(path ?? []).map((value, i, all) => (
+            <NavigationDestination key={value} value={value}>
+              <PageOnTop.Provider value={i === all.length - 1}>
+                {renderPage?.(value)}
+              </PageOnTop.Provider>
+            </NavigationDestination>
+          ))}
+        </NavigationStack>
+      </PageFit.Provider>
     </Host>
   );
 }
@@ -104,6 +116,22 @@ export function Page({
   );
 
   const banner = useContext(PageBanner);
+  const wayBack = useContext(PageReturn);
+  const fit = useContext(PageFit);
+  const onTop = useContext(PageOnTop);
+  // The list's top inset is the bar, read from its offset at rest, once: scrolled or pulled, the
+  // offset no longer shows it, and the sheet must not shrink or grow under a finger.
+  const inset = useRef(0);
+  const fitting = useScrollGeometryChange(
+    fit && onTop
+      ? (g) => {
+          // Before its first layout the list has no rows: no height to take yet.
+          if (!g.contentHeight) return;
+          if (!inset.current) inset.current = Math.max(0, -g.contentOffsetY);
+          fit(Math.ceil(g.contentHeight + inset.current));
+        }
+      : undefined,
+  );
   const reducedMotion = useReducedMotion();
   const Container = form ? Form : List;
   const modifiers = [
@@ -113,6 +141,7 @@ export function Page({
     // Sections close together, as in Settings: a sheet shows more than its gaps.
     listSectionSpacing('compact'),
     ...(onRefresh ? [refreshable(onRefresh)] : []),
+    ...(fitting ? [fitting] : []),
     ...(search
       ? [
           searchable(query, {
@@ -141,6 +170,20 @@ export function Page({
       ) : (
         <Container key={searches} modifiers={[...modifiers, ...bar]}>
           {banner}
+          {wayBack ? (
+            <Section
+              modifiers={
+                fit ? [listSectionMargins({ edges: 'vertical', length: space.xs })] : undefined
+              }
+            >
+              <ListRow
+                title={wayBack.label}
+                icon="help"
+                chevron={false}
+                onPress={wayBack.onPress}
+              />
+            </Section>
+          ) : null}
           {header ? (
             // Close under the bar's buttons: the header is the page's top, not a section after it.
             <Section modifiers={[listSectionMargins({ edges: 'top', length: 0 })]}>

@@ -253,7 +253,6 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
       }
     }
     // A tap on the open map closes the sheets on it, as Apple Maps lets go of a place.
-    useMapStore.getState().showPlace(null);
     if (router.canDismiss()) router.dismissAll();
   }
 
@@ -328,24 +327,10 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
       ],
     };
   }, [previewLines, focusLines, chains, trailHighlight, drag, editHandles]);
-  // The searched place, pinned on the plain map (not over an open tour, nor a step's own points).
-  const place = useMapStore((s) => s.place);
-  const points: Points = useMemo(() => {
-    if (previewPoints) return previewPoints;
-    const shown = focusPoints(scene, t);
-    if (!place || mode !== 'browse' || scene.focus.length) return shown;
-    return {
-      type: 'FeatureCollection',
-      features: [
-        ...shown.features,
-        {
-          type: 'Feature',
-          geometry: { type: 'Point', coordinates: place.at },
-          properties: { kind: 'preview', color: color.primary, label: place.name },
-        },
-      ],
-    };
-  }, [previewPoints, scene, t, place, mode]);
+  const points: Points = useMemo(
+    () => previewPoints ?? focusPoints(scene, t),
+    [previewPoints, scene, t],
+  );
 
   return (
     <View style={StyleSheet.absoluteFill}>

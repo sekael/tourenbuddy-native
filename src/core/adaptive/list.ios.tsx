@@ -37,6 +37,7 @@ import {
   keyboardType as keyboardTypeModifier,
   labelStyle,
   listRowBackground,
+  listSectionMargins,
   listSectionSpacing,
   listStyle,
   lineLimit,
@@ -57,6 +58,7 @@ import { Avatar } from './avatar';
 import { Icon } from './icon';
 import { icons, type IconName } from './icons';
 import { InSwiftUIList } from './in-list';
+import { PageFit } from './page-fit';
 import { Segments } from './segments';
 import { Text } from './text';
 import { useFieldText } from './use-field-text';
@@ -131,10 +133,13 @@ export function GroupedList({ children, form, onRefresh, header, testID }: Group
 }
 
 export function ListSection({ title, footer, children }: ListSectionProps) {
+  const fit = useContext(PageFit);
   const rows = Children.toArray(children).filter(isValidElement);
   if (rows.length === 0) return null;
   return (
     <Section
+      // In a sheet as tall as its page, the sections sit close under the bar and to each other.
+      modifiers={fit ? [listSectionMargins({ edges: 'vertical', length: space.xs })] : undefined}
       // SwiftUI builds a section with and without a footer (or title) as different views, so its
       // rows are made anew when one comes or goes; the rows' app-drawn icons are remounted with
       // them, or they stay blank.
@@ -202,13 +207,14 @@ export function ListRow({
           </View>
         </RNHostView>
       ) : icon ? (
-        <RowIcon name={icon} tint={iconColor ?? color.primary} />
+        <RowIcon name={icon} tint={iconColor ?? (destructive ? color.error : color.primary)} />
       ) : null}
       <VStack alignment="leading" spacing={2}>
         <SwiftText
           modifiers={[
             foregroundStyle(destructive ? color.error : { type: 'hierarchical', style: 'primary' }),
-            lineLimit(2),
+            // Two lines keep a list even; at the accessibility sizes a title wraps in full.
+            fontScale >= ACCESSIBILITY_SCALE ? wraps : lineLimit(2),
           ]}
         >
           {title}

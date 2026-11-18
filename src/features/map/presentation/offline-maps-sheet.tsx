@@ -132,7 +132,7 @@ export function OfflineMapsSheet() {
   }
 
   return (
-    <Screen>
+    <Screen fit>
       <Page
         title={t('offlineMap.manage.title')}
         onClose={() => router.back()}
@@ -272,7 +272,7 @@ export function OfflineRegionSheet() {
   };
 
   return (
-    <Screen>
+    <Screen fit>
       <Page
         form
         // The bar holds Cancel and Download; the title heads the section, where it fits.

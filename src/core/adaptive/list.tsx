@@ -237,7 +237,7 @@ export function ListRow({
       {avatar ? (
         <Avatar letters={avatar} />
       ) : icon ? (
-        <Icon name={icon} color={iconColor ?? color.primary} />
+        <Icon name={icon} color={iconColor ?? (destructive ? color.error : color.primary)} />
       ) : null}
       <View style={styles.rowText}>
         <Text style={[styles.title, destructive && styles.destructive]} numberOfLines={2}>

@@ -40,10 +40,8 @@ export function PlaceSearchSheet() {
               icon={result.origin === 'stop' ? 'directions_bus' : 'location_on'}
               onPress={() => {
                 search.take(result);
-                // A pin where the place is: an address or a stop is a spot, not a whole view.
-                useMapStore
-                  .getState()
-                  .showPlace({ at: [result.lng, result.lat], name: result.name });
+                // Only the view moves: no pin (a pin is a tour's start, goal or end, set in the
+                // route step's own search).
                 useMapStore.getState().requestCamera({
                   kind: 'fly',
                   center: [result.lng, result.lat],

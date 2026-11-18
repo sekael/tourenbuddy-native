@@ -27,12 +27,18 @@ The Map tab SHALL show a full-screen Swisstopo map, rendered natively on iOS and
 
 ### Requirement: Place search on the map
 
-The map's bar SHALL hold a search for places, huts and stops, the route step's search; picking a result SHALL close the search and fly the map to it.
+The map's bar SHALL hold a search for places, huts and stops, the route step's search; picking a result SHALL close the search and fly the map to it, without placing a marker there. Only the route step's search (creating or editing a tour) SHALL set a marker on the place it finds, as the tour's start, goal or end.
 
 #### Scenario: A village
 
 - **WHEN** the user searches "Lauterbrunnen" and picks the village
 - **THEN** the map SHALL show Lauterbrunnen close up
+- **AND** no marker SHALL appear at the village
+
+#### Scenario: A goal searched in the route step
+
+- **WHEN** the user creates or edits a tour and picks "Tödi" in the route step's search for the goal
+- **THEN** the goal's marker SHALL be set on Tödi
 
 ### Requirement: Map controls in one compact row
 The Map tab SHALL show its controls in one row right above the tab bar, none overlapping at phone width: a search button, a "My Tours | Add tour" capsule in the app's blue (on iOS frosted glass tinted blue, white glyphs legible over snow), and a map button opening the map sheet. The map sheet SHALL hold the base maps and overlays as previews, the legend and the offline maps. On iOS the controls SHALL be compact Liquid Glass (44 pt), the round ones tinted with the app's blue.

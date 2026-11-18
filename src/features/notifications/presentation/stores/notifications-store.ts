@@ -58,6 +58,15 @@ type NotificationsState = {
 let unsubscribe: (() => void) | null = null;
 
 /**
+ * The app icon's badge: what the Profile tab counts (unread, still actionable inbox entries). iOS
+ * shows it only once notifications are allowed; a push sets it while the app is closed.
+ */
+export function setAppBadge(count: number) {
+  if (Platform.OS === 'web') return;
+  Notifications.setBadgeCountAsync(count).catch((error) => log.warn('App badge failed', error));
+}
+
+/**
  * The APNs environment of this install's token (backend design D3): the provisioning profile's
  * `aps-environment`. A build without a profile reads null: App Store and TestFlight builds (Apple
  * strips the profile) send production tokens, the Simulator sandbox ones.
@@ -143,6 +152,7 @@ export const useNotificationsStore = create<NotificationsState>()((set, get) => 
       unsubscribe?.();
       unsubscribe = null;
       set({ prefs: null, pushEnabled: false });
+      setAppBadge(0);
     },
 
     loadPrefs: async () => {

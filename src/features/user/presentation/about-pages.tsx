@@ -1,10 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking, StyleSheet } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, View } from 'react-native';
 
-import { ContentRow, ListSection } from '@/core/adaptive/list';
 import { Page } from '@/core/adaptive/screen';
 import { Text } from '@/core/adaptive/text';
-import { color, space } from '@/core/theme/tokens';
+import { color, radius, space } from '@/core/theme/tokens';
 
 export type AboutPageName = 'privacy' | 'terms' | 'imprint';
 
@@ -29,6 +28,9 @@ const EMAIL = /([\w.+-]+@[\w-]+(?:\.[\w-]+)+)/;
  * The «Über» pages inside the app: privacy policy, terms of use, imprint. Their text is the
  * website's (`public/`), kept word for word in the locales, so nothing needs a browser or a
  * connection; an email address opens a new mail.
+ *
+ * A document of the app's own, not a system list: in a SwiftUI list a long paragraph got a row a
+ * line too short and was cut, both as hosted text and as system text (German hyphenation).
  */
 export function AboutPage({ name }: { name: AboutPageName }) {
   const { t } = useTranslation();
@@ -39,44 +41,67 @@ export function AboutPage({ name }: { name: AboutPageName }) {
     );
 
   return (
-    <Page title={doc.title}>
-      {doc.sections.map((section, i) => (
-        <ListSection
-          key={section.title ?? i}
-          title={section.title}
-          footer={i === doc.sections.length - 1 ? doc.updated : undefined}
+    <Page
+      title={doc.title}
+      body={
+        <ScrollView
+          style={styles.page}
+          contentContainerStyle={styles.content}
+          contentInsetAdjustmentBehavior="automatic"
         >
-          {section.rows
-            .filter((row) => !row.country || OPERATOR.length > 0)
-            .map((row) => (
-              <ContentRow key={row.label ?? row.text}>
-                {row.label ? (
-                  <Text variant="label" style={styles.label}>
-                    {row.label}
-                  </Text>
-                ) : null}
-                <Text>
-                  {(row.country ? [row.text, ...OPERATOR, row.country].join('\n') : row.text)
-                    .split(EMAIL)
-                    .map((part, j) =>
-                      j % 2 ? (
-                        <Text key={j} role="link" style={styles.link} onPress={() => mail(part)}>
-                          {part}
-                        </Text>
-                      ) : (
-                        part
-                      ),
-                    )}
+          {doc.sections.map((section, i) => (
+            <View key={section.title ?? i} style={styles.section}>
+              {section.title ? (
+                <Text variant="label" role="heading" style={styles.sectionTitle}>
+                  {section.title}
                 </Text>
-              </ContentRow>
-            ))}
-        </ListSection>
-      ))}
-    </Page>
+              ) : null}
+              <View style={styles.card}>
+                {section.rows
+                  .filter((row) => !row.country || OPERATOR.length > 0)
+                  .map((row, j) => (
+                    <View key={row.label ?? row.text} style={[styles.row, j > 0 && styles.divided]}>
+                      {row.label ? <Text variant="label">{row.label}</Text> : null}
+                      <Text>
+                        {(row.country ? [row.text, ...OPERATOR, row.country].join('\n') : row.text)
+                          .split(EMAIL)
+                          .map((part, k) =>
+                            k % 2 ? (
+                              <Text
+                                key={k}
+                                role="link"
+                                style={styles.link}
+                                onPress={() => mail(part)}
+                              >
+                                {part}
+                              </Text>
+                            ) : (
+                              part
+                            ),
+                          )}
+                      </Text>
+                    </View>
+                  ))}
+              </View>
+            </View>
+          ))}
+          <Text variant="caption" style={styles.updated}>
+            {doc.updated}
+          </Text>
+        </ScrollView>
+      }
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  label: { marginBottom: space.xxs },
+  page: { flex: 1, backgroundColor: color.groupedBackground },
+  content: { padding: space.md, gap: space.lg, paddingBottom: space.xxxl },
+  section: { gap: space.xs },
+  sectionTitle: { color: color.onSurfaceVariant, paddingHorizontal: space.md },
+  card: { backgroundColor: color.background, borderRadius: radius.lg, paddingHorizontal: space.md },
+  row: { paddingVertical: space.sm, gap: space.xxs },
+  divided: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.divider },
   link: { color: color.primary },
+  updated: { color: color.onSurfaceVariant, paddingHorizontal: space.md },
 });

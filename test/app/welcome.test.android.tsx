@@ -2,13 +2,25 @@ import { act, fireEvent, screen } from '@testing-library/react-native';
 import { Slot } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
+import { PageReturn } from '@/core/adaptive/page-return';
+import { TourReturn } from '@/features/onboarding/presentation/tour-return';
 import type { UserProfile } from '@/features/user/domain/entities/user-profile';
 import { useUserProfileStore } from '@/features/user/presentation/stores/user-profile-store';
 
 import { signIn } from '../support/auth';
 import { routes as appRoutes } from './routes';
 
-const routes = { ...appRoutes, '(tabs)/_layout': Slot };
+// The tab bar's accessory (the way back to the tour) beside the tabs' content, which leave the
+// sheets' way back out, as on iOS.
+const routes = {
+  ...appRoutes,
+  '(tabs)/_layout': () => (
+    <PageReturn.Provider value={null}>
+      <Slot />
+      <TourReturn />
+    </PageReturn.Provider>
+  ),
+};
 
 const newAccount = {
   id: 'user-1',
@@ -91,5 +103,33 @@ describe('welcome (onboarding)', () => {
 
     expect(screen).toHavePathname('/contacts');
     expect(actions.dismissTourAtSignIn).not.toHaveBeenCalled();
+
+    // The way back ends with its close button; the place stays.
+    await fireEvent.press(button('Finish tour'));
+    expect(screen.queryByRole('button', { name: 'Back to the app tour' })).toBeNull();
+    expect(screen).toHavePathname('/contacts');
+  });
+
+  it('should lead back to a sign-in tour with its Done, without asking for the name again', async () => {
+    await renderRouter(routes, { initialUrl: '/welcome' });
+    await settle(); // the profile store's own load (which fails here) comes first
+    await act(async () => useUserProfileStore.setState({ profile: newAccount, ...actions }));
+    await settle();
+    await fireEvent.press(button('Skip for now')); // the name
+    await settle();
+    await fireEvent.press(screen.getByText('Friend requests'));
+    await settle();
+    expect(screen).toHavePathname('/contacts');
+
+    await fireEvent.press(button('Back to the app tour'));
+    await settle();
+
+    expect(screen).toHavePathname('/welcome');
+    expect(screen.queryByText('Set up your profile')).toBeNull();
+    await fireEvent.press(button('Done'));
+    await settle();
+    expect(actions.dismissTourAtSignIn).toHaveBeenCalledTimes(1);
+    // Closed without picking a place, the tour is over.
+    expect(screen.queryByRole('button', { name: 'Back to the app tour' })).toBeNull();
   });
 });

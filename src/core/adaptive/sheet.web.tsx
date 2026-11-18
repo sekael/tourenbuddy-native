@@ -45,6 +45,8 @@ export const stepSheetOptions: NativeStackNavigationOptions = {
   ...panelOptions,
   sheetAllowedDetents: [0.45],
 };
+export const fitSheetOptions = mapSheetOptions;
+export const fitStepSheetOptions = stepSheetOptions;
 export const formModalOptions = panelOptions;
 
 /**

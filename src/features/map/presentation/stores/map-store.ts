@@ -86,8 +86,6 @@ export type MapState = {
    */
   drag: { handles: EditHandles; target: HandleTarget; at: LngLat } | null;
   camera: CameraRequest | null;
-  /** The place last chosen in the search, pinned until the map is tapped or another search. */
-  place: { at: LngLat; name: string } | null;
   /** The map's visible centre, kept for picks that start "here" and for offline regions. */
   center: LngLat | null;
   zoom: number | null;
@@ -137,7 +135,6 @@ export type MapState = {
   requestSegment: (id: string) => void;
   requestCamera: (request: CameraRequest) => void;
   consumeCamera: () => CameraRequest | null;
-  showPlace: (place: { at: LngLat; name: string } | null) => void;
   /** `bounds`: west, south, east, north of what the map shows. */
   setView: (center: LngLat, zoom: number, bounds?: [number, number, number, number]) => void;
   setBottomInset: (height: number) => void;
@@ -172,7 +169,6 @@ export const useMapStore = create<MapState>()((set, get) => ({
   listedTourIds: null,
   segmentRequest: null,
   camera: null,
-  place: null,
   center: null,
   zoom: null,
   bounds: null,
@@ -231,7 +227,6 @@ export const useMapStore = create<MapState>()((set, get) => ({
     if (camera) set({ camera: null });
     return camera;
   },
-  showPlace: (place) => set({ place }),
   setView: (center, zoom, bounds) => set({ center, zoom, bounds: bounds ?? null }),
   setBottomInset: (bottomInset) => set({ bottomInset }),
   beginStep: (mode, tapHandler) => set({ mode, tapHandler }),

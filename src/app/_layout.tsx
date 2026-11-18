@@ -19,6 +19,8 @@ import { Platform } from 'react-native';
 
 import {
   formModalOptions,
+  fitSheetOptions,
+  fitStepSheetOptions,
   mapSheetOptions,
   sheetLayout,
   sheetOptions,
@@ -27,6 +29,7 @@ import {
 import { useDeviceLocale } from '@/core/i18n';
 import { registerFlushTriggers } from '@/core/offline/triggers';
 import { PageBanner } from '@/core/adaptive/page-banner';
+import { PageReturn } from '@/core/adaptive/page-return';
 import { color } from '@/core/theme/tokens';
 import { useAuthStore } from '@/features/auth/presentation/stores/auth-store';
 import { useAvailabilityStore } from '@/features/calendar/presentation/stores/availability-store';
@@ -49,6 +52,7 @@ import { useTourFiltersStore } from '@/features/tours/presentation/stores/tour-f
 import { useTourSuggestionsStore } from '@/features/tours/presentation/stores/tour-suggestions-store';
 import { useToursStore } from '@/features/tours/presentation/stores/tours-store';
 import { useUserProfileStore } from '@/features/user/presentation/stores/user-profile-store';
+import { useTourReturn, useTourWayBack } from '@/features/onboarding/presentation/tour-return';
 
 registerFlushTriggers();
 
@@ -151,6 +155,7 @@ function useSessionStores(userId: string | null) {
       useCalendarFeedStore.getState().clear();
       useTourDraftStore.getState().reset();
       useTourFiltersStore.getState().reset();
+      useTourReturn.setState({ start: null });
     };
   }, [userId]);
 }
@@ -190,47 +195,53 @@ export default function RootLayout() {
   useEffect(() => (signedIn ? watchOfflineFlashes() : undefined), [signedIn]);
   const status = useOfflineStatus();
   const banner = signedIn && status ? <OfflineBanner status={status} /> : null;
+  const wayBack = useTourWayBack();
 
   return (
     <PageBanner.Provider value={banner}>
-      <Stack
-        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.background } }}
-        screenLayout={sheetLayout}
-      >
-        <Stack.Protected guard={isLoading || signedIn} redirectTo="/auth">
-          <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
-          <Stack.Screen name="tours" options={mapSheetOptions} />
-          <Stack.Screen name="tour/[id]" options={mapSheetOptions} />
-          <Stack.Screen name="tour/edit" options={formModalOptions} />
-          <Stack.Screen name="tour/suggestions" options={mapSheetOptions} />
-          <Stack.Screen name="tour/add-segment" options={mapSheetOptions} />
-          <Stack.Screen name="tour-overlaps" options={mapSheetOptions} />
-          <Stack.Screen name="plan" options={stepSheetOptions} />
-          <Stack.Screen name="draw" options={stepSheetOptions} />
-          <Stack.Screen name="stack" options={mapSheetOptions} dangerouslySingular />
-          <Stack.Screen name="trail" options={mapSheetOptions} dangerouslySingular />
-          {/* Dimmed: a contact has nothing to do with what is behind it, and a live Contacts tab
+      <PageReturn.Provider value={wayBack}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: color.background },
+          }}
+          screenLayout={sheetLayout}
+        >
+          <Stack.Protected guard={isLoading || signedIn} redirectTo="/auth">
+            <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+            <Stack.Screen name="tours" options={mapSheetOptions} />
+            <Stack.Screen name="tour/[id]" options={mapSheetOptions} />
+            <Stack.Screen name="tour/edit" options={formModalOptions} />
+            <Stack.Screen name="tour/suggestions" options={mapSheetOptions} />
+            <Stack.Screen name="tour/add-segment" options={mapSheetOptions} />
+            <Stack.Screen name="tour-overlaps" options={mapSheetOptions} />
+            <Stack.Screen name="plan" options={stepSheetOptions} />
+            <Stack.Screen name="draw" options={stepSheetOptions} />
+            <Stack.Screen name="stack" options={mapSheetOptions} dangerouslySingular />
+            <Stack.Screen name="trail" options={mapSheetOptions} dangerouslySingular />
+            {/* Dimmed: a contact has nothing to do with what is behind it, and a live Contacts tab
               under it would open the same contact again, full screen. */}
-          <Stack.Screen
-            name="contact/[id]"
-            options={{ ...mapSheetOptions, sheetLargestUndimmedDetentIndex: 'none' }}
-          />
-          <Stack.Screen name="contact/edit" options={formModalOptions} />
-          <Stack.Screen name="inbox" options={mapSheetOptions} />
-          <Stack.Screen name="offline-maps" options={mapSheetOptions} />
-          <Stack.Screen name="offline-region" options={stepSheetOptions} />
-          <Stack.Screen name="map-layers" options={mapSheetOptions} />
-          <Stack.Screen name="search" options={mapSheetOptions} />
-          <Stack.Screen name="feedback" options={mapSheetOptions} />
-          <Stack.Screen name="sync-issues" options={mapSheetOptions} />
-          <Stack.Screen name="welcome" options={formModalOptions} />
-          <Stack.Screen name="password" options={sheetOptions} />
-          <Stack.Screen name="passkeys" options={sheetOptions} />
-        </Stack.Protected>
-        <Stack.Protected guard={!signedIn} redirectTo="/">
-          <Stack.Screen name="auth" options={{ animation: 'fade' }} />
-        </Stack.Protected>
-      </Stack>
+            <Stack.Screen
+              name="contact/[id]"
+              options={{ ...mapSheetOptions, sheetLargestUndimmedDetentIndex: 'none' }}
+            />
+            <Stack.Screen name="contact/edit" options={formModalOptions} />
+            <Stack.Screen name="inbox" options={mapSheetOptions} />
+            <Stack.Screen name="offline-maps" options={fitSheetOptions} />
+            <Stack.Screen name="offline-region" options={fitStepSheetOptions} />
+            <Stack.Screen name="map-layers" options={fitSheetOptions} />
+            <Stack.Screen name="search" options={mapSheetOptions} />
+            <Stack.Screen name="feedback" options={mapSheetOptions} />
+            <Stack.Screen name="sync-issues" options={mapSheetOptions} />
+            <Stack.Screen name="welcome" options={formModalOptions} />
+            <Stack.Screen name="password" options={sheetOptions} />
+            <Stack.Screen name="passkeys" options={sheetOptions} />
+          </Stack.Protected>
+          <Stack.Protected guard={!signedIn} redirectTo="/">
+            <Stack.Screen name="auth" options={{ animation: 'fade' }} />
+          </Stack.Protected>
+        </Stack>
+      </PageReturn.Provider>
       <UpdateGate />
     </PageBanner.Provider>
   );
