@@ -59,7 +59,6 @@ const fitted: NativeStackNavigationOptions =
       }
     : {};
 export const fitSheetOptions = { ...mapSheetOptions, ...fitted };
-export const fitStepSheetOptions = { ...stepSheetOptions, ...fitted };
 
 /** Data entry: a full-height modal with its own navigation bar (Cancel, Save). */
 export const formModalOptions: NativeStackNavigationOptions = {
@@ -67,6 +66,15 @@ export const formModalOptions: NativeStackNavigationOptions = {
   headerShown: false,
   contentStyle: { backgroundColor: color.surface },
 };
+
+/**
+ * The welcome sheet (onboarding): iOS, as tall as its page and dimming the app behind it, so a new
+ * account's two name fields aren't a screen of empty space; Android keeps the full-height modal.
+ */
+export const welcomeSheetOptions: NativeStackNavigationOptions =
+  Platform.OS === 'ios'
+    ? { ...fitSheetOptions, sheetLargestUndimmedDetentIndex: 'none' }
+    : formModalOptions;
 
 /** The stack's screen layout: native presents sheets itself (web: a panel beside the map). */
 export const sheetLayout = undefined;

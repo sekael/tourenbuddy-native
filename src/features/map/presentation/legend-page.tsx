@@ -1,7 +1,8 @@
+import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { ListRow, ListSection } from '@/core/adaptive/list';
-import { Page } from '@/core/adaptive/screen';
+import { Page, Screen } from '@/core/adaptive/screen';
 import { color } from '@/core/theme/tokens';
 import {
   TOUR_TYPE_COLORS,
@@ -16,8 +17,19 @@ import { FALLBACK_COLOR } from './marker-palette';
  * activities wearing it (derived from the palette, so a palette change cannot leave it behind),
  * then the badges and the cluster.
  */
-/** The legend, pushed inside the map layers sheet. */
-export function LegendPage({ onClose }: { onClose?: () => void }) {
+/**
+ * The legend as a sheet of its own over the map layers (owner, 2026-11-18): it opens at full height
+ * at once, so it never shows half drawn while a smaller sheet grows; closing it returns to the layers.
+ */
+export function LegendSheet() {
+  return (
+    <Screen>
+      <LegendPage onClose={() => router.back()} />
+    </Screen>
+  );
+}
+
+function LegendPage({ onClose }: { onClose?: () => void }) {
   const { t } = useTranslation();
   const byColour = new Map<string, TourType[]>();
   for (const [type, colour] of Object.entries(TOUR_TYPE_COLORS) as [TourType, string][]) {

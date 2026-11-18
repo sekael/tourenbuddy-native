@@ -68,9 +68,12 @@ describe('welcome (onboarding)', () => {
     expect(actions.updateProfile).not.toHaveBeenCalled();
 
     // Skipping the name still shows what the app does; Done stops it showing at sign-in.
-    await fireEvent.press(button('Skip for now'));
+    await fireEvent.press(button('Later'));
     await settle();
     expect(screen.getByText('Plan a tour')).toBeOnTheScreen();
+    // The overview is the sheet's first page now: no way back to a name step already passed.
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
+    expect(screen.queryByText('Set up your profile')).toBeNull();
     await fireEvent.press(button('Done'));
     await settle();
     expect(actions.dismissTourAtSignIn).toHaveBeenCalledTimes(1);
@@ -115,7 +118,7 @@ describe('welcome (onboarding)', () => {
     await settle(); // the profile store's own load (which fails here) comes first
     await act(async () => useUserProfileStore.setState({ profile: newAccount, ...actions }));
     await settle();
-    await fireEvent.press(button('Skip for now')); // the name
+    await fireEvent.press(button('Later')); // the name
     await settle();
     await fireEvent.press(screen.getByText('Friend requests'));
     await settle();

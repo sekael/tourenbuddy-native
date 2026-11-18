@@ -46,8 +46,8 @@ export const stepSheetOptions: NativeStackNavigationOptions = {
   sheetAllowedDetents: [0.45],
 };
 export const fitSheetOptions = mapSheetOptions;
-export const fitStepSheetOptions = stepSheetOptions;
 export const formModalOptions = panelOptions;
+export const welcomeSheetOptions = panelOptions;
 
 /**
  * The stack's screen layout: a panel route's content in a side panel from 600 px, a bottom sheet

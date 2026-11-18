@@ -94,7 +94,8 @@ export function Screen({ children, path = [], onPathChange, renderPage }: Screen
   if (!top) return children;
   return (
     <BackContext.Provider value={() => onPathChange?.(path.slice(0, -1))}>
-      {top}
+      {/* The tour's way back is the sheet's first page's, not a page pushed further on. */}
+      <PageReturn.Provider value={null}>{top}</PageReturn.Provider>
     </BackContext.Provider>
   );
 }

@@ -1,13 +1,21 @@
 import { AuthApiError, AuthRetryableFetchError } from '@supabase/supabase-js';
 import { act, fireEvent, screen } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
-import { Alert, type AlertButton } from 'react-native';
+import { Alert, Keyboard, type AlertButton } from 'react-native';
+
+import { useAuthStore } from '@/features/auth/presentation/stores/auth-store';
 
 import { routes } from '../../../app/routes';
 import { signIn } from '../../../support/auth';
 import { Passkey, sheetError } from '../../../support/fake-passkey';
 import { supabase } from '../../../support/fake-supabase';
-import { isSwiftDisabled, pressSwift, swiftButton } from '../../../support/swift-ui';
+import {
+  hasSwiftText,
+  isSwiftDisabled,
+  pressSwift,
+  swiftButton,
+  swiftButtonLabelled,
+} from '../../../support/swift-ui';
 
 // The Profile tab's password and passkey sheets, on iOS.
 const passkey = supabase.auth.passkey;
@@ -37,7 +45,9 @@ describe('Profile tab', () => {
   });
 });
 
-describe('password sheet', () => {
+describe('password sheet, just signed in', () => {
+  // A code, password or passkey accepted moments ago in this app.
+  beforeEach(() => useAuthStore.setState({ provenAt: Date.now() }));
   beforeEach(() => renderRouter(routes, { initialUrl: '/profile' }));
   beforeEach(() => pressSwift('Password'));
 
@@ -97,6 +107,87 @@ describe('password sheet', () => {
     expect(field('New password')).toHaveDisplayValue('chosen-123');
     expect(screen).toHavePathname('/password');
   });
+
+  it("should ask for the server's code when it wants one, then save with it", async () => {
+    supabase.auth.updateUser.mockResolvedValueOnce({
+      data: {},
+      error: new AuthApiError('reauth', 400, 'reauthentication_needed'),
+    });
+    await type('New password', 'chosen-123');
+    await pressSwift('Save password');
+
+    expect(supabase.auth.signInWithOtp).toHaveBeenCalledWith({
+      email: 'anna@example.com',
+      options: { shouldCreateUser: false },
+    });
+    expect(screen.getByText(/we sent a 6-digit code to anna@example.com/)).toBeOnTheScreen();
+    await type('Code from your email', '123456');
+    await pressSwift('Save password');
+
+    expect(supabase.auth.verifyOtp).toHaveBeenCalledWith({
+      email: 'anna@example.com',
+      token: '123456',
+      type: 'email',
+    });
+    expect(supabase.auth.updateUser).toHaveBeenLastCalledWith({ password: 'chosen-123' });
+    expect(screen).toHavePathname('/profile');
+  });
+});
+
+describe('password sheet, the app relaunched since the sign-in', () => {
+  // A restored session proves nothing, however recent the account's last sign-in elsewhere.
+  beforeEach(() => useAuthStore.setState({ provenAt: undefined }));
+  beforeEach(() => renderRouter(routes, { initialUrl: '/profile' }));
+  beforeEach(() => pressSwift('Password'));
+
+  it('should confirm with an emailed code before it changes anything (an unlocked phone is not enough)', async () => {
+    await type('New password', 'chosen-123');
+    await pressSwift('Continue');
+
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+    expect(supabase.auth.signInWithOtp).toHaveBeenCalledWith({
+      email: 'anna@example.com',
+      options: { shouldCreateUser: false },
+    });
+
+    await pressSwift('Save password');
+    expect(screen.getByText('Enter the 6-digit code from your email.')).toBeOnTheScreen();
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+  });
+
+  it('should ask for the code even when the account signed in a minute ago elsewhere', async () => {
+    useAuthStore.setState((s) => ({
+      user: s.user && { ...s.user, last_sign_in_at: new Date().toISOString() },
+    }));
+    await type('New password', 'chosen-123');
+    await pressSwift('Continue');
+
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+    expect(supabase.auth.signInWithOtp).toHaveBeenCalledTimes(1);
+  });
+
+  it('should explain a wrong code, in sight, and keep the sheet open to try again', async () => {
+    const dismiss = jest.spyOn(Keyboard, 'dismiss');
+    await type('New password', 'chosen-123');
+    await pressSwift('Continue');
+    supabase.auth.verifyOtp.mockResolvedValueOnce({
+      data: { session: null },
+      error: new AuthApiError('Token has expired or is invalid', 403, 'otp_expired'),
+    });
+
+    await type('Code from your email', '000000');
+    await pressSwift('Save password');
+
+    expect(
+      screen.getByText('That code is wrong or has expired. Send a new one and try again.'),
+    ).toBeOnTheScreen();
+    expect(dismiss).toHaveBeenCalled(); // the keyboard no longer covers the message
+    expect(screen.getByLabelText('Code from your email').props.maxLength).toBe(6);
+    expect(screen).toHavePathname('/password');
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled(); // a wrong code changes nothing
+    await pressSwift('Send a new code');
+    expect(supabase.auth.signInWithOtp).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe('passkeys sheet', () => {
@@ -116,20 +207,21 @@ describe('passkeys sheet', () => {
 
     await open();
 
-    expect(screen.getByText('iCloud Keychain')).toBeOnTheScreen();
-    expect(screen.getByText('Added on November 8, 2026')).toBeOnTheScreen();
-    expect(screen.getByText('Passkey')).toBeOnTheScreen();
+    expect(hasSwiftText('iCloud Keychain')).toBe(true);
+    // Day and time: several passkeys often share a name.
+    expect(hasSwiftText('Added on November 8, 2026')).toBe(true);
+    expect(hasSwiftText('Passkey')).toBe(true);
   });
 
   it('should say when there are none', async () => {
     await open();
-    expect(screen.getByText('No passkeys yet.')).toBeOnTheScreen();
+    expect(hasSwiftText('No passkeys yet.')).toBe(true);
   });
 
   it('should say when the list is out of reach', async () => {
     passkey.list.mockResolvedValueOnce({ data: null, error: offline() });
     await open();
-    expect(screen.getByText("This action isn't available offline")).toBeOnTheScreen();
+    expect(hasSwiftText("This action isn't available offline")).toBe(true);
   });
 
   it('should add a passkey and show it', async () => {
@@ -143,7 +235,7 @@ describe('passkeys sheet', () => {
 
     expect(Passkey.create).toHaveBeenCalled();
     expect(passkey.verifyRegistration).toHaveBeenCalled();
-    expect(screen.getByText('iCloud Keychain')).toBeOnTheScreen();
+    expect(hasSwiftText('iCloud Keychain')).toBe(true);
   });
 
   it('should say nothing when adding is cancelled', async () => {
@@ -177,7 +269,7 @@ describe('passkeys sheet', () => {
 
     await pressSwift('Add passkey');
 
-    expect(screen.getByText(message)).toBeOnTheScreen();
+    expect(hasSwiftText(message)).toBe(true);
   });
 
   it('should add one passkey at a time', async () => {
@@ -202,16 +294,21 @@ describe('passkeys sheet', () => {
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     await open();
 
-    await pressSwift('Delete');
+    // The row's own delete, named with the passkey it deletes.
+    await act(() =>
+      fireEvent(swiftButtonLabelled('Delete iCloud Keychain, added on'), 'buttonPress'),
+    );
     expect(passkey.delete).not.toHaveBeenCalled();
     const [title, message, buttons] = alert.mock.calls[0] as [string, string, AlertButton[]];
     expect(title).toBe('Delete passkey?');
-    expect(message).toContain('“iCloud Keychain” will no longer sign you in.');
+    expect(message).toMatch(
+      /^“iCloud Keychain”, added on November 8, 2026.*, will no longer sign you in\./,
+    );
     expect(buttons.map((b) => b.style)).toEqual(['cancel', 'destructive']);
 
     await act(async () => buttons[1].onPress?.());
 
     expect(passkey.delete).toHaveBeenCalledWith({ passkeyId: 'p1' });
-    expect(screen.queryByText('iCloud Keychain')).toBeNull();
+    expect(hasSwiftText('No passkeys yet.')).toBe(true);
   });
 });

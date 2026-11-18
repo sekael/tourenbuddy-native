@@ -1,5 +1,5 @@
 import { Button, Host } from '@expo/ui/swift-ui';
-import { accessibilityLabel, buttonStyle } from '@expo/ui/swift-ui/modifiers';
+import { accessibilityLabel, buttonStyle, labelStyle } from '@expo/ui/swift-ui/modifiers';
 
 import type { CloseButtonProps } from './close-button';
 
@@ -7,10 +7,14 @@ import type { CloseButtonProps } from './close-button';
 export function CloseButton({ label, onPress }: CloseButtonProps) {
   return (
     <Host matchContents>
+      {/* The xmark, as every other sheet's close: on its own, iOS 26 writes "Close" in the
+          device's language («Schließen» in an app switched to English). */}
       <Button
         role="close"
+        label={label}
+        systemImage="xmark"
         onPress={onPress}
-        modifiers={[buttonStyle('glass'), accessibilityLabel(label)]}
+        modifiers={[buttonStyle('glass'), labelStyle('iconOnly'), accessibilityLabel(label)]}
       />
     </Host>
   );

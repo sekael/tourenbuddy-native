@@ -58,6 +58,8 @@ jest.mock('expo-notifications', () => ({
   addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
   getLastNotificationResponse: jest.fn(() => null),
   setBadgeCountAsync: jest.fn(async () => true),
+  dismissAllNotificationsAsync: jest.fn(async () => undefined),
+  unregisterForNotificationsAsync: jest.fn(async () => undefined),
 }));
 // No system passkey sheet either.
 jest.mock('react-native-passkey', () => require('./support/fake-passkey'));

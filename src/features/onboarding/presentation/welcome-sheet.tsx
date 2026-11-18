@@ -1,13 +1,14 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Keyboard } from 'react-native';
 
 import type { IconName } from '@/core/adaptive/icons';
 import { ListRow, ListSection, TextRow } from '@/core/adaptive/list';
 import { Page, Screen } from '@/core/adaptive/screen';
 import { useUserProfileStore } from '@/features/user/presentation/stores/user-profile-store';
 
-import { useTourReturn } from './tour-return';
+import { startTourFeature, useTourReturn } from './tour-return';
 
 /**
  * Welcome (onboarding-tour, D12 as revised): the name step a new account needs, then what the app
@@ -50,7 +51,7 @@ const FEATURES: Feature[] = [
 ];
 
 function open(feature: Feature, start: 'resume' | 'features') {
-  useTourReturn.setState({ start });
+  startTourFeature(start, String(feature.href));
   router.back();
   if (feature.overMap) {
     router.navigate('/');
@@ -64,8 +65,19 @@ export function WelcomeSheet() {
   const { t } = useTranslation();
   const { start } = useLocalSearchParams<{ start?: string }>();
   const profile = useUserProfileStore((s) => s.profile);
-  const needsName = !start && !!profile && !profile.firstName?.trim();
-  const [path, setPath] = useState<string[]>([]);
+  // The name step, decided once as the sheet opens: saving the name must not swap the sheet for
+  // another tree (a flash), and the overview after it is the sheet's first page, with no back
+  // button to a name already saved.
+  // Undecided until the profile is known (it can arrive after the sheet opens).
+  const known = start
+    ? 'features'
+    : profile
+      ? profile.firstName?.trim()
+        ? 'features'
+        : 'name'
+      : null;
+  const [step, setStep] = useState<'name' | 'features' | null>(known);
+  if (step === null && known !== null) setStep(known);
   // Open, it is its own way back; closed without picking a place, the tour is over.
   useLayoutEffect(() => useTourReturn.setState({ start: null }), []);
 
@@ -82,7 +94,7 @@ export function WelcomeSheet() {
       title={t('onboarding.tour.welcome.title')}
       onClose={fromSignIn ? undefined : () => router.back()}
       cancel={
-        fromSignIn && !needsName
+        fromSignIn
           ? { label: t('onboarding.tour.welcome.skip'), onPress: () => router.back() }
           : undefined
       }
@@ -108,16 +120,17 @@ export function WelcomeSheet() {
     </Page>
   );
 
-  if (!needsName) return <Screen>{features}</Screen>;
+  // As tall as its page: the name step is two fields, not a screen of empty space; the overview
+  // grows the sheet up to the screen.
   return (
-    <Screen path={path} onPathChange={setPath} renderPage={() => features}>
-      <NamePage onDone={() => setPath(['features'])} />
+    <Screen fit>
+      {step === 'name' ? <NamePage onDone={() => setStep('features')} /> : features}
     </Screen>
   );
 }
 
 /** A new account's name (user-profile "Profile setup"): both names, or skip for this launch. */
-function NamePage({ onDone }: { onDone: () => void }) {
+function NamePage({ onDone: next }: { onDone: () => void }) {
   const { t } = useTranslation();
   const [first, setFirst] = useState('');
   const [last, setLast] = useState('');
@@ -125,6 +138,11 @@ function NamePage({ onDone }: { onDone: () => void }) {
   const missingFirst = !first.trim();
   const missingLast = !last.trim();
 
+  // The keyboard goes before the tour takes the sheet: it doesn't linger over the new page.
+  const onDone = () => {
+    Keyboard.dismiss();
+    next();
+  };
   const save = () => {
     setTried(true);
     if (missingFirst || missingLast) return;

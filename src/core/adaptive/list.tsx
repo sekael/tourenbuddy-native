@@ -152,6 +152,14 @@ export type StepperRowProps = {
   format?: (value: number) => string;
 };
 
+/** A value picked along a range (the pace): a slider between two icons, the value beside the title. */
+export type SliderRowProps = StepperRowProps & {
+  icon?: IconName;
+  /** The slow and the fast end's icons (a tortoise and a hare). */
+  minIcon: IconName;
+  maxIcon: IconName;
+};
+
 export type ContentRowProps = { children: ReactNode; accessibilityLabel?: string };
 
 export type EmptyStateProps = {
@@ -556,6 +564,16 @@ export function StepperRow({
       </View>
     </View>
   );
+}
+
+/** Material: the stepper, until Android and the web get a slider of their own. */
+export function SliderRow({
+  icon: _icon,
+  minIcon: _min,
+  maxIcon: _max,
+  ...stepper
+}: SliderRowProps) {
+  return <StepperRow {...stepper} />;
 }
 
 /** App-drawn content inside a section (a profile chart, the attachments strip). */

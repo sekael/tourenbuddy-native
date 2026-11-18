@@ -22,10 +22,12 @@ import {
   Animation,
   background,
   buttonStyle,
+  controlSize,
   disabled as disabledModifier,
   font,
   foregroundStyle,
   frame,
+  id,
   lineLimit,
   listSectionMargins,
   listSectionSpacing,
@@ -36,12 +38,13 @@ import {
   navigationTitle,
   pickerStyle,
   refreshable,
+  scrollContentBackground,
   searchable,
   tag,
   tint,
   useScrollGeometryChange,
 } from '@expo/ui/swift-ui/modifiers';
-import { useContext, useRef, useState, type ReactNode } from 'react';
+import { useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
@@ -64,28 +67,75 @@ import type { PageProps, ScreenProps } from './screen';
  * system's own. Pushed pages are `NavigationDestination`s for the values in `path`.
  */
 export function Screen({ children, path, onPathChange, renderPage, fit }: ScreenProps) {
-  // Fitted, the sheet (`fitSheetOptions`) takes the host's height: the top page's list, up to
-  // the sheet's largest height (a longer list scrolls). Below the status bar and the sheet's gap
-  // above it on every iPhone, so the list's end never hides under the sheet's edge.
-  const [height, setHeight] = useState<number>();
   const window = useWindowDimensions().height;
-  const style = fit ? { height: Math.min(height ?? window / 2, window * 0.9) } : styles.host;
-  return (
-    <Host style={style}>
-      <PageFit.Provider value={fit ? setHeight : null}>
+  // Fitted, the sheet (`fitSheetOptions`) is as tall as the top page's list, up to its largest
+  // height (a longer list scrolls); below the status bar and the sheet's gap above it on every
+  // iPhone, so the list's end never hides under the sheet's edge.
+  //
+  // Two frames: the SwiftUI host always has that largest height, and an outer frame, as tall as the
+  // page, is what the sheet fits to. SwiftUI keeps a page's frame for a whole push, so a host that
+  // changed size with each page cut a taller page off mid-push or had to grow before it; with a
+  // host that never changes, a push or pop is the system's own slide, and the sheet glides once to
+  // the new page's height, up or down. The outer frame doesn't clip: the sheet's own edge does, as
+  // it glides, so a page sliding in or out is never cut off at the other page's height.
+  const largest = window * 0.9;
+  const [height, setHeight] = useState<number>();
+  const pages = useLeavingPages(path ?? []);
+  // The bar's inset, from the list's offset at rest, once: scrolled or pulled, the offset no longer
+  // shows it, and the sheet must not shrink or grow under a finger.
+  const inset = useRef(0);
+  const pageFit = fit
+    ? {
+        height: (contentHeight: number, offsetY: number) => {
+          if (!inset.current) inset.current = Math.max(0, -offsetY);
+          return Math.ceil(contentHeight + inset.current);
+        },
+        report: setHeight,
+      }
+    : null;
+  const host = (
+    <Host style={fit ? { height: largest } : styles.host}>
+      <PageFit.Provider value={pageFit}>
         <NavigationStack path={path} onPathChange={onPathChange}>
           <PageOnTop.Provider value={!path?.length}>{children}</PageOnTop.Provider>
-          {(path ?? []).map((value, i, all) => (
+          {pages.map((value) => (
             <NavigationDestination key={value} value={value}>
-              <PageOnTop.Provider value={i === all.length - 1}>
-                {renderPage?.(value)}
-              </PageOnTop.Provider>
+              {/* The tour's way back is the sheet's first page's, not a page pushed further on. */}
+              <PageReturn.Provider value={null}>
+                <PageOnTop.Provider value={value === path?.at(-1)}>
+                  {renderPage?.(value)}
+                </PageOnTop.Provider>
+              </PageReturn.Provider>
             </NavigationDestination>
           ))}
         </NavigationStack>
       </PageFit.Provider>
     </Host>
   );
+  if (!fit) return host;
+  return <View style={{ height: Math.min(height ?? window / 2, largest) }}>{host}</View>;
+}
+
+/** How long the system's pop slides a page away. */
+const POP_MS = 500;
+
+/**
+ * The pushed pages to render: the path, and for a moment those just popped. SwiftUI slides a popped
+ * page out after the path has dropped it; its content gone at once, it slid out as an empty pane.
+ */
+function useLeavingPages(path: string[]) {
+  const [shown, setShown] = useState(path);
+  const [leaving, setLeaving] = useState<string[]>([]);
+  if (shown !== path) {
+    setShown(path);
+    setLeaving(shown.filter((value) => !path.includes(value)));
+  }
+  useEffect(() => {
+    if (!leaving.length) return;
+    const timer = setTimeout(() => setLeaving([]), POP_MS);
+    return () => clearTimeout(timer);
+  }, [leaving]);
+  return [...path, ...leaving.filter((value) => !path.includes(value))];
 }
 
 export function Page({
@@ -119,16 +169,21 @@ export function Page({
   const wayBack = useContext(PageReturn);
   const fit = useContext(PageFit);
   const onTop = useContext(PageOnTop);
-  // The list's top inset is the bar, read from its offset at rest, once: scrolled or pulled, the
-  // offset no longer shows it, and the sheet must not shrink or grow under a finger.
-  const inset = useRef(0);
+  // Every page of a fitted sheet measures its list, on top or not: a modifier that came and went
+  // with the page on top made SwiftUI build the list anew mid-slide (its bar blank, a stale strip).
+  // Only the page on top sets the sheet's height; one back on top sets it at once from its last
+  // measure, as the page over it slides away.
+  const measured = useRef(0);
+  useLayoutEffect(() => {
+    if (fit && onTop && measured.current) fit.report(measured.current);
+  }, [fit, onTop]);
   const fitting = useScrollGeometryChange(
-    fit && onTop
+    fit
       ? (g) => {
           // Before its first layout the list has no rows: no height to take yet.
           if (!g.contentHeight) return;
-          if (!inset.current) inset.current = Math.max(0, -g.contentOffsetY);
-          fit(Math.ceil(g.contentHeight + inset.current));
+          measured.current = fit.height(g.contentHeight, g.contentOffsetY);
+          if (onTop) fit.report(measured.current);
         }
       : undefined,
   );
@@ -138,6 +193,9 @@ export function Page({
     // The status row slides in and out with the list (a cut under Reduce Motion).
     ...(reducedMotion ? [] : [animation(Animation.default, !!banner)]),
     ...(form ? [] : [listStyle('insetGrouped')]),
+    // Fitted, the sheet's glass is the page's background: the list's own grouped background ended
+    // above the sheet's bottom edge, a second, lighter shade under the cards.
+    ...(fit ? [scrollContentBackground('hidden')] : []),
     // Sections close together, as in Settings: a sheet shows more than its gaps.
     listSectionSpacing('compact'),
     ...(onRefresh ? [refreshable(onRefresh)] : []),
@@ -201,9 +259,14 @@ export function Page({
             <Picker
               selection={titleControl.value}
               onSelectionChange={(value) => titleControl.onChange(String(value))}
-              // As wide as the bar allows (up to a comfortable width), so the longer label
-              // has room in its half instead of the picker hugging it.
-              modifiers={[pickerStyle('segmented'), frame({ maxWidth: TITLE_CONTROL_WIDTH })]}
+              // Room to breathe: in the bar the picker is offered no width and hugged its labels,
+              // so it takes at least a comfortable width (more for longer labels), and the large
+              // size gives each option a taller, roomier segment.
+              modifiers={[
+                pickerStyle('segmented'),
+                controlSize('large'),
+                frame({ minWidth: TITLE_CONTROL_MIN_WIDTH, maxWidth: TITLE_CONTROL_WIDTH }),
+              ]}
             >
               {titleControl.options.map((option) => (
                 <SwiftText key={option.value} modifiers={[tag(option.value)]}>
@@ -215,9 +278,11 @@ export function Page({
         ) : !largeTitle && !titleInHeader && title ? (
           <ToolbarItem placement="principal">
             {/* The bar's own title, but shrinking at the largest text sizes rather than cut to
-                "Bearb…" between Cancel and Save. */}
+                "Bearb…" between Cancel and Save. A new title is a new view: it fades in rather
+                than morphing inside the old one's width ("Willkom…"). */}
             <SwiftText
               modifiers={[
+                id(title),
                 font({ textStyle: 'headline' }),
                 lineLimit(1),
                 minimumScaleFactor(0.5),
@@ -342,6 +407,7 @@ function HostedWidth({ children }: { children: ReactNode }) {
  */
 const TARGET = size.touch;
 const TITLE_CONTROL_WIDTH = 264;
+const TITLE_CONTROL_MIN_WIDTH = 220;
 
 function BarIcon({ icon, selected = false }: { icon: IconName; selected?: boolean }) {
   return (
@@ -356,4 +422,6 @@ function BarIcon({ icon, selected = false }: { icon: IconName; selected?: boolea
   );
 }
 
-const styles = StyleSheet.create({ host: { flex: 1 } });
+const styles = StyleSheet.create({
+  host: { flex: 1 },
+});

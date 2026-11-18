@@ -8,7 +8,7 @@ import { Page } from '@/core/adaptive/screen';
 import { connectivity } from '@/core/offline/online';
 import { MUTABLE_NOTIFICATION_TYPES } from '@/features/notifications/domain/entities/notification-preferences';
 
-import { useNotificationsStore } from './stores/notifications-store';
+import { useNotificationsStore, PushTokenTimeout } from './stores/notifications-store';
 
 /**
  * Notification settings (notifications): push on this device, email, and which kinds alert at
@@ -18,6 +18,7 @@ export function NotificationSettingsPage() {
   const { t } = useTranslation();
   const prefs = useNotificationsStore((s) => s.prefs);
   const pushEnabled = useNotificationsStore((s) => s.pushEnabled);
+  const pushPending = useNotificationsStore((s) => s.pushPending);
   const permission = useNotificationsStore((s) => s.permission);
   const online = useStore(connectivity, (s) => s.online);
   const store = useNotificationsStore.getState();
@@ -25,18 +26,34 @@ export function NotificationSettingsPage() {
   const pushAvailable = Platform.OS !== 'web';
   const allOff = !pushEnabled && !prefs?.notifEmailEnabled;
 
-  // Back from the Settings app (where a denied permission is fixed), the page reads it anew.
+  // Back from the Settings app (where a denied permission is fixed), the page reads it anew: at
+  // once and a moment later, as iOS can still answer with the old permission right on return.
   useEffect(() => {
+    let later: ReturnType<typeof setTimeout> | undefined;
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') void useNotificationsStore.getState().ensurePushToken();
+      if (state !== 'active') return;
+      const check = () => void useNotificationsStore.getState().ensurePushToken();
+      check();
+      clearTimeout(later);
+      later = setTimeout(check, SETTINGS_RECHECK_MS);
     });
-    return () => sub.remove();
+    return () => {
+      sub.remove();
+      clearTimeout(later);
+    };
   }, []);
 
   const fail = (error: unknown) => {
     if (error) Alert.alert(t('common.genericError'));
   };
-  const pushFailed = () => Alert.alert(t('notifications.pushFailed'));
+  const pushFailed = (error: unknown) =>
+    Alert.alert(
+      t(
+        error instanceof PushTokenTimeout
+          ? 'notifications.pushNoToken'
+          : 'notifications.pushFailed',
+      ),
+    );
 
   return (
     <Page title={t('notifications.sectionTitle')}>
@@ -57,8 +74,9 @@ export function NotificationSettingsPage() {
           title={t('notifications.pushLabel')}
           subtitle={t('notifications.pushDescription')}
           icon="notifications"
-          value={pushEnabled}
-          disabled={!pushAvailable || !online || denied}
+          // On while it switches on: the system's prompt and the token take a moment.
+          value={pushEnabled || pushPending}
+          disabled={!pushAvailable || !online || denied || pushPending}
           onValueChange={(on) => void store.setPushEnabled(on).catch(pushFailed)}
         />
         <ToggleRow
@@ -97,6 +115,8 @@ export function NotificationSettingsPage() {
     </Page>
   );
 }
+
+const SETTINGS_RECHECK_MS = 1000;
 
 const TYPE_DESCRIPTIONS = {
   tour_interest: true,

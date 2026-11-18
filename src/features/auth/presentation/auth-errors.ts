@@ -42,10 +42,21 @@ export function signInErrorMessage(error: unknown, t: TFunction): string {
 }
 
 /** Why setting a password failed, in the app's language. */
+/** The server wants the emailed code before it changes the password. */
+export function needsPasswordCode(error: unknown): boolean {
+  return isAuthApiError(error) && error.code === 'reauthentication_needed';
+}
+
 export function passwordErrorMessage(error: unknown, t: TFunction): string {
   if (isOffline(error)) return t('offline.actionUnavailable');
   if (isAuthApiError(error) && error.code === 'same_password') return t('auth.password.same');
   if (isAuthApiError(error) && error.code === 'weak_password') return t('auth.password.weak');
+  if (
+    isAuthApiError(error) &&
+    (error.code === 'otp_expired' || error.code === 'reauthentication_not_valid')
+  ) {
+    return t('auth.password.codeInvalid');
+  }
   return t('auth.password.saveError');
 }
 

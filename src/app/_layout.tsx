@@ -20,10 +20,10 @@ import { Platform } from 'react-native';
 import {
   formModalOptions,
   fitSheetOptions,
-  fitStepSheetOptions,
   mapSheetOptions,
   sheetLayout,
   sheetOptions,
+  welcomeSheetOptions,
   stepSheetOptions,
 } from '@/core/adaptive/sheet';
 import { useDeviceLocale } from '@/core/i18n';
@@ -43,7 +43,10 @@ import {
   useOfflineStatus,
   watchOfflineFlashes,
 } from '@/features/shell/presentation/offline-status';
-import { useNotificationsStore } from '@/features/notifications/presentation/stores/notifications-store';
+import {
+  forgetSignedOutDevice,
+  useNotificationsStore,
+} from '@/features/notifications/presentation/stores/notifications-store';
 import { useUserBlocksStore } from '@/features/friendships/presentation/stores/user-blocks-store';
 import { useTourLinksStore } from '@/features/tour-links/presentation/stores/tour-links-store';
 import { useTourAttachmentsStore } from '@/features/tours/presentation/stores/tour-attachments-store';
@@ -52,7 +55,11 @@ import { useTourFiltersStore } from '@/features/tours/presentation/stores/tour-f
 import { useTourSuggestionsStore } from '@/features/tours/presentation/stores/tour-suggestions-store';
 import { useToursStore } from '@/features/tours/presentation/stores/tours-store';
 import { useUserProfileStore } from '@/features/user/presentation/stores/user-profile-store';
-import { useTourReturn, useTourWayBack } from '@/features/onboarding/presentation/tour-return';
+import {
+  useFollowTour,
+  useTourReturn,
+  useTourWayBack,
+} from '@/features/onboarding/presentation/tour-return';
 
 registerFlushTriggers();
 
@@ -192,10 +199,17 @@ export default function RootLayout() {
     if (!isLoading) SplashScreen.hide();
   }, [isLoading]);
 
+  // Signed out, at launch or after any sign-out: no badge and no pushes for whoever was here.
+  useEffect(() => {
+    if (!isLoading && !signedIn) void forgetSignedOutDevice();
+  }, [isLoading, signedIn]);
+
   useEffect(() => (signedIn ? watchOfflineFlashes() : undefined), [signedIn]);
   const status = useOfflineStatus();
   const banner = signedIn && status ? <OfflineBanner status={status} /> : null;
-  const wayBack = useTourWayBack();
+  const pathname = usePathname();
+  useFollowTour(pathname);
+  const wayBack = useTourWayBack(pathname);
 
   return (
     <PageBanner.Provider value={banner}>
@@ -228,12 +242,16 @@ export default function RootLayout() {
             <Stack.Screen name="contact/edit" options={formModalOptions} />
             <Stack.Screen name="inbox" options={mapSheetOptions} />
             <Stack.Screen name="offline-maps" options={fitSheetOptions} />
-            <Stack.Screen name="offline-region" options={fitStepSheetOptions} />
             <Stack.Screen name="map-layers" options={fitSheetOptions} />
+            {/* Over the layers sheet, at full height; it can come down to half, the map live. */}
+            <Stack.Screen
+              name="legend"
+              options={{ ...mapSheetOptions, sheetInitialDetentIndex: 1 }}
+            />
             <Stack.Screen name="search" options={mapSheetOptions} />
             <Stack.Screen name="feedback" options={mapSheetOptions} />
             <Stack.Screen name="sync-issues" options={mapSheetOptions} />
-            <Stack.Screen name="welcome" options={formModalOptions} />
+            <Stack.Screen name="welcome" options={welcomeSheetOptions} />
             <Stack.Screen name="password" options={sheetOptions} />
             <Stack.Screen name="passkeys" options={sheetOptions} />
           </Stack.Protected>

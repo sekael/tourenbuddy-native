@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { create } from 'zustand';
@@ -11,10 +11,44 @@ import { color, size, space } from '@/core/theme/tokens';
 /**
  * A feature opened from the welcome sheet leads back to it (onboarding-tour): `start` is the sheet's
  * own, so a tour begun at sign-in keeps its Skip and Done. Null while no tour is under way.
+ * `dest` is the route the tour's row opened (a tab, or a sheet over the map): the way back shows
+ * there only, where the user meant to look, not on the screens on the way to it or beyond it.
+ * `arrived` once that route was reached, so the routes passed on the way don't end the tour.
  */
-export const useTourReturn = create<{ start: 'resume' | 'features' | null }>(() => ({
-  start: null,
-}));
+export const useTourReturn = create<{
+  start: 'resume' | 'features' | null;
+  dest: string | null;
+  arrived: boolean;
+}>(() => ({ start: null, dest: null, arrived: false }));
+
+/** The tabs' own routes: back on one after the destination, the user has left the tour. */
+const TAB_ROOTS = ['/', '/calendar', '/contacts', '/profile'];
+
+/** Opens a tour row's place, remembering it as where the way back shows. */
+export function startTourFeature(start: 'resume' | 'features', href: string) {
+  useTourReturn.setState({ start, dest: href.split('?')[0]!, arrived: false });
+}
+
+/**
+ * Follows the current route (root layout): the destination reached marks it arrived; after that,
+ * a tab other than the destination (the feature's sheet closed, another tab picked) ends the tour.
+ */
+export function useFollowTour(pathname: string) {
+  useEffect(() => {
+    const { start, dest, arrived } = useTourReturn.getState();
+    if (!start) return;
+    if (pathname === dest) {
+      if (!arrived) useTourReturn.setState({ arrived: true });
+    } else if (arrived && TAB_ROOTS.includes(pathname)) {
+      useTourReturn.setState({ start: null });
+    }
+  }, [pathname]);
+}
+
+/** Whether the way back shows on `pathname`: a tour under way, and this is its destination. */
+export function useTourHere(pathname: string) {
+  return useTourReturn((s) => s.start !== null && s.dest === pathname);
+}
 
 /** Back to the tour's overview, over whatever sheets the feature opened. */
 function backToTour(start: 'resume' | 'features') {
@@ -23,16 +57,20 @@ function backToTour(start: 'resume' | 'features') {
   router.push({ pathname: '/welcome', params: { start } });
 }
 
-/** The way back for a sheet's bottom bar (`PageReturn`), while a tour is under way. */
-export function useTourWayBack() {
+/**
+ * The way back for a sheet's first row (`PageReturn`), on the tour's destination only: a sheet
+ * further on, or the screens on the way, don't offer it.
+ */
+export function useTourWayBack(pathname: string) {
   const { t } = useTranslation();
   const start = useTourReturn((s) => s.start);
+  const here = useTourHere(pathname);
   return useMemo(
     () =>
-      start
+      start && here
         ? { label: t('onboarding.tour.controls.back'), onPress: () => backToTour(start) }
         : null,
-    [start, t],
+    [start, here, t],
   );
 }
 

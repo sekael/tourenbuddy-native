@@ -14,9 +14,9 @@ import ContactEditRoute from '@/app/contact/edit';
 import DrawRoute from '@/app/draw';
 import FeedbackSheet from '@/app/feedback';
 import InboxSheet from '@/app/inbox';
+import LegendSheet from '@/app/legend';
 import MapLayersSheet from '@/app/map-layers';
 import OfflineMapsSheet from '@/app/offline-maps';
-import OfflineRegionSheet from '@/app/offline-region';
 import PasskeysSheet from '@/app/passkeys';
 import PasswordSheet from '@/app/password';
 import PlanRoute from '@/app/plan';
@@ -42,8 +42,8 @@ export const routes = {
   '(tabs)/profile': ProfileTab,
   inbox: InboxSheet,
   'offline-maps': OfflineMapsSheet,
-  'offline-region': OfflineRegionSheet,
   'map-layers': MapLayersSheet,
+  legend: LegendSheet,
   search: SearchSheet,
   feedback: FeedbackSheet,
   'sync-issues': SyncIssuesSheet,

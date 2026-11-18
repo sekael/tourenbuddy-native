@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image, Pressable, StyleSheet, View, type ImageSourcePropType } from 'react-native';
 import { useStore } from 'zustand';
@@ -14,9 +14,10 @@ import { connectivity } from '@/core/offline/online';
 import { color, radius, space } from '@/core/theme/tokens';
 import { TRAIL_OVERLAYS, type TrailOverlayId } from '@/features/map/data/trail-overlays';
 
-import { LegendPage } from './legend-page';
+import { OfflineMapsPage, RegionPage } from './offline-maps-sheet';
 import { BASE_STYLES } from './map-styles';
 import { useMapStore } from './stores/map-store';
+import { useOfflineMapsStore } from './stores/offline-maps-store';
 
 /** What each overlay looks like on the map, as the PWA's layer panel shows it. */
 const OVERLAY_PREVIEWS: Record<TrailOverlayId, { image: ImageSourcePropType; chip: string }> = {
@@ -31,15 +32,33 @@ const OVERLAY_PREVIEWS: Record<TrailOverlayId, { image: ImageSourcePropType; chi
  * downloaded.
  */
 export function MapLayersSheet() {
+  // Offline maps and framing a region are pages pushed inside this sheet: back from either is a
+  // slide back, never the sheet closing and opening again.
   const [path, setPath] = useState<string[]>([]);
+  // The regions read before the offline maps page is pushed: it slides in with its rows, at its
+  // final height, instead of growing as they arrive.
+  useEffect(() => {
+    void useOfflineMapsStore.getState().load();
+  }, []);
   return (
-    <Screen fit path={path} onPathChange={setPath} renderPage={() => <LegendPage />}>
-      <LayersPage onLegend={() => setPath(['legend'])} />
+    <Screen
+      fit
+      path={path}
+      onPathChange={setPath}
+      renderPage={(value) =>
+        value === 'region' ? (
+          <RegionPage onDone={() => setPath(['offline'])} />
+        ) : (
+          <OfflineMapsPage onRegion={() => setPath(['offline', 'region'])} />
+        )
+      }
+    >
+      <LayersPage onOffline={() => setPath(['offline'])} />
     </Screen>
   );
 }
 
-function LayersPage({ onLegend }: { onLegend: () => void }) {
+function LayersPage({ onOffline }: { onOffline: () => void }) {
   const { t } = useTranslation();
   const styleIndex = useMapStore((s) => s.styleIndex);
   const overlays = useMapStore((s) => s.overlays);
@@ -102,9 +121,11 @@ function LayersPage({ onLegend }: { onLegend: () => void }) {
         <ListRow
           title={t('map.overlay.offlineMap')}
           icon="download_for_offline"
-          onPress={() => router.replace('/offline-maps')}
+          // Pushed inside this sheet, as the legend: its back button returns here.
+          onPress={onOffline}
         />
-        <ListRow title={t('map.legend.title')} icon="info" onPress={onLegend} />
+        {/* A sheet of its own over this one, at full height (owner's choice, 2026-11-18). */}
+        <ListRow title={t('map.legend.title')} icon="info" onPress={() => router.push('/legend')} />
       </ListSection>
     </Page>
   );

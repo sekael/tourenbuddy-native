@@ -45,7 +45,14 @@ The Map tab SHALL show its controls in one row right above the tab bar, none ove
 
 #### Scenario: Legend from the map button
 - **WHEN** the user taps the map button and then "Legend"
-- **THEN** the legend opens inside the same sheet, with a back button to the map layers
+- **THEN** the legend opens as its own sheet over the map layers, at full height from the start
+- **AND** closing it returns to the map layers
+
+#### Scenario: Offline maps from the map button
+
+- **WHEN** the user taps the map button and then "Offline maps"
+- **THEN** the offline maps open inside the same sheet, with a back button to the map layers
+- **AND** framing a region is a page pushed in the same sheet: its back button or a started download slides back to those offline maps, without the sheet closing in between
 
 #### Scenario: Nothing clashes
 - **WHEN** the Map tab shows on a 375 pt wide phone in German

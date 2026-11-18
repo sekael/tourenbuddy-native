@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 
 import { EmptyState, ListRow, ListSection, TextRow } from '@/core/adaptive/list';
+import { usePageOnTop } from '@/core/adaptive/page-on-top';
 import { Page, Screen } from '@/core/adaptive/screen';
 import { color } from '@/core/theme/tokens';
 import { formatBytes } from '@/core/utils/format-bytes';
@@ -43,11 +44,38 @@ function frameRegions(regions: OfflineRegion[]) {
   });
 }
 
+/** How long a sheet takes to glide to a new height: the map flies after it, not with it. */
+const SHEET_SETTLE_MS = 450;
+
+/** Offline maps as a sheet of its own (the guided tour's row leads here). */
+export function OfflineMapsSheet() {
+  const [path, setPath] = useState<string[]>([]);
+  return (
+    <Screen
+      fit={offlineMapsSupported}
+      path={path}
+      onPathChange={setPath}
+      renderPage={() => <RegionPage onDone={() => setPath([])} />}
+    >
+      <OfflineMapsPage onRegion={() => setPath(['region'])} onClose={() => router.back()} />
+    </Screen>
+  );
+}
+
 /**
  * Offline maps (offline-map): the downloaded regions with their size and state (outlined on the
  * map; a tap shows one whole), a region framed on the map, or all of Switzerland in four regions.
+ * A sheet of its own (`onClose`), or a page pushed inside the map layers sheet, with its back
+ * button there. Framing a region is a page pushed over it in the same sheet (`onRegion`), so
+ * leaving it comes straight back here.
  */
-export function OfflineMapsSheet() {
+export function OfflineMapsPage({
+  onRegion,
+  onClose,
+}: {
+  onRegion: () => void;
+  onClose?: () => void;
+}) {
   const { t } = useTranslation();
   const regions = useOfflineMapsStore((s) => s.regions);
   const loaded = useOfflineMapsStore((s) => s.loaded);
@@ -56,11 +84,18 @@ export function OfflineMapsSheet() {
   const total = regions.reduce((sum, r) => sum + r.bytes, 0);
 
   useEffect(() => {
-    // Opening the list shows the saved regions on the map, wherever they are.
-    void useOfflineMapsStore
-      .getState()
-      .load()
-      .then(() => frameRegions(useOfflineMapsStore.getState().regions));
+    // Opening the list shows the saved regions on the map, wherever they are: once the sheet has
+    // settled, so the map's flight doesn't run with the sheet's glide.
+    let open = true;
+    void Promise.all([
+      useOfflineMapsStore.getState().load(),
+      new Promise((resolve) => setTimeout(resolve, SHEET_SETTLE_MS)),
+    ]).then(() => {
+      if (open) frameRegions(useOfflineMapsStore.getState().regions);
+    });
+    return () => {
+      open = false;
+    };
   }, []);
   useRegionsOnMap();
 
@@ -123,101 +158,95 @@ export function OfflineMapsSheet() {
 
   if (!offlineMapsSupported) {
     return (
-      <Screen>
-        <Page title={t('offlineMap.manage.title')} onClose={() => router.back()}>
-          <EmptyState icon="cloud_off" title={t('offlineMap.manage.webUnavailable')} />
-        </Page>
-      </Screen>
+      <Page title={t('offlineMap.manage.title')} onClose={onClose}>
+        <EmptyState icon="cloud_off" title={t('offlineMap.manage.webUnavailable')} />
+      </Page>
     );
   }
 
   return (
-    <Screen fit>
-      <Page
-        title={t('offlineMap.manage.title')}
-        onClose={() => router.back()}
-        onRefresh={store.load}
+    <Page title={t('offlineMap.manage.title')} onClose={onClose} onRefresh={store.load}>
+      <ListSection
+        footer={
+          error
+            ? t(`offlineMap.errors.${error}`)
+            : // The total once there is more than one row to add up.
+              regions.length > 1
+              ? formatBytes(total)
+              : undefined
+        }
       >
-        <ListSection
-          footer={
-            error
-              ? t(`offlineMap.errors.${error}`)
-              : // The total once there is more than one row to add up.
-                regions.length > 1
-                ? formatBytes(total)
-                : undefined
-          }
-        >
-          {loaded && !regions.length ? (
-            // A section of only a footer does not show: the empty list says so in a row.
-            <ListRow title={t('offlineMap.manage.empty')} icon="cloud_off" />
-          ) : null}
-          {regions.map((region) => (
-            <ListRow
-              key={region.id}
-              title={region.name || t('offlineMap.download.untitled')}
-              subtitle={
-                region.state === 'downloading'
-                  ? t('offlineMap.manage.downloading', { percent: region.percentage })
-                  : region.state === 'incomplete'
-                    ? `${t('offlineMap.manage.incomplete')} · ${formatBytes(region.bytes)}`
-                    : t('offlineMap.manage.ready', { size: formatBytes(region.bytes) })
-              }
-              progress={region.state === 'downloading' ? region.percentage / 100 : undefined}
-              icon={
-                region.state === 'complete'
-                  ? 'download_for_offline'
-                  : region.state === 'downloading'
-                    ? 'download'
-                    : 'warning'
-              }
-              iconColor={region.state === 'incomplete' ? color.error : undefined}
-              // A download under way stops with the button at its end, as in the App Store; a
-              // saved region's tap offers what it can do: show it, download it again, delete it.
-              accessory={region.state === 'downloading' ? dropAction(region) : undefined}
-              menu={
-                region.state === 'downloading'
-                  ? undefined
-                  : [
-                      {
-                        label: t('offlineMap.manage.showOnMap'),
-                        icon: 'map',
-                        onPress: () => frameRegions([region]),
-                      },
-                      ...(region.state === 'incomplete'
-                        ? [
-                            {
-                              label: t('offlineMap.manage.redownload'),
-                              icon: 'replay' as const,
-                              onPress: () => void store.redownload(region.id),
-                            },
-                          ]
-                        : []),
-                      dropAction(region),
-                    ]
-              }
-              swipeActions={[dropAction(region)]}
-            />
-          ))}
-        </ListSection>
-        <ListSection footer={t('offlineMap.manage.tip')}>
+        {loaded && !regions.length ? (
+          // A section of only a footer does not show: the empty list says so in a row.
+          <ListRow title={t('offlineMap.manage.empty')} icon="cloud_off" />
+        ) : null}
+        {regions.map((region) => (
           <ListRow
-            title={t('offlineMap.manage.drawRegion')}
-            icon="add_location_alt"
-            onPress={() => router.replace('/offline-region')}
+            key={region.id}
+            title={region.name || t('offlineMap.download.untitled')}
+            subtitle={
+              region.state === 'downloading'
+                ? t('offlineMap.manage.downloading', { percent: region.percentage })
+                : region.state === 'incomplete'
+                  ? `${t('offlineMap.manage.incomplete')} · ${formatBytes(region.bytes)}`
+                  : t('offlineMap.manage.ready', { size: formatBytes(region.bytes) })
+            }
+            progress={region.state === 'downloading' ? region.percentage / 100 : undefined}
+            icon={
+              region.state === 'complete'
+                ? 'download_for_offline'
+                : region.state === 'downloading'
+                  ? 'download'
+                  : 'warning'
+            }
+            iconColor={region.state === 'incomplete' ? color.error : undefined}
+            // A download under way stops with the button at its end, as in the App Store; a
+            // saved region's tap offers what it can do: show it, download it again, delete it.
+            accessory={region.state === 'downloading' ? dropAction(region) : undefined}
+            menu={
+              region.state === 'downloading'
+                ? undefined
+                : [
+                    {
+                      label: t('offlineMap.manage.showOnMap'),
+                      icon: 'map',
+                      onPress: () => frameRegions([region]),
+                    },
+                    ...(region.state === 'incomplete'
+                      ? [
+                          {
+                            label: t('offlineMap.manage.redownload'),
+                            icon: 'replay' as const,
+                            onPress: () => void store.redownload(region.id),
+                          },
+                        ]
+                      : []),
+                    dropAction(region),
+                  ]
+            }
+            swipeActions={[dropAction(region)]}
           />
-          <ListRow title={t('offlineMap.manage.wholeMap')} icon="map" onPress={downloadAll} />
-        </ListSection>
-      </Page>
-    </Screen>
+        ))}
+      </ListSection>
+      <ListSection footer={t('offlineMap.manage.tip')}>
+        <ListRow
+          title={t('offlineMap.manage.drawRegion')}
+          icon="add_location_alt"
+          onPress={onRegion}
+        />
+        <ListRow title={t('offlineMap.manage.wholeMap')} icon="map" onPress={downloadAll} />
+      </ListSection>
+    </Page>
   );
 }
 
 /**
  * Framing a region (offline-map, as the PWA): a frame over the map marks the region; the user
  * moves the map under it, its size estimated as it moves. Named, it downloads in the background.
+ * A page pushed over the offline maps in their sheet: its back button cancels, Download starts
+ * it; both return to the list (`onDone`) in the same sheet.
  */
-export function OfflineRegionSheet() {
+export function RegionPage({ onDone }: { onDone: () => void }) {
   const { t } = useTranslation();
   const bounds = useMapStore((s) => s.bounds);
   const [name, setName] = useState('');
@@ -257,10 +286,13 @@ export function OfflineRegionSheet() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [centreKey, named]);
   useRegionsOnMap();
+  // The frame shows while this page does: it goes as the back button slides it away.
+  const onTop = usePageOnTop();
   useEffect(() => {
+    if (!onTop) return;
     useMapStore.setState({ regionFrame: true });
     return () => useMapStore.setState({ regionFrame: false });
-  }, []);
+  }, [onTop]);
 
   const start = () => {
     if (!region) return;
@@ -268,35 +300,32 @@ export function OfflineRegionSheet() {
       .getState()
       .download(name.trim() || t('offlineMap.download.untitled'), region);
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.replace('/offline-maps');
+    onDone();
   };
 
   return (
-    <Screen fit>
-      <Page
-        form
-        // The bar holds Cancel and Download; the title heads the section, where it fits.
+    <Page
+      form
+      // The bar holds Back and Download; the title heads the section, where it fits.
+      title={t('offlineMap.download.sheetTitle')}
+      titleInHeader
+      confirm={{ label: t('offlineMap.download.start'), onPress: start, disabled: !region }}
+    >
+      <ListSection
         title={t('offlineMap.download.sheetTitle')}
-        titleInHeader
-        cancel={{ label: t('offlineMap.draw.cancel'), onPress: () => router.back() }}
-        confirm={{ label: t('offlineMap.download.start'), onPress: start, disabled: !region }}
+        footer={`${t('offlineMap.draw.hintFrame')} ${t('offlineMap.download.estimate', { size })}`}
       >
-        <ListSection
-          title={t('offlineMap.download.sheetTitle')}
-          footer={`${t('offlineMap.draw.hintFrame')} ${t('offlineMap.download.estimate', { size })}`}
-        >
-          <TextRow
-            label={t('offlineMap.download.nameLabel')}
-            placeholder={t('offlineMap.download.untitled')}
-            value={name}
-            onChangeText={(text) => {
-              setName(text);
-              setNamed(true);
-            }}
-            autoCapitalize="words"
-          />
-        </ListSection>
-      </Page>
-    </Screen>
+        <TextRow
+          label={t('offlineMap.download.nameLabel')}
+          placeholder={t('offlineMap.download.untitled')}
+          value={name}
+          onChangeText={(text) => {
+            setName(text);
+            setNamed(true);
+          }}
+          autoCapitalize="words"
+        />
+      </ListSection>
+    </Page>
   );
 }

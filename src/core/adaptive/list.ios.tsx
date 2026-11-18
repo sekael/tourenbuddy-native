@@ -14,6 +14,7 @@ import {
   Section,
   Spacer,
   Stepper,
+  Slider,
   SwipeActions,
   Text as SwiftText,
   TextField,
@@ -41,6 +42,7 @@ import {
   listSectionSpacing,
   listStyle,
   lineLimit,
+  monospacedDigit,
   onSubmit as onSubmitModifier,
   pickerStyle,
   refreshable,
@@ -49,7 +51,15 @@ import {
   textInputAutocapitalization,
   tint,
 } from '@expo/ui/swift-ui/modifiers';
-import { Children, isValidElement, useContext, type ReactElement, type ReactNode } from 'react';
+import {
+  Children,
+  isValidElement,
+  useContext,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { color, space } from '@/core/theme/tokens';
@@ -71,6 +81,7 @@ import type {
   ListSectionProps,
   PickerRowProps,
   RowAction,
+  SliderRowProps,
   StepperRowProps,
   TextRowProps,
   ToggleRowProps,
@@ -250,12 +261,14 @@ export function ListRow({
           label={accessory.label}
           systemImage={icons[accessory.icon].sf}
           onPress={accessory.onPress}
+          role={accessory.destructive ? 'destructive' : undefined}
           modifiers={[
             buttonStyle('borderless'),
             labelStyle('iconOnly'),
-            font({ size: 26 }),
-            // In the brand colour, as the App Store's stop: the row's label colour would win a tint.
-            foregroundStyle(color.primary),
+            font({ size: accessory.destructive ? 20 : 26 }),
+            // In the brand colour, as the App Store's stop (red when it deletes): the row's label
+            // colour would win a tint.
+            foregroundStyle(accessory.destructive ? color.error : color.primary),
           ]}
         />
       ) : null}
@@ -511,6 +524,57 @@ export function StepperRow({
       // VoiceOver reads the value as shown ("1.1×"), not the count of steps.
       modifiers={[accessibilityValue(format ? format(value) : String(value))]}
     />
+  );
+}
+
+/**
+ * A value along a range, as Settings' brightness: the title and the value on top, the system's
+ * slider between the slow and the fast end's icons below. It saves when the finger lifts, not on
+ * every step of a drag.
+ */
+export function SliderRow({
+  title,
+  icon,
+  value,
+  onChange,
+  min = 0,
+  max = 1,
+  step,
+  format,
+  minIcon,
+  maxIcon,
+}: SliderRowProps) {
+  const [dragging, setDragging] = useState(false);
+  const draft = useRef(value);
+  const [shownDraft, setShownDraft] = useState(value);
+  const shown = dragging ? shownDraft : value;
+  const label = format ? format(shown) : String(shown);
+  return (
+    <VStack alignment="leading" spacing={space.sm}>
+      <HStack spacing={12}>
+        {icon ? <RowIcon name={icon} tint={color.primary} /> : null}
+        <SwiftText modifiers={[wraps]}>{title}</SwiftText>
+        <Spacer />
+        <SwiftText modifiers={[secondary, monospacedDigit()]}>{label}</SwiftText>
+      </HStack>
+      <Slider
+        value={shown}
+        min={min}
+        max={max}
+        step={step}
+        onValueChange={(next) => {
+          draft.current = next;
+          setShownDraft(next);
+        }}
+        onEditingChanged={(editing) => {
+          setDragging(editing);
+          if (!editing && draft.current !== value) onChange(draft.current);
+        }}
+        minimumValueLabel={<Image systemName={icons[minIcon].sf} modifiers={[secondary]} />}
+        maximumValueLabel={<Image systemName={icons[maxIcon].sf} modifiers={[secondary]} />}
+        modifiers={[tint(color.primary), a11yLabel(title), accessibilityValue(label)]}
+      />
+    </VStack>
   );
 }
 

@@ -1,3 +1,4 @@
+import { usePathname } from 'expo-router';
 import { NativeTabs } from 'expo-router/native-tabs';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +9,7 @@ import { color, type } from '@/core/theme/tokens';
 import { useFriendshipsStore } from '@/features/friendships/presentation/stores/friendships-store';
 import { useInboxAttention } from '@/features/notifications/presentation/inbox-sheet';
 import { setAppBadge } from '@/features/notifications/presentation/stores/notifications-store';
-import { TourReturn, useTourReturn } from '@/features/onboarding/presentation/tour-return';
+import { TourReturn, useTourHere } from '@/features/onboarding/presentation/tour-return';
 
 /**
  * iOS and Android: the system tab bar, Liquid Glass on iOS and the Material 3 navigation bar on
@@ -23,7 +24,8 @@ export default function TabsLayout() {
   );
   // The home screen's icon counts what Profile does.
   useEffect(() => setAppBadge(attention), [attention]);
-  const touring = useTourReturn((s) => s.start !== null);
+  // Only on the tab the tour's row opened: a sheet it opened over the map has its own row.
+  const touring = useTourHere(usePathname());
   // expo-router shows any text it is given, `hidden` or not: a zero gets none.
   const badge = (count: number) => (count > 9 ? '9+' : String(count));
 

@@ -268,7 +268,13 @@
       "weak": "Dieses Passwort ist zu schwach. Wähle ein stärkeres.",
       "saveBtn": "Passwort speichern",
       "savingBtn": "Wird gespeichert…",
-      "saveError": "Das Passwort konnte nicht gespeichert werden. Bitte versuche es erneut."
+      "saveError": "Das Passwort konnte nicht gespeichert werden. Bitte versuche es erneut.",
+      "continueBtn": "Weiter",
+      "codeSent": "Damit wir wissen, dass du es bist, haben wir dir einen 6-stelligen Code an {{email}} geschickt.",
+      "codeLabel": "Code aus deiner E-Mail",
+      "codeResend": "Neuen Code senden",
+      "codeMissing": "Gib den 6-stelligen Code aus deiner E-Mail ein.",
+      "codeInvalid": "Der Code ist falsch oder abgelaufen. Lass dir einen neuen senden und versuche es nochmals."
     },
     "passkey": {
       "entryBtn": "Passkeys",
@@ -280,9 +286,10 @@
       "addBtn": "Passkey hinzufügen",
       "workingBtn": "Bitte warten…",
       "deleteBtn": "Löschen",
+      "deleteNamed": "«{{name}}» löschen, hinzugefügt am {{date}}",
       "cancelBtn": "Abbrechen",
       "deleteTitle": "Passkey löschen?",
-      "deleteMessage": "Mit «{{name}}» kannst du dich nicht mehr anmelden. Um ihn auch von diesem Gerät zu entfernen, lösche ihn in der App «Passwörter».",
+      "deleteMessage": "Mit «{{name}}» (hinzugefügt am {{date}}) kannst du dich nicht mehr anmelden. Um ihn auch von diesem Gerät zu entfernen, lösche ihn in der App «Passwörter».",
       "noCredentials": "Auf diesem Gerät gibt es keinen Passkey für TourenBuddy. Melde dich mit Passwort oder Code an.",
       "unknown": "Dieser Passkey ist nicht mehr gültig. Melde dich mit Passwort oder Code an.",
       "exists": "Auf diesem Gerät gibt es schon einen Passkey für dein Konto.",
@@ -297,7 +304,7 @@
       "firstNameRequired": "Vorname ist erforderlich",
       "lastNameRequired": "Nachname ist erforderlich",
       "continueBtn": "Weiter",
-      "skipBtn": "Vorerst überspringen"
+      "skipBtn": "Später"
     },
     "profile": {
       "title": "Profil",
@@ -1226,6 +1233,7 @@
     "deniedHint": "Push-Benachrichtigungen sind blockiert. Aktiviere sie in den Browser- oder Geräteeinstellungen.",
     "deniedHintApp": "Push-Benachrichtigungen sind für TourenBuddy ausgeschaltet. Schalte sie in den Einstellungen unter Apps › TourenBuddy › Mitteilungen ein.",
     "pushFailed": "Push-Benachrichtigungen konnten nicht eingeschaltet werden. Prüfe deine Verbindung und versuche es nochmals.",
+    "pushNoToken": "Dein iPhone hat keine Push-Anmeldung herausgegeben. Versuche es gleich nochmals; passiert es immer wieder, starte das iPhone neu.",
     "pushOffline": "Du bist offline. Push lässt sich mit Verbindung ein- oder ausschalten."
   },
   "common": {
@@ -1658,23 +1666,23 @@
           "rows": [
             {
               "label": "Deine E-Mail-Adresse, dein Name und, falls du sie hinzufügst, deine bestätigte Telefonnummer",
-              "text": "Um dich anzumelden, dich deinen Freunden zu zeigen und damit Freunde dich über deine Nummer finden"
+              "text": "Um dich anzumelden, dich deinen Freunden zu zeigen und damit Freunde dich über deine Nummer finden. Jede angemeldete Person kann prüfen, ob eine Telefonnummer ein Konto hat. Deine Nummer sehen nur Personen mit einer offenen Freundschaftsanfrage von oder an dich oder deine Freunde."
             },
             {
               "label": "Kontakte, die du hinzufügst oder importierst (Namen, Telefonnummern, E-Mail-Adressen)",
-              "text": "Dein Adressbuch in der App, Tourenpartner und das Verbinden mit Freunden, die TourenBuddy nutzen. Nur du siehst deine Kontakte; wir kontaktieren die Personen darin nie"
+              "text": "Dein Adressbuch in der App, Tourenpartner und das Verbinden mit Freunden, die TourenBuddy nutzen. Nur du siehst deine Kontakte; wir kontaktieren die Personen darin nie. Nummern gleichen wir nur mit TourenBuddy-Konten ab. Wenn dich jemand als Kontakt gespeichert hat und du willst, dass wir diesen Eintrag über dich entfernen, schreib an feedback@tourenbuddy.ch."
             },
             {
               "label": "Touren: Namen, Orte, Daten, Routen und Tracks (GPX), Aktivitäten, Notizen; deine freien Tage",
-              "text": "Der Zweck der App. Du wählst, mit wem du sie teilst: mit deinen Freunden und den Partnern einer Tour"
+              "text": "Der Zweck der App. Du wählst, mit wem du sie teilst: mit deinen Freunden und den Partnern einer Tour, oder hältst eine Tour privat."
             },
             {
               "label": "Fotos und PDFs, die du an Touren anhängst",
-              "text": "Bei der Tour gespeichert und allen gezeigt, die sie sehen dürfen"
+              "text": "Bei der Tour gespeichert und allen gezeigt, die sie sehen dürfen. Fotos behalten ihre EXIF-Daten; die können Ort und Zeit der Aufnahme enthalten und sind für alle sichtbar, die die Tour sehen."
             },
             {
               "label": "Adressen von Kalendern, die du verbindest",
-              "text": "Um deine belegten Tage zu markieren. Wir lesen den Kalender und behalten nur, welche Tage belegt sind, nie die Termine"
+              "text": "Um deine belegten Tage zu markieren. Wir lesen den Kalender und behalten nur, welche Tage belegt sind, nie die Termine. Wir speichern die Adresse selbst. Sie wirkt wie ein Passwort: Wer sie hat, kann diesen Kalender lesen."
             },
             {
               "label": "Einträge im Eingang, Benachrichtigungseinstellungen, Push-Token deiner Geräte, App-Version und Plattform",
@@ -1683,6 +1691,10 @@
             {
               "label": "Meldungen und Blockierungen",
               "text": "Damit TourenBuddy sicher bleibt"
+            },
+            {
+              "label": "Im Web: deine Anmeldung und deine Sprachwahl",
+              "text": "Im Local Storage deines Browsers gespeichert, damit du angemeldet bleibst und die App in deiner Sprache zeigt. Der Dienst braucht das, deshalb fragen wir nicht um Einwilligung. Wir setzen keine Tracking-Cookies."
             },
             {
               "text": "Die Karte kommt direkt von swisstopo: Dein Gerät lädt Kartenkacheln und Ortsnamen bei swisstopo, das dabei deine IP-Adresse und den angezeigten Ausschnitt sieht. Das ist nicht mit deinem Konto verknüpft. Die App verwendet deinen Standort nicht."
@@ -1696,12 +1708,12 @@
           "title": "Rechtsgrundlagen",
           "rows": [
             {
-              "text": "Wo die DSGVO gilt: die Erbringung des Dienstes, für den du dich angemeldet hast (Art. 6 Abs. 1 lit. b), deine Einwilligung für Push-Benachrichtigungen und den Kontaktimport (Art. 6 Abs. 1 lit. a) sowie unser berechtigtes Interesse an einem sicheren Dienst für Meldungen, Blockierungen und Sicherheitsprotokolle (Art. 6 Abs. 1 lit. f)."
+              "text": "Wo die DSGVO gilt: die Erbringung des Dienstes, für den du dich angemeldet hast (Art. 6 Abs. 1 lit. b), deine Einwilligung für Push-Benachrichtigungen und den Kontaktimport (Art. 6 Abs. 1 lit. a) sowie unser berechtigtes Interesse an einem sicheren Dienst für Meldungen und Blockierungen (Art. 6 Abs. 1 lit. f)."
             }
           ]
         },
         {
-          "title": "Wer Daten für uns bearbeitet",
+          "title": "Wer Daten für uns bearbeitet und wer sie erhält",
           "rows": [
             {
               "label": "Supabase",
@@ -1725,10 +1737,10 @@
             },
             {
               "label": "swisstopo (Bundesamt für Landestopografie)",
-              "text": "Kartenkacheln und Ortssuche, von deinem Gerät abgerufen"
+              "text": "Kartenkacheln, Ortsnamen, Höhen und Routenprofile, von deinem Gerät abgerufen. Höhen- und Profilabfragen enthalten die Koordinaten deiner geplanten Route."
             },
             {
-              "text": "Einige davon bearbeiten Daten ausserhalb der Schweiz und der EU, insbesondere in den USA. Wo dieses Land keinen angemessenen Schutz bietet, stützt sich die Übermittlung auf Standardvertragsklauseln."
+              "text": "Einige davon bearbeiten Daten ausserhalb der Schweiz und der EU, insbesondere in den USA. Wo der Empfänger nach dem EU-US- und Swiss-US-Data-Privacy-Framework zertifiziert ist, stützt sich die Übermittlung darauf, sonst auf Standardvertragsklauseln mit dem Schweizer Zusatz."
             }
           ]
         },
@@ -1744,7 +1756,15 @@
           "title": "Deine Rechte",
           "rows": [
             {
-              "text": "Du kannst Auskunft über deine Daten verlangen, sie berichtigen oder löschen lassen, sie in einem übertragbaren Format erhalten, der Bearbeitung widersprechen und eine Einwilligung jederzeit widerrufen. Schreib an feedback@tourenbuddy.ch. Du kannst dich auch beim Eidgenössischen Datenschutz- und Öffentlichkeitsbeauftragten (EDÖB) oder, in der EU, bei deiner Datenschutzbehörde beschweren."
+              "text": "Du kannst Auskunft über deine Daten verlangen, sie berichtigen oder löschen lassen, eine Kopie in einem gängigen elektronischen Format erhalten (zum Beispiel JSON; Touren kannst du in der App auch als GPX herunterladen), der Bearbeitung widersprechen und eine Einwilligung jederzeit widerrufen. Schreib an feedback@tourenbuddy.ch. Du kannst dich auch beim Eidgenössischen Datenschutz- und Öffentlichkeitsbeauftragten (EDÖB) oder, in der EU, bei deiner Datenschutzbehörde beschweren."
+            }
+          ]
+        },
+        {
+          "title": "Junge Menschen",
+          "rows": [
+            {
+              "text": "Bist du unter 18, brauchst du die Zustimmung deiner Eltern oder einer erziehungsberechtigten Person. Wir prüfen das Alter nicht. Erfahren wir, dass jemand unter 18 ohne diese Zustimmung ein Konto hat, löschen wir es."
             }
           ]
         },
@@ -1781,7 +1801,7 @@
           "title": "Dein Konto",
           "rows": [
             {
-              "text": "Mach korrekte Angaben und schütze dein Passwort und deine Geräte. Bist du unter 18, brauchst du die Zustimmung deiner Eltern oder einer erziehungsberechtigten Person. Du kannst dein Konto jederzeit löschen (siehe Konto löschen)."
+              "text": "Mach korrekte Angaben und schütze deine Anmeldung (Passwort, Passkey oder E-Mail-Code) und deine Geräte. Bist du unter 18, brauchst du die Zustimmung deiner Eltern oder einer erziehungsberechtigten Person. Du kannst dein Konto jederzeit löschen (siehe Konto löschen)."
             }
           ]
         },
@@ -1789,7 +1809,7 @@
           "title": "Deine Inhalte",
           "rows": [
             {
-              "text": "Touren, Notizen, Tracks und Anhänge bleiben deine. Du erlaubst uns, sie zu speichern und den Personen zu zeigen, mit denen du sie teilst, soweit das für den Dienst nötig ist. Deine Touren sehen deine Freunde und die Partner einer Tour, nie die Öffentlichkeit."
+              "text": "Touren, Notizen, Tracks und Anhänge bleiben deine. Du erlaubst uns, sie zu speichern und den Personen zu zeigen, mit denen du sie teilst, soweit das für den Dienst nötig ist. Du entscheidest pro Tour, ob deine Freunde und die Partner einer Tour sie sehen oder ob sie privat bleibt. Teile Fotos anderer Menschen nur, wenn sie einverstanden sind."
             }
           ]
         },
@@ -1805,7 +1825,7 @@
           "title": "Sicherheit am Berg",
           "rows": [
             {
-              "text": "TourenBuddy ist eine Planungshilfe. Routen, Zeiten, Schwierigkeiten sowie Wander- und Skitourendaten können unvollständig, falsch oder veraltet sein. Prüfe die Verhältnisse, das Lawinenbulletin und das Wetter und plane mit deinem eigenen Urteil. Für deine Entscheidungen am Berg bist allein du verantwortlich."
+              "text": "TourenBuddy ist eine Planungshilfe. Routen, Zeiten, Schwierigkeiten sowie Wander- und Skitourendaten können unvollständig, falsch oder veraltet sein. Prüfe die Verhältnisse, das Lawinenbulletin des SLF und die Prognose von MeteoSchweiz und plane mit deinem eigenen Urteil. Zeiten, Schwierigkeitsgrade und Vorschläge in der App sind Schätzungen, keine Garantien, und ersetzen weder Ausbildung, Erfahrung noch die offiziellen Quellen. Für deine Entscheidungen am Berg bist allein du verantwortlich."
             }
           ]
         },
@@ -1813,7 +1833,7 @@
           "title": "Haftung",
           "rows": [
             {
-              "text": "Wir betreiben TourenBuddy sorgfältig, können aber nicht garantieren, dass der Dienst immer verfügbar und fehlerfrei ist. Soweit gesetzlich zulässig, haften wir nur für Vorsatz und grobe Fahrlässigkeit."
+              "text": "Wir betreiben TourenBuddy sorgfältig, können aber nicht garantieren, dass der Dienst immer verfügbar und fehlerfrei ist. Soweit gesetzlich zulässig, haften wir nur für Vorsatz und grobe Fahrlässigkeit. Das gilt nicht für Schäden an Leben und Gesundheit und nicht, wo zwingendes Recht eine Einschränkung nicht erlaubt. Der Dienst ist kostenlos und wird so bereitgestellt, wie er ist."
             }
           ]
         },
@@ -1821,7 +1841,15 @@
           "title": "Recht und Gerichtsstand",
           "rows": [
             {
-              "text": "Es gilt Schweizer Recht. Zuständig sind die Gerichte am Sitz der Betreiberin, vorbehaltlich zwingender Bestimmungen zum Konsumentenschutz."
+              "text": "Es gilt Schweizer Recht. Zuständig sind die Gerichte am Sitz der Betreiberin, vorbehaltlich zwingender Bestimmungen zum Konsumentenschutz, auch aus deinem Wohnsitzland."
+            }
+          ]
+        },
+        {
+          "title": "Änderungen",
+          "rows": [
+            {
+              "text": "Wir können diese Bedingungen anpassen. Eine Änderung, die dich betrifft, kündigen wir dir in der App an, bevor sie gilt. Nutzt du TourenBuddy danach weiter, gelten die neuen Bedingungen."
             }
           ]
         },
@@ -1849,7 +1877,7 @@
               "text": "E-Mail: feedback@tourenbuddy.ch"
             },
             {
-              "text": "Kartendaten: © swisstopo."
+              "text": "Karten-, Wander- und Skitourendaten: © swisstopo."
             }
           ]
         }

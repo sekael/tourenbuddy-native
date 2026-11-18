@@ -10,7 +10,7 @@ import {
   ListRow,
   ListSection,
   PickerRow,
-  StepperRow,
+  SliderRow,
   TextRow,
   ToggleRow,
 } from '@/core/adaptive/list';
@@ -169,8 +169,11 @@ export function ProfilePage({ onPush }: { onPush: (page: string) => void }) {
         />
       </ListSection>
       <ListSection footer={t('user.profile.paceHint')}>
-        <StepperRow
+        <SliderRow
           title={t('tours.route.pace')}
+          icon="speed"
+          minIcon="snail"
+          maxIcon="cruelty_free"
           value={profile?.pace ?? 1}
           min={PACE_MIN}
           max={PACE_MAX}

@@ -55,6 +55,12 @@ type AuthState = {
    * by the next `signUp`, dropped on sign-out. Memory only: never stored, never in a route.
    */
   pendingPassword?: { email: string; password: string };
+  /**
+   * When the user last proved who they are in this app session: a code, a password or a passkey
+   * just accepted (never a restored session). A password may be set without another code shortly
+   * after; memory only, so a relaunched app always asks.
+   */
+  provenAt?: number;
   initialize: () => Promise<void>;
   /** A code sign-in: a password kept by an abandoned Create account is never set. */
   sendEmailOtp: (email: string) => Promise<void>;
@@ -65,7 +71,14 @@ type AuthState = {
   /** Sends the code as a code sign-in does (creating the account if there is none). */
   signUp: (email: string, password: string) => Promise<void>;
   signInWithPasskey: () => Promise<void>;
-  setPassword: (password: string) => Promise<void>;
+  /**
+   * Sets the password; with `code` (the one `sendPasswordCode` emailed) only once the server has
+   * accepted that code, so whoever sets it proved they read the account's email, not just that
+   * they hold an unlocked phone.
+   */
+  setPassword: (password: string, code?: string) => Promise<void>;
+  /** Emails a code that confirms a password change. */
+  sendPasswordCode: () => Promise<void>;
   listPasskeys: () => Promise<PasskeyItem[]>;
   addPasskey: () => Promise<void>;
   deletePasskey: (id: string) => Promise<void>;
@@ -155,6 +168,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   verifyOtp: async (email, token) => {
     const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
     if (error) throw error;
+    set({ provenAt: Date.now() });
     const pending = get().pendingPassword;
     if (pending?.email !== email) return 'signedIn';
     set({ pendingPassword: undefined });
@@ -168,6 +182,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   signInWithPassword: async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    set({ provenAt: Date.now() });
   },
 
   // Not Supabase's `signUp`: it answers an address that has an account differently (owner,
@@ -179,10 +194,33 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     set({ pendingPassword: { email, password } });
   },
 
-  signInWithPasskey: () => passkeys.signInWithPasskey(),
+  signInWithPasskey: async () => {
+    await passkeys.signInWithPasskey();
+    set({ provenAt: Date.now() });
+  },
 
-  setPassword: async (password) => {
+  // The code is checked as a sign-in code of the same account, not as Supabase's reauthentication
+  // nonce: the server reads that nonce only on sessions older than a day and takes any digits on a
+  // newer one. A wrong code fails here, before the password changes. The server's own rule (secure
+  // password change) still guards a direct request on an older session.
+  setPassword: async (password, code) => {
+    const email = get().user?.email;
+    if (code && email) {
+      const { error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
+      if (error) throw error;
+      set({ provenAt: Date.now() });
+    }
     const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+  },
+
+  sendPasswordCode: async () => {
+    const email = get().user?.email;
+    if (!email) throw new Error('No email address to send the code to');
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
+    });
     if (error) throw error;
   },
 
@@ -205,7 +243,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
    * adopt it.
    */
   signOut: async () => {
-    set({ user: null, pendingPassword: undefined });
+    set({ user: null, pendingPassword: undefined, provenAt: undefined });
     sessionTrust.setState({ unverified: false });
     const result = await bounded(
       supabase.auth.signOut({ scope: 'local' }).catch((error: unknown) => ({ error })),

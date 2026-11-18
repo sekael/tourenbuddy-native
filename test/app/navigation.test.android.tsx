@@ -44,28 +44,56 @@ describe('app navigation', () => {
     expect(screen).toHavePathname('/');
   });
 
-  it('should reach the offline maps from the map sheet, in its place', async () => {
+  it('should open the offline maps inside the map sheet, with a way back to it, as the legend', async () => {
     await renderRouter(routes);
     await openMap();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Offline maps' }));
     await settle();
 
-    expect(screen).toHavePathname('/offline-maps');
-    await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
+    expect(screen).toHavePathname('/map-layers');
+    expect(screen.getByRole('heading', { name: 'Offline maps' })).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
     await settle();
-    expect(screen).toHavePathname('/');
+    expect(screen.getByRole('heading', { name: 'Map layers' })).toBeOnTheScreen();
   });
 
-  it('should show the legend inside the map sheet', async () => {
+  it.each([
+    ['the map sheet', '/map-layers', true],
+    ['its own sheet', '/offline-maps', false],
+  ])(
+    'should frame a region on a page inside %s, and go back to the offline maps, never the bare map',
+    async (_, url, fromLayers) => {
+      await renderRouter(routes, { initialUrl: url });
+      await settle();
+      if (fromLayers) {
+        await fireEvent.press(screen.getByRole('button', { name: 'Offline maps' }));
+        await settle();
+      }
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Download a region' }));
+      await settle();
+      expect(screen.getByText('New region')).toBeOnTheScreen();
+      await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+      await settle();
+
+      expect(screen).toHavePathname(url);
+      expect(screen.getByRole('heading', { name: 'Offline maps' })).toBeOnTheScreen();
+    },
+  );
+
+  it('should open the legend as its own sheet over the map sheet, and close back to it', async () => {
     await renderRouter(routes);
     await openMap();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Legend' }));
     await settle();
 
-    expect(screen).toHavePathname('/map-layers');
+    expect(screen).toHavePathname('/legend');
     expect(screen.getByRole('heading', { name: 'Legend' })).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
+    await settle();
+    expect(screen).toHavePathname('/map-layers');
   });
 
   it.each(['/calendar', '/contacts', '/profile'])(

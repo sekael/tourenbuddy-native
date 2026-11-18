@@ -268,7 +268,13 @@
       "weak": "This password is too weak. Choose a stronger one.",
       "saveBtn": "Save password",
       "savingBtn": "Saving…",
-      "saveError": "The password couldn't be saved. Please try again."
+      "saveError": "The password couldn't be saved. Please try again.",
+      "continueBtn": "Continue",
+      "codeSent": "To confirm it’s you, we sent a 6-digit code to {{email}}.",
+      "codeLabel": "Code from your email",
+      "codeResend": "Send a new code",
+      "codeMissing": "Enter the 6-digit code from your email.",
+      "codeInvalid": "That code is wrong or has expired. Send a new one and try again."
     },
     "passkey": {
       "entryBtn": "Passkeys",
@@ -280,9 +286,10 @@
       "addBtn": "Add passkey",
       "workingBtn": "Please wait…",
       "deleteBtn": "Delete",
+      "deleteNamed": "Delete {{name}}, added on {{date}}",
       "cancelBtn": "Cancel",
       "deleteTitle": "Delete passkey?",
-      "deleteMessage": "“{{name}}” will no longer sign you in. To remove it from this device too, delete it in the Passwords app.",
+      "deleteMessage": "“{{name}}”, added on {{date}}, will no longer sign you in. To remove it from this device too, delete it in the Passwords app.",
       "noCredentials": "There's no passkey for TourenBuddy on this device. Sign in with your password or a code.",
       "unknown": "This passkey is no longer valid. Sign in with your password or a code.",
       "exists": "This device already has a passkey for your account.",
@@ -297,7 +304,7 @@
       "firstNameRequired": "First name is required",
       "lastNameRequired": "Last name is required",
       "continueBtn": "Continue",
-      "skipBtn": "Skip for now"
+      "skipBtn": "Later"
     },
     "profile": {
       "title": "Profile",
@@ -1226,6 +1233,7 @@
     "deniedHint": "Push notifications are blocked. Enable them in your browser or device settings.",
     "deniedHintApp": "Push notifications are off for TourenBuddy. Turn them on in Settings › Apps › TourenBuddy › Notifications.",
     "pushFailed": "Push notifications could not be turned on. Check your connection and try again.",
+    "pushNoToken": "Your iPhone didn’t hand out a push registration. Try again in a moment; if it keeps happening, restart the iPhone.",
     "pushOffline": "You’re offline. Push can be turned on or off once you’re connected."
   },
   "common": {
@@ -1658,23 +1666,23 @@
           "rows": [
             {
               "label": "Your email address, name and, if you add it, your verified phone number",
-              "text": "To sign you in, to show you to your friends, and to let friends find you by your phone number"
+              "text": "To sign you in, to show you to your friends, and to let friends find you by your phone number. Anyone signed in to TourenBuddy can check whether a phone number has an account. Your number is shown only to people with a pending friend request with you, or who are your friends."
             },
             {
               "label": "Contacts you add or import (names, phone numbers, email addresses)",
-              "text": "Your address book in the app, tour partners, and connecting with friends who use TourenBuddy. Only you see your contacts; we never contact the people in them"
+              "text": "Your address book in the app, tour partners, and connecting with friends who use TourenBuddy. Only you see your contacts; we never contact the people in them. Numbers are only checked against TourenBuddy accounts. If someone has saved you as a contact and you want that entry about you removed, write to feedback@tourenbuddy.ch."
             },
             {
               "label": "Tours: names, places, dates, routes and tracks (GPX), activities, notes; your free days",
-              "text": "The app’s purpose. You choose whom you share them with: your friends and the partners of a tour"
+              "text": "The app’s purpose. You choose whom you share them with: your friends and the partners of a tour, or keep a tour private."
             },
             {
               "label": "Photos and PDFs you attach to tours",
-              "text": "Stored with the tour and shown to those who can see it"
+              "text": "Stored with the tour and shown to those who can see it. Photos keep their EXIF data, which can include where and when they were taken, and everyone who can see the tour can read it."
             },
             {
               "label": "Addresses of calendars you connect",
-              "text": "To mark your busy days. We read the calendar and keep only which days are busy, never its events"
+              "text": "To mark your busy days. We read the calendar and keep only which days are busy, never its events. We store the address itself. It works like a password: anyone who has it can read that calendar."
             },
             {
               "label": "Inbox entries, notification settings, your devices’ push tokens, app version and platform",
@@ -1683,6 +1691,10 @@
             {
               "label": "Reports and blocks",
               "text": "To keep TourenBuddy safe"
+            },
+            {
+              "label": "On the web: your sign-in and language choice",
+              "text": "Kept in your browser’s local storage to keep you signed in and to show the app in your language. The service needs it, so we do not ask for consent. We set no tracking cookies."
             },
             {
               "text": "The map comes straight from swisstopo: your device asks swisstopo for map tiles and place names, which shows swisstopo your IP address and the area you look at. This is not linked to your account. The app does not use your location."
@@ -1696,12 +1708,12 @@
           "title": "Legal bases",
           "rows": [
             {
-              "text": "Where the GDPR applies: providing the service you signed up for (Art. 6(1)(b)), your consent for push notifications and for importing contacts (Art. 6(1)(a)), and our legitimate interest in a safe and secure service for reports, blocks and security logs (Art. 6(1)(f))."
+              "text": "Where the GDPR applies: providing the service you signed up for (Art. 6(1)(b)), your consent for push notifications and for importing contacts (Art. 6(1)(a)), and our legitimate interest in a safe and secure service for reports and blocks (Art. 6(1)(f))."
             }
           ]
         },
         {
-          "title": "Who processes data for us",
+          "title": "Who processes data for us and who receives it",
           "rows": [
             {
               "label": "Supabase",
@@ -1725,10 +1737,10 @@
             },
             {
               "label": "swisstopo (Federal Office of Topography)",
-              "text": "map tiles and place search, requested by your device"
+              "text": "map tiles, place names, elevation and route profiles, requested by your device. Elevation and profile requests include the coordinates of the route you plan."
             },
             {
-              "text": "Some of them process data outside Switzerland and the EU, in particular in the United States. Where that country has no adequate level of protection, the transfer relies on standard contractual clauses."
+              "text": "Some of them process data outside Switzerland and the EU, in particular in the United States. For each transfer we rely on the EU-US and Swiss-US Data Privacy Framework where the recipient is certified under it, and otherwise on standard contractual clauses with the Swiss addition."
             }
           ]
         },
@@ -1744,7 +1756,15 @@
           "title": "Your rights",
           "rows": [
             {
-              "text": "You can ask what we hold about you, have it corrected or deleted, receive it in a portable format, object to processing and withdraw a consent at any time. Write to feedback@tourenbuddy.ch. You may also complain to the Swiss Federal Data Protection and Information Commissioner (FDPIC) or, in the EU, to your data protection authority."
+              "text": "You can ask what we hold about you, have it corrected or deleted, receive a copy of it in a common electronic format (for example JSON; you can also download each tour as GPX in the app), object to processing and withdraw a consent at any time. Write to feedback@tourenbuddy.ch. You may also complain to the Swiss Federal Data Protection and Information Commissioner (FDPIC) or, in the EU, to your data protection authority."
+            }
+          ]
+        },
+        {
+          "title": "Young people",
+          "rows": [
+            {
+              "text": "If you are under 18, you need the consent of a parent or guardian. We do not check ages. If we learn that someone under 18 has an account without that consent, we delete the account."
             }
           ]
         },
@@ -1781,7 +1801,7 @@
           "title": "Your account",
           "rows": [
             {
-              "text": "Give correct details and keep your password and devices safe. If you are under 18, you need the consent of a parent or guardian. You can delete your account at any time (see Delete your account)."
+              "text": "Give correct details and keep your sign-in (password, passkey or email code) and your devices safe. If you are under 18, you need the consent of a parent or guardian. You can delete your account at any time (see Delete your account)."
             }
           ]
         },
@@ -1789,7 +1809,7 @@
           "title": "Your content",
           "rows": [
             {
-              "text": "Tours, notes, tracks and attachments stay yours. You allow us to store them and show them to the people you share them with, as far as that is needed to run the service. Your tours are visible to your friends and to the partners of a tour, never publicly."
+              "text": "Tours, notes, tracks and attachments stay yours. You allow us to store them and show them to the people you share them with, as far as that is needed to run the service. You choose per tour whether your friends and the partners of a tour can see it, or whether it stays private. Only share photos of other people if they agree."
             }
           ]
         },
@@ -1805,7 +1825,7 @@
           "title": "Safety in the mountains",
           "rows": [
             {
-              "text": "TourenBuddy is a planning aid. Routes, times, difficulties, trail and ski-route data may be incomplete, wrong or out of date. Check the conditions, the avalanche bulletin and the weather, and plan with your own judgement. You alone are responsible for your decisions in the mountains."
+              "text": "TourenBuddy is a planning aid. Routes, times, difficulties, trail and ski-route data may be incomplete, wrong or out of date. Check the conditions, the SLF avalanche bulletin and the MeteoSwiss forecast, and plan with your own judgement. Times, grades and suggestions in the app are estimates, not guarantees, and they do not replace training, experience or official sources. You alone are responsible for your decisions in the mountains."
             }
           ]
         },
@@ -1813,7 +1833,7 @@
           "title": "Liability",
           "rows": [
             {
-              "text": "We run TourenBuddy with care but cannot guarantee that it is always available or free of errors. As far as the law allows, we are liable only for intent and gross negligence."
+              "text": "We run TourenBuddy with care but cannot guarantee that it is always available or free of errors. As far as the law allows, we are liable only for intent and gross negligence. This does not limit our liability for injury to life or health, or where mandatory law does not allow a limit. The service is free and provided as it is."
             }
           ]
         },
@@ -1821,7 +1841,15 @@
           "title": "Law and venue",
           "rows": [
             {
-              "text": "These terms are governed by Swiss law. The courts at the operator’s seat have jurisdiction, subject to mandatory consumer protection rules."
+              "text": "These terms are governed by Swiss law. The courts at the operator’s seat have jurisdiction, subject to mandatory consumer protection rules, including those of your country of residence."
+            }
+          ]
+        },
+        {
+          "title": "Changes",
+          "rows": [
+            {
+              "text": "We may update these terms. We tell you in the app before a change that matters to you takes effect. If you keep using TourenBuddy after that, the new terms apply."
             }
           ]
         },
@@ -1849,7 +1877,7 @@
               "text": "Email: feedback@tourenbuddy.ch"
             },
             {
-              "text": "Map data: © swisstopo."
+              "text": "Map, trail and ski-route data: © swisstopo."
             }
           ]
         }

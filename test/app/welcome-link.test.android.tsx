@@ -47,7 +47,7 @@ describe('a link and the welcome sheet together', () => {
     // The link opened at sign-in; the new account's welcome sheet covers it.
     expect(screen).toHavePathname('/welcome');
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Skip for now' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Later' }));
     await settle();
     await fireEvent.press(screen.getByRole('button', { name: 'Done' }));
     await settle();
