@@ -6,7 +6,7 @@ import { connectivity, isOnline, isReachable, RECHECK_MS } from '@/core/offline/
 // The re-probe runs on timers and asks the backend through `fetch`: both stand-ins here.
 jest.useFakeTimers();
 const fetchMock = jest.fn<Promise<unknown>, unknown[]>();
-global.fetch = fetchMock as unknown as typeof fetch;
+globalThis.fetch = fetchMock as unknown as typeof fetch;
 
 // The PWA's use-online-status.test.ts, for the OS signal.
 describe('reachability', () => {

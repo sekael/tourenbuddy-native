@@ -1,3 +1,5 @@
+// Reads the website's pages from disk: Node's types, which the app's tsconfig leaves out.
+/// <reference types="node" />
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
