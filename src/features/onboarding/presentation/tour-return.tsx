@@ -50,6 +50,16 @@ export function useTourHere(pathname: string) {
   return useTourReturn((s) => s.start !== null && s.dest === pathname);
 }
 
+/**
+ * Whether the tab bar shows the way back: only for a tour row that opened a tab. A sheet over the
+ * map has it as its first row; the router is at the sheet's route a moment before iOS can raise it
+ * (the welcome sheet still closing), and the tab bar showed it on the bare map meanwhile.
+ */
+export function useTourOnTab(pathname: string) {
+  const here = useTourHere(pathname);
+  return here && TAB_ROOTS.includes(pathname);
+}
+
 /** Back to the tour's overview, over whatever sheets the feature opened. */
 function backToTour(start: 'resume' | 'features') {
   useTourReturn.setState({ start: null });

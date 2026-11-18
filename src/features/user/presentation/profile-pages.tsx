@@ -179,7 +179,7 @@ export function ProfilePage({ onPush }: { onPush: (page: string) => void }) {
           max={PACE_MAX}
           step={0.1}
           onChange={(pace) =>
-            void useUserProfileStore.getState().updateProfile({ pace: Math.round(pace * 10) / 10 })
+            useUserProfileStore.getState().updateProfile({ pace: Math.round(pace * 10) / 10 })
           }
           format={(pace) => `${pace.toFixed(1)}×`}
         />

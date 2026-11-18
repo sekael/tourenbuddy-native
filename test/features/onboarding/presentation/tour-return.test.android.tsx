@@ -8,6 +8,7 @@ import { PageReturn } from '@/core/adaptive/page-return';
 import { Page, Screen } from '@/core/adaptive/screen';
 import {
   useFollowTour,
+  useTourOnTab,
   useTourReturn,
   useTourWayBack,
 } from '@/features/onboarding/presentation/tour-return';
@@ -112,5 +113,31 @@ describe('following the tour across routes', () => {
 
     await view.rerender(<Follow pathname="/" />); // the sheet closed: back on the map
     expect(useTourReturn.getState().start).toBeNull();
+  });
+});
+
+describe('the way back in the tab bar', () => {
+  function TabBar({ pathname }: { pathname: string }) {
+    return useTourOnTab(pathname) ? <Page title="Back to the app tour">{null}</Page> : null;
+  }
+  const shown = () => screen.queryByText('Back to the app tour') !== null;
+
+  it('should show it only for a row that opened a tab', async () => {
+    useTourReturn.setState({ start: 'features', dest: '/contacts', arrived: false });
+    await render(
+      <SafeAreaProvider initialMetrics={metrics}>
+        <TabBar pathname="/contacts" />
+      </SafeAreaProvider>,
+    );
+
+    expect(shown()).toBe(true);
+  });
+
+  it('should never show it for a sheet over the map, even before iOS has raised the sheet', async () => {
+    // The router is at the sheet's route while the welcome sheet still closes: the map shows.
+    useTourReturn.setState({ start: 'features', dest: '/offline-maps', arrived: false });
+    await render(<TabBar pathname="/offline-maps" />);
+
+    expect(shown()).toBe(false);
   });
 });

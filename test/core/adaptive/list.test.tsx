@@ -1,7 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { useEffect } from 'react';
 
-import { ListRow, ListSection, PickerRow, StepperRow } from '@/core/adaptive/list';
+import { ListRow, ListSection, PickerRow, SliderRow, StepperRow } from '@/core/adaptive/list';
 
 describe('ListSection on iOS', () => {
   it('should remount its rows when the footer comes or goes, so their drawn icons show again', async () => {
@@ -136,5 +136,54 @@ describe('PickerRow, segmented under its icon and title', () => {
     expect(onChange).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByRole('radio', { name: 'Beides' }));
     expect(onChange).toHaveBeenCalledWith('both');
+  });
+});
+
+describe('SliderRow on iOS', () => {
+  const slider = () => screen.container.queryAll((n) => n.props.onValueChanged).at(-1)!;
+  const shown = () =>
+    screen.container.queryAll((n) => n.props.text?.endsWith?.('×')).at(-1)!.props.text;
+  const row = (value: number, onChange: (v: number) => Promise<unknown> | void) => (
+    <SliderRow
+      title="Pace"
+      value={value}
+      min={0.5}
+      max={1.5}
+      step={0.1}
+      format={(v) => `${v.toFixed(1)}×`}
+      minIcon="snail"
+      maxIcon="cruelty_free"
+      onChange={onChange}
+    />
+  );
+  const drag = async (to: number) => {
+    await fireEvent(slider(), 'editingChanged', { nativeEvent: { isEditing: true } });
+    await fireEvent(slider(), 'valueChanged', { nativeEvent: { value: to, eventCount: 1 } });
+    await fireEvent(slider(), 'editingChanged', { nativeEvent: { isEditing: false } });
+  };
+
+  it('should keep the new value once let go until the save is done, never the old one between', async () => {
+    let saved!: () => void;
+    const onChange = jest.fn(() => new Promise<void>((resolve) => (saved = resolve)));
+    const view = await render(row(1, onChange));
+
+    await drag(1.3);
+    expect(onChange).toHaveBeenCalledWith(1.3);
+    expect(shown()).toBe('1.3×'); // the store still says 1.0 until the server answers
+
+    await view.rerender(row(1.3, onChange)); // the store has it
+    await act(async () => saved());
+    expect(shown()).toBe('1.3×');
+    expect(slider().props.value).toBe(1.3);
+  });
+
+  it('should show the old value again when the save fails', async () => {
+    const view = await render(row(1, () => Promise.reject(new Error('offline'))));
+
+    await drag(0.7);
+    await act(async () => {});
+    await view.rerender(row(1, () => {}));
+
+    expect(shown()).toBe('1.0×');
   });
 });

@@ -544,10 +544,14 @@ export function SliderRow({
   minIcon,
   maxIcon,
 }: SliderRowProps) {
-  const [dragging, setDragging] = useState(false);
+  // While dragging, and once let go until the caller's save is done, the row shows the slider's own
+  // value: the caller's (a store written when the server answers) is still the old one meanwhile,
+  // and showing it flicked the slider back before it jumped to the new value.
+  const [held, setHeld] = useState<number | null>(null);
   const draft = useRef(value);
-  const [shownDraft, setShownDraft] = useState(value);
-  const shown = dragging ? shownDraft : value;
+  /** The latest drag: an earlier save's end doesn't let go of a drag that came after it. */
+  const drags = useRef(0);
+  const shown = held ?? value;
   const label = format ? format(shown) : String(shown);
   return (
     <VStack alignment="leading" spacing={space.sm}>
@@ -564,11 +568,20 @@ export function SliderRow({
         step={step}
         onValueChange={(next) => {
           draft.current = next;
-          setShownDraft(next);
+          setHeld(next);
         }}
         onEditingChanged={(editing) => {
-          setDragging(editing);
-          if (!editing && draft.current !== value) onChange(draft.current);
+          const drag = editing ? ++drags.current : drags.current;
+          if (editing) {
+            draft.current = shown;
+            return;
+          }
+          const letGo = () => {
+            if (drags.current === drag) setHeld(null);
+          };
+          if (draft.current === value) return letGo();
+          // A failed save lets go too: the row shows the caller's value, the old one, again.
+          void Promise.resolve(onChange(draft.current)).then(letGo, letGo);
         }}
         minimumValueLabel={<Image systemName={icons[minIcon].sf} modifiers={[secondary]} />}
         maximumValueLabel={<Image systemName={icons[maxIcon].sf} modifiers={[secondary]} />}

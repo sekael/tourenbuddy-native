@@ -153,7 +153,9 @@ export type StepperRowProps = {
 };
 
 /** A value picked along a range (the pace): a slider between two icons, the value beside the title. */
-export type SliderRowProps = StepperRowProps & {
+export type SliderRowProps = Omit<StepperRowProps, 'onChange'> & {
+  /** Called once, when the slider is let go; a returned promise is the save (iOS: held till done). */
+  onChange: (value: number) => Promise<unknown> | void;
   icon?: IconName;
   /** The slow and the fast end's icons (a tortoise and a hare). */
   minIcon: IconName;
