@@ -4,21 +4,6 @@ Always-visible action bar inside the tour detail view exposing primary tour acti
 
 ## Requirements
 
-### Requirement: Persistent bottom-center tour action bar
-
-The map page SHALL render a persistent action bar over the map, anchored bottom-center on both mobile and desktop viewports. The bar SHALL be a single rounded pill container with two tappable segments separated by a 1px divider in `--color-fab-border`: a primary "My Tours" segment (Material Symbols `location_on` icon + label from `map.actionBar.myTours`) and a trailing icon-only Add-tour segment (Material Symbols `add_location_alt` icon, no visible label, accessible name from `map.actionBar.addTourAriaLabel`). The pill SHALL respect `env(safe-area-inset-bottom)` and SHALL wear the shared map-control glass surface (`.fab-glass`: `--color-fab-glass`, `--shadow-md`, backdrop blur), with a 52px height and full pill corners (`--radius-pill`).
-
-#### Scenario: Bar mounted on map page
-
-- **WHEN** the user opens the map page with no overlay active and `mapStore.isPickingLocation === false`
-- **THEN** the bottom-center action bar SHALL be visible
-- **AND** SHALL render a single pill with two segments in this DOM order: My Tours (text + icon), divider, Add-tour (icon only)
-
-#### Scenario: Same layout on mobile and desktop
-
-- **WHEN** the bar is visible on a viewport below 600px AND on a viewport at or above 600px
-- **THEN** the bar SHALL be positioned bottom-center in both layouts using the same component instance and styling
-
 ### Requirement: Tour action bar visibility rules
 
 The bar SHALL be hidden entirely while any of the following are true: `mapStore.isPickingLocation === true`, the tour info overlay is active, the tours list overlay is active, or the tour-creation overlay is active. The bar SHALL remain visible (with disabled segments) while any other top-level interaction is active — feedback / profile / contacts / friend-requests overlays, or the speed-dial menu / base-map sub-panel.
@@ -99,3 +84,14 @@ While any overlay is active, all FABs not part of that overlay SHALL be disabled
 
 - **WHEN** any overlay is active
 - **THEN** the compass FAB SHALL retain its existing behaviour (visible when bearing is non-zero, click resets bearing) and SHALL NOT be disabled
+
+### Requirement: Glass tour capsule in the map's thumb zone
+The Map tab SHALL show, centred right above the tab bar, a capsule with "My tours" (opens the tours list) and an "Add tour" button (starts tour creation), in Liquid Glass on iOS and as Material floating controls on Android and web, level with the menu circle at the trailing edge and the legend button at the leading edge. The capsule SHALL hide while a tour or the tours list is open and while picking or drawing.
+
+#### Scenario: Open my tours
+- **WHEN** the user taps "My tours"
+- **THEN** the tours list opens as a sheet over the map
+
+#### Scenario: Hidden behind a tour
+- **WHEN** a tour's detail sheet is open
+- **THEN** the capsule is hidden and returns when the sheet closes

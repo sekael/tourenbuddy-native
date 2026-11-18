@@ -198,7 +198,10 @@ describe('auth store: password and passkey', () => {
 
   it('should leave the user to the listener', async () => {
     // A session in the answer, but no event: the action itself never sets the user.
-    supabase.auth.signInWithPassword.mockResolvedValueOnce({ data: { session: testSession() }, error: null });
+    supabase.auth.signInWithPassword.mockResolvedValueOnce({
+      data: { session: testSession() },
+      error: null,
+    });
 
     await store().signInWithPassword('anna@example.com', 'secret-123');
 
@@ -385,7 +388,7 @@ describe('auth store: sign-out', () => {
 
     await expect(store().signOut()).resolves.toBeUndefined();
     expect(store().user).toBeNull();
-    expect(console.error).toHaveBeenCalledWith(
+    expect(globalThis.console.error).toHaveBeenCalledWith(
       '[AuthStore]',
       'Could not delete the stored session',
       expect.any(Error),

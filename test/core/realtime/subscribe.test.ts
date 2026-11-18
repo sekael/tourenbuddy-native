@@ -108,7 +108,10 @@ describe('subscribeRealtime', () => {
     last().status!('SUBSCRIBED');
 
     expect(onSubscribed).toHaveBeenCalledTimes(2);
-    expect(console.warn).toHaveBeenCalledWith('[Realtime]', 'tours:user-1: CHANNEL_ERROR');
+    expect(globalThis.console.warn).toHaveBeenCalledWith(
+      '[Realtime]',
+      'tours:user-1: CHANNEL_ERROR',
+    );
   });
 
   it('should debounce a burst of changes into one refetch after 150 ms', () => {
@@ -167,7 +170,9 @@ describe('subscribeRealtime', () => {
 
   it('should reopen a topic only after its old channel is gone', async () => {
     let removed!: () => void;
-    supabase.removeChannel.mockReturnValueOnce(new Promise((resolve) => (removed = () => resolve('ok'))));
+    supabase.removeChannel.mockReturnValueOnce(
+      new Promise((resolve) => (removed = () => resolve('ok'))),
+    );
     subscribe().end();
 
     subscribe();
@@ -182,7 +187,9 @@ describe('subscribeRealtime', () => {
 
   it('should not reopen a topic whose consumers all left while its old channel closed', async () => {
     let removed!: () => void;
-    supabase.removeChannel.mockReturnValueOnce(new Promise((resolve) => (removed = () => resolve('ok'))));
+    supabase.removeChannel.mockReturnValueOnce(
+      new Promise((resolve) => (removed = () => resolve('ok'))),
+    );
     subscribe().end();
     subscribe().end();
 

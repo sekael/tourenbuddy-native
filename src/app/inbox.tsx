@@ -1,8 +1,3 @@
-import { useTranslation } from 'react-i18next';
+import { InboxSheet } from '@/features/notifications/presentation/inbox-sheet';
 
-import { PlaceholderSheet } from '@/features/shell/presentation/placeholder-sheet';
-
-export default function InboxSheet() {
-  const { t } = useTranslation();
-  return <PlaceholderSheet title={t('map.overlay.inbox')} />;
-}
+export default InboxSheet;

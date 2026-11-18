@@ -3,6 +3,8 @@ node_modules/
 
 # Expo
 .expo/
+# copied by postinstall (tour-map.web.tsx)
+/public/maplibre-gl-worker.mjs
 dist/
 web-build/
 expo-env.d.ts
@@ -40,3 +42,6 @@ npm-debug.*
 .claude/settings.local.json
 
 tourenbuddy_frontend_vue
+
+# Phase 2 backend patch for the Vue repo (applied there, not committed here)
+/.vue-patch/

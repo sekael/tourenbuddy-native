@@ -35,5 +35,4 @@ describe('createLogger', () => {
     expect(error).toHaveBeenCalledWith('[sync]', 'failed', 42);
     expect(warn).toHaveBeenCalledWith('[sync]', 'slow');
   });
-
 });

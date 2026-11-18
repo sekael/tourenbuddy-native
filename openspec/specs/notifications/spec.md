@@ -4,66 +4,6 @@ Push and email notifications for friend requests, tour updates, and tour collabo
 
 ## Requirements
 
-### Requirement: Disclaimer when notifications are effectively off
-The system SHALL display a hint in the profile preferences UI when push is off on this device and email is disabled, informing the user they will not be alerted outside the app and that updates still collect in the in-app inbox.
-
-#### Scenario: Both channels off
-- **WHEN** push is off on this device and email is disabled
-- **THEN** the preferences UI shows the hint pointing to the inbox
-
-#### Scenario: At least one channel on
-- **WHEN** push is on for this device or email is enabled
-- **THEN** the hint is hidden
-
-### Requirement: Web Push subscription registration
-The system SHALL register a Web Push subscription per browser when the user enables push on that device and permission is granted, and SHALL support any number of devices per user, each receiving every push sent to that user.
-
-#### Scenario: User grants permission
-- **WHEN** the user enables push on this device and the browser grants permission
-- **THEN** the client subscribes to Push using the VAPID public key and persists the resulting endpoint, p256dh, auth, and user agent in `push_subscriptions` for the current user
-
-#### Scenario: Same browser already registered
-- **WHEN** the same browser endpoint already exists for the user
-- **THEN** the existing row is reused (unique on endpoint) and `last_seen_at` is refreshed
-
-#### Scenario: Second device registers
-- **WHEN** a user with push enabled on a desktop browser enables push on their phone
-- **THEN** both subscriptions exist and a subsequent notification is pushed to both devices
-
-#### Scenario: User disables push
-- **WHEN** the user turns push off on their phone while it is on for their desktop
-- **THEN** the client unsubscribes the phone's browser PushManager and deletes only the phone's row; the desktop keeps receiving push
-
-#### Scenario: Endpoint previously owned by another account
-- **WHEN** user B enables push in a browser whose endpoint is still registered to user A
-- **THEN** the endpoint is reassigned to B and A no longer receives push on that browser
-
-### Requirement: iOS PWA gating
-The system SHALL hide the push toggle when the client is iOS Safari and the app is not running in standalone (installed PWA) mode, and SHALL replace the toggle with a compact "unavailable" indicator that exposes the install-to-home-screen guidance via an info-icon tooltip in desktop view and as inline text below the push label in mobile view (tooltips are desktop-only).
-
-#### Scenario: iOS browser, not installed
-- **WHEN** the user opens preferences in iOS Safari and `display-mode` is not `standalone`
-- **THEN** the push toggle is hidden, a compact "Not available" badge is shown in its place and the install-to-home-screen guidance text is shown inline below the push label (mobile view) or in the info-icon tooltip (desktop view)
-
-#### Scenario: iOS installed PWA
-- **WHEN** the user opens preferences in an installed PWA on iOS 16.4+
-- **THEN** the push toggle is shown and registration follows the standard Web Push flow
-
-### Requirement: Compact unavailable indicator for push notifications
-The notifications preferences UI SHALL present a single compact "unavailable" indicator in place of the push toggle whenever push notifications cannot be enabled on the current client — covering both the PWA-install-required case and the permission-denied case — and SHALL expose the full explanatory text through an info-icon tooltip in desktop view and as inline text below the push label in mobile view, where tooltips do not exist.
-
-#### Scenario: Push permission denied
-- **WHEN** the browser push permission state is `denied`
-- **THEN** the push toggle is hidden and a compact "Not available" badge with an info-icon button is rendered in its place, in desktop view an info-icon button carries an accessible label equal to the full denial explanation and shows it in a tooltip on hover; in mobile view the explanation is shown inline below the push label and no info button is rendered
-
-#### Scenario: PWA install required
-- **WHEN** push is supported by the browser but the app is not yet installed as a PWA
-- **THEN** the push toggle is hidden and the same compact "Not available" badge is rendered, with the install-to-home-screen guidance in the info-icon tooltip (desktop view) or inline below the push label (mobile view)
-
-#### Scenario: Long-locale layout
-- **WHEN** the active locale produces a long explanation string (e.g. German) in desktop view
-- **THEN** the push row remains single-line because the long string lives inside the tooltip rather than inline in the row
-
 ### Requirement: Friend request received notification
 The system SHALL notify the recipient of a new friend request through every enabled and non-muted channel they have configured. The event is internally classified under the `friend_requests` notification type.
 
@@ -101,20 +41,6 @@ The system SHALL select the Brevo template matching the recipient's `user_profil
 - **WHEN** the user locale is missing or not in the supported set
 - **THEN** the Worker falls back to the `*_en` template
 
-### Requirement: Stale push subscription cleanup
-The system SHALL delete push subscription rows whose endpoint returns 404 or 410 from the Web Push service.
-
-#### Scenario: Endpoint expired
-- **WHEN** the Worker dispatches a push and the response is 410 Gone
-- **THEN** the matching row in `push_subscriptions` is deleted
-
-### Requirement: Notification click deep link
-Every push and email SHALL link to `<APP_URL>/?notification=<entry id>`. Opening it SHALL focus an existing app window (or open a new one); the app then resolves that inbox entry's own deep link and marks it read, so routing lives in one place (see `notification-inbox`).
-
-#### Scenario: User clicks a friend request notification
-- **WHEN** the user taps a `friend_requests` push
-- **THEN** an existing app window is focused (or a new one opened) at `/?notification=<id>`, and the app opens the friend requests sheet and marks the entry read
-
 ### Requirement: Event dispatch authentication
 The notification Worker SHALL only accept event dispatch requests originating from the database, authenticated by a shared secret, and SHALL reject all others. Client applications SHALL NOT be able to trigger push or email dispatch.
 
@@ -130,30 +56,12 @@ The notification Worker SHALL only accept event dispatch requests originating fr
 - **WHEN** the database cannot reach the Worker for an emitted event
 - **THEN** the originating write and the inbox entry remain committed, the push/email for that event is not delivered, and the failure is observable in the database's request log
 
-### Requirement: Per-device push toggle
-The push toggle SHALL reflect whether the current browser holds an active push subscription registered to the current user, not an account-wide flag. A newly used device SHALL show push as off until enabled there.
-
-#### Scenario: New device
-- **WHEN** a user with push enabled on desktop opens preferences on a phone for the first time
-- **THEN** the phone's push toggle is off
-
-#### Scenario: Subscription lost
-- **WHEN** the browser's push subscription was revoked or expired
-- **THEN** the toggle shows off on next open
-
 ### Requirement: Push delivery follows registered devices
 Push SHALL be sent to a user iff they have at least one registered push subscription and the event's type is not muted; no account-level push flag SHALL gate delivery.
 
 #### Scenario: No devices
 - **WHEN** an event is emitted for a user with zero push subscriptions
 - **THEN** no push is attempted
-
-### Requirement: Sign-out removes this device's push registration
-Signing out SHALL delete the current browser's push subscription row and unsubscribe its PushManager, so a shared device stops receiving the signed-out user's pushes. Other devices SHALL be unaffected.
-
-#### Scenario: Sign out on shared tablet
-- **WHEN** A signs out on a tablet with push enabled
-- **THEN** the tablet receives no further push for A and A's other devices still do
 
 ### Requirement: Push and email notification channels
 
@@ -254,3 +162,32 @@ The `tour_reminders` type SHALL cover one of your tours, or a friend's tour you 
 #### Scenario: User mutes tour_reminders
 - **WHEN** the user mutes `tour_reminders`
 - **THEN** that type is added to `notif_muted_types` and no tour reminder push or email is sent to that user, regardless of channel state, while inbox entries are still recorded
+
+### Requirement: Native push opt-in per device
+The notifications settings SHALL show a push switch for this device. Turning it on SHALL ask for the operating system's permission only then, register the device token with the server and keep it registered on each launch while permitted; turning it off SHALL delete this device's registration. When the permission is denied, the switch SHALL be replaced by a row explaining it with a link to the app's system settings. The app SHALL never ask for push permission unprompted.
+
+#### Scenario: First enable
+- **WHEN** the user turns push on for the first time
+- **THEN** the system permission prompt appears, and after "Allow" the device receives the user's pushes
+
+#### Scenario: Permission denied
+- **WHEN** the operating system has push denied for the app
+- **THEN** the settings show "Notifications are off in Settings" with a button opening the app's settings
+
+#### Scenario: Sign-out
+- **WHEN** the user signs out
+- **THEN** this device's registration is deleted before the session ends
+
+### Requirement: Push opens its target
+Tapping a push SHALL open the app at the inbox entry's target and mark the entry read, from the background and from a cold start. Push handlers SHALL only show or navigate and SHALL never change app data.
+
+#### Scenario: Friend request push from a killed app
+- **WHEN** the user taps a friend-request push while the app is not running
+- **THEN** the app starts, opens the friend requests and marks the entry read
+
+### Requirement: Hint when nothing reaches the user outside the app
+The notification settings SHALL show a hint when push is off or not permitted on this device and email is off, saying that updates still collect in the inbox.
+
+#### Scenario: Both channels off
+- **WHEN** push is off on this device and email is disabled
+- **THEN** the settings show the hint pointing to the inbox

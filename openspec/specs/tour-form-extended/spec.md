@@ -4,38 +4,6 @@ Tour creation and edit form with the extended field set, validation, and Swiss-t
 
 ## Requirements
 
-### Requirement: Pick-type label in collapsed overlay header
-
-While the location picker is active, the surrounding tour creation dialog and tour info sheet collapse to a header-only surface (a bottom title bar on mobile, side-drawer compact header on desktop). That collapsed header SHALL display a label naming the location type currently being picked, so the user retains context once the form is hidden.
-
-The label SHALL resolve from the active pick type:
-
-- `goal` → "Tour Goal" / "Tourenziel"
-- `start` → "Start Point" / "Startpunkt"
-- `end` → "End Point" / "Endpunkt"
-
-The `location-picker.vue` component itself SHALL NOT render an additional title bar over the map canvas.
-
-#### Scenario: Goal pick on mobile
-
-- **WHEN** the user is on a mobile viewport and enters location-pick mode with pick type `goal`
-- **THEN** the overlay SHALL be collapsed to a bottom title bar and the title SHALL read "Tour Goal" (or its localized equivalent)
-
-#### Scenario: Start pick on desktop
-
-- **WHEN** the user is on a desktop viewport and enters location-pick mode with pick type `start`
-- **THEN** the side drawer SHALL be in its collapsed top-right header state and the title SHALL read "Start Point" (or its localized equivalent)
-
-#### Scenario: End pick label
-
-- **WHEN** the user enters location-pick mode with pick type `end` on either viewport
-- **THEN** the collapsed overlay header SHALL read "End Point" (or its localized equivalent)
-
-#### Scenario: No standalone title bar on map canvas
-
-- **WHEN** location-pick mode is active for any pick type
-- **THEN** `location-picker.vue` SHALL NOT render a title bar over the map; the only label SHALL be the one in the collapsed overlay header
-
 ### Requirement: Start and end point metadata auto-fetch
 
 When the user confirms a start or end point pick, the tour form SHALL set the point at once and look up its name and elevation from Swisstopo, each field on its own, with the same loading, failure and typed-value rules as the goal's name and elevation fields.
@@ -163,20 +131,6 @@ The tour form SHALL render each of goal, start point, and end point inside a dis
 
 - **WHEN** the form renders the goal section
 - **THEN** the goal elevation input SHALL be located inside the goal section's container (not floating between the goal coordinates and the start point section)
-
-### Requirement: Point picker action rows stay within their bounded section
-
-The action button row inside each `.point-section` (goal, start, end) SHALL remain visually contained within its bounded background across all supported viewport widths (down to ~320 CSS px). When the combined intrinsic width of the action buttons exceeds the available row width, the buttons SHALL wrap onto additional lines rather than overflowing the section background.
-
-#### Scenario: End-point section on a narrow mobile viewport
-
-- **WHEN** the user opens the tour form on a viewport ≤ 360 CSS px wide with a start point set and no end point set
-- **THEN** the "Add end point" and "Round Trip" buttons SHALL both render fully inside the end-point section's bounded background, wrapping onto a second line if they do not fit side by side
-
-#### Scenario: End-point section on a wide viewport
-
-- **WHEN** the user opens the tour form on a viewport wide enough to fit both action buttons on one line
-- **THEN** the buttons SHALL render side by side on a single line as today
 
 ### Requirement: Equipment textarea
 
@@ -599,3 +553,49 @@ the points.
 
 - **WHEN** a drawn track set the end and the user redraws it to end at the goal
 - **THEN** the end SHALL be cleared
+
+### Requirement: Ways up and down beside the activities
+
+With two or more activities selected, or paragliding alone, the form SHALL show a "Way up and down"
+section right after the activities, with no page or menu to open: one line per activity (paragliding
+last) in the activity's own glyph and colour, above a switch "Up | Both | Down" ("Both | Down" for
+a lone glider) that one tap changes. An edited tour SHALL start from its saved ways.
+
+#### Scenario: Skitour & fly at a glance
+
+- **WHEN** the user selects ski touring, then paragliding
+- **THEN** the section SHALL appear under the activities with ski touring on "Up" and paragliding on
+  "Down", without opening anything
+
+#### Scenario: A pick that stays
+
+- **WHEN** the user sets hiking to "Both" on a hike & fly, then adds mountain biking
+- **THEN** hiking SHALL stay on "Both" and mountain biking SHALL take its default, "Up"
+
+### Requirement: A greyed way says why
+
+A part of the switch that would leave a way without activity SHALL show greyed and take no tap;
+the section's footer SHALL explain the three ways and that each way needs an activity.
+
+#### Scenario: The only way down
+
+- **WHEN** paragliding is the only activity on the way down
+- **THEN** its "Up" SHALL be greyed, and tapping it SHALL change nothing
+
+### Requirement: A flown way ends at the landing
+
+When the way down includes paragliding, the route's end SHALL read as the landing ("Landeplatz") in
+the route step, the form and the tour sheet; the route step SHALL ask where the user lands, and
+neither it nor the drawing SHALL offer the way back to the start. The form's start and end SHALL say how far they lie from the goal, and past
+20 km ask whether the place is right.
+
+#### Scenario: Hike & fly to the valley
+
+- **WHEN** the user plans hiking up and paragliding down, then sets the end in the valley
+- **THEN** the route step's end row SHALL read "Landeplatz" with no "Rundtour" offered, and the form
+  SHALL show "Landeplatz · 2,4 km vom Ziel" under the place's name
+
+#### Scenario: A landing in the wrong valley
+
+- **WHEN** the landing found by a search lies 35 km from the goal
+- **THEN** the form SHALL show "35 km vom Ziel – stimmt der Ort?" under it

@@ -29,32 +29,6 @@ The tour list SHALL own its own scroll container rather than scrolling within th
 - **THEN** an icon-only Add-tour button SHALL be visible in the sheet header, adjacent to the close button
 - **AND** SHALL NOT appear inside the scrollable list region
 
-### Requirement: Add-tour affordance inside the tour list sheet
-
-`TourListSheet` SHALL render an icon-only Add-tour button in the sheet header (Material Symbols `add_location_alt`, accessible name from `tours.list.addTourAriaLabel`), positioned adjacent to the close button. Activating the button SHALL emit an `add-tour` event with no payload. The component SHALL NOT mutate any store directly — the consuming page is responsible for closing the list and entering the location-pick flow.
-
-#### Scenario: Add-tour icon rendered in sheet header
-
-- **WHEN** `TourListSheet` is mounted for an authenticated user
-- **THEN** an icon-only Add-tour button SHALL be visible in the sheet header, adjacent to the close button
-- **AND** SHALL NOT appear inside the scrollable list region
-
-#### Scenario: Activating add-tour emits event
-
-- **WHEN** the user activates the Add-tour button
-- **THEN** `TourListSheet` SHALL emit an `add-tour` event
-- **AND** SHALL NOT mutate `useToursStore` or `useMapStore`
-
-#### Scenario: Add-tour disabled when unauthenticated
-
-- **WHEN** the user is not authenticated
-- **THEN** the Add-tour button SHALL render disabled with the existing `signInToAddToursTooltip` tooltip text (desktop view only)
-
-#### Scenario: Add-tour visible in both mobile and desktop layouts
-
-- **WHEN** `TourListSheet` is rendered on a viewport below 600px AND on a viewport at or above 600px
-- **THEN** the header Add-tour icon SHALL be present in both layouts
-
 ### Requirement: Tour search by name and partner
 
 The overlay SHALL include a text search input. A tour SHALL be considered a match when the trimmed, case-insensitive query is a substring of either the tour's `name` or of any of the tour's partner names resolved via `useContactsStore`.
@@ -139,22 +113,6 @@ Tapping a tour row SHALL call `mapStore.selectTour(tour.id)` and emit `close` so
 - **AND** the component SHALL emit `close`
 - **AND** the existing map-page machinery SHALL open `TourInfoSheet` and fly to the tour goal
 
-### Requirement: Calendar entry point in the tour list
-
-The tour-list overview SHALL provide a calendar icon button in its header that
-navigates the user to the `/calendar` calendar view.
-
-#### Scenario: Opening the calendar from the tour list
-
-- **WHEN** the user taps the calendar icon button in the tour-list header
-- **THEN** the app navigates to the `/calendar` route and displays the calendar
-  view
-
-#### Scenario: Calendar button available regardless of active list tab
-
-- **WHEN** the tour list is on either the Owned or the Friends tab
-- **THEN** the calendar icon button remains visible and functional in the header
-
 ### Requirement: Tour rows are identified by activity type
 
 Each tour row in the tour list SHALL lead with an avatar showing the tour's primary
@@ -208,31 +166,6 @@ suggestions SHALL show none.
 - **WHEN** the list renders a friend's tour on which the viewer has authored a pending suggestion
 - **THEN** no owner-facing pending indicator is shown on that row
 
-### Requirement: Filter panel accessibility
-
-The filters SHALL expose their expanded state and accessible name to assistive technology, and SHALL manage focus on open and close. They SHALL be announced as a non-modal region, since content outside them remains operable.
-
-#### Scenario: Trigger exposes panel state
-
-- **WHEN** the filters are open or closed
-- **THEN** the trigger SHALL reflect the state via `aria-expanded`
-- **AND** SHALL reference the filters via `aria-controls`
-
-#### Scenario: Focus moves into the panel on open
-
-- **WHEN** the user opens the filters
-- **THEN** focus SHALL move to the filters region without scrolling the tabs and search row out of view
-
-#### Scenario: Focus returns to the trigger on close
-
-- **WHEN** the filters are closed by the trigger, "Show N tours" or Escape
-- **THEN** focus SHALL return to the trigger
-
-#### Scenario: Panel has an accessible name
-
-- **WHEN** the filters are rendered
-- **THEN** they SHALL expose an accessible name sourced from a localized string present in every locale file
-
 ### Requirement: Backfill entry point in the sheet header
 
 The backfill collisions entry point SHALL be an icon button in the sheet header alongside the other header actions, shown only on the Friends tab when the user has at least one friendship. It SHALL expose a localized accessible name, and on desktop SHALL additionally surface that name as a tooltip. It SHALL NOT occupy a row in the list header, so that the header keeps the same height on both tabs.
@@ -259,23 +192,9 @@ The backfill collisions entry point SHALL be an icon button in the sheet header 
 - **THEN** the sheet body SHALL be replaced by the backfill view
 - **AND** returning from it SHALL restore the prior tab, search, and filter state
 
-### Requirement: Stable list sheet height while searching
-
-On mobile, the tour list sheet SHALL NOT shrink while a search query or any filter is active, so results stay above the on-screen keyboard. Clearing search and filters SHALL let the sheet fit its content again.
-
-#### Scenario: Typing a narrowing query
-
-- **WHEN** the user types a search query that reduces the number of visible tours
-- **THEN** the tour list sheet height SHALL NOT decrease
-
-#### Scenario: Applying a narrowing filter
-
-- **WHEN** the user activates a filter that reduces the number of visible tours
-- **THEN** the tour list sheet height SHALL NOT decrease
-
 ### Requirement: Search and filters reset when the list is left
 
-Leaving the tour list SHALL clear the search query and every filter on both tabs. Opening a tour from the list and returning to the list SHALL keep them. The last-viewed tab SHALL still be remembered.
+Leaving the tour list SHALL clear the search query and every filter on both tabs. Opening a tour from the list and returning to the list SHALL keep them. The tab SHALL follow how the list is opened: "Meine Touren" SHALL open the user's own tours, and a friend's Touren SHALL open the Friends tab narrowed to that friend (native: a list reopened on Friends hid the user's own tours behind a button labelled "Meine Touren").
 
 #### Scenario: Closing the list
 
@@ -296,6 +215,16 @@ Leaving the tour list SHALL clear the search query and every filter on both tabs
 
 - **WHEN** the user opens a tour from a searched/filtered list and closes the tour detail instead of returning
 - **THEN** the search query and filters SHALL be cleared
+
+#### Scenario: Reopening after viewing Friends
+
+- **WHEN** the user viewed the Friends tab, closed the list and opens it again from "Meine Touren"
+- **THEN** the list SHALL show the user's own tours
+
+#### Scenario: A friend's tours from the contact
+
+- **WHEN** the user taps Touren on a friend's contact
+- **THEN** the list SHALL open on Friends, showing only that friend's tours
 
 ### Requirement: A narrowed Friends list says what the map marks
 
@@ -392,85 +321,6 @@ The list SHALL filter by activity type, grade, season, planned-date range and co
 - **WHEN** a search query and one or more filters are active
 - **THEN** a tour SHALL appear only when it satisfies both the search predicate and every active filter
 
-### Requirement: Filters view
-
-Filter controls SHALL be collapsed behind a "Filters" trigger in the search row, with a badge counting active filter categories (search does not count). Opened, the filters SHALL replace the tour rows in the sheet's or drawer's normal flow, below the tabs and the search row, as the only scrolling region. Their layout SHALL depend on the tab's tours only, never on how many match, so selecting or clearing a filter SHALL NOT resize the filters or move any control.
-
-#### Scenario: Filters hidden by default
-
-- **WHEN** the list opens
-- **THEN** the search input and tour rows SHALL be visible and the filters hidden behind the trigger
-
-#### Scenario: Badge reflects active filter count
-
-- **WHEN** the user has selected two partners and a completion status of `done`
-- **THEN** the trigger SHALL display a badge with the value `2`
-
-#### Scenario: Opening the filters
-
-- **WHEN** the user activates the trigger
-- **THEN** the filters SHALL take the rows' place, with the tabs and the search row still above them
-- **AND** the sheet SHALL scroll them as its one scrolling region
-
-#### Scenario: A selection that thins the list
-
-- **WHEN** the filters are open and the user taps a chip that leaves one matching tour
-- **THEN** no filter group, chip or footer action SHALL move or change size
-
-#### Scenario: Sheet size on a phone
-
-- **WHEN** the filters open in the bottom sheet
-- **THEN** the sheet SHALL open them at their content height, at most 70% of the visible viewport, and SHALL be draggable up to 90%
-- **AND** dragging the sheet SHALL NOT close the filters
-
-#### Scenario: Glove-sized targets
-
-- **WHEN** the filters are shown
-- **THEN** every chip, date field and status option SHALL be at least 44px tall
-
-#### Scenario: Same presentation in both shells
-
-- **WHEN** the list is rendered in the desktop side drawer
-- **THEN** the filters SHALL take the rows' place there too, scrolling within the drawer below the search row
-
-### Requirement: Filters footer actions
-
-While the filters are open, the sheet or drawer footer SHALL hold a "Reset" action and a primary "Show N tours" action, visible at every scroll position. N SHALL be the number of rows the list shows on close (search and filters together, an outing counted once). "Show N tours" SHALL close the filters. "Reset" SHALL stay in place, disabled, while no filter is active.
-
-#### Scenario: Count reflects search and filters together
-
-- **WHEN** a search query and one or more filters are both active
-- **THEN** N SHALL equal the number of rows displayed once the filters close
-
-#### Scenario: Count updates as facets change
-
-- **WHEN** the user toggles a filter facet
-- **THEN** N SHALL update without closing the filters
-
-#### Scenario: No active filters
-
-- **WHEN** no filter is active
-- **THEN** "Reset" SHALL be shown disabled
-
-### Requirement: Filters view dismissal
-
-The filters SHALL close via the trigger, the "Show N tours" action and the Escape key. Pointers elsewhere, including dragging the sheet, SHALL NOT close them. Closing SHALL show the filtered rows and preserve the selection.
-
-#### Scenario: Escape while typing in search
-
-- **WHEN** focus is in the search input and the user presses Escape
-- **THEN** the filters SHALL close and the sheet SHALL stay open
-
-#### Scenario: Switching tabs keeps the filters open
-
-- **WHEN** the filters are open and the user activates the other tab
-- **THEN** the filters SHALL stay open and present the selection stored for that tab
-
-#### Scenario: Filters are closed after remount
-
-- **WHEN** the user opens a tour detail view and returns to the list
-- **THEN** the filters SHALL be closed and the previously selected filters SHALL still be active
-
 ### Requirement: Additive grade filter
 
 The grade filter SHALL offer one chip row per closed scale in use on the tab's tours — SAC hiking T1–T6, SAC alpine L–EX, singletrail S0–S5 — in aligned columns, each scale on one row. Each chip SHALL toggle its grade on its own. A tour SHALL match when any part of its grade leads with a selected grade, so a modifier keeps its base grade.
@@ -523,3 +373,25 @@ On the Friends tab the recorded-by chips SHALL be the friends who recorded at le
 
 - **WHEN** the filters open before the friends' names have resolved
 - **THEN** the recorded-by group SHALL hold one chip row of space and show no chip until every label is final
+
+### Requirement: Tours list sheet on native
+The tours list SHALL open as a sheet over the map with a segmented control (Mine, Friends), a system search field by tour name and partner, a Filters button with a badge counting active categories, and Add in its navigation bar; focusing the search SHALL raise the sheet to its large height. Rows SHALL show the PWA row's content: activity avatar, name, grade and subtitle, the owner and date line on friends' tours, a pending-suggestion count, no planned date on own tours.
+
+#### Scenario: Search a partner
+- **WHEN** the user types a partner's first name into the search field
+- **THEN** only tours with that partner remain and the sheet stands at its large height
+
+#### Scenario: An uncrowded bar
+- **WHEN** the user opens the tours list on an iPhone
+- **THEN** Filters stands at the bar's leading edge and Add at its trailing edge, the Mine | Friends switch between them, and there is no close button: the sheet closes with a swipe down
+
+#### Scenario: Swipe to complete
+- **WHEN** the user swipes an own tour row from the leading edge and taps Complete
+- **THEN** the tour is marked completed, as from its detail
+
+### Requirement: Filters as a pushed screen
+The Filters button SHALL push a filters screen in the sheet with the PWA's filter categories; its toolbar SHALL hold "Reset" (disabled while no filter is active) and a primary "Show N tours", N counting the rows the list shows on return. Back and "Show N tours" SHALL return to the list with the filters applied. Selecting a filter SHALL never move another control.
+
+#### Scenario: Show N tours
+- **WHEN** the user selects the grade "WS" and taps "Show 3 tours"
+- **THEN** the list shows those three tours and the Filters badge shows 1

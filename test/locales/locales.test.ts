@@ -1,14 +1,15 @@
 import deCH from '@/locales/de-CH.json';
 import en from '@/locales/en.json';
 
-type Catalog = { [key: string]: string | Catalog };
+// Arrays (the About pages' sections) flatten by index.
+type Catalog = { [key: string]: string | Catalog | Catalog[] };
 
 function flatten(catalog: Catalog, prefix = ''): Map<string, string> {
   const out = new Map<string, string>();
   for (const [k, v] of Object.entries(catalog)) {
     const key = prefix ? `${prefix}.${k}` : k;
     if (typeof v === 'string') out.set(key, v);
-    else for (const [nk, nv] of flatten(v, key)) out.set(nk, nv);
+    else for (const [nk, nv] of flatten(v as Catalog, key)) out.set(nk, nv);
   }
   return out;
 }
@@ -28,13 +29,14 @@ function localeProblems(source: Catalog, target: Catalog): string[] {
     else if (placeholders(text).join() !== placeholders(src.get(key)!).join())
       problems.push(`placeholders: ${key}`);
   }
-  for (const [key, text] of [...src, ...tgt]) if (VUE_SYNTAX.test(text)) problems.push(`vue syntax: ${key}`);
+  for (const [key, text] of [...src, ...tgt])
+    if (VUE_SYNTAX.test(text)) problems.push(`vue syntax: ${key}`);
   return problems;
 }
 
 describe('locale catalogs', () => {
   it('should have the same keys, placeholders and no vue-i18n syntax', () => {
-    expect(localeProblems(en, deCH)).toEqual([]);
+    expect(localeProblems(en as unknown as Catalog, deCH as unknown as Catalog)).toEqual([]);
   });
 
   it('should report a key missing from the translation', () => {
@@ -52,8 +54,8 @@ describe('locale catalogs', () => {
   });
 
   it('should report leftover vue-i18n syntax in either catalog', () => {
-    expect(
-      localeProblems({ p: '{count} day | {count} days' }, { p: "du{'@'}example.ch" }),
-    ).toEqual(['vue syntax: p', 'vue syntax: p']);
+    expect(localeProblems({ p: '{count} day | {count} days' }, { p: "du{'@'}example.ch" })).toEqual(
+      ['vue syntax: p', 'vue syntax: p'],
+    );
   });
 });

@@ -221,64 +221,6 @@ The system SHALL grant read access to an attachment only via short-lived signed 
 - **WHEN** an in-progress view fails to load due to expired/403 signed URL
 - **THEN** the viewer SHALL regenerate a fresh signed URL and retry once
 
-### Requirement: Full-screen viewer with horizontal flip
-
-The system SHALL provide a full-screen viewer that displays the selected attachment and SHALL allow the user to flip between all attachments of the tour via horizontal swipe and on-screen left/right controls. Images SHALL be rendered with a native `<img>`; PDFs SHALL be rendered using `pdfjs-dist` with page-by-page navigation. The viewer's top chrome (filename, download button, close button) SHALL clear the device status bar in standalone PWA mode on both iOS and Android by honoring `env(safe-area-inset-top)`. The viewer's bottom chrome (dots indicator, PDF page navigation) SHALL clear the home indicator / gesture navigation bar by honoring `env(safe-area-inset-bottom)`. Side navigation controls SHALL honor `env(safe-area-inset-left)` / `env(safe-area-inset-right)`. The viewer SHALL also close on a downward swipe gesture past a distance threshold; gesture classification SHALL choose the dominant axis so a clearly horizontal swipe still navigates between attachments, and an upward swipe SHALL NOT close the viewer.
-
-#### Scenario: Flip between files
-
-- **WHEN** the viewer is open on attachment 1 of N
-- **THEN** the user SHALL be able to swipe horizontally or press a control to move to attachment 2, and the new attachment SHALL render full-screen
-
-#### Scenario: Image rendering
-
-- **WHEN** the active attachment is an image
-- **THEN** it SHALL be rendered using `<img>` fitted to the viewport
-
-#### Scenario: PDF rendering
-
-- **WHEN** the active attachment is a PDF
-- **THEN** the viewer SHALL render it using `pdfjs-dist` and SHALL provide page navigation when the PDF has more than one page
-
-#### Scenario: PDF dependency loaded lazily
-
-- **WHEN** a tour view renders without opening the viewer for a PDF
-- **THEN** `pdfjs-dist` SHALL NOT be loaded into the main bundle
-
-#### Scenario: Close button clears status bar on iOS and Android PWA
-
-- **WHEN** the viewer is opened in a standalone PWA on iOS or Android where `env(safe-area-inset-top)` is non-zero
-- **THEN** the header (including the close button) SHALL be offset by at least the safe-area top inset so the close button is fully tappable and not occluded by the system status bar
-
-#### Scenario: Bottom chrome clears home indicator / gesture bar
-
-- **WHEN** the viewer is opened on a device where `env(safe-area-inset-bottom)` is non-zero
-- **THEN** the dots indicator (and PDF page navigation, when shown) SHALL be offset by at least the safe-area bottom inset
-
-#### Scenario: Swipe down closes viewer
-
-- **WHEN** the user performs a touch gesture whose downward vertical displacement (`dy > 0`) exceeds the close threshold AND exceeds the absolute horizontal displacement
-- **THEN** the viewer SHALL emit `close` and be dismissed
-
-#### Scenario: Swipe up does not close
-
-- **WHEN** the user performs a touch gesture whose upward vertical displacement (`dy < 0`) exceeds the close threshold
-- **THEN** the viewer SHALL NOT close
-
-#### Scenario: Horizontal swipe still navigates
-
-- **WHEN** the user performs a touch gesture whose absolute horizontal displacement exceeds the navigation threshold AND exceeds the absolute vertical displacement
-- **THEN** the viewer SHALL navigate to the previous or next attachment and SHALL NOT close
-
-### Requirement: Attachments excluded from PWA runtime cache
-
-The PWA runtime cache SHALL NOT cache responses from the `tour-attachments` storage path/origin, to avoid serving expired or stale signed URLs.
-
-#### Scenario: Service worker bypass
-
-- **WHEN** the service worker intercepts a fetch for a `tour-attachments` signed URL
-- **THEN** the response SHALL bypass the runtime cache (network-only)
-
 ### Requirement: Tour attachments list reacts to Realtime changes
 
 When the user has a tour-attachments view open and an attachment for that tour is inserted, updated, or deleted on another device, the local view SHALL reflect the change within one debounce window without a manual reload.
@@ -628,3 +570,29 @@ unchanged. The name shown while uploading SHALL be the name that is persisted.
 
 - **WHEN** the user picks `Hoernli-summit.jpg` from the photo library
 - **THEN** the stored filename SHALL be `Hoernli-summit.jpg` unchanged
+
+### Requirement: Attachments from system pickers, out through the share sheet
+Adding an attachment SHALL offer the photo library, the camera and Files on iOS and Android (the file picker on the web), keeping the PWA's types, size and count limits. Sharing SHALL hand the file to the system share sheet. Signed URLs SHALL NOT be stored anywhere.
+
+#### Scenario: Photo from the library
+- **WHEN** the owner picks two photos from the library
+- **THEN** both upload with progress and appear in the tour's attachments
+
+#### Scenario: Too large
+- **WHEN** a picked file exceeds 10 MB
+- **THEN** it is rejected with the localized size message and the others continue
+
+#### Scenario: Share an attachment
+- **WHEN** the user taps share in the previewer
+- **THEN** the system share sheet opens with that file
+
+### Requirement: Attachments open in the system preview
+Tapping an attachment SHALL open the system's previewer at that file: on iOS with every attachment of the tour, swiping between them, zooming images and paging PDFs, with the system's share and close controls; on Android the system viewer for that one file; on the web a new browser tab. The bytes SHALL come from the device's file cache when present.
+
+#### Scenario: Swipe to the next file on iOS
+- **WHEN** the user opens the first of three attachments and swipes left
+- **THEN** the second attachment shows in the same previewer
+
+#### Scenario: Offline with a cached file
+- **WHEN** the device is offline and the attachment was opened before
+- **THEN** it opens from the cache

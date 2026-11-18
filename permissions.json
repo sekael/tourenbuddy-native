@@ -1,8 +1,14 @@
 {
   "android": [
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.CAMERA",
     "android.permission.INTERNET",
+    "android.permission.POST_NOTIFICATIONS",
+    "android.permission.RECEIVE_BOOT_COMPLETED",
     "android.permission.VIBRATE",
-    "ch.tourenbuddy.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+    "android.permission.WAKE_LOCK",
+    "ch.tourenbuddy.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+    "com.google.android.c2dm.permission.RECEIVE"
   ],
-  "ios": []
+  "ios": ["NSCameraUsageDescription", "NSPhotoLibraryUsageDescription"]
 }
