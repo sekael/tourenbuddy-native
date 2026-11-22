@@ -7,3 +7,8 @@
 # Apple reads the association file as JSON; it has no extension to say so.
 /.well-known/apple-app-site-association
   Content-Type: application/json
+
+# The app's version gate (update gate) reads this; a raised minimum reaches every app within minutes.
+/app-config.json
+  Content-Type: application/json
+  Cache-Control: public, max-age=300

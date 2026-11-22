@@ -54,5 +54,8 @@
         ]
       }
     ]
+  },
+  "worktree": {
+    "bgIsolation": "none"
   }
 }

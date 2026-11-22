@@ -20,11 +20,18 @@ const palette = {
   blue700: '#1d4ed8',
   blue900: '#1e3a8a',
   red600: '#dc2626',
+  swisstopoRed: '#e3061b',
   green800: '#166534',
+  orange500: '#f97316',
+  amber700: '#b45309',
 } as const;
+
+const IOS = Platform.OS === 'ios';
 
 export const color = {
   primary: palette.blue600,
+  /** Words and glyphs on a brand-blue fill (the profile's avatar). */
+  onPrimary: palette.white,
   // Tonal controls: one step stronger than surfaceVariant, so they stand off white and tinted fills.
   secondaryContainer: palette.blue100,
   secondaryContainerPressed: palette.blue200,
@@ -32,18 +39,45 @@ export const color = {
   // Floating controls over the map (Android and web): brand blue with white glyphs.
   fab: palette.blue700,
   onFab: palette.white,
+  /** A picked ski route on the map: orange, since swisstopo draws the routes themselves blue. */
+  trailHighlight: palette.orange500,
+  /** A blue glass chip (iOS, a layer switch that's on): blue enough for white glyphs over snow. */
+  fabGlass: 'rgba(29, 78, 216, 0.7)',
+  /**
+   * The tint of the map's controls in Liquid Glass (iOS: the capsule, search and the map button):
+   * 60 % blue, so the map still shows through as through the tab bar and the white glyphs and
+   * words (with `onGlassShadow`) read over snow.
+   */
+  fabGlassTint: 'rgba(29, 78, 216, 0.6)',
+  /** Lifts white glyphs off clear glass over bright snow and glacier. */
+  onGlassShadow: 'rgba(15, 23, 42, 0.55)',
+  /** A line between actions on the blue capsule. */
+  onFabDivider: 'rgba(255, 255, 255, 0.45)',
+  /** An area marked on the map (an offline region): the app's blue, faint enough to read through. */
+  areaFill: 'rgba(37, 99, 235, 0.12)',
+  /** Clear glass over the map, breathed with the app's blue (iOS round map controls). */
+  glassTint: 'rgba(37, 99, 235, 0.12)',
   background: palette.white,
-  onBackground: palette.slate900,
+  // iOS text in the system's label colours, as the SwiftUI lists beside it (light only for now).
+  onBackground: IOS ? '#000000' : palette.slate900,
   surface: palette.slate50,
-  onSurface: palette.slate900,
+  /** Behind grouped content the app draws itself, as behind the system's grouped lists. */
+  groupedBackground: IOS ? '#F2F2F7' : palette.slate50,
+  onSurface: IOS ? '#000000' : palette.slate900,
   surfaceVariant: palette.blue50,
-  onSurfaceVariant: palette.slate600,
+  // The system's secondary grey at its higher-contrast step, to keep 4.5:1 on every surface.
+  onSurfaceVariant: IOS ? '#6C6C70' : palette.slate600,
   neutralContainer: palette.slate100,
   divider: palette.slate200,
-  /** Borders of text fields. */
-  outlineVariant: palette.slate300,
+  /** Borders of text fields, days outside the month (iOS: the system separator grey). */
+  outlineVariant: IOS ? '#C6C6C8' : palette.slate300,
   error: palette.red600,
   success: palette.green800,
+  /** Needs the user's eye, nothing broke (a number an import couldn't add); 4.5:1 on white. */
+  warning: palette.amber700,
+  /** A terrain profile's line, as the swisstopo app draws it under a tour. */
+  elevation: palette.swisstopoRed,
+  elevationFill: 'rgba(227, 6, 27, 0.12)',
   /** Text over photos, under `scrim`. */
   onContrast: palette.white,
   backdrop: 'rgba(15, 23, 42, 0.35)',
@@ -65,14 +99,31 @@ const fontFamily = Platform.select({
   web: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
 });
 
-/** Headings use medium (500), not bold, as in the Vue app. */
+/**
+ * Headings use medium (500), not bold, as in the Vue app; on iOS semibold and the system font's own
+ * tracking (it tightens large sizes itself), so they read as the SwiftUI headings beside them.
+ */
 export const type = {
   /** The product name over the sign-in photo. */
-  display: { fontFamily, fontSize: 40, lineHeight: 46, fontWeight: '600', letterSpacing: -1.2 },
-  title: { fontFamily, fontSize: 24, lineHeight: 30, fontWeight: '500', letterSpacing: -0.5 },
+  display: {
+    fontFamily,
+    fontSize: 40,
+    lineHeight: 46,
+    fontWeight: IOS ? '700' : '600',
+    letterSpacing: IOS ? 0 : -1.2,
+  },
+  title: {
+    fontFamily,
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: IOS ? '600' : '500',
+    letterSpacing: IOS ? 0 : -0.5,
+  },
   body: { fontFamily, fontSize: 16, lineHeight: 22, fontWeight: '400' },
   label: { fontFamily, fontSize: 16, lineHeight: 20, fontWeight: '500' },
   caption: { fontFamily, fontSize: 14, lineHeight: 20, fontWeight: '400' },
+  /** A chart's axis: the months under a season (the PWA's 10 px). */
+  axis: { fontFamily, fontSize: 11, lineHeight: 14, fontWeight: '400' },
 } as const;
 
 /** Emphasis within running text: an email address, the active tab's label. */
@@ -97,12 +148,16 @@ export const size = {
   /** Minimum touch target (Apple 44 pt, Material 48 dp). */
   touch: 48,
   fab: 56,
-  /** The iOS menu's glass circle: FAB-sized, as tall as the system tab bar beneath it. */
-  menu: 60,
+  /** A floating control over the map (glass on iOS): compact, still a full touch target. */
+  mapControl: 44,
+  /** The round initial beside who the user is (the profile's first row), as in Settings. */
+  avatar: 48,
   /** Widest a form or an account card gets on a tablet or a desktop window. */
   form: 400,
   /** Outline of a text field. */
   fieldBorder: 1.5,
+  /** The web's side panel beside the map. */
+  panel: 420,
 } as const;
 
 /** Material's opacity for disabled controls. */
@@ -120,6 +175,8 @@ export const motion = {
 } as const;
 
 export const shadow = {
+  /** Under a glyph on clear glass (text shadow, iOS layer shadow). */
+  glyph: { offset: { width: 0, height: 1 }, radius: 3 },
   md: '0 2px 4px rgba(23, 37, 84, 0.04), 0 8px 20px -4px rgba(23, 37, 84, 0.14)',
   lg: '0 4px 8px rgba(23, 37, 84, 0.04), 0 16px 40px -8px rgba(23, 37, 84, 0.22)',
 } as const;

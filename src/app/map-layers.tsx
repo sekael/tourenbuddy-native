@@ -1,8 +1,3 @@
-import { useTranslation } from 'react-i18next';
+import { MapLayersSheet } from '@/features/map/presentation/map-layers-sheet';
 
-import { PlaceholderSheet } from '@/features/shell/presentation/placeholder-sheet';
-
-export default function MapLayersSheet() {
-  const { t } = useTranslation();
-  return <PlaceholderSheet title={t('map.overlay.mapLayers')} />;
-}
+export default MapLayersSheet;

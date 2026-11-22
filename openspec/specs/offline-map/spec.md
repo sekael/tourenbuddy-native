@@ -4,29 +4,6 @@ Let users download a chosen region (or all of Switzerland) of the `ch.swisstopo.
 
 ## Requirements
 
-### Requirement: Base-map footprint is measured before sizing-dependent UI
-
-Before any download or estimation UI is built, the team SHALL measure and record
-the base-map (`ch.swisstopo.basemap.vt`) offline footprint: tiles-per-zoom and
-bytes for a sample region up to the source `maxzoom`, the extrapolated
-whole-Switzerland figure, the source's real `maxzoom`, the browser storage quota
-and eviction behaviour on target platforms (including iOS Safari), whether plain
-browser vs installed PWA is required for durable offline storage, and whether the
-service worker reads the hot tile path faster from the Cache API or IndexedDB. The
-recorded findings SHALL be the basis for the estimate formula and the quota guard.
-
-#### Scenario: Measurement recorded before download UI
-
-- **WHEN** the offline-map download or estimate UI is implemented
-- **THEN** the measured average tile bytes, source `maxzoom`, and quota figures it
-  relies on have already been recorded in the change, not assumed
-
-#### Scenario: Feasibility per platform captured
-
-- **WHEN** the spike evaluates a target browser that offers too little quota or no
-  durable (non-evictable) storage
-- **THEN** that limitation is recorded so the UI can surface it to the user
-
 ### Requirement: User selects an offline region by drawing a rectangle
 
 The system SHALL let a user draw an axis-aligned rectangle on the map to define
@@ -123,34 +100,6 @@ SHALL NOT be downloaded.
 - **THEN** the download aborts, reports the failure, and does not leave a region
   presented as complete
 
-### Requirement: Downloaded base-map assets are served offline-first
-
-The service worker SHALL serve a base-map tile, style, sprite, or glyph asset, or a
-ski-route tile, from the offline download cache whenever a copy is present, using
-the network only when no offline copy exists. A downloaded copy SHALL take
-precedence over the network and over the opportunistic runtime tile cache.
-Requests with no offline copy SHALL behave exactly as before this change (existing
-runtime caching for the respective asset).
-
-#### Scenario: Downloaded tile preferred over network
-
-- **WHEN** the map requests a base-map asset that exists in the offline download
-  cache
-- **THEN** the service worker returns the offline copy without a network request
-
-#### Scenario: Downloaded ski-route tile preferred over network
-
-- **WHEN** the map requests a ski-route tile that exists in the offline download
-  cache
-- **THEN** the service worker returns the offline copy without a network request
-
-#### Scenario: Non-downloaded tile falls back to runtime behaviour
-
-- **WHEN** the map requests a base-map asset not present in the offline download
-  cache
-- **THEN** the request is handled by the existing runtime tile caching (network
-  with stale-while-revalidate), unchanged
-
 ### Requirement: User can manage downloaded regions
 
 The system SHALL provide a UI listing each downloaded region with its label,
@@ -177,3 +126,41 @@ referenced by another downloaded region.
   region
 - **THEN** tiles shared with the surviving region remain cached and the surviving
   region still renders offline
+
+### Requirement: Offline regions as native packs
+On iOS and Android a downloaded region SHALL be an offline pack of the vector base map with its labels and the ski-route source, zoom levels 0 to 14, created from a rectangle the user draws, with an estimate before and progress during the download. The list of regions SHALL show each region's size and whether it is complete, read from the pack rather than assumed; a region can be deleted. Offline maps SHALL NOT be offered on the web.
+
+#### Scenario: Airplane mode
+- **WHEN** a region finished downloading and the device is in airplane mode after a restart
+- **THEN** the base map, labels and ski routes render inside the region
+
+#### Scenario: Download under way
+- **WHEN** the user starts downloading a region
+- **THEN** its row shows a progress bar filling with the percentage, and once done the row says the region is available offline with its size
+
+#### Scenario: Cancel a download
+- **WHEN** the user taps the stop button at the end of a download's row (or swipes it) and confirms
+- **THEN** the download stops, the region and what it fetched are gone, and the app keeps running
+
+#### Scenario: Delete after a restart
+- **WHEN** the user restarts the app, opens the offline maps and deletes a saved region
+- **THEN** the region is gone from the list and the map, and the app keeps running
+
+#### Scenario: Incomplete pack
+- **WHEN** the system evicted part of a pack
+- **THEN** the region shows as incomplete with a way to download it again
+
+### Requirement: Saved regions and the new one show on the map
+Opening the offline maps SHALL show the saved regions outlined on the map, framed above the sheet, and list each with its name and size, also after the app restarts; with none saved, the list SHALL say so. Framing a new region SHALL show a fixed frame over the map, as the PWA does, marking exactly the area that downloads, with its estimated size updating as the map moves under it; the estimate SHALL err high, never promising less storage than the region takes.
+
+#### Scenario: After a restart
+- **WHEN** the user saved a region, restarts the app and opens the offline maps
+- **THEN** the region is listed with its size and outlined on the map
+
+#### Scenario: A name from the place
+- **WHEN** the user frames a region
+- **THEN** its name is prefilled from Swisstopo's names at the frame's centre: the town, valley or named area the centre lies in ("Zermatt"), else one within a kilometre ("Gadmertal"), official names before local variants, else the name a tour pinned there would get, else its coordinates; it follows the frame until the user types a name of their own
+
+#### Scenario: Framing a valley
+- **WHEN** the user taps "Region herunterladen" and moves the map until the frame covers the Lauterbrunnen valley
+- **THEN** the sheet shows the estimated size for the framed area, and after the download the region's outline matches the frame

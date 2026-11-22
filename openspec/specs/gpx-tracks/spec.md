@@ -214,20 +214,6 @@ upload, an indeterminate indicator SHALL remain acceptable.
 - **WHEN** the Storage upload returns an error
 - **THEN** the form shows an i18n error message and offers retry without losing other unsaved form data
 
-### Requirement: Download original GPX from tour info sheet
-
-The system SHALL expose a download action in the tour info sheet whenever the selected tour has `gpx_filepath` set, allowing the user to download the original `.gpx` file via a signed URL.
-
-#### Scenario: Tour with track
-
-- **WHEN** a user opens the info sheet for a tour with a track
-- **THEN** a "Download GPX" button is visible and clicking it downloads the original `.gpx` file
-
-#### Scenario: Tour without track
-
-- **WHEN** a user opens the info sheet for a tour with `gpx_filepath = null`
-- **THEN** the download button is not shown
-
 ### Requirement: Internationalisation
 
 The system SHALL provide all GPX-related user-facing text in both `en` and `de-CH` locales, accessed via `vue-i18n` keys.
@@ -316,3 +302,18 @@ or leaving the form SHALL restore the saved display.
 
 - **WHEN** the user finishes a drawing while editing a tour that has a saved track
 - **THEN** the map SHALL show the new line and not the saved one until the edit is saved or cancelled
+
+### Requirement: Share the original GPX
+The tour detail SHALL offer "Share GPX" whenever the tour has a track the viewer may read, which downloads the original `.gpx` through a signed URL into a temporary file and opens the system share sheet (Save to Files, AirDrop, Mail, other apps) on iOS and Android, and a browser download on the web.
+
+#### Scenario: Tour with track
+- **WHEN** a user opens the detail of a tour with a track and taps "Share GPX"
+- **THEN** the share sheet opens with the `.gpx` file named after the tour
+
+#### Scenario: Tour without track
+- **WHEN** the tour has no track
+- **THEN** no share action is shown
+
+#### Scenario: Offline
+- **WHEN** the device is offline and the file is not cached
+- **THEN** the action explains that the file needs a connection

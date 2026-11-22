@@ -35,12 +35,19 @@ Releases, store builds and web previews run on GitHub Actions and EAS: see [docs
 ## Backend
 
 The app talks to Supabase. Schema, migrations and the local stack live in the Vue repository.
-Set two variables in `.env.local` (gitignored); the app refuses to start without them:
+Set two variables in `.env.local` (gitignored); the app refuses to start without them. A third,
+optional one points at the Worker (`services/email-hook` in the Vue repository) for account
+deletion and calendar sync; without it those actions say they are unavailable:
 
 ```sh
 EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon key>
+EXPO_PUBLIC_NOTIFY_HOOK_URL=http://127.0.0.1:8787   # `npx wrangler dev` in services/email-hook
 ```
+
+A fourth, only for testing the update gate, replaces `https://tourenbuddy.ch/app-config.json`
+(`EXPO_PUBLIC_APP_CONFIG_URL=http://127.0.0.1:8099/app-config.json`; see
+`docs/manual-test-plan.md`, UPD).
 
 - **Local stack:** `supabase start` in `tourenbuddy_frontend_vue` (up to date with its `main`).
   Then, still there, write both variables for the Simulator into this repository's `.env.local`:

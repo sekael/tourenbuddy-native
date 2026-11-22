@@ -16,19 +16,26 @@
     "planned": {
       "prevMonth": "Vorheriger Monat",
       "nextMonth": "Nächster Monat",
-      "tourCount": "{{count}} Touren",
+      "tourCount_one": "{{count}} Tour",
+      "tourCount_other": "{{count}} Touren",
       "dayCounter": "{{day}}/{{total}}",
       "dayCounterLabel": "Tag {{day}} von {{total}}",
-      "friendCount": "{{count}} Freunde",
+      "friendCount_one": "{{count}} Freund",
+      "friendCount_other": "{{count}} Freunde",
       "toursHeading": "Touren",
-      "friendsHeading": "Verfügbare Freunde"
+      "friendsHeading": "Verfügbare Freunde",
+      "noTours": "Keine Touren an diesem Tag"
     },
     "availability": {
       "edit": "Verfügbarkeit angeben",
       "save": "Speichern",
       "cancel": "Abbrechen",
       "disclaimer": "Deine Verfügbarkeit ist für deine Freunde sichtbar.",
-      "calendarNote": "Tage werden aus deinem Kalender vorausgefüllt. Tage, die du hier änderst, überschreiben ihn dauerhaft."
+      "calendarNote": "Tage werden aus deinem Kalender vorausgefüllt. Tage, die du hier änderst, überschreiben ihn dauerhaft.",
+      "freeLabel": "frei",
+      "saveFailed": "Deine Verfügbarkeit konnte nicht gespeichert werden. Versuch es nochmals.",
+      "markHint": "Tippe die Tage an, an denen du frei bist.",
+      "editTitle": "Verfügbarkeit"
     },
     "seasons": {
       "title": "Saisonplaner",
@@ -36,10 +43,10 @@
       "emptyState": "Noch keine Touren – füge welche hinzu, um deine Saisonübersicht zu sehen",
       "scrollHint": "Scrollen für das ganze Jahr",
       "range": {
-        "winter": "DEZ – FEB",
-        "spring": "MÄR – MAI",
-        "summer": "JUN – AUG",
-        "autumn": "SEP – NOV"
+        "winter": "Dez – Feb",
+        "spring": "Mär – Mai",
+        "summer": "Jun – Aug",
+        "autumn": "Sep – Nov"
       }
     },
     "tour": {
@@ -98,13 +105,16 @@
         "outlookStep3": "Kopiere den ICS-Link.",
         "icloudStep1": "Öffne die Kalender-App auf iPhone oder iPad und tippe auf «Kalender».",
         "icloudStep2": "Tippe auf ⓘ neben dem Kalender und aktiviere «Öffentlicher Kalender».",
-        "icloudStep3": "Tippe auf «Link teilen …» → «Kopieren». Wer den Link kennt, sieht den Kalender."
+        "icloudStep3": "Tippe auf «Link teilen …» → «Kopieren». Wer den Link kennt, sieht den Kalender.",
+        "provider": "Kalenderdienst"
       },
       "label": "Bezeichnung",
       "labelPlaceholder": "Bezeichnung (z. B. Arbeit)",
       "labelAria": "Bezeichnung für {{host}}",
       "addFeed": "Kalender verbinden",
       "removeFeed": "{{host}} trennen",
+      "removeFeedConfirm": "Seine belegten Tage zählen dann nicht mehr. Du kannst ihn jederzeit wieder verbinden.",
+      "disconnect": "Trennen",
       "lastSynced": "Synchronisiert {{when}}",
       "neverSynced": "Noch nicht synchronisiert",
       "syncNow": "Jetzt synchronisieren",
@@ -120,6 +130,8 @@
       "outboundTitle": "Deine Touren in deinem Kalender",
       "outboundHint": "Abonniere diesen Link in deiner Kalender-App, um deine geplanten Touren zu sehen. Wer den Link kennt, sieht deine Touren – teile ihn nicht.",
       "copy": "Kopieren",
+      "subscribe": "Im Kalender abonnieren",
+      "subscribeFailed": "Keine Kalender-App konnte den Link öffnen. Kopiere ihn und füge ihn in deiner Kalender-App als Abo hinzu.",
       "copied": "Kopiert",
       "regenerate": "Link zurücksetzen",
       "regenerateHint": "Link versehentlich geteilt? Setze ihn zurück: Du erhältst einen neuen Link und der alte zeigt keine Touren mehr.",
@@ -143,8 +155,11 @@
         "too_complex": "Ein wiederkehrender Termin ist zu komplex.",
         "unknown": "Die letzte Synchronisierung ist fehlgeschlagen."
       },
-      "feedsTitle": "Deine Kalender"
-    }
+      "feedsTitle": "Deine Kalender",
+      "windowSection": "Freier Tag",
+      "addSection": "Kalender verbinden"
+    },
+    "today": "Heute"
   },
   "validation": {
     "required": "Dieses Feld ist erforderlich",
@@ -174,7 +189,8 @@
         "openBugReport": "Einen Bug auf GitHub melden",
         "openIssue": "Feedback auf GitHub geben",
         "noGitHub": "Kein GitHub-Konto? Schreib uns an",
-        "errorOpening": "GitHub-Seite konnte nicht geöffnet werden. Bitte sende uns eine E-Mail an {{email}}"
+        "errorOpening": "GitHub-Seite konnte nicht geöffnet werden. Bitte sende uns eine E-Mail an {{email}}",
+        "errorMail": "Keine Mail-App konnte geöffnet werden. Schreib uns an:\n{{email}}"
       }
     },
     "drawer": {
@@ -183,19 +199,24 @@
     },
     "bottomSheet": {
       "resizeHandle": "Panel anpassen"
+    },
+    "update": {
+      "title": "TourenBuddy aktualisieren",
+      "body": "Diese Version wird nicht mehr unterstützt. Aktualisiere die App, um weiter Touren mit deinen Freunden zu planen.",
+      "action": "Aktualisieren"
     }
   },
   "auth": {
     "emailEntry": {
       "title": "E-Mail-Adresse eingeben",
-      "subtitle": "Wir senden Dir einen Anmeldecode",
+      "subtitle": "Wir senden dir einen Anmeldecode",
       "emailLabel": "E-Mail-Adresse",
       "emailPlaceholder": "du@tourenbuddy.ch",
       "invalidEmail": "Bitte gib eine gültige E-Mail-Adresse ein",
       "sendCodeBtn": "Code senden",
       "sendError": "Code konnte nicht gesendet werden. Bitte versuche es erneut.",
-      "rateLimited_one": "Bitte warte {{count}} Sekunde, bevor Du einen neuen Code anforderst.",
-      "rateLimited_other": "Bitte warte {{count}} Sekunden, bevor Du einen neuen Code anforderst."
+      "rateLimited_one": "Bitte warte {{count}} Sekunde, bevor du einen neuen Code anforderst.",
+      "rateLimited_other": "Bitte warte {{count}} Sekunden, bevor du einen neuen Code anforderst."
     },
     "shared": {
       "sendingBtn": "Wird gesendet...",
@@ -210,15 +231,15 @@
       "verifyError": "Ungültiger oder abgelaufener Code. Bitte versuche es erneut.",
       "resendBtn": "Code erneut senden",
       "resendCountdown": "Erneut senden in {{seconds}}s",
-      "resendSuccess": "Code erneut gesendet! Prüfe Deine E-Mails.",
+      "resendSuccess": "Code erneut gesendet! Prüfe deine E-Mails.",
       "resendError": "Code konnte nicht erneut gesendet werden. Bitte versuche es erneut.",
       "backBtn": "Zurück"
     },
     "signIn": {
       "title": "Anmelden",
-      "subtitle": "Mit Deinem Passwort oder einem Code per E-Mail",
+      "subtitle": "Mit deinem Passwort oder einem Code per E-Mail",
       "passwordLabel": "Passwort",
-      "passwordRequired": "Bitte gib Dein Passwort ein",
+      "passwordRequired": "Bitte gib dein Passwort ein",
       "signInBtn": "Anmelden",
       "signingInBtn": "Wird angemeldet…",
       "emailCodeBtn": "Code per E-Mail senden",
@@ -231,40 +252,47 @@
     },
     "signUp": {
       "title": "Konto erstellen",
-      "subtitle": "Wir senden Dir einen Code, um Deine Adresse zu bestätigen",
+      "subtitle": "Wir senden dir einen Code, um deine Adresse zu bestätigen",
       "createBtn": "Konto erstellen",
       "passwordNotSavedTitle": "Passwort nicht gespeichert",
-      "passwordNotSaved": "Du bist angemeldet, aber Dein Passwort konnte nicht gespeichert werden. Lege es unter Profil → Passwort fest."
+      "passwordNotSaved": "Du bist angemeldet, aber dein Passwort konnte nicht gespeichert werden. Lege es unter Profil → Passwort fest."
     },
     "password": {
       "entryBtn": "Passwort",
       "title": "Passwort",
-      "subtitle": "Melde Dich ab jetzt mit Deiner E-Mail-Adresse und diesem Passwort an.",
+      "subtitle": "Melde dich ab jetzt mit deiner E-Mail-Adresse und diesem Passwort an.",
       "newLabel": "Neues Passwort",
       "tooShort_one": "Verwende mindestens {{count}} Zeichen",
       "tooShort_other": "Verwende mindestens {{count}} Zeichen",
-      "same": "Das ist Dein aktuelles Passwort. Wähle ein anderes.",
+      "same": "Das ist dein aktuelles Passwort. Wähle ein anderes.",
       "weak": "Dieses Passwort ist zu schwach. Wähle ein stärkeres.",
       "saveBtn": "Passwort speichern",
       "savingBtn": "Wird gespeichert…",
-      "saveError": "Das Passwort konnte nicht gespeichert werden. Bitte versuche es erneut."
+      "saveError": "Das Passwort konnte nicht gespeichert werden. Bitte versuche es erneut.",
+      "continueBtn": "Weiter",
+      "codeSent": "Damit wir wissen, dass du es bist, haben wir dir einen 6-stelligen Code an {{email}} geschickt.",
+      "codeLabel": "Code aus deiner E-Mail",
+      "codeResend": "Neuen Code senden",
+      "codeMissing": "Gib den 6-stelligen Code aus deiner E-Mail ein.",
+      "codeInvalid": "Der Code ist falsch oder abgelaufen. Lass dir einen neuen senden und versuche es nochmals."
     },
     "passkey": {
       "entryBtn": "Passkeys",
       "title": "Passkeys",
-      "subtitle": "Melde Dich mit Face ID statt mit einem Passwort an. Passkeys liegen in Deinem iCloud-Schlüsselbund.",
+      "subtitle": "Melde dich mit Face ID statt mit einem Passwort an. Passkeys liegen in deinem iCloud-Schlüsselbund.",
       "empty": "Noch keine Passkeys.",
       "defaultName": "Passkey",
       "added": "Hinzugefügt am {{date}}",
       "addBtn": "Passkey hinzufügen",
       "workingBtn": "Bitte warten…",
       "deleteBtn": "Löschen",
+      "deleteNamed": "«{{name}}» löschen, hinzugefügt am {{date}}",
       "cancelBtn": "Abbrechen",
       "deleteTitle": "Passkey löschen?",
-      "deleteMessage": "Mit «{{name}}» kannst Du Dich nicht mehr anmelden. Um ihn auch von diesem Gerät zu entfernen, lösche ihn in der App «Passwörter».",
-      "noCredentials": "Auf diesem Gerät gibt es keinen Passkey für TourenBuddy. Melde Dich mit Passwort oder Code an.",
-      "unknown": "Dieser Passkey ist nicht mehr gültig. Melde Dich mit Passwort oder Code an.",
-      "exists": "Auf diesem Gerät gibt es schon einen Passkey für Dein Konto.",
+      "deleteMessage": "Mit «{{name}}» (hinzugefügt am {{date}}) kannst du dich nicht mehr anmelden. Um ihn auch von diesem Gerät zu entfernen, lösche ihn in der App «Passwörter».",
+      "noCredentials": "Auf diesem Gerät gibt es keinen Passkey für TourenBuddy. Melde dich mit Passwort oder Code an.",
+      "unknown": "Dieser Passkey ist nicht mehr gültig. Melde dich mit Passwort oder Code an.",
+      "exists": "Auf diesem Gerät gibt es schon einen Passkey für dein Konto.",
       "tooMany": "Dein Konto hat bereits so viele Passkeys wie erlaubt. Lösche zuerst einen.",
       "failed": "Mit dem Passkey hat es nicht geklappt. Bitte versuche es erneut."
     }
@@ -272,16 +300,17 @@
   "user": {
     "onboarding": {
       "title": "Profil einrichten",
-      "subtitle": "Ein vollständiges Profil hilft Deinen Tourpartnern, Dich zu erkennen und zu kontaktieren. Du kannst dies jederzeit aktualisieren.",
+      "subtitle": "Ein vollständiges Profil hilft deinen Tourpartnern, dich zu erkennen und zu kontaktieren. Du kannst dies jederzeit aktualisieren.",
       "firstNameRequired": "Vorname ist erforderlich",
       "lastNameRequired": "Nachname ist erforderlich",
       "continueBtn": "Weiter",
-      "skipBtn": "Vorerst überspringen"
+      "skipBtn": "Später"
     },
     "profile": {
       "title": "Profil",
       "verifiedTooltip": "Verifiziert",
       "addPhoneBtn": "Telefonnummer hinzufügen",
+      "phoneHint": "Freunde, die deine verifizierte Nummer in ihren Kontakten haben, finden dich darüber und können dir eine Freundschaftsanfrage senden.",
       "editBtn": "Profil bearbeiten",
       "signOutBtn": "Abmelden",
       "nameRequired": "Vor- und Nachname sind erforderlich",
@@ -289,13 +318,13 @@
       "languageLabel": "Sprache",
       "removePhoneBtn": "Telefonnummer entfernen",
       "removePhoneConfirmTitle": "Telefonnummer entfernen",
-      "removePhoneDisclaimer": "Deine Telefonnummer wird entfernt. Wenn Du diese Nummer erneut hinzufügst, musst Du sie erneut verifizieren.",
+      "removePhoneDisclaimer": "Deine Telefonnummer wird entfernt. Wenn du diese Nummer erneut hinzufügst, musst du sie erneut verifizieren.",
       "removePhoneConfirmBtn": "Entfernen",
       "removePhoneCancelBtn": "Abbrechen",
       "removePhoneFailed": "Telefonnummer konnte nicht entfernt werden",
-      "removePhonePendingWarning": "Du hast offene Freundschaftsanfragen. Das Entfernen Deiner Telefonnummer bricht alle offenen Anfragen ab.",
-      "removePhoneFriendshipWarning": "Du hast aktive Freundschaften. Das Entfernen Deiner Telefonnummer entfernt alle Freundschaftsverbindungen.",
-      "removePhoneBothWarning": "Du hast aktive Freundschaften und offene Anfragen. Das Entfernen Deiner Telefonnummer entfernt alle Freundschaftsverbindungen und bricht alle Anfragen ab.",
+      "removePhonePendingWarning": "Du hast offene Freundschaftsanfragen. Das Entfernen deiner Telefonnummer bricht alle offenen Anfragen ab.",
+      "removePhoneFriendshipWarning": "Du hast aktive Freundschaften. Das Entfernen deiner Telefonnummer entfernt alle Freundschaftsverbindungen.",
+      "removePhoneBothWarning": "Du hast aktive Freundschaften und offene Anfragen. Das Entfernen deiner Telefonnummer entfernt alle Freundschaftsverbindungen und bricht alle Anfragen ab.",
       "notVerified": "Nicht verifiziert",
       "notificationsSummary": {
         "pushAndEmail": "Push und E-Mail",
@@ -307,7 +336,26 @@
       "calendarSummary_one": "{{count}} Kalender",
       "calendarSummary_other": "{{count}} Kalender",
       "calendarProblem": "Sync-Problem",
-      "version": "Version {{version}}"
+      "version": "Version {{version}}",
+      "deleteAccount": {
+        "entryBtn": "Konto löschen",
+        "title": "Konto löschen?",
+        "body": "Damit werden dein Profil, deine Touren, GPX-Dateien und Anhänge, Kontakte, Freundschaften, Verfügbarkeiten, Kalender-Abos und Mitteilungen endgültig gelöscht. Freunde sehen deine geteilten Touren nicht mehr.",
+        "hint": "Das lässt sich nicht rückgängig machen. Du kannst dich später mit derselben E-Mail neu registrieren, als neues Konto.",
+        "confirmBtn": "Endgültig löschen",
+        "deleting": "Wird gelöscht…",
+        "failed": "Dein Konto konnte nicht gelöscht werden. Bitte versuche es nochmals.",
+        "offline": "Du bist offline. Verbinde dich mit dem Internet, um dein Konto zu löschen.",
+        "unavailable": "Konto löschen ist in dieser Version der App nicht verfügbar. Schreib von der E-Mail-Adresse deines Kontos an feedback@tourenbuddy.ch, dann löschen wir es für dich.",
+        "done": "Dein Konto ist gelöscht, mit allem, was darin war. Danke, dass du mit TourenBuddy geplant hast."
+      },
+      "privacy": "Datenschutz",
+      "terms": "Nutzungsbedingungen",
+      "imprint": "Impressum",
+      "legalSection": "Über",
+      "accountSection": "Konto",
+      "languageHint": "Die Sprache änderst du in der Einstellungen-App.",
+      "paceHint": "Jede geschätzte Zeit richtet sich nach deinem Tempo: unter 1.0× bist du langsamer als die Faustregel, darüber schneller."
     },
     "phoneVerification": {
       "title": "Telefon verifizieren",
@@ -324,7 +372,10 @@
       "sendingBtn": "Wird gesendet...",
       "resendBtn": "Code erneut senden",
       "verifiedMsg": "Telefon verifiziert!",
-      "alreadyRegisteredError": "Diese Telefonnummer ist bereits von einem TourenBuddy registriert worden. Besitzt du ein weiteres TourenBuddy Profil? Bei Fragen erreichst du uns unter feedback@tourenbuddy.ch."
+      "alreadyRegisteredError": "Diese Telefonnummer ist bereits von einem TourenBuddy registriert worden. Besitzt du ein weiteres TourenBuddy Profil? Bei Fragen erreichst du uns unter feedback@tourenbuddy.ch.",
+      "sendCodeBtn": "Code senden",
+      "invalidPhone": "Gib eine gültige Telefonnummer ein.",
+      "sendFailed": "Der Code konnte nicht gesendet werden. Bitte versuche es nochmals."
     },
     "shared": {
       "firstNameLabel": "Vorname",
@@ -377,7 +428,9 @@
       "labelPlaceholder": "Bezeichnung (z. B. Mobil)",
       "removePhoneTooltip": "Telefon entfernen",
       "addPhoneBtn": "Telefon hinzufügen",
-      "primaryPhoneRequired": "Wähle ein Haupttelefon aus, wenn mehrere Telefonnummern eingetragen sind"
+      "primaryPhoneRequired": "Wähle ein Haupttelefon aus, wenn mehrere Telefonnummern eingetragen sind",
+      "addEmailBtn": "E-Mail hinzufügen",
+      "newTitle": "Neuer Kontakt"
     },
     "addDialog": {
       "title": "Kontakt hinzufügen",
@@ -400,6 +453,7 @@
       "extraPhones": "+{{count}} weitere",
       "unparseableTooltip": "Nicht lesbar: {{values}}",
       "discardedPhones": "Nummer nicht hinzugefügt",
+      "fixNumberHint": "Tippen, um die Nummer zu korrigieren",
       "fileError": {
         "emptyFile": "Diese Datei ist leer. Exportiere deine Kontakte nochmals und wähle die neue Datei.",
         "notVCard": "Das ist keine vCard-Datei. Exportiere eine .vcf aus deiner Kontakte-App und versuche es nochmals.",
@@ -472,7 +526,10 @@
       "callAction": "Anrufen",
       "whatsAppAction": "WhatsApp",
       "deleteAction": "Löschen",
-      "deleteFailed": "Kontakt konnte nicht gelöscht werden."
+      "deleteFailed": "Kontakt konnte nicht gelöscht werden.",
+      "messageAction": "Nachricht",
+      "mailAction": "E-Mail",
+      "copyAction": "Kopieren"
     },
     "actionMenu": {
       "noMethods": "Keine Kontaktmethode verfügbar. Bearbeite den Kontakt, um eine hinzuzufügen.",
@@ -499,16 +556,23 @@
       "emptySubtitle": "Erstelle eine auf der Karte.",
       "noMatchesTitle": "Keine Touren gefunden.",
       "clearFiltersBtn": "Filter zurücksetzen",
-      "tabOwned": "Meine Touren",
+      "tabOwned": "Meine",
       "tabFriends": "Freunde",
       "friendsEmptyTitle": "Noch keine Touren von Freunden.",
       "friendsEmptySubtitle": "Touren, die deine Freunde teilen, erscheinen hier.",
       "ownedByLabel": "von {{name}}",
       "aFriend": "einem Freund",
       "viewBackfillCollisionsBtn": "Tour-Überschneidungen prüfen",
+      "overlapsHint": "Gleiche Touren wie deine Freunde finden und verknüpfen",
       "friendsOnMap_zero": "Keine davon auf der Karte – du bist bei keiner Partner",
       "friendsOnMap_one": "Nur 1 davon auf der Karte – die, bei der du Partner bist",
-      "friendsOnMap_other": "Nur {{count}} davon auf der Karte – die, bei denen du Partner bist"
+      "friendsOnMap_other": "Nur {{count}} davon auf der Karte – die, bei denen du Partner bist",
+      "open": "Öffnen",
+      "markOpen": "Als nicht erledigt markieren",
+      "filtersActive_one": "Filter ({{count}} aktiv)",
+      "filtersActive_other": "Filter ({{count}} aktiv)",
+      "filteredFooter_one": "{{count}} Tour passt zu den Filtern",
+      "filteredFooter_other": "{{count}} Touren passen zu den Filtern"
     },
     "duplicate": {
       "title": "Tour bereits vorhanden",
@@ -609,13 +673,18 @@
       "pointsFromTrack": "Start und Ende kommen aus dem Track.",
       "pointsByHandBtn": "Selbst setzen",
       "fromTrack": "aus dem Track",
-      "gpxDrawnFile": "Gezeichneter Track · {{distance}}",
       "gpxPreparing": "Höhen werden ergänzt …",
       "nextDayBtn": "Nächster Tag",
       "nextDayHint": "Mit Übernachtung? Die nächste Etappe beginnt, wo diese endet.",
       "splitDaysBtn": "In Tagesetappen aufteilen",
       "splitDaysHint": "{{count}} Tage: Plane jeden Tag als eigene Etappe – diese behält den ersten.",
-      "trackFromGoal": "Am Ziel, wo der Track beginnt"
+      "trackFromGoal": "Am Ziel, wo der Track beginnt",
+      "discardTitle": "Änderungen verwerfen?",
+      "gpxTrackNone": "Noch kein Track",
+      "changeRouteBtn": "Route auf der Karte ändern",
+      "severalActivities": "Mehrere Aktivitäten…",
+      "gradeMore": "Andere Angabe…",
+      "allContacts": "Alle Kontakte"
     },
     "creation": {
       "title": "Neue Tour",
@@ -638,7 +707,7 @@
     },
     "infoSheet": {
       "editTitlePrefix": "Bearbeiten",
-      "editTitle": "Bearbeiten: {{name}}",
+      "editTitle": "Bearbeiten",
       "unnamedTour": "Unbenannte Tour",
       "createdByLabel": "Erstellt von {{name}}",
       "completedBtn": "Abgeschlossen",
@@ -658,6 +727,8 @@
       "saveFailed": "Speichern fehlgeschlagen",
       "deleteFailed": "Löschen fehlgeschlagen",
       "backToTours": "Touren",
+      "backToCalendar": "Zurück zum Kalender",
+      "backToSeasons": "Zurück zu den Saisons",
       "saveLabel": "Speichern",
       "iconTooltipType": "Aktivitätstyp",
       "iconTooltipElevation": "Höhe",
@@ -669,10 +740,14 @@
       "downloadGpxBtn": "GPX herunterladen",
       "startShort": "Start",
       "endShort": "Ende",
-      "landingShort": "Landung",
+      "landingShort": "Landeplatz",
       "wayUp": "Hinauf",
       "wayDown": "Hinunter",
-      "landingOpen": "noch offen"
+      "landingOpen": "noch offen",
+      "gone": "Diese Tour ist nicht mehr verfügbar.",
+      "visibleToFriends": "Für Freunde sichtbar",
+      "downloadGpxFailed": "Der Track konnte nicht geteilt werden. Bitte nochmals versuchen.",
+      "deleteConfirmDetail": "Das kann nicht rückgängig gemacht werden."
     },
     "filters": {
       "partnerLabel": "Partner",
@@ -692,7 +767,8 @@
       "resetBtn": "Zurücksetzen",
       "showResultsBtn_zero": "{{count}} Touren anzeigen",
       "showResultsBtn_one": "{{count}} Tour anzeigen",
-      "showResultsBtn_other": "{{count}} Touren anzeigen"
+      "showResultsBtn_other": "{{count}} Touren anzeigen",
+      "anyDate": "Beliebig"
     },
     "type": {
       "skiing": "Skifahren",
@@ -760,7 +836,13 @@
       "retryUpload": "Upload wiederholen",
       "dismissUpload": "Datei entfernen",
       "loadFailed": "Die Dateien dieser Tour konnten nicht geladen werden.",
-      "reorderHandle": "{{name}} verschieben"
+      "reorderHandle": "{{name}} verschieben",
+      "fromPhotos": "Fotomediathek",
+      "fromCamera": "Foto aufnehmen",
+      "fromFiles": "Datei auswählen",
+      "cameraDenied": "Der Kamerazugriff ist ausgeschaltet. Erlaube ihn in den Einstellungen, um ein Foto aufzunehmen.",
+      "share": "Teilen",
+      "unavailableOffline": "Diese Datei ist noch nicht auf diesem Gerät. Verbinde dich mit dem Internet, um sie zu öffnen."
     },
     "suggestions": {
       "suggestBtn": "Änderungen vorschlagen",
@@ -829,7 +911,8 @@
       "gpxNew": "Neuer GPX-Track",
       "gpxExisting": "Bestehender GPX-Track",
       "anAttachment": "Ein Anhang",
-      "byYou": "Vorgeschlagen von dir"
+      "byYou": "Vorgeschlagen von dir",
+      "suggestTitle": "Vorschlag"
     },
     "outing": {
       "segmentCount_one": "{{count}} Etappe",
@@ -860,7 +943,10 @@
       "reorderHandle": "Etappe {{n}} verschieben",
       "ruleHint": "Ein Tag, eine Tour – auch mit mehreren Gipfeln oder hoch zu Fuss und runter mit dem Schirm. Nach einer Übernachtung beginnt die nächste Etappe.",
       "connect": "Verbinden",
-      "connectLabel": "Etappe {{n}} bei {{place}} enden lassen"
+      "connectLabel": "Etappe {{n}} bei {{place}} enden lassen",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
+      "newTitle": "Neue Etappe"
     },
     "route": {
       "ascent": "Aufstieg",
@@ -925,13 +1011,16 @@
       "noInfo": "Keine Routeninformationen verfügbar",
       "offline": "Für Routendetails braucht es eine Verbindung",
       "lookupError": "Routeninfo konnte nicht geladen werden",
-      "planTour": "Als Tour planen"
+      "planTour": "Als Tour planen",
+      "ascentTime": "Aufstiegszeit"
     },
     "cluster": {
       "label": "Cluster aus {{count}} Touren",
       "planned": "{{count}} geplant",
       "undated": "{{count}} ohne Datum",
-      "done": "{{count}} erledigt"
+      "done": "{{count}} erledigt",
+      "stackTitle_one": "{{count}} Tour hier",
+      "stackTitle_other": "{{count}} Touren hier"
     },
     "marker": {
       "done": "Erledigt",
@@ -955,18 +1044,12 @@
     "draw": {
       "title": "Track zeichnen",
       "followLabel": "Die Linie folgt",
-      "status": {
-        "hiking": "Die Linie folgt den Wanderwegen, dann Strassen und Wegen.",
-        "ski": "Die Linie folgt den Skitouren, dann Strassen und Wegen.",
-        "byActivity": "(passend zur Aktivität der Tour)",
-        "ways": "Die Linie folgt Strassen und Wegen.",
-        "unavailable": "Die Wege konnten nicht geladen werden (offline?), dieser Abschnitt ist deshalb gerade."
-      },
       "hint": {
         "start": "Tippe auf die Karte, um den Start zu setzen.",
         "next": "Tippe entlang des Wegs, um Punkte zu setzen. Ziehe einen Punkt, um ihn zu verschieben.",
         "profileLoading": "Höhenprofil wird geladen …",
-        "profileOffline": "Das Höhenprofil braucht eine Verbindung."
+        "profileOffline": "Das Höhenprofil braucht eine Verbindung.",
+        "shape": "Tippe auf einen Punkt, um ihn zu entfernen, oder halte und ziehe ihn, um ihn zu verschieben. Den Punkt in der Mitte einer Linie ziehst du auf einen anderen Weg."
       },
       "pace": {
         "open": "Tempo einstellen"
@@ -975,7 +1058,8 @@
       "redo": "Wiederholen",
       "done": "Fertig",
       "returnToStart": "Zum Start",
-      "returnToStartHint": "Auf demselben Weg zurück zum Start"
+      "returnToStartHint": "Auf demselben Weg zurück zum Start",
+      "clear": "Zeichnung löschen"
     },
     "plan": {
       "stepsLabel": "Routenpunkte",
@@ -983,9 +1067,11 @@
         "start": "Wo gehst du los? Auf die Karte tippen oder suchen.",
         "goal": "Wohin? Ziel auf der Karte antippen oder suchen.",
         "end": "Wo endest du? Auf die Karte tippen – oder ohne Endpunkt weiter.",
-        "move": "Setze oder ziehe den Punkt auf der Karte.",
-        "shape": "Ziehe den Punkt in der Mitte einer Linie, um den Weg zu ändern.",
-        "via": "Tippe einen herausgezogenen Punkt an, um ihn wieder zu entfernen."
+        "move": "Tippe jetzt auf die Karte, wohin der Punkt soll.",
+        "shape": "Um den Weg zu ändern, tippe auf den Punkt in der Mitte einer Linie (oder einen Routenpunkt) und dann auf die Karte – oder halte und ziehe ihn.",
+        "via": "Tippe einen herausgezogenen Punkt an, um ihn wieder zu entfernen.",
+        "pull": "Tippe jetzt auf die Karte, wo der Weg durchgehen soll.",
+        "landing": "Wo landest du? Auf die Karte tippen oder suchen – oder ohne Landeplatz weiter."
       },
       "required": "Erforderlich",
       "optional": "Optional",
@@ -998,7 +1084,8 @@
       "step": {
         "start": "Start",
         "goal": "Ziel",
-        "end": "Ende"
+        "end": "Ende",
+        "landing": "Landeplatz"
       },
       "removeStep": "{{step}} entfernen",
       "measuring": "Route wird berechnet …",
@@ -1012,11 +1099,41 @@
         "unavailable": "Wege nicht geladen (offline?), darum Luftlinie",
         "fixed": "Dein hochgeladener Track bleibt, wie er ist",
         "gap": "Kein Weg für einen Abschnitt – dort Luftlinie",
-        "finding": "Weg wird gesucht …"
+        "finding": "Weg wird gesucht …",
+        "option": {
+          "hiking": "Wanderwege",
+          "ski": "Skitouren",
+          "flown": "Luftlinie (geflogen)"
+        },
+        "flown": "Geflogen: Luftlinie zwischen den Punkten",
+        "perWay": "Hinauf: {{up}} · Hinunter: {{down}}"
       },
       "back": "Zurück zu den Details, ohne diese Änderungen",
       "fold": "Routenpunkte einklappen",
-      "unfold": "Routenpunkte zeigen"
+      "unfold": "Routenpunkte zeigen",
+      "editTitle": "Route ändern",
+      "overlays": {
+        "label": "Auf der Karte zeigen"
+      },
+      "flightApart": "Dazu {{distance}} Flug in Luftlinie, nicht in der Distanz"
+    },
+    "a11y": {
+      "label": "Karte der Schweiz mit deinen Touren",
+      "hint": "Deine Touren findest du auch unter Meine Touren.",
+      "legendHint": "Erklärt Markierungen, Farben und Linien.",
+      "toursHint": "Listet deine Touren und die deiner Freunde.",
+      "addHint": "Wähle das Ziel auf der Karte oder suche einen Ort.",
+      "searchHint": "Findet einen Ort auf der Karte",
+      "layersHint": "Grundkarte, Wanderwege und Skitouren mit Vorschau, Legende und Offline-Karten.",
+      "creditHint": "Zeigt die Quellen der Karte"
+    },
+    "search": {
+      "title": "Ort suchen",
+      "hint": "Suche einen Ort, eine Hütte oder eine Haltestelle"
+    },
+    "credit": {
+      "title": "Kartendaten",
+      "body": "Karten, Wanderwege und Skitouren: © swisstopo, Bundesamt für Landestopografie."
     }
   },
   "i18n": {
@@ -1036,26 +1153,27 @@
     "sendFailedRetry": "Konnte nicht gesendet werden – bitte erneut versuchen.",
     "learnMore": "Mehr erfahren",
     "inboxEmpty": "Keine ausstehenden Freundschaftsanfragen.",
-    "inboxDenyRightsNote": "Du kannst jede Anfrage ohne Begründung ablehnen. Eine Ablehnung hat keine Konsequenzen und gibt Deine Identität nicht preis.",
+    "inboxDenyRightsNote": "Du kannst jede Anfrage ohne Begründung ablehnen. Eine Ablehnung hat keine Konsequenzen und gibt deine Identität nicht preis.",
     "accept": "Annehmen",
     "deny": "Ablehnen",
     "cancel": "Abbrechen",
-    "requestFrom": "Anfrage von",
-    "requestTo": "Anfrage an",
-    "verifyPhoneHint": "Verifiziere Deine Telefonnummer, um dich mit anderen Nutzern zu vernetzen.",
+    "requestFrom": "Anfragen an dich",
+    "requestTo": "Deine Anfragen",
+    "verifyPhoneHint": "Verifiziere deine Telefonnummer, um dich mit anderen Nutzern zu vernetzen.",
     "friendsListLink": "Freundschaftsanfragen",
     "requestsTab": "Anfragen",
     "contactCreated": "Kontakt für neuen Freund erstellt",
     "tooltip": "Freund auf TourenBuddy",
     "acceptConfirm": "Diese Freundschaftsanfrage annehmen?",
-    "acceptWarning": "Angenommene Freundschaften können nicht gelöscht werden. Um diesen Freund zu entfernen, musst Du den verknüpften Kontakt löschen.",
+    "acceptWarning": "Angenommene Freundschaften können nicht gelöscht werden. Um diesen Freund zu entfernen, musst du den verknüpften Kontakt löschen.",
     "acceptingBtn": "Wird angenommen...",
     "verificationNotice": {
       "title": "Hinweis zur Auffindbarkeit",
       "body": "Nach der Verifizierung können andere verifizierte TourenBuddy-Nutzer, die diese Nummer in ihren Kontakten haben, erkennen, dass ein Konto für diese Nummer existiert, und eine Freundschaftsanfrage senden. Deine Identität wird dabei nicht preisgegeben. Unverifizierte Nummern sind nie auffindbar. Du kannst jede eingehende Anfrage ohne Begründung und ohne Konsequenzen ablehnen. Freundschaften können in Zukunft widerrufen werden.",
       "acknowledge": "Ich verstehe die Bedingungen zur Auffindbarkeit der Telefonnummer.",
       "sendCodeBtn": "Verifizierungscode senden"
-    }
+    },
+    "cancelRequest": "Anfrage zurückziehen"
   },
   "blocks": {
     "tabLabel": "Blockiert",
@@ -1066,13 +1184,14 @@
     "blockedSince": "Blockiert seit {{date}}",
     "confirm": {
       "title": "Diese Person blockieren?",
-      "bodyWithFriend": "Damit wird die Freundschaft aufgehoben und diese Person kann Dir keine Freundschaftsanfragen mehr senden.",
-      "bodyWithoutFriend": "Damit kann diese Person Dir keine Freundschaftsanfragen mehr senden.",
+      "bodyWithFriend": "Damit wird die Freundschaft aufgehoben und diese Person kann dir keine Freundschaftsanfragen mehr senden.",
+      "bodyWithoutFriend": "Damit kann diese Person dir keine Freundschaftsanfragen mehr senden.",
       "cooldownNotice": "Du kannst diese Person erst nach 48 Stunden wieder entsperren.",
       "reportToggle": "Diese Person auch melden",
       "reportPlaceholder": "Optional: Beschreibe das Problem (max. 1000 Zeichen)",
       "cancelBtn": "Abbrechen",
-      "confirmBtn": "Blockieren"
+      "confirmBtn": "Blockieren",
+      "reportAndBlock": "Blockieren und melden"
     },
     "snackbar": {
       "blockSuccess": "Person blockiert",
@@ -1083,7 +1202,8 @@
     },
     "cooldown": {
       "remaining": "Verfügbar in {{hours}} h"
-    }
+    },
+    "unblockFrom": "Entsperren möglich ab {{date}}"
   },
   "notifications": {
     "sectionTitle": "Benachrichtigungen",
@@ -1110,11 +1230,22 @@
     "allOffDisclaimer": "Du wirst ausserhalb der App nicht benachrichtigt. Neuigkeiten sammeln sich weiterhin in deinem Posteingang.",
     "pushUnavailable": "Nicht verfügbar",
     "installHint": "Um Push-Benachrichtigungen zu aktivieren, füge TourenBuddy zuerst zum Home-Bildschirm hinzu.",
-    "deniedHint": "Push-Benachrichtigungen sind blockiert. Aktiviere sie in den Browser- oder Geräteeinstellungen."
+    "deniedHint": "Push-Benachrichtigungen sind blockiert. Aktiviere sie in den Browser- oder Geräteeinstellungen.",
+    "deniedHintApp": "Push-Benachrichtigungen sind für TourenBuddy ausgeschaltet. Schalte sie in den Einstellungen unter Apps › TourenBuddy › Mitteilungen ein.",
+    "pushFailed": "Push-Benachrichtigungen konnten nicht eingeschaltet werden. Prüfe deine Verbindung und versuche es nochmals.",
+    "pushNoToken": "Dein iPhone hat keine Push-Anmeldung herausgegeben. Versuche es gleich nochmals; passiert es immer wieder, starte das iPhone neu.",
+    "pushOffline": "Du bist offline. Push lässt sich mit Verbindung ein- oder ausschalten."
   },
   "common": {
     "loading": "Lädt…",
-    "close": "Schliessen"
+    "close": "Schliessen",
+    "back": "Zurück",
+    "cancel": "Abbrechen",
+    "done": "Fertig",
+    "openSettings": "Einstellungen öffnen",
+    "more": "Mehr",
+    "genericError": "Etwas ist schiefgelaufen. Bitte versuche es nochmals.",
+    "retry": "Erneut versuchen"
   },
   "tourLinks": {
     "linkedWithHeader": "Verknüpft mit",
@@ -1150,7 +1281,9 @@
     "mergeBlockedTitle": "Eine andere Freundesgruppe plant dieselbe Tour",
     "mergeBlockedBody": "Freunde bereits in eigener verknüpfter Gruppe: {{names}}. Du kannst sie direkt kontaktieren, um euch abzustimmen — eure Gruppen lassen sich aber nicht zusammenführen.",
     "dismissBtn": "Verstanden",
-    "doNotShowAgain": "Nicht mehr anzeigen"
+    "doNotShowAgain": "Nicht mehr anzeigen",
+    "actionFailed": "Die Verknüpfung konnte nicht geändert werden. Bitte nochmals versuchen.",
+    "requestSent": "Anfrage gesendet"
   },
   "onboarding": {
     "tour": {
@@ -1176,14 +1309,14 @@
       },
       "addLocation": {
         "title": "Tour planen",
-        "body": "Tippe hier und dann auf der Karte auf Start, Ziel und Ende – oder suche sie. Die Route folgt den Wegen und wird dein Track; mit Übernachtung planst du mit «Nächster Tag» gleich die nächste Etappe."
+        "body": "Tippe hier und dann auf der Karte auf Start, Ziel und Ende – oder suche sie. Jeder Weg folgt den Wanderwegen oder Skitouren seiner Aktivität, ein Flug gerade zum Landeplatz, und wird dein Track; halte und ziehe einen Punkt oder die Mitte einer Linie, um den Weg zu ändern. Mit Übernachtung planst du mit «Nächster Tag» gleich die nächste Etappe."
       },
       "mapLayers": {
         "title": "Kartenebenen",
-        "body": "Wähle eine Grundkarte und blende Wanderwege oder Skitouren darüber ein, in beliebiger Kombination. Mit Skitouren zoomst du hinein, bis die Routen Schwierigkeits-Badges zeigen, und tippst dann für Details auf eine Route – oder planst sie gleich als Tour. Der ⓘ-Knopf unten links erklärt die Farben und Symbole der Tourenmarker."
+        "body": "Der runde Kartenknopf unten rechts zeigt jede Grundkarte und Überlagerung als Vorschau: Wähle eine Grundkarte und blende Wanderwege oder Skitouren darüber ein, in beliebiger Kombination. Mit Skitouren zoomst du hinein, bis die Routen Schwierigkeits-Badges zeigen, und tippst dann für Details auf eine Route – oder planst sie gleich als Tour. Die Legende dort erklärt die Farben und Symbole der Tourenmarker."
       },
       "welcome": {
-        "title": "Willkommen bei TourenBuddy",
+        "title": "Willkommen",
         "body": "Eine kurze Tour durch das Wichtigste: Touren planen, Karten, Freunde und der Kalender. Tippe irgendwo, um fortzufahren, oder nutze die Navigation oben.",
         "start": "Tour starten",
         "skip": "Vorerst überspringen",
@@ -1216,7 +1349,8 @@
         "previous": "Zurück",
         "done": "Fertig",
         "finish": "Tour beenden",
-        "reopen": "App-Tour anzeigen"
+        "reopen": "App-Tour anzeigen",
+        "back": "Zurück zur App-Tour"
       },
       "openCalendar": {
         "title": "Kalender öffnen",
@@ -1234,6 +1368,20 @@
         "title": "Alles an einem Ort",
         "body": "Freundschaftsanfragen, Änderungen an geteilten Touren, Vorschläge und Tourenerinnerungen sammeln sich in deinem Posteingang – auch ohne Push und E-Mail. Die Zahl zeigt, was noch auf dich wartet."
       }
+    },
+    "index": {
+      "intro": "Das kann TourenBuddy. Tippe auf eine Zeile, um dorthin zu gelangen.",
+      "addLocation": "Tippe Start, Ziel und Ende auf die Karte oder suche danach. Die Route folgt den Wegen deiner Aktivität, ein Flug gerade zum Landeplatz.",
+      "mapLayers": "Wähle eine Grundkarte und blende Wanderwege oder Skitouren mit ihrer Schwierigkeit ein.",
+      "offlineMap": "Lade eine Region oder die ganze Schweiz herunter, bevor du losziehst.",
+      "tours": "Deine Touren und die deiner Freunde, als Liste oder auf der Karte.",
+      "addContact": "Füge Personen aus deinem Adressbuch oder von Hand hinzu und verknüpfe sie mit deinen Touren.",
+      "friendRequests": "Werdet Freunde, um eure Touren zu sehen und gemeinsam zu planen.",
+      "inbox": "Anfragen, Tourenänderungen, Vorschläge und Erinnerungen – auch ohne Push und E-Mail.",
+      "phone": "Bestätige deine Nummer, damit dich deine Freunde finden.",
+      "notifications": "Wähle, worüber du informiert wirst, auf diesem Gerät und per E-Mail.",
+      "calendarSync": "Dein Kalender markiert deine freien Tage. Sein Inhalt wird nie gespeichert.",
+      "openCalendar": "Plane nach Datum, teile, wann du frei bist, und sieh, wann deine Freunde Zeit haben."
     }
   },
   "offlineMap": {
@@ -1243,17 +1391,19 @@
       "hintMobile": "Verschiebe die Karte, um deine Region einzurahmen · {{size}}",
       "redraw": "Neu zeichnen",
       "cancel": "Abbrechen",
-      "confirm": "Weiter"
+      "confirm": "Weiter",
+      "hintFrame": "Verschiebe und zoome die Karte, bis der blaue Rahmen deine Region zeigt."
     },
     "download": {
       "title": "Offline-Karte herunterladen",
       "nameLabel": "Name der Region",
-      "estimate": "Geschätzte Grösse: {{size}}",
+      "estimate": "Geschätzte Grösse: ca. {{size}}",
       "tooLarge": "Nicht genügend freier Speicher für diese Region.",
       "nearQuota": "Dies verbraucht einen Grossteil deines verbleibenden Speichers.",
       "start": "Herunterladen",
       "cancel": "Abbrechen",
-      "untitled": "Offline-Region"
+      "untitled": "Offline-Region",
+      "sheetTitle": "Neue Region"
     },
     "manage": {
       "title": "Offline-Karten",
@@ -1263,13 +1413,27 @@
       "empty": "Noch keine Offline-Karten heruntergeladen.",
       "tip": "Tipp: Lade mehrere kleinere Regionen anstelle einer sehr grossen.",
       "drawRegion": "Region herunterladen",
-      "wholeMap": "Ganze Schweiz herunterladen"
+      "wholeMap": "Ganze Schweiz herunterladen",
+      "incomplete": "Unvollständig",
+      "redownload": "Erneut herunterladen",
+      "webUnavailable": "Offline-Karten gibt es in den Apps für iPhone und Android.",
+      "showOnMap": "Auf der Karte zeigen",
+      "downloading": "Wird heruntergeladen · {{percent}} %",
+      "ready": "Offline verfügbar · {{size}}",
+      "cancelDownload": "Download abbrechen",
+      "keepDownloading": "Weiterladen"
     },
     "errors": {
       "load": "Offline-Karten konnten nicht geladen werden.",
       "delete": "Diese Region konnte nicht gelöscht werden.",
       "quota": "Nicht genügend Speicher für diese Region.",
       "download": "Download fehlgeschlagen. Bitte erneut versuchen."
+    },
+    "regions": {
+      "west": "Schweiz · West",
+      "centreWest": "Schweiz · Mitte-West",
+      "centreEast": "Schweiz · Mitte-Ost",
+      "east": "Schweiz · Ost"
     }
   },
   "offline": {
@@ -1308,7 +1472,12 @@
       },
       "kind": {
         "tour": "Tour",
-        "contact": "Kontakt"
+        "contact": "Kontakt",
+        "friendship": "Freundschaft",
+        "availability": "Verfügbarkeit",
+        "inbox": "Eingangsmeldung",
+        "notif-prefs": "Benachrichtigungseinstellungen",
+        "profile": "Profil"
       },
       "permanentReason": "Diese Änderung konnte nicht angewendet und nicht gespeichert werden",
       "transientReason": "Der Server konnte nicht erreicht werden — du kannst es erneut versuchen"
@@ -1316,7 +1485,7 @@
   },
   "inbox": {
     "title": "Posteingang",
-    "empty": "Noch nichts Neues. Freundschaftsanfragen, geteilte Touren und Vorschläge erscheinen hier.",
+    "empty": "Noch nichts Neues",
     "loadError": "Der Posteingang konnte nicht geladen werden.",
     "markAllRead": "Alle gelesen",
     "loadMore": "Mehr laden",
@@ -1365,7 +1534,8 @@
       "eyebrow": "Neu in TourenBuddy",
       "settingsAction": "Benachrichtigungen",
       "settingsHint": "Beides kommt auch per Push und E-Mail. Du entscheidest, was du erhältst."
-    }
+    },
+    "emptyHint": "Freundschaftsanfragen, geteilte Touren und Vorschläge erscheinen hier."
   },
   "releaseNotes": {
     "2026-10-availability-reminders": {
@@ -1471,6 +1641,249 @@
       "calendar": "Kalender",
       "contacts": "Kontakte",
       "profile": "Profil"
+    }
+  },
+  "about": {
+    "privacy": {
+      "sections": [
+        {
+          "rows": [
+            {
+              "text": "Mit TourenBuddy planst du Bergtouren mit deinen Freunden, auf dem iPhone, auf Android und im Web. Hier steht, welche Personendaten wir bearbeiten, wozu, und was du tun kannst. Sie folgt dem Schweizer Datenschutzgesetz (DSG) und, wo sie gilt, der EU-Datenschutz-Grundverordnung (DSGVO)."
+            }
+          ]
+        },
+        {
+          "title": "Verantwortlich",
+          "rows": [
+            {
+              "text": "Die im Impressum genannte Betreiberin („wir“). Schreib an feedback@tourenbuddy.ch für alles zu deinen Daten."
+            }
+          ]
+        },
+        {
+          "title": "Was wir bearbeiten und wozu",
+          "rows": [
+            {
+              "label": "Deine E-Mail-Adresse, dein Name und, falls du sie hinzufügst, deine bestätigte Telefonnummer",
+              "text": "Um dich anzumelden, dich deinen Freunden zu zeigen und damit Freunde dich über deine Nummer finden. Jede angemeldete Person kann prüfen, ob eine Telefonnummer ein Konto hat. Deine Nummer sehen nur Personen mit einer offenen Freundschaftsanfrage von oder an dich oder deine Freunde."
+            },
+            {
+              "label": "Kontakte, die du hinzufügst oder importierst (Namen, Telefonnummern, E-Mail-Adressen)",
+              "text": "Dein Adressbuch in der App, Tourenpartner und das Verbinden mit Freunden, die TourenBuddy nutzen. Nur du siehst deine Kontakte; wir kontaktieren die Personen darin nie. Nummern gleichen wir nur mit TourenBuddy-Konten ab. Wenn dich jemand als Kontakt gespeichert hat und du willst, dass wir diesen Eintrag über dich entfernen, schreib an feedback@tourenbuddy.ch."
+            },
+            {
+              "label": "Touren: Namen, Orte, Daten, Routen und Tracks (GPX), Aktivitäten, Notizen; deine freien Tage",
+              "text": "Der Zweck der App. Du wählst, mit wem du sie teilst: mit deinen Freunden und den Partnern einer Tour, oder hältst eine Tour privat."
+            },
+            {
+              "label": "Fotos und PDFs, die du an Touren anhängst",
+              "text": "Bei der Tour gespeichert und allen gezeigt, die sie sehen dürfen. Fotos behalten ihre EXIF-Daten; die können Ort und Zeit der Aufnahme enthalten und sind für alle sichtbar, die die Tour sehen."
+            },
+            {
+              "label": "Adressen von Kalendern, die du verbindest",
+              "text": "Um deine belegten Tage zu markieren. Wir lesen den Kalender und behalten nur, welche Tage belegt sind, nie die Termine. Wir speichern die Adresse selbst. Sie wirkt wie ein Passwort: Wer sie hat, kann diesen Kalender lesen."
+            },
+            {
+              "label": "Einträge im Eingang, Benachrichtigungseinstellungen, Push-Token deiner Geräte, App-Version und Plattform",
+              "text": "Um dich in der App, per Push und per E-Mail zu benachrichtigen, wie du es wählst"
+            },
+            {
+              "label": "Meldungen und Blockierungen",
+              "text": "Damit TourenBuddy sicher bleibt"
+            },
+            {
+              "label": "Im Web: deine Anmeldung und deine Sprachwahl",
+              "text": "Im Local Storage deines Browsers gespeichert, damit du angemeldet bleibst und die App in deiner Sprache zeigt. Der Dienst braucht das, deshalb fragen wir nicht um Einwilligung. Wir setzen keine Tracking-Cookies."
+            },
+            {
+              "text": "Die Karte kommt direkt von swisstopo: Dein Gerät lädt Kartenkacheln und Ortsnamen bei swisstopo, das dabei deine IP-Adresse und den angezeigten Ausschnitt sieht. Das ist nicht mit deinem Konto verknüpft. Die App verwendet deinen Standort nicht."
+            },
+            {
+              "text": "Wir verwenden keine Werbung, keine Analyse und kein Tracking, und wir verkaufen keine Daten."
+            }
+          ]
+        },
+        {
+          "title": "Rechtsgrundlagen",
+          "rows": [
+            {
+              "text": "Wo die DSGVO gilt: die Erbringung des Dienstes, für den du dich angemeldet hast (Art. 6 Abs. 1 lit. b), deine Einwilligung für Push-Benachrichtigungen und den Kontaktimport (Art. 6 Abs. 1 lit. a) sowie unser berechtigtes Interesse an einem sicheren Dienst für Meldungen und Blockierungen (Art. 6 Abs. 1 lit. f)."
+            }
+          ]
+        },
+        {
+          "title": "Wer Daten für uns bearbeitet und wer sie erhält",
+          "rows": [
+            {
+              "label": "Supabase",
+              "text": "Datenbank, Anmeldung und Dateiablage"
+            },
+            {
+              "label": "Cloudflare",
+              "text": "diese Website und der Dienst, der Benachrichtigungen versendet und Kalender abgleicht"
+            },
+            {
+              "label": "Brevo",
+              "text": "Versand von E-Mails"
+            },
+            {
+              "label": "Twilio",
+              "text": "Versand der SMS-Codes zur Bestätigung einer Telefonnummer"
+            },
+            {
+              "label": "Apple und Google",
+              "text": "Zustellung von Push-Benachrichtigungen auf iPhone und Android"
+            },
+            {
+              "label": "swisstopo (Bundesamt für Landestopografie)",
+              "text": "Kartenkacheln, Ortsnamen, Höhen und Routenprofile, von deinem Gerät abgerufen. Höhen- und Profilabfragen enthalten die Koordinaten deiner geplanten Route."
+            },
+            {
+              "text": "Einige davon bearbeiten Daten ausserhalb der Schweiz und der EU, insbesondere in den USA. Wo der Empfänger nach dem EU-US- und Swiss-US-Data-Privacy-Framework zertifiziert ist, stützt sich die Übermittlung darauf, sonst auf Standardvertragsklauseln mit dem Schweizer Zusatz."
+            }
+          ]
+        },
+        {
+          "title": "Wie lange wir Daten aufbewahren",
+          "rows": [
+            {
+              "text": "So lange dein Konto besteht. Einträge im Eingang werden nach 90 Tagen gelöscht. Löschst du dein Konto, wird alles gelöscht, ausser Meldungen, die ohne Bezug zu dir bleiben (siehe Konto löschen)."
+            }
+          ]
+        },
+        {
+          "title": "Deine Rechte",
+          "rows": [
+            {
+              "text": "Du kannst Auskunft über deine Daten verlangen, sie berichtigen oder löschen lassen, eine Kopie in einem gängigen elektronischen Format erhalten (zum Beispiel JSON; Touren kannst du in der App auch als GPX herunterladen), der Bearbeitung widersprechen und eine Einwilligung jederzeit widerrufen. Schreib an feedback@tourenbuddy.ch. Du kannst dich auch beim Eidgenössischen Datenschutz- und Öffentlichkeitsbeauftragten (EDÖB) oder, in der EU, bei deiner Datenschutzbehörde beschweren."
+            }
+          ]
+        },
+        {
+          "title": "Junge Menschen",
+          "rows": [
+            {
+              "text": "Bist du unter 18, brauchst du die Zustimmung deiner Eltern oder einer erziehungsberechtigten Person. Wir prüfen das Alter nicht. Erfahren wir, dass jemand unter 18 ohne diese Zustimmung ein Konto hat, löschen wir es."
+            }
+          ]
+        },
+        {
+          "title": "Änderungen",
+          "rows": [
+            {
+              "text": "Ändert sich diese Erklärung, passen wir diese Seite und ihr Datum an. Wichtige Änderungen kündigen wir in der App an."
+            }
+          ]
+        }
+      ],
+      "title": "Datenschutzerklärung",
+      "updated": "Stand: 9. November 2026"
+    },
+    "terms": {
+      "sections": [
+        {
+          "rows": [
+            {
+              "text": "Diese Bedingungen gelten, wenn du TourenBuddy auf irgendeinem Gerät nutzt. Mit dem Erstellen eines Kontos akzeptierst du sie."
+            }
+          ]
+        },
+        {
+          "title": "Der Dienst",
+          "rows": [
+            {
+              "text": "Mit TourenBuddy planst du Bergtouren, verwaltest Kontakte, teilst Touren und freie Tage mit Freunden und wirst über gemeinsame Pläne benachrichtigt. Der Dienst ist kostenlos. Wir können Funktionen ändern, erweitern oder einstellen und informieren dich rechtzeitig über Änderungen, die dich betreffen."
+            }
+          ]
+        },
+        {
+          "title": "Dein Konto",
+          "rows": [
+            {
+              "text": "Mach korrekte Angaben und schütze deine Anmeldung (Passwort, Passkey oder E-Mail-Code) und deine Geräte. Bist du unter 18, brauchst du die Zustimmung deiner Eltern oder einer erziehungsberechtigten Person. Du kannst dein Konto jederzeit löschen (siehe Konto löschen)."
+            }
+          ]
+        },
+        {
+          "title": "Deine Inhalte",
+          "rows": [
+            {
+              "text": "Touren, Notizen, Tracks und Anhänge bleiben deine. Du erlaubst uns, sie zu speichern und den Personen zu zeigen, mit denen du sie teilst, soweit das für den Dienst nötig ist. Du entscheidest pro Tour, ob deine Freunde und die Partner einer Tour sie sehen oder ob sie privat bleibt. Teile Fotos anderer Menschen nur, wenn sie einverstanden sind."
+            }
+          ]
+        },
+        {
+          "title": "Faire Nutzung",
+          "rows": [
+            {
+              "text": "Veröffentliche keine rechtswidrigen, beleidigenden oder belästigenden Inhalte, gib dich nicht als jemand anderes aus und versuche nicht, den Dienst zu stören oder zu überlasten. Du kannst alle melden und blockieren. Wir können Inhalte entfernen und Konten sperren oder schliessen, die gegen diese Bedingungen verstossen."
+            }
+          ]
+        },
+        {
+          "title": "Sicherheit am Berg",
+          "rows": [
+            {
+              "text": "TourenBuddy ist eine Planungshilfe. Routen, Zeiten, Schwierigkeiten sowie Wander- und Skitourendaten können unvollständig, falsch oder veraltet sein. Prüfe die Verhältnisse, das Lawinenbulletin des SLF und die Prognose von MeteoSchweiz und plane mit deinem eigenen Urteil. Zeiten, Schwierigkeitsgrade und Vorschläge in der App sind Schätzungen, keine Garantien, und ersetzen weder Ausbildung, Erfahrung noch die offiziellen Quellen. Für deine Entscheidungen am Berg bist allein du verantwortlich."
+            }
+          ]
+        },
+        {
+          "title": "Haftung",
+          "rows": [
+            {
+              "text": "Wir betreiben TourenBuddy sorgfältig, können aber nicht garantieren, dass der Dienst immer verfügbar und fehlerfrei ist. Soweit gesetzlich zulässig, haften wir nur für Vorsatz und grobe Fahrlässigkeit. Das gilt nicht für Schäden an Leben und Gesundheit und nicht, wo zwingendes Recht eine Einschränkung nicht erlaubt. Der Dienst ist kostenlos und wird so bereitgestellt, wie er ist."
+            }
+          ]
+        },
+        {
+          "title": "Recht und Gerichtsstand",
+          "rows": [
+            {
+              "text": "Es gilt Schweizer Recht. Zuständig sind die Gerichte am Sitz der Betreiberin, vorbehaltlich zwingender Bestimmungen zum Konsumentenschutz, auch aus deinem Wohnsitzland."
+            }
+          ]
+        },
+        {
+          "title": "Änderungen",
+          "rows": [
+            {
+              "text": "Wir können diese Bedingungen anpassen. Eine Änderung, die dich betrifft, kündigen wir dir in der App an, bevor sie gilt. Nutzt du TourenBuddy danach weiter, gelten die neuen Bedingungen."
+            }
+          ]
+        },
+        {
+          "title": "Kontakt",
+          "rows": [
+            {
+              "text": "feedback@tourenbuddy.ch"
+            }
+          ]
+        }
+      ],
+      "title": "Nutzungsbedingungen",
+      "updated": "Stand: 9. November 2026"
+    },
+    "imprint": {
+      "sections": [
+        {
+          "rows": [
+            {
+              "text": "TourenBuddy wird betrieben von:",
+              "country": "Schweiz"
+            },
+            {
+              "text": "E-Mail: feedback@tourenbuddy.ch"
+            },
+            {
+              "text": "Karten-, Wander- und Skitourendaten: © swisstopo."
+            }
+          ]
+        }
+      ],
+      "title": "Impressum",
+      "updated": "Stand: 9. November 2026"
     }
   }
 }

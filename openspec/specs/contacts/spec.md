@@ -346,30 +346,6 @@ Contacts Realtime event handlers MUST NOT trigger any notification dispatch (pus
 - **WHEN** any `postgres_changes` event for `contacts` / `contact_methods` is received
 - **THEN** no notification dispatch function is invoked from the `onChange` handler
 
-### Requirement: Contact detail header is titled and pinned
-
-The contact detail view header — back control, title, close — SHALL be titled with the contact's
-resolved name (the display name, else first and last name). It SHALL hold no Edit action: Edit
-sits in the detail footer.
-
-The header row SHALL remain pinned to the top of the overlay while the detail content below it is
-scrolled, and SHALL occlude the content passing underneath it. It SHALL move with the surface
-itself — dragging the bottom sheet up or down on mobile moves the header with the sheet.
-
-#### Scenario: Title reflects read mode
-- **WHEN** a contact is opened from the contacts list
-- **THEN** the header title reads the contact's resolved name
-- **AND** the header holds back and close only, no Edit
-
-#### Scenario: Header stays put while content scrolls
-- **WHEN** the user scrolls the detail content past the header's resting position
-- **THEN** the back control, title, and close remain visible at the top
-- **AND** the content scrolling past SHALL NOT show through the header
-
-#### Scenario: Header travels with a dragged sheet
-- **WHEN** the bottom sheet holding the detail view is dragged to another snap point
-- **THEN** the header moves with the sheet rather than staying fixed to the viewport
-
 ### Requirement: A friend's tours from the contact detail
 
 The detail view of a contact linked to an accepted friend, and not blocked, SHALL offer a "Tours" quick action in its hero, marked with the route icon (a path between two points) — not a location pin, which reads as a place. It SHALL open the tour list on the Friends tab with the search cleared and only the recorded-by filter set, to that friend. Other contacts SHALL NOT offer the action.
@@ -446,26 +422,13 @@ applies.
 - **WHEN** the contact detail is in edit mode
 - **THEN** no quick action is shown
 
-### Requirement: Contact detail actions sit in the footer
+### Requirement: Contact detail as a pushed screen
+Tapping a contact SHALL push its detail onto the Contacts tab's stack: the navigation bar shows Edit; the screen opens with the hero and quick actions, then the methods (each with its own call, message, WhatsApp or mail action and a context menu to copy), the friend's tours, and at the end Block and Delete as destructive rows. Delete and Block SHALL confirm in a system dialog that carries the friendship and pending-request warnings.
 
-In view mode the contact detail SHALL show Delete, Block and Edit as one row of equal-width,
-text-labelled buttons at least 44px tall in the overlay's footer, in that order, on mobile and
-desktop. Block SHALL follow the Block entry-point rules. A Delete or Block confirmation SHALL
-replace the row in place. Edit mode SHALL show no such footer.
+#### Scenario: Delete a linked contact
+- **WHEN** the user taps Delete on a contact linked to a friend
+- **THEN** a system dialog warns that the friendship ends and asks to confirm
 
-#### Scenario: Order and placement
-- **WHEN** the detail of an unblocked friend is shown in view mode
-- **THEN** the footer row reads Delete, Block, Edit from left to right, pinned below the scrolling content
-
-#### Scenario: Edit from the footer
-- **WHEN** the user activates Edit in the footer
-- **THEN** the detail enters edit mode and the footer row is no longer shown
-
-#### Scenario: Delete confirms in place
-- **WHEN** the user activates Delete
-- **THEN** the row is replaced by the delete confirmation with any friendship or pending-request warning
-- **AND** Cancel restores the row
-
-#### Scenario: One row on a phone
-- **WHEN** a friend's detail is shown on a 360px-wide phone in `de-CH`
-- **THEN** Delete, Block and Edit fit one row
+#### Scenario: Edit
+- **WHEN** the user taps Edit in the navigation bar
+- **THEN** the contact form opens with the contact's values

@@ -19,3 +19,17 @@ export const isSwiftDisabled = (node: Node) =>
 export async function pressSwift(label: string) {
   await act(() => fireEvent(swiftButton(label), 'buttonPress'));
 }
+
+/** A SwiftUI button known by its label alone (an icon-only one: a row's delete). */
+export function swiftButtonLabelled(prefix: string): Node {
+  const node = screen.container
+    .queryAll((n) => typeof n.props.label === 'string' && n.props.label.startsWith(prefix))
+    .find((n) => n.props.onButtonPress);
+  if (!node) throw new Error(`No SwiftUI button labelled "${prefix}…"`);
+  return node;
+}
+
+/** Whether SwiftUI text containing `text` is on the screen (rows, footers). */
+export const hasSwiftText = (text: string) =>
+  screen.container.queryAll((n) => typeof n.props.text === 'string' && n.props.text.includes(text))
+    .length > 0;

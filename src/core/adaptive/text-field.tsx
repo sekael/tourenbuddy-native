@@ -25,6 +25,8 @@ export function TextField({ label, style, onFocus, onBlur, ...props }: TextField
       placeholderTextColor={color.onSurfaceVariant}
       selectionColor={color.primary}
       {...props}
+      // A field never stands empty and unnamed: without a placeholder its name stands in.
+      placeholder={props.placeholder ?? label}
       onFocus={(event) => {
         setFocused(true);
         onFocus?.(event);

@@ -113,7 +113,10 @@ describe('signing in with a passkey', () => {
 
   it("should follow the server's relying party, also when reporting an unknown passkey", async () => {
     passkey.startAuthentication.mockResolvedValueOnce({
-      data: { challenge_id: 'challenge-1', options: { challenge: 'Y2hhbGxlbmdl', rpId: 'other.example' } },
+      data: {
+        challenge_id: 'challenge-1',
+        options: { challenge: 'Y2hhbGxlbmdl', rpId: 'other.example' },
+      },
       error: null,
     });
     passkey.verifyAuthentication.mockResolvedValueOnce({

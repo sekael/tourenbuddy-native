@@ -1,12 +1,12 @@
+import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert } from 'react-native';
 
-import { Button } from '@/core/adaptive/button';
-import { Sheet } from '@/core/adaptive/sheet';
-import { Text } from '@/core/adaptive/text';
+import { ListRow, ListSection } from '@/core/adaptive/list';
+import { Page, Screen } from '@/core/adaptive/screen';
 import { createLogger } from '@/core/logging/logger';
-import { color, space } from '@/core/theme/tokens';
+import { color } from '@/core/theme/tokens';
 
 import { passkeyErrorMessage } from './auth-errors';
 import { type PasskeyItem, useAuthStore } from './stores/auth-store';
@@ -14,10 +14,11 @@ import { type PasskeyItem, useAuthStore } from './stores/auth-store';
 const log = createLogger('PasskeysSheet');
 
 /**
- * The account's passkeys (iOS): Supabase's name for each (the provider, such as iCloud Keychain)
- * and the day it was added; adding one with Face ID; deleting one after a system alert. A deleted
- * passkey stays in iCloud Keychain until the user removes it there; signing in with it then says
- * it is no longer valid.
+ * The account's passkeys (iOS), as Settings lists them: one row each, Supabase's name for it (the
+ * provider, such as Apple Passwords) and when it was added, day and time, since several often share
+ * a name; its own delete button (and a swipe), and an alert naming the same passkey. Adding one
+ * uses Face ID. A deleted passkey stays in the Passwords app until the user removes it there;
+ * signing in with it then says it is no longer valid.
  */
 export function PasskeysSheet() {
   const { t, i18n } = useTranslation();
@@ -66,7 +67,7 @@ export function PasskeysSheet() {
   function confirmDelete(item: PasskeyItem) {
     Alert.alert(
       t('auth.passkey.deleteTitle'),
-      t('auth.passkey.deleteMessage', { name: name(item) }),
+      t('auth.passkey.deleteMessage', { name: name(item), date: added(item) }),
       [
         { text: t('auth.passkey.cancelBtn'), style: 'cancel' },
         {
@@ -79,50 +80,53 @@ export function PasskeysSheet() {
   }
 
   const added = (item: PasskeyItem) =>
-    new Date(item.createdAt).toLocaleDateString(i18n.language, {
+    new Date(item.createdAt).toLocaleString(i18n.language, {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
 
+  const remove = (item: PasskeyItem) => ({
+    label: t('auth.passkey.deleteNamed', { name: name(item), date: added(item) }),
+    icon: 'delete' as const,
+    destructive: true,
+    onPress: () => confirmDelete(item),
+  });
+
   return (
-    <Sheet title={t('auth.passkey.title')}>
-      <View style={styles.body}>
-        <Text style={styles.muted}>{t('auth.passkey.subtitle')}</Text>
-        {items === null && !error && <Text style={styles.muted}>{t('common.loading')}</Text>}
-        {items?.length === 0 && <Text>{t('auth.passkey.empty')}</Text>}
-        {items?.map((item) => (
-          <View key={item.id} style={styles.item}>
-            <Text>{name(item)}</Text>
-            <Text variant="caption" style={styles.muted}>
-              {t('auth.passkey.added', { date: added(item) })}
-            </Text>
-            <Button
-              variant="plain"
-              label={t('auth.passkey.deleteBtn')}
-              onPress={() => confirmDelete(item)}
-              disabled={busy}
-            />
-          </View>
-        ))}
-        {error && (
-          <Text role="alert" variant="caption" style={styles.error}>
-            {error}
-          </Text>
-        )}
-        <Button
-          label={busy ? t('auth.passkey.workingBtn') : t('auth.passkey.addBtn')}
-          onPress={() => void change(addPasskey)}
-          disabled={busy}
-        />
-      </View>
-    </Sheet>
+    <Screen fit>
+      <Page title={t('auth.passkey.title')} onClose={() => router.back()}>
+        <ListSection footer={t('auth.passkey.subtitle')}>
+          {items === null && !error ? (
+            <ListRow title={t('common.loading')} disabled />
+          ) : items?.length === 0 ? (
+            <ListRow title={t('auth.passkey.empty')} disabled />
+          ) : (
+            items?.map((item) => (
+              <ListRow
+                key={item.id}
+                title={name(item)}
+                subtitle={t('auth.passkey.added', { date: added(item) })}
+                icon="lock"
+                accessory={busy ? undefined : remove(item)}
+                swipeActions={busy ? undefined : [remove(item)]}
+              />
+            ))
+          )}
+        </ListSection>
+        <ListSection footer={error ?? undefined}>
+          <ListRow
+            title={busy ? t('auth.passkey.workingBtn') : t('auth.passkey.addBtn')}
+            icon="add"
+            iconColor={color.primary}
+            chevron={false}
+            disabled={busy}
+            onPress={() => void change(addPasskey)}
+          />
+        </ListSection>
+      </Page>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  body: { gap: space.md },
-  item: { gap: space.xxs },
-  muted: { color: color.onSurfaceVariant },
-  error: { color: color.error },
-});

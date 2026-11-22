@@ -4,77 +4,6 @@ Durable IndexedDB outbox for offline mutations: one coalesced entry per entity, 
 
 ## Requirements
 
-### Requirement: Offline mutations are queued durably, coalesced per entity
-
-The system SHALL persist offline mutations to a durable IndexedDB queue holding at
-most **one entry per entity**, carrying a serializable representation of the
-entity's final desired state (or a delete) plus any binary payload (e.g. a GPX
-file), sufficient to replay it as a single idempotent operation. Repeated offline
-mutations of the same entity SHALL coalesce into that one entry. Entries SHALL carry
-an ordering key so that, across different entities, replay honours foreign-key
-dependencies. The mutation of local state and its queue entry SHALL be persisted
-atomically (a single transaction), so cached state and the queue never disagree.
-
-A mutation SHALL also be queued — not attempted against the server — whenever the
-current session is unverified (restored from storage without a successful token
-refresh), regardless of the reachability signal. A write attempted on an unverified
-session would be rejected by the server and lost to an error state; queueing it keeps
-the user's edit durable until the session is real.
-
-#### Scenario: Write while the session is unverified but the device reports online
-
-- **WHEN** the user edits an entity while the app is running on a restored session whose
-  token refresh has not yet succeeded, and the connectivity signal reports online
-- **THEN** the mutation SHALL be queued and applied optimistically exactly as an offline
-  write, and SHALL NOT be sent to the server or surfaced as a failed edit
-
-#### Scenario: Queue persists across reloads
-
-- **WHEN** a mutation is queued offline and the app is closed and reopened
-- **THEN** the queued entry is still present and pending replay, consistent with the
-  cached state
-
-#### Scenario: Create then edit coalesce to one entry
-
-- **WHEN** an entity is created offline and then edited offline
-- **THEN** the queue holds a single entry for it representing the final state, which
-  replays as one idempotent create
-
-#### Scenario: Create then delete annihilate
-
-- **WHEN** an entity is created offline and then deleted offline
-- **THEN** its queue entry is removed entirely and nothing is replayed for it (the
-  row never reached the server)
-
-#### Scenario: Edit then revert to the server baseline annihilate
-
-- **WHEN** a field is edited offline and then edited back to its last-synced server
-  value (e.g. a notification toggle flipped and flipped back)
-- **THEN** the coalesced update nets to the pre-edit snapshot, its queue entry is
-  removed, and nothing shows as pending or replays
-
-#### Scenario: Notification preferences are queued offline
-
-- **WHEN** the email notification preference or a per-type mute is toggled offline
-- **THEN** the change is applied optimistically, queued under its own `notif-prefs`
-  entry, and replayed on reconnect
-
-#### Scenario: Push toggle is not queued
-
-- **WHEN** the user is offline
-- **THEN** the per-device push toggle is disabled — subscribing needs the network, and
-  push is a property of this browser, not a synced preference
-
-#### Scenario: Cross-entity dependency order
-
-- **WHEN** a contact is created offline and a tour referencing it is created offline
-- **THEN** on replay the contact is written before the tour
-
-#### Scenario: Binary payload retained
-
-- **WHEN** an offline tour creation includes a GPX file
-- **THEN** the file is stored with the queue entry and uploaded on replay
-
 ### Requirement: Offline mutations can be discarded with immediate revert
 
 The system SHALL let the user discard a pending or dead-lettered offline mutation
@@ -258,3 +187,21 @@ entries dependent on a dead-lettered create SHALL also be dead-lettered.
 
 - **WHEN** the user discards a dead-lettered mutation
 - **THEN** its optimistic local state is reconciled away on the next refetch
+
+### Requirement: Durable coalesced outbox on native
+On iOS and Android offline mutations SHALL be stored in the app's database with at most one entry per entity, holding the entity's final desired state (or a delete) and any staged file, with an ordering key that honours foreign-key dependencies; the optimistic state, the entry and the cache SHALL be written in one transaction.
+
+#### Scenario: Three edits, one write
+- **WHEN** the user edits the same tour three times offline
+- **THEN** one entry holds the last state and one write replays
+
+### Requirement: The outbox survives the app on native
+The outbox SHALL survive the app being killed and drain when the device becomes reachable, when the app returns to the foreground and when Realtime subscribes. Writes on the web SHALL never queue: they fail with a clear message while offline. A queue left by a signed-out user SHALL never replay under another user.
+
+#### Scenario: Kill during drain
+- **WHEN** the app is killed while replaying queued writes and started again online
+- **THEN** each remaining write replays exactly once, in order
+
+#### Scenario: Switch user with a queue
+- **WHEN** user A signs out with queued writes and user B signs in
+- **THEN** A's writes are not sent with B's session
