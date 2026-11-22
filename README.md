@@ -30,7 +30,7 @@ Builds default to the `dev` variant ("TourenBuddy Dev", `ch.tourenbuddy.app.dev`
 `APP_VARIANT=prod` selects the store identity ("TourenBuddy", `ch.tourenbuddy.app`).
 The variant changes the bundle identifier, so regenerate the native projects when you switch: `npx expo prebuild --clean`.
 `ios/` and `android/` are generated from `app.config.ts` and never committed; change native settings there or in a config plugin.
-Releases, store builds and web previews run on GitHub Actions and EAS: see [docs/publishing.md](./docs/publishing.md).
+Releases and store builds run on GitHub Actions and EAS: see [docs/publishing.md](./docs/publishing.md).
 
 ## Backend
 

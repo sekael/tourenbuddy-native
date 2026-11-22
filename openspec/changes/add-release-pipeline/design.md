@@ -13,7 +13,7 @@ build quota with a queue. The Vue repo's `release.yml`, `deploy-preview.yml` and
 
 **Goals:**
 
-- One merge of the release PR produces the web deploy and both store builds, with no manual version
+- One merge of the release PR produces the `public/` deploy and the store builds, with no manual version
   or build number edits.
 - A pull request that would break a native build, or quietly add a permission, fails before merge.
 - Mergeable now; each part starts working when its account and secrets exist.
@@ -55,22 +55,21 @@ number in git.
 `release.yml` on push to `main`: release-please (`node`, the Vue repo's config). When a release is
 created:
 
-- **web:** `npx expo export --platform web` with `EXPO_PUBLIC_SUPABASE_URL` and
-  `EXPO_PUBLIC_SUPABASE_ANON_KEY` from the secrets, then `wrangler pages deploy dist` to the
-  `tourenbuddy-native` project's production branch. A new project, because the PWA keeps
-  `tourenbuddy` until the cutover (Phase 7).
-- **native:** `eas build --platform all --profile production --non-interactive --no-wait
-  --auto-submit`. The `production` profile reads the same two variables from EAS's `production`
-  environment. Submission goes to TestFlight and the Play internal track as a draft release; a Play
-  app that was never reviewed only accepts drafts, and the owner promotes it in the Console.
+- **site:** `wrangler pages deploy public` to the `tourenbuddy-native` project's production
+  branch (the apex `tourenbuddy.ch`): legal pages, association file, `app-config.json`. No web
+  app (#346 D21, 2026-11-22: the web stays the Vue PWA; this repository releases no web app, Expo web port in sekael/tourenbuddy_frontend_vue#386). A project of its own: the PWA keeps `tourenbuddy`.
+- **native:** `eas build --platform ios --profile production --non-interactive --no-wait
+  --auto-submit`. The `production` profile reads the Supabase variables from EAS's `production`
+  environment. Submission goes to TestFlight. iOS ships first (2026-11-22): Android has no upload
+  keystore yet, and `--non-interactive` will not generate one. With Google Play set up, the job
+  goes back to `--platform all` and also submits to the Play internal track as a draft release; a
+  Play app that was never reviewed only accepts drafts, and the owner promotes it in the Console.
 
 Each job checks for its secrets first and ends with a notice when they are missing.
 
 ### Previews
 
-`preview.yml` and `preview-cleanup.yml` are the Vue workflows with the native export: same branch
-slug rules (the head ref goes through `env`, never inline), same sticky comment, deletion through
-the Pages API on close. Previews use the production backend, as Vue's do; the comment says so.
+Removed 2026-11-22 with the web release (#346 D21).
 
 ### Permission review
 

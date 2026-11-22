@@ -5,8 +5,9 @@ Canonical project context for all coding agents working in this repository.
 ## Project
 
 TourenBuddy is a tour-planning app. Users pin tour objectives on a Swiss topo map (Swisstopo), link
-contacts, and pick planned dates. This repository holds the iOS, Android and web clients, built with
-React Native and Expo. They replace the Vue PWA in `sekael/tourenbuddy_frontend_vue`.
+contacts, and pick planned dates. This repository holds the iOS and Android apps (iOS first), built with
+React Native and Expo. The web app stays the Vue PWA in `sekael/tourenbuddy_frontend_vue`
+(2026-11-22): the web build here runs locally only (development, reviews) and is never released.
 
 The plan lives in that repo's issues: epic sekael/tourenbuddy_frontend_vue#346 (decision IDs
 D1–D20, risks, architecture) and one issue per phase, #367 (Phase 0, done) to #374 in the same repo.
