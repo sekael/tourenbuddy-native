@@ -43,12 +43,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx expo prebuild --platform ios
+      # arm64 only: a Release build for the Simulator otherwise compiles every architecture
+      # (x86_64 too), twice the work for a check that only has to build.
       - name: Release build (Simulator)
         run: >
           xcodebuild -quiet
           -workspace ios/TourenBuddy.xcworkspace -scheme TourenBuddy -configuration Release
           -sdk iphonesimulator -destination 'generic/platform=iOS Simulator'
-          -derivedDataPath ios/build CODE_SIGNING_ALLOWED=NO build
+          -derivedDataPath ios/build CODE_SIGNING_ALLOWED=NO ARCHS=arm64 build
       # The built Info.plist: a build phase strips the dev launcher's local network keys from it.
       - name: Permission review
         run: |
