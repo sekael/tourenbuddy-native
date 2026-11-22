@@ -156,9 +156,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-sharing',
     // Push (D11): the APNs entitlement; the environment follows the signing profile.
     ['expo-notifications', { color: '#2563eb' }],
-    // The system contact picker runs out of process and needs no Contacts permission; `false`
-    // drops the plugin's NSContactsUsageDescription (Android: blockedPermissions above).
-    ['expo-contacts', { contactsPermission: false }],
+    // The system contact picker runs out of process and never asks for the Contacts permission.
+    // App Store Connect still rejects a binary without the usage string, as the library links the
+    // Contacts APIs (ITMS-90683): localized through `locales` above. Android: blockedPermissions.
+    [
+      'expo-contacts',
+      {
+        contactsPermission:
+          'TourenBuddy imports the contacts you pick into your contacts in TourenBuddy.',
+      },
+    ],
     // Photo attachments: the usage strings are localized through `locales` above.
     [
       'expo-image-picker',

@@ -10,5 +10,9 @@
     "ch.tourenbuddy.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
     "com.google.android.c2dm.permission.RECEIVE"
   ],
-  "ios": ["NSCameraUsageDescription", "NSPhotoLibraryUsageDescription"]
+  "ios": [
+    "NSCameraUsageDescription",
+    "NSContactsUsageDescription",
+    "NSPhotoLibraryUsageDescription"
+  ]
 }
