@@ -1,3 +1,9 @@
+## Purpose
+
+How the app gets and keeps the user's acceptance of the terms of use: the acceptance page before
+any use, acceptance again after a change, apps that cannot accept, offline use, edits saved before
+the acceptance, the line at sign-up, and wording that does not invite reliance.
+
 ## ADDED Requirements
 
 ### Requirement: The terms are accepted before the app is used

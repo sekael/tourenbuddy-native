@@ -1,3 +1,9 @@
+## Purpose
+
+The public pages on `tourenbuddy.ch` that the apps and the store listings rely on: the legal pages
+in English and German, the account deletion page, the published app configuration, and the
+association file for links and passkeys.
+
 ## ADDED Requirements
 
 ### Requirement: Legal pages in both languages
