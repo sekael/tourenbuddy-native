@@ -18,6 +18,8 @@ export default function AuthLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
+      {/* A light page with its own close button: the photo's white bar would vanish on it. */}
+      <Stack.Screen name="legal" options={{ headerShown: false, presentation: 'modal' }} />
     </Stack>
   );
 }

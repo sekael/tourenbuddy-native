@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 
 import { Button } from '@/core/adaptive/button';
+import { linkMark, LinkedText } from '@/core/adaptive/linked-text';
 import { Text } from '@/core/adaptive/text';
 import { TextField, type TextFieldHandle } from '@/core/adaptive/text-field';
 import { createLogger } from '@/core/logging/logger';
@@ -100,8 +101,24 @@ export function SignUpScreen({ initialEmail = '' }: { initialEmail?: string }) {
         onPress={create}
         disabled={sending}
       />
+      {/* terms-acceptance: both documents before the address is sent, readable in the app. */}
+      <LinkedText
+        variant="caption"
+        style={styles.note}
+        text={t('terms.signUpNote', { terms: linkMark('terms'), privacy: linkMark('privacy') })}
+        links={{
+          terms: { label: t('terms.termsLink'), onPress: () => openLegal('terms') },
+          privacy: { label: t('terms.privacyLink'), onPress: () => openLegal('privacy') },
+        }}
+      />
     </AuthHero>
   );
 }
 
-const styles = StyleSheet.create({ error: { color: color.error } });
+const openLegal = (name: 'terms' | 'privacy') =>
+  router.push({ pathname: '/auth/legal', params: { name } });
+
+const styles = StyleSheet.create({
+  error: { color: color.error },
+  note: { color: color.onSurfaceVariant },
+});

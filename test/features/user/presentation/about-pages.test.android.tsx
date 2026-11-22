@@ -2,16 +2,23 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { Alert, Linking } from 'react-native';
 
 import '@/core/i18n';
-import { AboutPage } from '@/features/user/presentation/about-pages';
+import { AboutPage, OPERATOR } from '@/features/user/presentation/about-pages';
 
 describe('AboutPage', () => {
   beforeEach(() => jest.restoreAllMocks());
 
-  it('should leave out the imprint\'s "operated by" lines while no operator is filled in', async () => {
+  it('should name the operator in the imprint, with no placeholder left', async () => {
     await render(<AboutPage name="imprint" />);
 
-    expect(screen.getByText('Imprint')).toBeOnTheScreen();
-    expect(screen.queryByText(/operated by/)).toBeNull();
+    expect(
+      screen.getByText(
+        [
+          'TourenBuddy is a private, non-commercial project operated by:',
+          ...OPERATOR,
+          'Switzerland',
+        ].join('\n'),
+      ),
+    ).toBeOnTheScreen();
     expect(screen.queryByText(/\[/)).toBeNull();
   });
 

@@ -16,7 +16,7 @@ Privacy: controller (the owner), data and purposes from #346 section 9's table, 
 consent for push, legitimate interest for safety reports), recipients and processors with their
 locations (Supabase, Cloudflare, Brevo, Twilio for SMS codes, Apple for push on iOS, Google for push
 on Android, swisstopo for map tiles), retention (inbox 90 days, everything else until deletion,
-reports anonymized), rights under FADP and GDPR, the deletion path, no tracking, contact. Terms:
+reports anonymized), rights under FADP (Switzerland only since 2026-11-22: no GDPR), the deletion path, no tracking, contact. Terms:
 service, account, user content and friends-only sharing, acceptable use and reporting, availability,
 liability for mountain tours (planning aid only), Swiss law. Imprint: name, address placeholder,
 email.

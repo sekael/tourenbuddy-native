@@ -7,6 +7,7 @@ import {
   CalendarSyncPage,
 } from '@/features/calendar/presentation/calendar-sync-page';
 import { NotificationSettingsPage } from '@/features/notifications/presentation/notification-settings-page';
+import { useTermsEffective } from '@/features/terms/presentation/stores/terms-store';
 import { AboutPage } from '@/features/user/presentation/about-pages';
 import {
   EditProfilePage,
@@ -22,6 +23,7 @@ export default function ProfileTab() {
   const [path, setPath] = useState<string[]>([]);
   const pop = () => setPath((p) => p.slice(0, -1));
   const push = (page: string) => setPath((p) => [...p, page]);
+  const effective = useTermsEffective();
 
   // A link's page opens once per link (state adjusted while rendering, not in an effect).
   const [opened, setOpened] = useState<string | undefined>(undefined);
@@ -41,7 +43,7 @@ export default function ProfileTab() {
         if (value === 'sync') return <CalendarSyncPage onHelp={() => push('sync-help')} />;
         if (value === 'sync-help') return <CalendarFeedHelpPage />;
         if (value === 'privacy' || value === 'terms' || value === 'imprint')
-          return <AboutPage name={value} />;
+          return <AboutPage name={value} effective={value === 'imprint' ? null : effective} />;
         return null;
       }}
     >

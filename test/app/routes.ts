@@ -6,6 +6,7 @@ import ProfileTab from '@/app/(tabs)/profile';
 // The whole module, so `renderRouter` also reads its `unstable_settings` (the tabs anchor).
 import * as RootLayout from '@/app/_layout';
 import AuthLayout from '@/app/auth/_layout';
+import LegalRoute from '@/app/auth/legal';
 import SignInRoute from '@/app/auth/index';
 import SignUpRoute from '@/app/auth/sign-up';
 import VerifyOtpRoute from '@/app/auth/verify-otp';
@@ -31,6 +32,7 @@ import ToursRoute from '@/app/tours';
 import TrailRoute from '@/app/trail';
 import SyncIssuesSheet from '@/app/sync-issues';
 import WelcomeSheet from '@/app/welcome';
+import AcceptTermsRoute from '@/app/accept-terms';
 
 /** The app's real route tree for `renderRouter` (platform files resolve per test project). */
 export const routes = {
@@ -66,4 +68,6 @@ export const routes = {
   'auth/index': SignInRoute,
   'auth/sign-up': SignUpRoute,
   'auth/verify-otp': VerifyOtpRoute,
+  'auth/legal': LegalRoute,
+  'accept-terms': AcceptTermsRoute,
 };

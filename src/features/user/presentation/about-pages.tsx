@@ -16,11 +16,10 @@ type AboutDoc = {
 };
 
 /**
- * The operator's name, street and postcode with place, as the imprint names them. Empty until the
- * owner fills them in (here and in `public/imprint`, `public/de/imprint`); until then the imprint
- * leaves out its "operated by" lines rather than show placeholders.
+ * The operator's lines, as `public/imprint` and `public/de/imprint` name them. Empty leaves out the
+ * imprint's "operated by" lines rather than show placeholders.
  */
-export const OPERATOR: readonly string[] = [];
+export const OPERATOR: readonly string[] = ['Selim Kälin', '3904 Naters'];
 
 const EMAIL = /([\w.+-]+@[\w-]+(?:\.[\w-]+)+)/;
 
@@ -32,8 +31,18 @@ const EMAIL = /([\w.+-]+@[\w-]+(?:\.[\w-]+)+)/;
  * A document of the app's own, not a system list: in a SwiftUI list a long paragraph got a row a
  * line too short and was cut, both as hosted text and as system text (German hyphenation).
  */
-export function AboutPage({ name }: { name: AboutPageName }) {
-  const { t } = useTranslation();
+export function AboutPage({
+  name,
+  onClose,
+  effective,
+}: {
+  name: AboutPageName;
+  /** Shown on its own (from sign-up): a close button. */
+  onClose?: () => void;
+  /** A newer text than the one in force (terms-acceptance): the date it takes effect. */
+  effective?: string | null;
+}) {
+  const { t, i18n } = useTranslation();
   const doc = t(`about.${name}`, { returnObjects: true }) as unknown as AboutDoc;
   const mail = (address: string) =>
     void Linking.openURL(`mailto:${address}`).catch(() =>
@@ -43,6 +52,7 @@ export function AboutPage({ name }: { name: AboutPageName }) {
   return (
     <Page
       title={doc.title}
+      onClose={onClose}
       body={
         <ScrollView
           style={styles.page}
@@ -85,6 +95,17 @@ export function AboutPage({ name }: { name: AboutPageName }) {
               </View>
             </View>
           ))}
+          {effective ? (
+            <Text variant="caption" style={styles.updated}>
+              {t('terms.effective', {
+                date: new Date(`${effective}T00:00:00`).toLocaleDateString(i18n.language, {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                }),
+              })}
+            </Text>
+          ) : null}
           <Text variant="caption" style={styles.updated}>
             {doc.updated}
           </Text>

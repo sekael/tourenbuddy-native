@@ -34,6 +34,10 @@ const STORE_SEARCH = {
   android: 'https://play.google.com/store/search?q=TourenBuddy&c=apps',
 };
 
+/** Where to update the app on this platform when no store URL is configured. */
+export const storeSearchUrl = (os: string) =>
+  os === 'android' ? STORE_SEARCH.android : STORE_SEARCH.ios;
+
 const log = createLogger('UpdateGate');
 
 /** -1, 0 or 1 by numeric major.minor.patch; missing parts count as 0, a pre-release tag is ignored. */

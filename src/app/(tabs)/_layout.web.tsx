@@ -17,25 +17,28 @@ export default function TabsLayout() {
   const { t } = useTranslation();
   const rail = useBreakpoint() !== 'compact';
 
+  // `Tabs` finds its tabs only in a `TabList` that is its direct child: the bar goes inside it.
   const nav = (
-    <SafeAreaView edges={rail ? ['left'] : ['bottom']} style={rail ? styles.rail : styles.bar}>
-      <TabList asChild>
-        <View role="tablist" style={rail ? styles.railItems : styles.barItems}>
-          <TabTrigger name="index" href="/" asChild>
-            <NavItem icon="map" label={t('shell.tabs.map')} />
-          </TabTrigger>
-          <TabTrigger name="calendar" href="/calendar" asChild>
-            <NavItem icon="calendar" label={t('shell.tabs.calendar')} />
-          </TabTrigger>
-          <TabTrigger name="contacts" href="/contacts" asChild>
-            <NavItem icon="contacts" label={t('shell.tabs.contacts')} />
-          </TabTrigger>
-          <TabTrigger name="profile" href="/profile" asChild>
-            <NavItem icon="profile" label={t('shell.tabs.profile')} />
-          </TabTrigger>
-        </View>
-      </TabList>
-    </SafeAreaView>
+    <TabList asChild>
+      <SafeAreaView
+        role="tablist"
+        edges={rail ? ['left'] : ['bottom']}
+        style={rail ? styles.rail : styles.bar}
+      >
+        <TabTrigger name="index" href="/" asChild>
+          <NavItem icon="map" label={t('shell.tabs.map')} />
+        </TabTrigger>
+        <TabTrigger name="calendar" href="/calendar" asChild>
+          <NavItem icon="calendar" label={t('shell.tabs.calendar')} />
+        </TabTrigger>
+        <TabTrigger name="contacts" href="/contacts" asChild>
+          <NavItem icon="contacts" label={t('shell.tabs.contacts')} />
+        </TabTrigger>
+        <TabTrigger name="profile" href="/profile" asChild>
+          <NavItem icon="profile" label={t('shell.tabs.profile')} />
+        </TabTrigger>
+      </SafeAreaView>
+    </TabList>
   );
 
   return (
@@ -80,20 +83,26 @@ const styles = StyleSheet.create({
   column: { flex: 1 },
   row: { flex: 1, flexDirection: 'row' },
   slot: { flex: 1 },
-  bar: { backgroundColor: color.surface, borderTopWidth: 1, borderTopColor: color.divider },
-  barItems: {
+  // One style object each: `TabList`'s slot spreads its child's style, so an array breaks it.
+  bar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingVertical: space.sm,
+    backgroundColor: color.surface,
+    borderTopWidth: 1,
+    borderTopColor: color.divider,
   },
+  // TabList lays its child out as a row; the rail stacks.
   rail: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: space.md,
     width: 88,
+    paddingTop: space.xl,
     backgroundColor: color.surface,
     borderRightWidth: 1,
     borderRightColor: color.divider,
   },
-  // TabList lays its child out as a row; the rail stacks.
-  railItems: { flexDirection: 'column', alignItems: 'center', gap: space.md, paddingTop: space.xl },
   item: { alignItems: 'center', gap: space.xxs, minWidth: 64 },
   indicator: {
     width: 64,

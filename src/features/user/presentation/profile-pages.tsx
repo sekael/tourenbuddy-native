@@ -54,39 +54,12 @@ function usePhone() {
 }
 
 /**
- * The Profile tab (user-profile): who the user is (as the PWA's identity card, opening the edit
- * page), the inbox, notifications, calendar sync and language, the pace, password and passkeys, the
- * guided tour and feedback, «Über» (privacy, terms, imprint, inside the app), sign-out and account
- * deletion, as iOS Settings lays such a list out.
+ * Account deletion with its confirmation (account-deletion): from Profile, and from the terms page
+ * for a user who would rather leave than accept. Signs out once the account is gone.
  */
-export function ProfilePage({ onPush }: { onPush: (page: string) => void }) {
-  const { t, i18n } = useTranslation();
-  const profile = useUserProfileStore((s) => s.profile);
-  const email = useAuthStore((s) => s.user?.email);
-  const { phone, verified } = usePhone();
-  const attention = useInboxAttention();
-  const prefs = useNotificationsStore((s) => s.prefs);
-  const pushEnabled = useNotificationsStore((s) => s.pushEnabled);
-  const feeds = useCalendarFeedStore((s) => s.feeds);
+export function useDeleteAccount() {
+  const { t } = useTranslation();
   const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
-    void useCalendarFeedStore.getState().loadFeeds();
-  }, []);
-
-  const name = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ');
-  const notificationSummary =
-    pushEnabled && prefs?.notifEmailEnabled
-      ? 'pushAndEmail'
-      : pushEnabled
-        ? 'push'
-        : prefs?.notifEmailEnabled
-          ? 'email'
-          : 'off';
-  const feedProblem = feeds.some((f) => f.lastError);
-  const phoneLine = phone
-    ? `${phone} · ${verified ? t('user.profile.verifiedTooltip') : t('user.profile.notVerified')}`
-    : t('user.profile.addPhoneBtn');
 
   function confirmDeleteAccount() {
     if (!isReachable()) {
@@ -126,6 +99,44 @@ export function ProfilePage({ onPush }: { onPush: (page: string) => void }) {
     await useAuthStore.getState().signOut();
     Alert.alert(t('user.profile.deleteAccount.done'));
   }
+
+  return { deleting, confirmDeleteAccount };
+}
+
+/**
+ * The Profile tab (user-profile): who the user is (as the PWA's identity card, opening the edit
+ * page), the inbox, notifications, calendar sync and language, the pace, password and passkeys, the
+ * guided tour and feedback, «Über» (privacy, terms, imprint, inside the app), sign-out and account
+ * deletion, as iOS Settings lays such a list out.
+ */
+export function ProfilePage({ onPush }: { onPush: (page: string) => void }) {
+  const { t, i18n } = useTranslation();
+  const profile = useUserProfileStore((s) => s.profile);
+  const email = useAuthStore((s) => s.user?.email);
+  const { phone, verified } = usePhone();
+  const attention = useInboxAttention();
+  const prefs = useNotificationsStore((s) => s.prefs);
+  const pushEnabled = useNotificationsStore((s) => s.pushEnabled);
+  const feeds = useCalendarFeedStore((s) => s.feeds);
+  const { deleting, confirmDeleteAccount } = useDeleteAccount();
+
+  useEffect(() => {
+    void useCalendarFeedStore.getState().loadFeeds();
+  }, []);
+
+  const name = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ');
+  const notificationSummary =
+    pushEnabled && prefs?.notifEmailEnabled
+      ? 'pushAndEmail'
+      : pushEnabled
+        ? 'push'
+        : prefs?.notifEmailEnabled
+          ? 'email'
+          : 'off';
+  const feedProblem = feeds.some((f) => f.lastError);
+  const phoneLine = phone
+    ? `${phone} · ${verified ? t('user.profile.verifiedTooltip') : t('user.profile.notVerified')}`
+    : t('user.profile.addPhoneBtn');
 
   return (
     <Page largeTitle title={t('user.profile.title')}>

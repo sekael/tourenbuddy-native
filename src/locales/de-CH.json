@@ -1012,7 +1012,8 @@
       "offline": "Für Routendetails braucht es eine Verbindung",
       "lookupError": "Routeninfo konnte nicht geladen werden",
       "planTour": "Als Tour planen",
-      "ascentTime": "Aufstiegszeit"
+      "ascentTime": "Aufstiegszeit",
+      "source": "Angaben aus den Skitourendaten von swisstopo, erstellt mit dem SAC. Prüfe vor der Tour die aktuellen Verhältnisse."
     },
     "cluster": {
       "label": "Cluster aus {{count}} Touren",
@@ -1133,7 +1134,7 @@
     },
     "credit": {
       "title": "Kartendaten",
-      "body": "Karten, Wanderwege und Skitouren: © swisstopo, Bundesamt für Landestopografie."
+      "body": "Karten und Wanderwege: © swisstopo, Bundesamt für Landestopografie. Skitouren: © swisstopo, mit dem SAC."
     }
   },
   "i18n": {
@@ -1309,11 +1310,11 @@
       },
       "addLocation": {
         "title": "Tour planen",
-        "body": "Tippe hier und dann auf der Karte auf Start, Ziel und Ende – oder suche sie. Jeder Weg folgt den Wanderwegen oder Skitouren seiner Aktivität, ein Flug gerade zum Landeplatz, und wird dein Track; halte und ziehe einen Punkt oder die Mitte einer Linie, um den Weg zu ändern. Mit Übernachtung planst du mit «Nächster Tag» gleich die nächste Etappe."
+        "body": "Tippe hier und dann auf der Karte auf Start, Ziel und Ende – oder suche sie. Jeder Weg folgt, wo möglich, den Wanderwegen oder Skitouren seiner Aktivität, ein Flug gerade zum Landeplatz, und wird dein Track: Prüfe ihn vor der Tour; halte und ziehe einen Punkt oder die Mitte einer Linie, um den Weg zu ändern. Mit Übernachtung planst du mit «Nächster Tag» gleich die nächste Etappe."
       },
       "mapLayers": {
         "title": "Kartenebenen",
-        "body": "Der runde Kartenknopf unten rechts zeigt jede Grundkarte und Überlagerung als Vorschau: Wähle eine Grundkarte und blende Wanderwege oder Skitouren darüber ein, in beliebiger Kombination. Mit Skitouren zoomst du hinein, bis die Routen Schwierigkeits-Badges zeigen, und tippst dann für Details auf eine Route – oder planst sie gleich als Tour. Die Legende dort erklärt die Farben und Symbole der Tourenmarker."
+        "body": "Der runde Kartenknopf unten rechts zeigt jede Grundkarte und Überlagerung als Vorschau: Wähle eine Grundkarte und blende Wanderwege oder Skitouren darüber ein, in beliebiger Kombination. Mit Skitouren zoomst du hinein, bis die Routen ihre Schwierigkeit zeigen, wie die Datenquelle sie angibt, und tippst dann für Details auf eine Route – oder planst sie gleich als Tour. Die Legende dort erklärt die Farben und Symbole der Tourenmarker."
       },
       "welcome": {
         "title": "Willkommen",
@@ -1371,8 +1372,8 @@
     },
     "index": {
       "intro": "Das kann TourenBuddy. Tippe auf eine Zeile, um dorthin zu gelangen.",
-      "addLocation": "Tippe Start, Ziel und Ende auf die Karte oder suche danach. Die Route folgt den Wegen deiner Aktivität, ein Flug gerade zum Landeplatz.",
-      "mapLayers": "Wähle eine Grundkarte und blende Wanderwege oder Skitouren mit ihrer Schwierigkeit ein.",
+      "addLocation": "Tippe Start, Ziel und Ende. Prüfe die Route vor der Tour.",
+      "mapLayers": "Wanderwege oder Skitouren, Schwierigkeit laut Datenquelle.",
       "offlineMap": "Lade eine Region oder die ganze Schweiz herunter, bevor du losziehst.",
       "tours": "Deine Touren und die deiner Freunde, als Liste oder auf der Karte.",
       "addContact": "Füge Personen aus deinem Adressbuch oder von Hand hinzu und verknüpfe sie mit deinen Touren.",
@@ -1566,7 +1567,7 @@
         },
         "details": {
           "title": "Routendetails mit einem Tipp",
-          "body": "Tippe auf eine markierte Route für Gipfel, Aufstiegszeit, Höhenmeter und Schwierigkeit, samt Link ins SAC-Tourenportal. Wo sich Routen überlagern, wählst du eine aus der Liste."
+          "body": "Tippe auf eine markierte Route für Gipfel, Aufstiegszeit, Höhenmeter und Schwierigkeit, wie der SAC sie angibt, samt Link ins SAC-Tourenportal. Wo sich Routen überlagern, wählst du eine aus der Liste."
         }
       }
     },
@@ -1649,7 +1650,7 @@
         {
           "rows": [
             {
-              "text": "Mit TourenBuddy planst du Bergtouren mit deinen Freunden, auf dem iPhone, auf Android und im Web. Hier steht, welche Personendaten wir bearbeiten, wozu, und was du tun kannst. Sie folgt dem Schweizer Datenschutzgesetz (DSG) und, wo sie gilt, der EU-Datenschutz-Grundverordnung (DSGVO)."
+              "text": "Mit TourenBuddy planst du Bergtouren mit deinen Freunden, auf dem iPhone, auf Android und im Web. TourenBuddy ist ein kostenloses, nicht kommerzielles Projekt und wird in der Schweiz angeboten. Hier steht, welche Personendaten wir bearbeiten, wozu, und was du tun kannst. Sie folgt dem Schweizer Datenschutzgesetz (DSG)."
             }
           ]
         },
@@ -1657,7 +1658,7 @@
           "title": "Verantwortlich",
           "rows": [
             {
-              "text": "Die im Impressum genannte Betreiberin („wir“). Schreib an feedback@tourenbuddy.ch für alles zu deinen Daten."
+              "text": "Selim Kälin, 3904 Naters, Schweiz („wir“). Für alles zu deinen Daten schreib an feedback@tourenbuddy.ch."
             }
           ]
         },
@@ -1693,22 +1694,18 @@
               "text": "Damit TourenBuddy sicher bleibt"
             },
             {
+              "label": "Deine Zustimmung zu den Nutzungsbedingungen: Version, Zeitpunkt und die E-Mail-Adresse deines Kontos",
+              "text": "Damit wir belegen können, dass du sie akzeptiert hast. Wir bewahren sie auf, solange dein Konto besteht, und 10 Jahre nach dessen Löschung, um uns gegen Ansprüche zu verteidigen."
+            },
+            {
               "label": "Im Web: deine Anmeldung und deine Sprachwahl",
-              "text": "Im Local Storage deines Browsers gespeichert, damit du angemeldet bleibst und die App in deiner Sprache zeigt. Der Dienst braucht das, deshalb fragen wir nicht um Einwilligung. Wir setzen keine Tracking-Cookies."
+              "text": "Im Local Storage deines Browsers gespeichert, damit du angemeldet bleibst und die App in deiner Sprache zeigt. Das ist für den Dienst unbedingt nötig, deshalb fragen wir nicht um Einwilligung. Wir setzen keine Tracking-Cookies."
             },
             {
               "text": "Die Karte kommt direkt von swisstopo: Dein Gerät lädt Kartenkacheln und Ortsnamen bei swisstopo, das dabei deine IP-Adresse und den angezeigten Ausschnitt sieht. Das ist nicht mit deinem Konto verknüpft. Die App verwendet deinen Standort nicht."
             },
             {
               "text": "Wir verwenden keine Werbung, keine Analyse und kein Tracking, und wir verkaufen keine Daten."
-            }
-          ]
-        },
-        {
-          "title": "Rechtsgrundlagen",
-          "rows": [
-            {
-              "text": "Wo die DSGVO gilt: die Erbringung des Dienstes, für den du dich angemeldet hast (Art. 6 Abs. 1 lit. b), deine Einwilligung für Push-Benachrichtigungen und den Kontaktimport (Art. 6 Abs. 1 lit. a) sowie unser berechtigtes Interesse an einem sicheren Dienst für Meldungen und Blockierungen (Art. 6 Abs. 1 lit. f)."
             }
           ]
         },
@@ -1740,7 +1737,7 @@
               "text": "Kartenkacheln, Ortsnamen, Höhen und Routenprofile, von deinem Gerät abgerufen. Höhen- und Profilabfragen enthalten die Koordinaten deiner geplanten Route."
             },
             {
-              "text": "Einige davon bearbeiten Daten ausserhalb der Schweiz und der EU, insbesondere in den USA. Wo der Empfänger nach dem EU-US- und Swiss-US-Data-Privacy-Framework zertifiziert ist, stützt sich die Übermittlung darauf, sonst auf Standardvertragsklauseln mit dem Schweizer Zusatz."
+              "text": "Supabase speichert die Daten der App in der Schweiz (Zürich). Supabase, Cloudflare, Twilio, Apple und Google sind US-Unternehmen; von den USA aus kann auf Daten zugegriffen werden. Cloudflare kann Daten zudem auf Servern in weiteren Ländern verarbeiten. In die EU gehen Daten nur zu Brevo, mit Sitz in Frankreich. Für die USA stützt sich jede Übermittlung auf das Swiss-US-Data-Privacy-Framework, wo der Empfänger danach zertifiziert ist, sonst auf Standardvertragsklauseln mit dem Schweizer Zusatz. Die EU-Staaten haben nach Schweizer Recht einen angemessenen Datenschutz."
             }
           ]
         },
@@ -1748,7 +1745,7 @@
           "title": "Wie lange wir Daten aufbewahren",
           "rows": [
             {
-              "text": "So lange dein Konto besteht. Einträge im Eingang werden nach 90 Tagen gelöscht. Löschst du dein Konto, wird alles gelöscht, ausser Meldungen, die ohne Bezug zu dir bleiben (siehe Konto löschen)."
+              "text": "So lange dein Konto besteht. Einträge im Eingang werden nach 90 Tagen gelöscht. Löschst du dein Konto, löschen wir deine Daten, ausser: Meldungen, die ohne Bezug zu dir bleiben; Einträgen, die andere Personen selbst über dich gemacht haben, etwa dich als Kontakt in ihrem Adressbuch; und dem Nachweis deiner Zustimmung zu den Nutzungsbedingungen, den wir 10 Jahre nach dem Löschen aufbewahren, um uns gegen Ansprüche zu verteidigen (siehe Konto löschen)."
             }
           ]
         },
@@ -1756,7 +1753,7 @@
           "title": "Deine Rechte",
           "rows": [
             {
-              "text": "Du kannst Auskunft über deine Daten verlangen, sie berichtigen oder löschen lassen, eine Kopie in einem gängigen elektronischen Format erhalten (zum Beispiel JSON; Touren kannst du in der App auch als GPX herunterladen), der Bearbeitung widersprechen und eine Einwilligung jederzeit widerrufen. Schreib an feedback@tourenbuddy.ch. Du kannst dich auch beim Eidgenössischen Datenschutz- und Öffentlichkeitsbeauftragten (EDÖB) oder, in der EU, bei deiner Datenschutzbehörde beschweren."
+              "text": "Du kannst Auskunft über deine Daten verlangen, sie berichtigen oder löschen lassen, eine Kopie in einem gängigen elektronischen Format erhalten (zum Beispiel JSON; Touren kannst du in der App auch als GPX herunterladen), der Bearbeitung widersprechen und eine Einwilligung jederzeit widerrufen. Schreib an feedback@tourenbuddy.ch; wir antworten innert 30 Tagen. Du kannst dich auch beim Eidgenössischen Datenschutz- und Öffentlichkeitsbeauftragten (EDÖB) beschweren."
             }
           ]
         },
@@ -1772,28 +1769,68 @@
           "title": "Änderungen",
           "rows": [
             {
-              "text": "Ändert sich diese Erklärung, passen wir diese Seite und ihr Datum an. Wichtige Änderungen kündigen wir in der App an."
+              "text": "Ändert sich diese Erklärung, passen wir diese Seite und ihr Datum an. Betrifft dich eine Änderung, zeigen wir sie dir in der App, bevor sie gilt, und bitten dich, die Nutzungsbedingungen erneut zu akzeptieren."
             }
           ]
         }
       ],
       "title": "Datenschutzerklärung",
-      "updated": "Stand: 9. November 2026"
+      "updated": "Stand: 22. November 2026"
     },
     "terms": {
       "sections": [
         {
           "rows": [
             {
-              "text": "Diese Bedingungen gelten, wenn du TourenBuddy auf irgendeinem Gerät nutzt. Mit dem Erstellen eines Kontos akzeptierst du sie."
+              "text": "Diese Bedingungen gelten, wenn du TourenBuddy auf irgendeinem Gerät nutzt. Du akzeptierst sie in der App, bevor du sie zum ersten Mal nutzt, und erneut, wenn sie sich ändern."
+            },
+            {
+              "text": "Kurz gesagt: TourenBuddy speichert und teilt nur deine eigenen Pläne. Jede Aktivität entscheidest und unternimmst du auf eigene Gefahr und in eigener Verantwortung. Soweit gesetzlich zulässig, übernehmen wir dafür keine Haftung (siehe «Deine Eigenverantwortung» und «Haftung»)."
             }
           ]
         },
         {
-          "title": "Der Dienst",
+          "title": "Was TourenBuddy ist",
           "rows": [
             {
-              "text": "Mit TourenBuddy planst du Bergtouren, verwaltest Kontakte, teilst Touren und freie Tage mit Freunden und wirst über gemeinsame Pläne benachrichtigt. Der Dienst ist kostenlos. Wir können Funktionen ändern, erweitern oder einstellen und informieren dich rechtzeitig über Änderungen, die dich betreffen."
+              "text": "TourenBuddy ist eine kostenlose, nicht kommerzielle App, die in der Schweiz angeboten wird. Darin hältst du deine Pläne für Outdoor-Aktivitäten fest, speicherst und teilst sie: Orte, Daten, Routen, Notizen, Kontakte und freie Tage. Als Hilfe dabei zeigt sie Karten sowie Wander- und Skitourendaten von swisstopo und dem SAC und berechnet Schätzungen wie Gehzeiten, Distanzen, Höhenprofile und Routen entlang von Wegen."
+            },
+            {
+              "text": "TourenBuddy berät nicht und empfiehlt nichts. Die App prüft keine Verhältnisse, beurteilt nicht, ob eine Aktivität für dich geeignet, machbar oder sicher ist, und begleitet dich nicht unterwegs. Sie ist kein Bergführer, kein Navigations- oder Sicherheitsgerät und kein Rettungs- oder Notrufdienst: Im Notfall rufst du die Rega (1414) oder die Notrufnummer 112 an."
+            },
+            {
+              "text": "Wir können Funktionen ändern, erweitern oder einstellen und informieren dich rechtzeitig über Änderungen, die dich betreffen. Stellen wir TourenBuddy ein, sagen wir es dir mindestens 30 Tage vorher, damit du deine Touren als GPX herunterladen und eine Kopie deiner Daten verlangen kannst."
+            }
+          ]
+        },
+        {
+          "title": "Deine Eigenverantwortung",
+          "rows": [
+            {
+              "text": "Outdoor-Aktivitäten, besonders in den Bergen, bergen ernsthafte Gefahren, darunter Lawinen, Absturz, Steinschlag, Wetterumschwünge, Verirren, Verletzung und Tod."
+            },
+            {
+              "text": "Ob, wann, wo, wie und mit wem du eine Aktivität unternimmst, entscheidest allein du. Du allein trägst das Risiko und die Verantwortung für diese Entscheidungen und alle ihre Folgen, für dich selbst und gegenüber deinen Begleitpersonen und anderen. Das gilt auch, wenn du Pläne, Routen oder Angaben verwendest, die andere in TourenBuddy mit dir geteilt haben."
+            },
+            {
+              "text": "Karten, Routen, Wander- und Skitourendaten, Schwierigkeitsgrade, Zeiten, Profile und alle anderen Inhalte der App können unvollständig, falsch oder veraltet sein. Verlass dich nicht darauf. Prüfe vor und während jeder Aktivität die aktuellen Verhältnisse in offiziellen Quellen, etwa im Lawinenbulletin des SLF und in der Prognose von MeteoSchweiz, und stütze dich auf deine eigene Ausbildung, Erfahrung und Urteilskraft. Fehlen sie dir, geh mit einer ausgebildeten Bergführerin oder einem ausgebildeten Bergführer."
+            },
+            {
+              "text": "Eine Tour in TourenBuddy zu planen oder zu teilen, begründet keine Pflichten zwischen dir und uns, und wir sind nicht Partei von Abmachungen zwischen dir und deinen Tourenpartnern."
+            }
+          ]
+        },
+        {
+          "title": "Haftung",
+          "rows": [
+            {
+              "text": "Wir stellen TourenBuddy kostenlos und so bereit, wie es ist. Wir gewährleisten weder, dass die App verfügbar ist und fehlerfrei funktioniert, noch dass ihre Inhalte richtig, vollständig oder aktuell sind, noch dass deine Daten erhalten bleiben: Bewahre selbst eine Kopie von allem auf, was dir wichtig ist."
+            },
+            {
+              "text": "Soweit das Schweizer Recht es zulässt, schliessen wir jede Haftung für Schäden jeder Art aus, die aus dem Planen, Vorbereiten oder Durchführen von Aktivitäten, aus dem Vertrauen auf Inhalte der App oder aus Unterbrüchen, Fehlern oder Datenverlust entstehen. Das umfasst Personen-, Sach- und Vermögensschäden aus leichter und mittlerer Fahrlässigkeit. Wir haften einzig für Absicht und grobe Fahrlässigkeit; diese Haftung lässt das Schweizer Recht nicht zum Voraus ausschliessen (Art. 100 Abs. 1 OR). Soweit das Gesetz es zulässt, schliessen wir die Haftung für Personen und Unternehmen, die wir für den Betrieb von TourenBuddy beiziehen, vollständig aus (Art. 101 OR)."
+            },
+            {
+              "text": "Machen Dritte wegen Inhalten, die du eingestellt hast, oder wegen eines Verstosses gegen diese Bedingungen Ansprüche gegen uns geltend, stellst du uns davon frei, soweit du den Anspruch verursacht hast. Das gilt nicht für Ansprüche, die auf unsere Absicht oder grobe Fahrlässigkeit zurückgehen."
             }
           ]
         },
@@ -1822,26 +1859,10 @@
           ]
         },
         {
-          "title": "Sicherheit am Berg",
-          "rows": [
-            {
-              "text": "TourenBuddy ist eine Planungshilfe. Routen, Zeiten, Schwierigkeiten sowie Wander- und Skitourendaten können unvollständig, falsch oder veraltet sein. Prüfe die Verhältnisse, das Lawinenbulletin des SLF und die Prognose von MeteoSchweiz und plane mit deinem eigenen Urteil. Zeiten, Schwierigkeitsgrade und Vorschläge in der App sind Schätzungen, keine Garantien, und ersetzen weder Ausbildung, Erfahrung noch die offiziellen Quellen. Für deine Entscheidungen am Berg bist allein du verantwortlich."
-            }
-          ]
-        },
-        {
-          "title": "Haftung",
-          "rows": [
-            {
-              "text": "Wir betreiben TourenBuddy sorgfältig, können aber nicht garantieren, dass der Dienst immer verfügbar und fehlerfrei ist. Soweit gesetzlich zulässig, haften wir nur für Vorsatz und grobe Fahrlässigkeit. Das gilt nicht für Schäden an Leben und Gesundheit und nicht, wo zwingendes Recht eine Einschränkung nicht erlaubt. Der Dienst ist kostenlos und wird so bereitgestellt, wie er ist."
-            }
-          ]
-        },
-        {
           "title": "Recht und Gerichtsstand",
           "rows": [
             {
-              "text": "Es gilt Schweizer Recht. Zuständig sind die Gerichte am Sitz der Betreiberin, vorbehaltlich zwingender Bestimmungen zum Konsumentenschutz, auch aus deinem Wohnsitzland."
+              "text": "Es gilt Schweizer Recht. Zuständig sind die Gerichte am Wohnsitz der im Impressum genannten Person, vorbehaltlich zwingender Gerichtsstände. Ist eine Bestimmung dieser Bedingungen unwirksam, bleiben die übrigen gültig. Die Kurzfassung oben ist nicht verbindlich; massgeblich ist der ausführliche Text. Weichen die deutsche und die englische Fassung voneinander ab, gilt die deutsche."
             }
           ]
         },
@@ -1849,7 +1870,7 @@
           "title": "Änderungen",
           "rows": [
             {
-              "text": "Wir können diese Bedingungen anpassen. Eine Änderung, die dich betrifft, kündigen wir dir in der App an, bevor sie gilt. Nutzt du TourenBuddy danach weiter, gelten die neuen Bedingungen."
+              "text": "Wir können diese Bedingungen anpassen. Bevor eine Änderung, die dich betrifft, gilt, zeigen wir sie dir in der App und bitten dich, sie zu akzeptieren. Akzeptierst du sie nicht, kannst du TourenBuddy nicht mehr nutzen, und du kannst dein Konto jederzeit löschen."
             }
           ]
         },
@@ -1863,27 +1884,58 @@
         }
       ],
       "title": "Nutzungsbedingungen",
-      "updated": "Stand: 9. November 2026"
+      "updated": "Stand: 22. November 2026"
     },
     "imprint": {
       "sections": [
         {
           "rows": [
             {
-              "text": "TourenBuddy wird betrieben von:",
+              "text": "TourenBuddy ist ein privates, nicht kommerzielles Projekt, betrieben von:",
               "country": "Schweiz"
             },
             {
               "text": "E-Mail: feedback@tourenbuddy.ch"
             },
             {
-              "text": "Karten-, Wander- und Skitourendaten: © swisstopo."
+              "text": "Karten- und Wanderdaten: © swisstopo. Skitourendaten: © swisstopo, mit dem SAC."
             }
           ]
         }
       ],
       "title": "Impressum",
-      "updated": "Stand: 9. November 2026"
+      "updated": "Stand: 22. November 2026"
     }
+  },
+  "terms": {
+    "title": "Nutzungsbedingungen",
+    "lead": "Bevor du TourenBuddy nutzt, lies und akzeptiere bitte die Nutzungsbedingungen. Kurz gesagt:",
+    "changedLead": "Wir haben die Nutzungsbedingungen aktualisiert. Geändert: {{changes}}. Kurz gesagt:",
+    "points": {
+      "plans": "TourenBuddy speichert und teilt nur deine Pläne.",
+      "risk": "Jede Aktivität entscheidest und unternimmst du auf eigene Gefahr und in eigener Verantwortung.",
+      "liability": "Soweit gesetzlich zulässig, übernehmen wir dafür keine Haftung, auch nicht für Personenschäden aus leichter und mittlerer Fahrlässigkeit.",
+      "indemnity": "Du stellst uns von Ansprüchen Dritter frei, die du verursachst."
+    },
+    "read": "Die vollständigen Texte: {{terms}} und {{privacy}}.",
+    "update": "Eine ältere Version der App kann nicht akzeptieren; bitte aktualisiere die App.",
+    "updateBtn": "App aktualisieren",
+    "updateWeb": "Eine neuere Version von TourenBuddy ist verfügbar. Lade die Seite neu, um die aktuellen Bedingungen zu akzeptieren.",
+    "reloadBtn": "Neu laden",
+    "unavailable": "Noch nicht verfügbar. Bitte versuche es in Kürze erneut.",
+    "retryBtn": "Erneut versuchen",
+    "offline": "Zum Akzeptieren brauchst du eine Verbindung.",
+    "acceptBtn": "Akzeptieren und weiter",
+    "accepting": "Wird gespeichert…",
+    "failed": "Deine Zustimmung konnte nicht gespeichert werden. Bitte versuche es erneut.",
+    "signOutBtn": "Abmelden",
+    "deleteBtn": "Konto löschen",
+    "termsLink": "Nutzungsbedingungen",
+    "privacyLink": "Datenschutzerklärung",
+    "whatChanged": {
+      "2026-11-22": "der Abschnitt Haftung und wie du die Bedingungen akzeptierst"
+    },
+    "signUpNote": "Bevor du TourenBuddy nutzt, akzeptierst du die {{terms}}. Wie wir mit deinen Daten umgehen: {{privacy}}.",
+    "effective": "Diese Fassung gilt ab {{date}}."
   }
 }

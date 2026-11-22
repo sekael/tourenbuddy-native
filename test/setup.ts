@@ -6,6 +6,8 @@ process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
 // tests of the real modules unmock.
 jest.mock('@/core/supabase', () => require('./support/fake-supabase'));
 jest.mock('@/core/auth/auth-storage', () => require('./support/fake-auth-storage'));
+// The terms in force are accepted unless a test says otherwise (terms-acceptance).
+jest.mock('@/features/terms/data/terms-repository', () => require('./support/fake-terms'));
 // The offline database is Maps; the OS network state is NetInfo's own mock.
 jest.mock('@/core/offline/tables', () => require('./support/fake-tables'));
 jest.mock('@react-native-community/netinfo', () =>

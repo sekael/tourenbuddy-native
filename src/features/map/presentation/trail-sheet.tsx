@@ -151,7 +151,8 @@ function TrailPage({ trail, onClose }: { trail: Trail; onClose?: () => void }) {
         </View>
       }
     >
-      <ListSection>
+      {/* terms-acceptance: where the details come from, and to check before going. */}
+      <ListSection footer={t('map.trail.source')}>
         {route.difficulty ? (
           <ListRow
             title={t('tours.filters.gradeLabel')}

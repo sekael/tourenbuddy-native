@@ -49,6 +49,23 @@ describe('replayQueue', () => {
     expect((await getEntry('a'))?.attempts).toBe(0);
   });
 
+  it('should keep entries refused for unaccepted terms, uncounted, and stop there', async () => {
+    const handler = jest.fn(async () => {
+      // As supabase-js hands over the database's refusal.
+      throw { message: 'terms_not_accepted', code: 'P0001' };
+    });
+    registerReplay('tour', handler);
+    await queue({ entityId: 'a', seq: 1 });
+    await queue({ entityId: 'b', seq: 2 });
+
+    await replayQueue();
+
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect((await getEntry('a'))?.attempts).toBe(0);
+    expect(await getEntry('b')).toBeDefined();
+    expect(await listDeadLetters('u1')).toEqual([]);
+  });
+
   it('should not drain while offline', async () => {
     connectivity.setState({ online: false });
     const handler = jest.fn();
