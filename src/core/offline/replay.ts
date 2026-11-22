@@ -31,6 +31,16 @@ export class PermanentReplayError extends Error {
 }
 
 const log = createLogger('Replay');
+
+/**
+ * The backend refuses every client write until the terms in force are accepted (terms-acceptance).
+ * Such a refusal is no verdict on the edit: it waits, uncounted, for the acceptance, which drains.
+ */
+export function isTermsRefusal(error: unknown): boolean {
+  const message =
+    error instanceof Error ? error.message : (error as { message?: unknown })?.message;
+  return typeof message === 'string' && message.includes('terms_not_accepted');
+}
 const handlers = new Map<string, ReplayHandler>();
 
 /** Stores wire their `kind` to a handler at module load. */
@@ -106,6 +116,11 @@ async function runDrain(): Promise<void> {
       await handler(entry);
       await remove(entry.entityId);
     } catch (error) {
+      if (isTermsRefusal(error)) {
+        // Every later entry would be refused too: stop here, keep them all.
+        log.info(`Waiting for the terms to be accepted before ${entry.kind} ${entry.entityId}`);
+        break;
+      }
       if (error instanceof PermanentReplayError || entry.attempts + 1 >= MAX_ATTEMPTS) {
         const reason: DeadReason =
           error instanceof PermanentReplayError

@@ -15,7 +15,7 @@ import {
 } from 'expo-router';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 
 import {
   formModalOptions,
@@ -55,6 +55,7 @@ import { useTourFiltersStore } from '@/features/tours/presentation/stores/tour-f
 import { useTourSuggestionsStore } from '@/features/tours/presentation/stores/tour-suggestions-store';
 import { useToursStore } from '@/features/tours/presentation/stores/tours-store';
 import { useUserProfileStore } from '@/features/user/presentation/stores/user-profile-store';
+import { useTermsGate } from '@/features/terms/presentation/stores/terms-store';
 import {
   useFollowTour,
   useTourReturn,
@@ -179,7 +180,8 @@ void SplashScreen.preventAutoHideAsync();
  * screens that became unreachable, with their history. While the session is restored, under the
  * launch screen, the signed-in side stays open too (sign-in is, since nobody is signed in yet), so
  * the address the app was opened at is kept for a signed-in user instead of bouncing through
- * sign-in to the map.
+ * sign-in to the map. Signed in without the current terms accepted (terms-acceptance), only the
+ * terms page is reachable.
  */
 export default function RootLayout() {
   useDeviceLocale();
@@ -187,17 +189,23 @@ export default function RootLayout() {
   const isLoading = useAuthStore((state) => state.isLoading);
   const userId = useAuthStore((state) => state.user?.id ?? null);
   const signedIn = userId !== null;
-  useSessionStores(userId);
-  useNotificationOpens(signedIn);
-  useWelcome(signedIn);
+  // terms-acceptance: nothing of the app runs, and no store writes, before the terms are accepted.
+  const gate = useTermsGate(userId);
+  const accepted = gate === 'pass';
+  // The first answer for this user: the app stays covered (the launch screen on iOS and Android)
+  // and its routes stay open, so the address it was opened at is kept.
+  const checking = signedIn && gate === 'loading';
+  useSessionStores(accepted ? userId : null);
+  useNotificationOpens(signedIn && accepted);
+  useWelcome(signedIn && accepted);
 
   useEffect(() => {
     void initialize();
   }, [initialize]);
 
   useEffect(() => {
-    if (!isLoading) SplashScreen.hide();
-  }, [isLoading]);
+    if (!isLoading && !checking) SplashScreen.hide();
+  }, [isLoading, checking]);
 
   // Signed out, at launch or after any sign-out: no badge and no pushes for whoever was here.
   useEffect(() => {
@@ -221,7 +229,10 @@ export default function RootLayout() {
           }}
           screenLayout={sheetLayout}
         >
-          <Stack.Protected guard={isLoading || signedIn} redirectTo="/auth">
+          <Stack.Protected
+            guard={isLoading || (signedIn && (accepted || checking))}
+            redirectTo={signedIn ? '/accept-terms' : '/auth'}
+          >
             <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
             <Stack.Screen name="tours" options={mapSheetOptions} />
             <Stack.Screen name="tour/[id]" options={mapSheetOptions} />
@@ -255,12 +266,21 @@ export default function RootLayout() {
             <Stack.Screen name="password" options={sheetOptions} />
             <Stack.Screen name="passkeys" options={sheetOptions} />
           </Stack.Protected>
+          <Stack.Protected guard={signedIn && !isLoading && !accepted && !checking} redirectTo="/">
+            <Stack.Screen name="accept-terms" options={{ animation: 'fade' }} />
+          </Stack.Protected>
           <Stack.Protected guard={!signedIn} redirectTo="/">
             <Stack.Screen name="auth" options={{ animation: 'fade' }} />
           </Stack.Protected>
         </Stack>
+        {/* The web has no launch screen: nothing of the app shows until the session and terms are known. */}
+        {isLoading || checking ? <View style={styles.cover} /> : null}
       </PageReturn.Provider>
       <UpdateGate />
     </PageBanner.Provider>
   );
 }
+
+const styles = StyleSheet.create({
+  cover: { ...StyleSheet.absoluteFill, backgroundColor: color.background },
+});

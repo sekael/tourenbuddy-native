@@ -34,7 +34,7 @@ export function Button({ label, onPress, variant = 'primary', disabled = false }
         disabled && styles.disabled,
       ]}
     >
-      <Text variant="label" style={{ color: labelColor[variant] }}>
+      <Text variant="label" style={[styles.label, { color: labelColor[variant] }]}>
         {label}
       </Text>
     </Pressable>
@@ -55,6 +55,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: space.xl,
   },
+  // A long label wraps centred, as the system buttons do.
+  label: { textAlign: 'center' },
   primary: { backgroundColor: color.primary },
   secondary: { backgroundColor: color.secondaryContainer },
   plain: {},
