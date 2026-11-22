@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/sekael/tourenbuddy-native/compare/tourenbuddy-native-v0.2.0...tourenbuddy-native-v0.2.1) (2026-11-22)
+
+
+### Bug Fixes
+
+* **ios:** Contacts usage string for App Store Connect ([#9](https://github.com/sekael/tourenbuddy-native/issues/9)) ([3d093a0](https://github.com/sekael/tourenbuddy-native/commit/3d093a0bd96adc3285b8eb64cf787e85d1b2097f))
+
 ## [0.2.0](https://github.com/sekael/tourenbuddy-native/compare/tourenbuddy-native-v0.1.0...tourenbuddy-native-v0.2.0) (2026-11-22)
 
 
