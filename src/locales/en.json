@@ -1655,7 +1655,7 @@
           ]
         },
         {
-          "title": "Who is responsible",
+          "title": "Who Is Responsible",
           "rows": [
             {
               "text": "Selim Kälin, 3904 Naters, Switzerland (“we”). For anything about your data, write to feedback@tourenbuddy.ch."
@@ -1663,11 +1663,11 @@
           ]
         },
         {
-          "title": "What we process and why",
+          "title": "What We Process and Why",
           "rows": [
             {
               "label": "Your email address, name and, if you add it, your verified phone number",
-              "text": "To sign you in, to show you to your friends, and to let friends find you by your phone number. Anyone signed in to TourenBuddy can check whether a phone number has an account. Your number is shown only to people with a pending friend request with you, or who are your friends."
+              "text": "To sign you in, to show you to your friends, and to let friends find you by your phone number. Anyone signed in to TourenBuddy can check whether a phone number has an account. Your number is shown only to people with a pending friend request from or to you, or who are your friends."
             },
             {
               "label": "Contacts you add or import (names, phone numbers, email addresses)",
@@ -1675,7 +1675,7 @@
             },
             {
               "label": "Tours: names, places, dates, routes and tracks (GPX), activities, notes; your free days",
-              "text": "The app’s purpose. You choose whom you share them with: your friends and the partners of a tour, or keep a tour private."
+              "text": "The app’s purpose. You choose whom you share them with: your friends and tour partners, or keep a tour private."
             },
             {
               "label": "Photos and PDFs you attach to tours",
@@ -1694,7 +1694,7 @@
               "text": "To keep TourenBuddy safe"
             },
             {
-              "label": "Your acceptance of the terms of use: version, time and your account’s email address",
+              "label": "Your acceptance of the Terms of Use: version, time and your account’s email address",
               "text": "To show that you accepted them. We keep it as long as your account exists, and for 10 years after you delete it, to defend against legal claims."
             },
             {
@@ -1710,7 +1710,7 @@
           ]
         },
         {
-          "title": "Who processes data for us and who receives it",
+          "title": "Who Processes Data for Us and Who Receives It",
           "rows": [
             {
               "label": "Supabase",
@@ -1737,28 +1737,28 @@
               "text": "map tiles, place names, elevation and route profiles, requested by your device. Elevation and profile requests include the coordinates of the route you plan."
             },
             {
-              "text": "Supabase stores the app’s data in Switzerland (Zurich). Supabase, Cloudflare, Twilio, Apple and Google are US companies, and data can be accessed from the United States. Cloudflare can also process data on servers in other countries. Data goes to the EU only for Brevo, based in France. For the United States, each transfer relies on the Swiss-US Data Privacy Framework where the recipient is certified under it, and otherwise on standard contractual clauses with the Swiss addition. Under Swiss law, EU countries have adequate data protection."
+              "text": "Supabase stores the app’s data in Switzerland (Zurich). Supabase, Cloudflare, Twilio, Apple and Google are US companies, and data can be accessed from the United States. Cloudflare can also process data on servers in other countries. Data goes to the EU only for Brevo, based in France. For the United States, each transfer relies on the Swiss-U.S. Data Privacy Framework where the recipient is certified under it, and otherwise on standard contractual clauses with the Swiss addition. Under Swiss law, EU countries have adequate data protection."
             }
           ]
         },
         {
-          "title": "How long we keep data",
+          "title": "How Long We Keep Data",
           "rows": [
             {
-              "text": "As long as your account exists. Inbox entries are deleted after 90 days. When you delete your account, we delete your data, except: reports, kept without a link to you; entries other people made about you themselves, such as you as a contact in their address book; and the record of your acceptance of the terms of use, which we keep for 10 years after deletion to defend against legal claims (see Delete your account)."
+              "text": "As long as your account exists. Inbox entries are deleted after 90 days. When you delete your account, we delete your data, except: reports, kept without a link to you; entries other people made about you themselves, such as you as a contact in their address book; and the record of your acceptance of the Terms of Use, which we keep for 10 years after deletion to defend against legal claims (see Delete account)."
             }
           ]
         },
         {
-          "title": "Your rights",
+          "title": "Your Rights",
           "rows": [
             {
-              "text": "You can ask what we hold about you, have it corrected or deleted, receive a copy of it in a common electronic format (for example JSON; you can also download each tour as GPX in the app), object to processing and withdraw a consent at any time. Write to feedback@tourenbuddy.ch; we answer within 30 days. You may also complain to the Swiss Federal Data Protection and Information Commissioner (FDPIC)."
+              "text": "You can ask what we hold about you, have it corrected or deleted, receive a copy of it in a common electronic format (for example JSON; you can also download each tour as GPX in the app), object to processing and withdraw your consent at any time. Write to feedback@tourenbuddy.ch; we answer within 30 days. You may also complain to the Swiss Federal Data Protection and Information Commissioner (FDPIC)."
             }
           ]
         },
         {
-          "title": "Young people",
+          "title": "Young People",
           "rows": [
             {
               "text": "If you are under 18, you need the consent of a parent or guardian. We do not check ages. If we learn that someone under 18 has an account without that consent, we delete the account."
@@ -1769,12 +1769,12 @@
           "title": "Changes",
           "rows": [
             {
-              "text": "When this policy changes, we update this page and its date. If a change affects you, we show it to you in the app before it takes effect and ask you to accept the terms again."
+              "text": "When this policy changes, we update this page and its date. If a change affects you, we show it to you in the app before it takes effect and ask you to accept the Terms of Use again."
             }
           ]
         }
       ],
-      "title": "Privacy policy",
+      "title": "Privacy Policy",
       "updated": "Last updated: 22 November 2026"
     },
     "terms": {
@@ -1785,15 +1785,15 @@
               "text": "These terms apply when you use TourenBuddy on any device. You accept them in the app before you first use it, and again when they change."
             },
             {
-              "text": "In short: TourenBuddy only stores and shares your own plans. You decide on and carry out every activity at your own risk and on your own responsibility. As far as the law allows, we accept no liability for it (see “Your own responsibility” and “Liability”)."
+              "text": "In short: TourenBuddy only stores and shares your own plans. You decide on and carry out every activity at your own risk and on your own responsibility. As far as the law allows, we accept no liability for it (see “Your Own Responsibility” and “Liability”)."
             }
           ]
         },
         {
-          "title": "What TourenBuddy is",
+          "title": "What TourenBuddy Is",
           "rows": [
             {
-              "text": "TourenBuddy is a free, non-commercial app, offered in Switzerland, in which you record, store and share your plans for outdoor activities: places, dates, routes, notes, contacts and free days. To help you record them, it shows maps and trail and ski-route data from swisstopo and the SAC and calculates estimates such as walking times, distances, elevation profiles and routes along trails."
+              "text": "TourenBuddy is a free, non-commercial app offered in Switzerland. You use it to record, store and share your plans for outdoor activities: places, dates, routes, notes, contacts and free days. To help you record them, it shows maps and trail and ski-route data from swisstopo and the SAC and calculates estimates such as walking times, distances, elevation profiles and routes along trails."
             },
             {
               "text": "TourenBuddy gives no advice and makes no recommendations. It does not check conditions, does not assess whether an activity is suitable, feasible or safe for you, and does not watch over you while you are out. It is not a guide, not a navigation or safety device, and not a rescue or emergency service: in an emergency, call Rega on 1414 or the emergency number 112."
@@ -1804,7 +1804,7 @@
           ]
         },
         {
-          "title": "Your own responsibility",
+          "title": "Your Own Responsibility",
           "rows": [
             {
               "text": "Outdoor activities, especially in the mountains, carry serious risks, including avalanches, falls, rockfall, sudden changes in the weather, getting lost, injury and death."
@@ -1824,7 +1824,7 @@
           "title": "Liability",
           "rows": [
             {
-              "text": "We provide TourenBuddy free of charge and as it is. We do not guarantee that it is available or works without errors, that its content is correct, complete or up to date, or that your data is kept: keep your own copy of what matters to you."
+              "text": "We provide TourenBuddy free of charge and as is. We do not guarantee that it is available or works without errors, that its content is correct, complete or up to date, or that your data is kept: keep your own copy of what matters to you."
             },
             {
               "text": "As far as Swiss law allows, we exclude all liability for damage of any kind arising from planning, preparing or carrying out activities, from relying on content in the app, or from interruptions, errors or loss of data. This includes personal injury, damage to property and financial loss caused by slight or medium negligence. We are liable only for intent and gross negligence; Swiss law does not allow that liability to be excluded in advance (Art. 100 para. 1 CO). As far as the law allows, we fully exclude liability for the people and companies we use to run TourenBuddy (Art. 101 CO)."
@@ -1835,23 +1835,23 @@
           ]
         },
         {
-          "title": "Your account",
+          "title": "Your Account",
           "rows": [
             {
-              "text": "Give correct details and keep your sign-in (password, passkey or email code) and your devices safe. If you are under 18, you need the consent of a parent or guardian. You can delete your account at any time (see Delete your account)."
+              "text": "Give correct details and keep your sign-in (password, passkey or email code) and your devices safe. If you are under 18, you need the consent of a parent or guardian. You can delete your account at any time (see Delete account)."
             }
           ]
         },
         {
-          "title": "Your content",
+          "title": "Your Content",
           "rows": [
             {
-              "text": "Tours, notes, tracks and attachments stay yours. You allow us to store them and show them to the people you share them with, as far as that is needed to run the service. You choose per tour whether your friends and the partners of a tour can see it, or whether it stays private. Only share photos of other people if they agree."
+              "text": "Tours, notes, tracks and attachments stay yours. You allow us to store them and show them to the people you share them with, as far as that is needed to run the service. You choose per tour whether your friends and tour partners can see it, or whether it stays private. Only share photos of other people if they agree."
             }
           ]
         },
         {
-          "title": "Fair use",
+          "title": "Fair Use",
           "rows": [
             {
               "text": "Do not post unlawful, offensive or harassing content, do not pretend to be someone else, and do not try to break or overload the service. You can report and block anyone. We may remove content and suspend or close accounts that break these terms."
@@ -1859,10 +1859,10 @@
           ]
         },
         {
-          "title": "Law and venue",
+          "title": "Law and Venue",
           "rows": [
             {
-              "text": "These terms are governed by Swiss law. The courts at the domicile of the person named in the imprint have jurisdiction, subject to mandatory places of jurisdiction. If a provision of these terms is invalid, the others remain valid. The summary at the top is not binding; the full text applies. If the German and English versions differ, the German version applies."
+              "text": "These terms are governed by Swiss law. The courts at the domicile of the person named in the Imprint have jurisdiction, subject to mandatory places of jurisdiction. If a provision of these terms is invalid, the others remain valid. The summary at the top is not binding; the full text applies. If the German and English versions differ, the German version applies."
             }
           ]
         },
@@ -1883,7 +1883,7 @@
           ]
         }
       ],
-      "title": "Terms of use",
+      "title": "Terms of Use",
       "updated": "Last updated: 22 November 2026"
     },
     "imprint": {
@@ -1908,9 +1908,9 @@
     }
   },
   "terms": {
-    "title": "Terms of use",
-    "lead": "Before you use TourenBuddy, please read and accept the terms of use. In short:",
-    "changedLead": "We have updated the terms of use. What changed: {{changes}}. In short:",
+    "title": "Terms of Use",
+    "lead": "Before you use TourenBuddy, please read and accept the Terms of Use. In short:",
+    "changedLead": "We have updated the Terms of Use. What changed: {{changes}}. In short:",
     "points": {
       "plans": "TourenBuddy only stores and shares your plans.",
       "risk": "You decide on and carry out every activity at your own risk and on your own responsibility.",
@@ -1918,9 +1918,9 @@
       "indemnity": "You indemnify us against claims by others that you cause."
     },
     "read": "The full texts: {{terms}} and {{privacy}}.",
-    "update": "An app with an older version cannot accept; please update the app.",
+    "update": "An older version of the app cannot accept the Terms of Use. Please update the app.",
     "updateBtn": "Update the app",
-    "updateWeb": "A newer version of TourenBuddy is available. Reload the page to accept the current terms.",
+    "updateWeb": "A newer version of TourenBuddy is available. Reload the page to accept the current Terms of Use.",
     "reloadBtn": "Reload",
     "unavailable": "Not available yet. Please try again shortly.",
     "retryBtn": "Try again",
@@ -1930,10 +1930,10 @@
     "failed": "Your acceptance couldn’t be saved. Please try again.",
     "signOutBtn": "Sign out",
     "deleteBtn": "Delete account",
-    "termsLink": "terms of use",
-    "privacyLink": "privacy policy",
+    "termsLink": "Terms of Use",
+    "privacyLink": "Privacy Policy",
     "whatChanged": {
-      "2026-11-22": "the liability section and how you accept the terms"
+      "2026-11-22": "the Liability section and how you accept the Terms of Use"
     },
     "signUpNote": "Before you use TourenBuddy, you accept the {{terms}}. How we handle your data: {{privacy}}.",
     "effective": "This version takes effect on {{date}}."

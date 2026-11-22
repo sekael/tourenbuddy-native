@@ -1650,7 +1650,7 @@
         {
           "rows": [
             {
-              "text": "Mit TourenBuddy planst du Bergtouren mit deinen Freunden, auf dem iPhone, auf Android und im Web. TourenBuddy ist ein kostenloses, nicht kommerzielles Projekt und wird in der Schweiz angeboten. Hier steht, welche Personendaten wir bearbeiten, wozu, und was du tun kannst. Sie folgt dem Schweizer Datenschutzgesetz (DSG)."
+              "text": "Mit TourenBuddy planst du Bergtouren mit deinen Freunden, auf dem iPhone, auf Android und im Web. TourenBuddy ist ein kostenloses, nicht kommerzielles Projekt und wird in der Schweiz angeboten. Hier steht, welche Personendaten wir bearbeiten, wozu, und was du tun kannst. Die Erklärung folgt dem Schweizer Datenschutzgesetz (DSG)."
             }
           ]
         },
@@ -1658,7 +1658,7 @@
           "title": "Verantwortlich",
           "rows": [
             {
-              "text": "Selim Kälin, 3904 Naters, Schweiz („wir“). Für alles zu deinen Daten schreib an feedback@tourenbuddy.ch."
+              "text": "Selim Kälin, 3904 Naters, Schweiz («wir»). Für alles zu deinen Daten schreib an feedback@tourenbuddy.ch."
             }
           ]
         },
@@ -1674,8 +1674,8 @@
               "text": "Dein Adressbuch in der App, Tourenpartner und das Verbinden mit Freunden, die TourenBuddy nutzen. Nur du siehst deine Kontakte; wir kontaktieren die Personen darin nie. Nummern gleichen wir nur mit TourenBuddy-Konten ab. Wenn dich jemand als Kontakt gespeichert hat und du willst, dass wir diesen Eintrag über dich entfernen, schreib an feedback@tourenbuddy.ch."
             },
             {
-              "label": "Touren: Namen, Orte, Daten, Routen und Tracks (GPX), Aktivitäten, Notizen; deine freien Tage",
-              "text": "Der Zweck der App. Du wählst, mit wem du sie teilst: mit deinen Freunden und den Partnern einer Tour, oder hältst eine Tour privat."
+              "label": "Touren: Namen, Orte, Termine, Routen und Tracks (GPX), Aktivitäten, Notizen; deine freien Tage",
+              "text": "Der Zweck der App. Du wählst, mit wem du sie teilst: mit deinen Freunden und den Tourenpartnern, oder hältst eine Tour privat."
             },
             {
               "label": "Fotos und PDFs, die du an Touren anhängst",
@@ -1737,7 +1737,7 @@
               "text": "Kartenkacheln, Ortsnamen, Höhen und Routenprofile, von deinem Gerät abgerufen. Höhen- und Profilabfragen enthalten die Koordinaten deiner geplanten Route."
             },
             {
-              "text": "Supabase speichert die Daten der App in der Schweiz (Zürich). Supabase, Cloudflare, Twilio, Apple und Google sind US-Unternehmen; von den USA aus kann auf Daten zugegriffen werden. Cloudflare kann Daten zudem auf Servern in weiteren Ländern verarbeiten. In die EU gehen Daten nur zu Brevo, mit Sitz in Frankreich. Für die USA stützt sich jede Übermittlung auf das Swiss-US-Data-Privacy-Framework, wo der Empfänger danach zertifiziert ist, sonst auf Standardvertragsklauseln mit dem Schweizer Zusatz. Die EU-Staaten haben nach Schweizer Recht einen angemessenen Datenschutz."
+              "text": "Supabase speichert die Daten der App in der Schweiz (Zürich). Supabase, Cloudflare, Twilio, Apple und Google sind US-Unternehmen; von den USA aus kann auf Daten zugegriffen werden. Cloudflare kann Daten zudem auf Servern in weiteren Ländern verarbeiten. In die EU gehen Daten nur zu Brevo, mit Sitz in Frankreich. Für die USA stützt sich jede Übermittlung auf das Swiss-U.S. Data Privacy Framework, wo der Empfänger nach diesem Framework zertifiziert ist, sonst auf Standardvertragsklauseln mit dem Schweizer Zusatz. Die EU-Staaten haben nach Schweizer Recht einen angemessenen Datenschutz."
             }
           ]
         },
@@ -1793,7 +1793,7 @@
           "title": "Was TourenBuddy ist",
           "rows": [
             {
-              "text": "TourenBuddy ist eine kostenlose, nicht kommerzielle App, die in der Schweiz angeboten wird. Darin hältst du deine Pläne für Outdoor-Aktivitäten fest, speicherst und teilst sie: Orte, Daten, Routen, Notizen, Kontakte und freie Tage. Als Hilfe dabei zeigt sie Karten sowie Wander- und Skitourendaten von swisstopo und dem SAC und berechnet Schätzungen wie Gehzeiten, Distanzen, Höhenprofile und Routen entlang von Wegen."
+              "text": "TourenBuddy ist eine kostenlose, nicht kommerzielle App, die in der Schweiz angeboten wird. Darin hältst du deine Pläne für Outdoor-Aktivitäten fest, speicherst und teilst sie: Orte, Termine, Routen, Notizen, Kontakte und freie Tage. Als Hilfe dabei zeigt sie Karten sowie Wander- und Skitourendaten von swisstopo und dem SAC und berechnet Schätzungen wie Gehzeiten, Distanzen, Höhenprofile und Routen entlang von Wegen."
             },
             {
               "text": "TourenBuddy berät nicht und empfiehlt nichts. Die App prüft keine Verhältnisse, beurteilt nicht, ob eine Aktivität für dich geeignet, machbar oder sicher ist, und begleitet dich nicht unterwegs. Sie ist kein Bergführer, kein Navigations- oder Sicherheitsgerät und kein Rettungs- oder Notrufdienst: Im Notfall rufst du die Rega (1414) oder die Notrufnummer 112 an."
@@ -1807,7 +1807,7 @@
           "title": "Deine Eigenverantwortung",
           "rows": [
             {
-              "text": "Outdoor-Aktivitäten, besonders in den Bergen, bergen ernsthafte Gefahren, darunter Lawinen, Absturz, Steinschlag, Wetterumschwünge, Verirren, Verletzung und Tod."
+              "text": "Outdoor-Aktivitäten, besonders in den Bergen, bergen ernsthafte Gefahren, darunter Lawinen, Abstürze, Steinschlag, Wetterumschwünge, Verirren, Verletzung und Tod."
             },
             {
               "text": "Ob, wann, wo, wie und mit wem du eine Aktivität unternimmst, entscheidest allein du. Du allein trägst das Risiko und die Verantwortung für diese Entscheidungen und alle ihre Folgen, für dich selbst und gegenüber deinen Begleitpersonen und anderen. Das gilt auch, wenn du Pläne, Routen oder Angaben verwendest, die andere in TourenBuddy mit dir geteilt haben."
@@ -1846,7 +1846,7 @@
           "title": "Deine Inhalte",
           "rows": [
             {
-              "text": "Touren, Notizen, Tracks und Anhänge bleiben deine. Du erlaubst uns, sie zu speichern und den Personen zu zeigen, mit denen du sie teilst, soweit das für den Dienst nötig ist. Du entscheidest pro Tour, ob deine Freunde und die Partner einer Tour sie sehen oder ob sie privat bleibt. Teile Fotos anderer Menschen nur, wenn sie einverstanden sind."
+              "text": "Touren, Notizen, Tracks und Anhänge bleiben deine. Du erlaubst uns, sie zu speichern und den Personen zu zeigen, mit denen du sie teilst, soweit das für den Dienst nötig ist. Du entscheidest pro Tour, ob deine Freunde und die Tourenpartner sie sehen oder ob sie privat bleibt. Teile Fotos anderer Menschen nur, wenn sie einverstanden sind."
             }
           ]
         },
@@ -1854,7 +1854,7 @@
           "title": "Faire Nutzung",
           "rows": [
             {
-              "text": "Veröffentliche keine rechtswidrigen, beleidigenden oder belästigenden Inhalte, gib dich nicht als jemand anderes aus und versuche nicht, den Dienst zu stören oder zu überlasten. Du kannst alle melden und blockieren. Wir können Inhalte entfernen und Konten sperren oder schliessen, die gegen diese Bedingungen verstossen."
+              "text": "Veröffentliche keine rechtswidrigen, beleidigenden oder belästigenden Inhalte, gib dich nicht als jemand anderes aus und versuche nicht, den Dienst zu stören oder zu überlasten. Du kannst jede Person melden und blockieren. Wir können Inhalte entfernen und Konten sperren oder schliessen, die gegen diese Bedingungen verstossen."
             }
           ]
         },
@@ -1918,7 +1918,7 @@
       "indemnity": "Du stellst uns von Ansprüchen Dritter frei, die du verursachst."
     },
     "read": "Die vollständigen Texte: {{terms}} und {{privacy}}.",
-    "update": "Eine ältere Version der App kann nicht akzeptieren; bitte aktualisiere die App.",
+    "update": "Eine ältere Version der App kann die Nutzungsbedingungen nicht akzeptieren. Bitte aktualisiere die App.",
     "updateBtn": "App aktualisieren",
     "updateWeb": "Eine neuere Version von TourenBuddy ist verfügbar. Lade die Seite neu, um die aktuellen Bedingungen zu akzeptieren.",
     "reloadBtn": "Neu laden",
