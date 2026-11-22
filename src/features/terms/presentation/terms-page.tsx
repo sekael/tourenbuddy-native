@@ -161,7 +161,8 @@ const styles = StyleSheet.create({
   },
   column: { gap: space.lg, width: '100%', maxWidth: size.form },
   points: { gap: space.md },
-  point: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  // Each icon sits in the middle of its text, one line or several (as in the PWA).
+  point: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   badge: {
     width: 36,
     height: 36,
@@ -170,7 +171,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pointText: { flex: 1, paddingTop: space.xs },
+  pointText: { flex: 1 },
   muted: { color: color.onSurfaceVariant },
   error: { color: color.error },
 });
