@@ -42,6 +42,3 @@ npm-debug.*
 .claude/settings.local.json
 
 tourenbuddy_frontend_vue
-
-# Phase 2 backend patch for the Vue repo (applied there, not committed here)
-/.vue-patch/

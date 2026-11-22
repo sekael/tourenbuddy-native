@@ -22,19 +22,12 @@ A failure gets a note: what you did, what you saw, a screenshot.
 
 ### Backend (Vue repository)
 
-1. In `tourenbuddy_frontend_vue`, on a branch from `main`, apply the backend patches if their pull
-   requests are not merged yet:
-
-   ```sh
-   git apply ../tourenbuddy-native/.vue-patch/unconfirmed-accounts-hold-no-password.patch
-   git apply ../tourenbuddy-native/.vue-patch/native-backend.patch
-   ```
-
-2. `supabase db reset && supabase test db` (seed users below, all pgTAP green).
-3. Worker: `cd services/email-hook && npx wrangler dev --ip 0.0.0.0`. For real pushes to the
+1. In `tourenbuddy_frontend_vue` on `main`: `supabase db reset && supabase test db` (seed users
+   below, all pgTAP green).
+2. Worker: `cd services/email-hook && npx wrangler dev --ip 0.0.0.0`. For real pushes to the
    iPhone 15 put the APNs key in `.dev.vars` (`SETUP-NOTIFICATIONS.md`, "Native push"); without it
    push cases run in the Simulator with `simctl push` only.
-4. `.env.local` here as in the README ("Backend"), with `EXPO_PUBLIC_NOTIFY_HOOK_URL` set to the
+3. `.env.local` here as in the README ("Backend"), with `EXPO_PUBLIC_NOTIFY_HOOK_URL` set to the
    Worker (`http://127.0.0.1:8787` for the Simulator, `http://<Mac's address>:8787` for the
    iPhone 15, and the Supabase URL likewise).
 
