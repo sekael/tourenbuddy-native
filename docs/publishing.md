@@ -210,7 +210,8 @@ with a migration.
    Providers → Email, turn on **Confirm email**. The migration keeps every unconfirmed account
    without a password and drops the passwords that exist (no client ever set one; every account
    keeps signing in with a code).
-2. Same page: **Minimum password length** 8.
+2. Same page: **Minimum password length** 8, and **Secure password change** on (the Vue change
+   `add-native-backend`): a password set on a session older than a day then needs a code.
 3. Authentication → Passkeys: on, display name `TourenBuddy`, relying party ID `tourenbuddy.ch`,
    origins `https://tourenbuddy.ch, https://test.tourenbuddy.ch`. Never change the relying party
    ID once someone has a passkey: every passkey would stop working.
