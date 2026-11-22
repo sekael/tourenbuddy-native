@@ -22,7 +22,7 @@ it('should open the full terms over the gate and come back to it', async () => {
   fakeTerms.status = { current: TERMS_VERSION, accepted: null };
   await renderRouter(routes);
 
-  await fireEvent.press(screen.getByRole('link', { name: 'terms of use' }));
+  await fireEvent.press(screen.getByRole('link', { name: 'Terms of Use' }));
   expect(screen.getByText(/Outdoor activities, especially in the mountains/)).toBeOnTheScreen();
 
   await fireEvent.press(screen.getByRole('button', { name: 'Back' }));

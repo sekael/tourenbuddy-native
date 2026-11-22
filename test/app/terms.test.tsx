@@ -66,7 +66,7 @@ describe('terms gate', () => {
     fakeTerms.status = { current: '2999-01-01', accepted: null };
     await renderRouter(routes);
 
-    expect(screen.getByText(/please update the app/)).toBeOnTheScreen();
+    expect(screen.getByText(/Please update the app/)).toBeOnTheScreen();
     expect(() => swiftButton('Accept and continue')).toThrow();
     expect(swiftButton('Sign out')).toBeTruthy();
   });
@@ -99,7 +99,7 @@ describe('sign-up', () => {
   it('should link the terms before the account exists', async () => {
     await renderRouter(routes, { initialUrl: '/auth/sign-up' });
 
-    await act(() => fireEvent.press(screen.getByRole('link', { name: 'terms of use' })));
+    await act(() => fireEvent.press(screen.getByRole('link', { name: 'Terms of Use' })));
 
     expect(screen).toHavePathname('/auth/legal');
     expect(screen.getByText(/Outdoor activities, especially in the mountains/)).toBeOnTheScreen();
