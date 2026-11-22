@@ -32,15 +32,15 @@ for iOS and review its permissions. A failing step SHALL fail the check.
 
 ### Requirement: Releases
 
-Merging the release pull request SHALL tag the version from the conventional commits, deploy the web
-app and start store builds of the `prod` variant that are submitted to TestFlight (and to the Play
+Merging the release pull request SHALL tag the version from the conventional commits, deploy the
+public pages (`public/`, never a web app: the web app is the Vue PWA) and start store builds of the `prod` variant that are submitted to TestFlight (and to the Play
 internal track once Google Play is set up). Build numbers SHALL increase with every store build without a commit. A release
 step whose account is not set up yet SHALL skip with a notice instead of failing.
 
 #### Scenario: Release merged
 
 - **WHEN** the owner merges the release pull request
-- **THEN** the web app is deployed and the iOS build starts with a build number higher than the
+- **THEN** the public pages are deployed and the iOS build starts with a build number higher than the
   last (Android joins once Google Play is set up)
 
 #### Scenario: Accounts not set up yet
@@ -48,19 +48,3 @@ step whose account is not set up yet SHALL skip with a notice instead of failing
 - **WHEN** a release runs before the Expo or Cloudflare secrets exist
 - **THEN** the affected step skips with a notice naming the missing setup, and the release itself
   succeeds
-
-### Requirement: Web previews
-
-Every pull request from this repository SHALL get a preview of the web app, linked in a comment on
-the pull request and updated on every push, and the preview SHALL be deleted when the pull request
-closes.
-
-#### Scenario: Pull request opened
-
-- **WHEN** a pull request is opened from a branch of this repository
-- **THEN** a comment links the preview of its latest commit
-
-#### Scenario: Pull request closed
-
-- **WHEN** the pull request is merged or closed
-- **THEN** its preview deployments are deleted

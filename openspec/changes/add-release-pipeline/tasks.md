@@ -7,8 +7,8 @@
 
 ## 2. Workflows
 
-- [x] 2.1 `release.yml`: release-please; on a release, web deploy to Pages and EAS build with auto-submit, each skipping with a notice without its secrets
-- [x] 2.2 `preview.yml` and `preview-cleanup.yml`: Pages preview per PR with a sticky comment, deleted on close
+- [x] 2.1 `release.yml`: release-please; on a release, `public/` deploy to Pages (no web app, 2026-11-22) and EAS build with auto-submit, each skipping with a notice without its secrets
+- [x] 2.2 ~~`preview.yml` and `preview-cleanup.yml`~~ removed 2026-11-22: the web app stays the Vue PWA
 - [x] 2.3 `native-build.yml`: iOS Simulator release build (`macos-26`) of `prod` on native inputs, weekly and on demand; permission review. The Android build (release APK, permission review, 16 KB alignment) is dropped while Android is not a priority (commit d066a19, this repository's PR #3)
 
 ## 3. Permission review

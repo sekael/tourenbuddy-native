@@ -1,7 +1,9 @@
 # Publishing
 
-How a change reaches the App Store and the web, and the one-time setup behind it. Android ships
-later: what it still needs is under "Android (later)".
+How a change reaches the App Store and the public pages on tourenbuddy.ch, and the one-time setup
+behind it. Android ships later: what it still needs is under "Android (later)". The web app is the
+Vue PWA, released from its own repository: this one releases no web app, and its web build runs
+locally only (development and reviews).
 Every part skips with a notice until its secrets exist, so the workflows stay green before setup.
 Follow the setup in order: `EXPO_TOKEN` comes last, because it turns the store builds on.
 
@@ -15,8 +17,9 @@ Follow the setup in order: `EXPO_TOKEN` comes last, because it turns the store b
    `.release-please-manifest.json` and `CHANGELOG.md`; to run the checks anyway, close and reopen
    it.
 3. Merging it tags the release and starts two jobs:
-   - **web:** `npx expo export --platform web`, deployed to the Cloudflare Pages project
-     `tourenbuddy-native` (production branch `main`).
+   - **site:** `public/` as it is (the legal pages, the association file and `app-config.json`),
+     deployed to the Cloudflare Pages project `tourenbuddy-native` (production branch `main`,
+     served on `tourenbuddy.ch`).
    - **native:** `eas build --platform ios --profile production --auto-submit`. EAS raises the
      build number (`appVersionSource: remote`), signs the app and submits it to TestFlight once
      built.
@@ -45,9 +48,6 @@ Apple's CDN, as for users), before submitting it for review. These need a real d
   descriptions and background modes in the built `Info.plist` must match `permissions.json`. A new
   entry is a decision: block it in `app.config.ts`, or add it to `permissions.json` and update the
   App Store privacy labels in the same pull request.
-- `preview.yml`: each pull request from this repository gets a web preview on Pages, linked in a
-  sticky comment; `preview-cleanup.yml` deletes it when the pull request closes. Previews use the
-  production Supabase project.
 
 ## One-time setup
 
@@ -60,13 +60,10 @@ Apple's CDN, as for users), before submitting it for review. These need a real d
 - Settings → Rules: protect `main` with required pull requests, signed commits and squash merges.
   Do not require status checks: the release pull request never gets any (see the release flow), so
   it could not be merged.
-- Settings → Secrets and variables → Actions, repository secrets for the web:
+- Settings → Secrets and variables → Actions, repository secrets for the public pages:
 
   | Secret                  | Value                                                       |
   | ----------------------- | ----------------------------------------------------------- |
-  | `SUPABASE_URL`          | hosted project URL (as in the Vue repository)               |
-  | `SUPABASE_ANON_KEY`     | hosted project anon key                                     |
-  | `NOTIFY_HOOK_URL`       | the Worker's URL with `https://` (as in the Vue repository) |
   | `CLOUDFLARE_API_TOKEN`  | Cloudflare API token with Account → Cloudflare Pages → Edit |
   | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id                                       |
 
@@ -76,19 +73,7 @@ Apple's CDN, as for users), before submitting it for review. These need a real d
 npx wrangler pages project create tourenbuddy-native --production-branch main
 ```
 
-A new project: the PWA keeps `tourenbuddy` until the cutover.
-
-**First-load budget (web).** #346 R3 allows 700 KB of gzipped JavaScript to a usable map. Measured
-on 2026-11-12 (local export, gzip -9): **about 1.3 MB**. That is the app bundle at 1148 KB plus the
-map worker at 143 KB. Splitting by route did not help, since the map route and the shared chunk
-load first anyway (about 1.24 MB). The web ships one bundle, so sheets still open after the connection
-drops. Over budget: the owner decides before the cutover (Phase 7). Candidates are loading
-`maplibre-gl` and the map after the first frame, and checking what the bundle pulls in that the web
-never uses. Measure again after each change:
-
-```sh
-npx expo export --platform web && gzip -9 -c dist/_expo/static/js/web/entry-*.js | wc -c
-```
+A project of its own: the PWA keeps `tourenbuddy` (test.tourenbuddy.ch).
 
 ### Expo (EAS)
 
@@ -131,7 +116,7 @@ app, so it is not a secret.
 
 ### Public pages on tourenbuddy.ch
 
-The web export serves static pages from `public/` before the app: the privacy policy, terms of use,
+Each release deploys `public/`: the privacy policy, terms of use,
 imprint and account deletion, in English at the root and in German under `/de/`
 (`/privacy`, `/de/privacy`, …), one stylesheet (`/legal.css`), and `/app-config.json`.
 
@@ -162,8 +147,8 @@ the app and the legal pages open in Safari. Development builds read the file fro
 Raise `min_supported_ios` (and set `ios_store_url` once the listing exists) to send older apps to
 the store; Pages caches it for five minutes. Backend changes stay
 expand-then-contract until the minimum passes every app that uses the old shape. Until the apex
-serves `/app-config.json` (the native web app moves there in Phase 7), the request fails and the
-gate stays open: deploy the file with the first store build, or no app can be held back. The
+serves `/app-config.json`, the request fails and the gate stays open: deploy `public/` before the
+first store build, or no app can be held back. The
 gate blocks only while the device is online (app-update: being offline never blocks): an app below
 the minimum keeps working offline and may queue writes in the old shape, which replay once it is
 updated. So a minimum raised for a breaking backend change still needs the old shape accepted until
@@ -189,9 +174,8 @@ with a migration.
 4. **Association file:** put the Apple Team ID (developer.apple.com → Membership) in place of
    `TEAMID` in `public/.well-known/apple-app-site-association`, and as `ios.appleTeamId` in
    `app.config.ts`: without it a Simulator build carries no team and never matches the file. The
-   apex `tourenbuddy.ch` serves it with the web app: check it still shows only the parked page,
-   then add it as a custom domain of the `tourenbuddy-native` Pages project. Until the first
-   release deploys the web app there, deploy the file alone:
+   apex `tourenbuddy.ch` serves it from `public/`: add the apex as a custom domain of the
+   `tourenbuddy-native` Pages project. Until the first release deploys `public/`, deploy it by hand:
    `npx wrangler pages deploy public --project-name tourenbuddy-native --branch main`. Check:
    `curl -i https://tourenbuddy.ch/.well-known/apple-app-site-association` answers 200 with
    `content-type: application/json`, without a redirect. The app ids need the Associated Domains

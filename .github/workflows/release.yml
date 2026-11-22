@@ -30,21 +30,19 @@ jobs:
     if: needs.release.outputs.created == 'true'
     runs-on: ubuntu-latest
     outputs:
-      web: ${{ steps.check.outputs.web }}
+      site: ${{ steps.check.outputs.site }}
       native: ${{ steps.check.outputs.native }}
     steps:
       - id: check
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ] && [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
-            echo "web=true" >> "$GITHUB_OUTPUT"
+          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "site=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::notice::Web deploy skipped: set CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, SUPABASE_URL and SUPABASE_ANON_KEY (docs/publishing.md)."
+            echo "::notice::Public pages deploy skipped: set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (docs/publishing.md)."
           fi
           if [ -n "$EXPO_TOKEN" ]; then
             echo "native=true" >> "$GITHUB_OUTPUT"
@@ -52,30 +50,21 @@ jobs:
             echo "::notice::Store builds skipped: set EXPO_TOKEN (docs/publishing.md)."
           fi
 
-  web:
+  # The public pages only (legal pages, association file, app-config.json): the web app is the Vue
+  # PWA, released from its own repository.
+  site:
     needs: secrets
-    if: needs.secrets.outputs.web == 'true'
+    if: needs.secrets.outputs.site == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - name: Web export
-        env:
-          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          EXPO_PUBLIC_NOTIFY_HOOK_URL: ${{ secrets.NOTIFY_HOOK_URL }}
-        run: npx expo export --platform web
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=tourenbuddy-native --branch=main
+          command: pages deploy public --project-name=tourenbuddy-native --branch=main
 
   native:
     needs: secrets
