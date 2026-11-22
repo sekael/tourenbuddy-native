@@ -15,11 +15,9 @@ through EAS (#346 section 4).
   TestFlight and the Play internal track). EAS keeps the build numbers and raises them on every
   production build, so CI never commits them.
 - **Releases:** release-please (`node`) on `main` opens the release PR from conventional commits;
-  merging it tags the version, deploys the web app to Cloudflare Pages and starts the store builds
-  with automatic submission.
-- **Web previews:** every pull request from this repository gets a Pages preview of the web app,
-  linked in a PR comment and deleted when the PR closes, as in the Vue repo. Previews and store
-  builds use the production backend, as Vue previews do.
+  merging it tags the version, deploys `public/` (legal pages, association file, `app-config.json`)
+  to Cloudflare Pages and starts the store builds with automatic submission. No web app (#346 D21, 2026-11-22: the web stays the Vue PWA; this repository releases no web app, Expo web port in sekael/tourenbuddy_frontend_vue#386).
+- ~~**Web previews**~~ removed 2026-11-22 (#346 D21). Store builds use the production backend.
 - **Native build smoke:** pull requests that change native inputs (dependencies, app config, EAS
   config, patches, images) build a release app of the `prod` variant on a GitHub runner: iOS on
   macOS 26 for the Simulator, without signing.
@@ -46,7 +44,7 @@ None.
 ### Modified Capabilities
 
 - `project-scaffolding`: pull request checks gain the native build smoke and the permission review;
-  new requirements for releases and web previews.
+  a new requirement for releases.
 
 ## Impact
 
@@ -56,7 +54,7 @@ None.
   owner as a whole at the end: a recorded exception to one pull request per change.
 - New files: `eas.json`, `release-please-config.json`, `.release-please-manifest.json`,
   `permissions.json`, `scripts/check-permissions.js`, `docs/publishing.md`, workflows `release.yml`,
-  `preview.yml`, `preview-cleanup.yml`, `native-build.yml`.
+  `native-build.yml` (`preview.yml` and `preview-cleanup.yml` removed again 2026-11-22).
 - The owner sets up EAS, App Store Connect, Google Play and Cloudflare, and adds the GitHub secrets
   (`EXPO_TOKEN`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `SUPABASE_URL`,
   `SUPABASE_ANON_KEY`); `docs/publishing.md` lists the steps. No app code change; `app.config.ts`
