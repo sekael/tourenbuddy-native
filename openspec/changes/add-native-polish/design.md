@@ -31,7 +31,9 @@ gates (it is always current); it reloads on a new deploy as before (out of scope
 `expo-image-picker` plugin: photo and camera strings; localized through `app.config.ts`'s `locales`
 (`assets/locales/ios/{en,de}.json` → `InfoPlist.strings`). No microphone (`microphonePermission:
 false`). Android `blockedPermissions` adds `READ_CONTACTS`, `ACCESS_*_LOCATION`, `RECORD_AUDIO`.
-`expo-contacts`' picker needs none of them.
+`expo-contacts`' picker needs none of them. iOS still carries `NSContactsUsageDescription`
+(localized like the photo strings): App Store Connect rejects a binary that links the Contacts APIs
+without it (ITMS-90683, first upload 2026-11-22), even though the picker never asks.
 
 Android target API: 36, SDK 58's default (`expo-modules-core`), with no override. It meets Google
 Play's current requirement for new apps and updates; #346 suggests 37 early, but forcing it ahead

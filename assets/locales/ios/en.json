@@ -1,4 +1,5 @@
 {
   "NSPhotoLibraryUsageDescription": "TourenBuddy adds the photos you choose to a tour as attachments.",
-  "NSCameraUsageDescription": "TourenBuddy takes a photo to attach to a tour."
+  "NSCameraUsageDescription": "TourenBuddy takes a photo to attach to a tour.",
+  "NSContactsUsageDescription": "TourenBuddy imports the contacts you pick into your contacts in TourenBuddy."
 }
