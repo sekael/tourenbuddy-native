@@ -59,10 +59,12 @@ created:
   `EXPO_PUBLIC_SUPABASE_ANON_KEY` from the secrets, then `wrangler pages deploy dist` to the
   `tourenbuddy-native` project's production branch. A new project, because the PWA keeps
   `tourenbuddy` until the cutover (Phase 7).
-- **native:** `eas build --platform all --profile production --non-interactive --no-wait
+- **native:** `eas build --platform ios --profile production --non-interactive --no-wait
   --auto-submit`. The `production` profile reads the same two variables from EAS's `production`
-  environment. Submission goes to TestFlight and the Play internal track as a draft release; a Play
-  app that was never reviewed only accepts drafts, and the owner promotes it in the Console.
+  environment. Submission goes to TestFlight. iOS ships first (2026-11-22): Android has no upload
+  keystore yet, and `--non-interactive` will not generate one. With Google Play set up, the job
+  goes back to `--platform all` and also submits to the Play internal track as a draft release; a
+  Play app that was never reviewed only accepts drafts, and the owner promotes it in the Console.
 
 Each job checks for its secrets first and ends with a notice when they are missing.
 

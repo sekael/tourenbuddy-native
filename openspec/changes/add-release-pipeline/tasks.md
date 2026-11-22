@@ -24,4 +24,4 @@
 
 - [ ] 5.1 After merge: the native build check ran green on this PR (or `permissions.json` updated from its output)
 - [ ] 5.2 Setup per `docs/publishing.md` (EAS project id in `app.config.ts`, App Store Connect, Pages project, secrets); then the first release reaches TestFlight and the Pages production URL
-- [ ] 5.3 Google Play: first upload by hand, then the internal track through the pipeline
+- [ ] 5.3 Google Play (after the iOS release, `docs/publishing.md` "Android (later)"): first upload by hand, then `--platform all` and the internal track through the pipeline

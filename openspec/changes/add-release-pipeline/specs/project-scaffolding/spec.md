@@ -33,15 +33,15 @@ for iOS and review its permissions. A failing step SHALL fail the check.
 ### Requirement: Releases
 
 Merging the release pull request SHALL tag the version from the conventional commits, deploy the web
-app and start store builds of the `prod` variant that are submitted to TestFlight and the Play
-internal track. Build numbers SHALL increase with every store build without a commit. A release
+app and start store builds of the `prod` variant that are submitted to TestFlight (and to the Play
+internal track once Google Play is set up). Build numbers SHALL increase with every store build without a commit. A release
 step whose account is not set up yet SHALL skip with a notice instead of failing.
 
 #### Scenario: Release merged
 
 - **WHEN** the owner merges the release pull request
-- **THEN** the web app is deployed and iOS and Android builds start, each with a build number higher
-  than the last
+- **THEN** the web app is deployed and the iOS build starts with a build number higher than the
+  last (Android joins once Google Play is set up)
 
 #### Scenario: Accounts not set up yet
 

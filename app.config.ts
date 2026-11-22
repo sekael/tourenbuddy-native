@@ -22,6 +22,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: prod ? 'TourenBuddy' : 'TourenBuddy Dev',
   slug: 'tourenbuddy',
+  // The EAS project (both variants build from it); `eas init` cannot write to a dynamic config.
+  owner: 'tourenbuddy',
+  extra: { eas: { projectId: '5478edce-0f81-4ad6-bc78-a9d1e058e89e' } },
   version,
   scheme: prod ? 'tourenbuddy' : 'tourenbuddy-dev',
   icon: './assets/images/icon.png',

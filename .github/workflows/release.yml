@@ -93,6 +93,6 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-      # EAS builds and signs both apps, raises their build numbers and, once each build finishes,
-      # submits it to TestFlight and to the Play internal track as a draft.
-      - run: eas build --platform all --profile production --non-interactive --no-wait --auto-submit
+      # EAS builds and signs the iOS app, raises its build number and, once the build finishes,
+      # submits it to TestFlight. Android joins later (docs/publishing.md, "Android (later)").
+      - run: eas build --platform ios --profile production --non-interactive --no-wait --auto-submit
