@@ -1,4 +1,11 @@
-## ADDED Requirements
+# deep-links Specification
+
+## Purpose
+
+How links and taps reach the app: Universal Links and App Links on `tourenbuddy.ch`, the app's own
+scheme and tapped pushes, all routed by one resolver.
+
+## Requirements
 
 ### Requirement: One resolver for every way into the app
 Universal Links and App Links on `tourenbuddy.ch`, the app's own scheme and tapped pushes SHALL all be routed by one resolver. A link carrying `?notification=<id>` SHALL open that inbox entry's target and mark it read; a link to a known screen SHALL open it; any other link SHALL open the map. A link arriving before sign-in SHALL be followed after sign-in.

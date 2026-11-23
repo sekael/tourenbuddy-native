@@ -1,7 +1,14 @@
-## ADDED Requirements
+# app-compliance Specification
+
+## Purpose
+
+What the store builds declare for Apple's and Google's checks (privacy manifest, encryption,
+usage strings, target API, permissions) and the accessibility every screen keeps.
+
+## Requirements
 
 ### Requirement: The build declares what the stores check
-The iOS build SHALL ship a privacy manifest declaring no tracking, the data the app collects (linked to the user, for app functionality only) and the reasons for every required-reason API; SHALL declare no non-exempt encryption; and SHALL carry photo and camera usage strings in English and German. The Android build SHALL target API 36 or higher, SHALL not request Contacts, location or microphone permissions, and SHALL declare the apps it opens.
+The iOS build SHALL ship a privacy manifest declaring no tracking, the data the app collects (linked to the user, for app functionality only) and the reasons for every required-reason API; SHALL declare no non-exempt encryption; and SHALL carry photo, camera and contacts usage strings in English and German (contacts: App Store Connect requires it although the system picker never asks). The Android build SHALL target API 36 or higher, SHALL not request Contacts, location or microphone permissions, and SHALL declare the apps it opens.
 
 #### Scenario: App Store upload
 - **WHEN** the owner uploads a production build

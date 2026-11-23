@@ -22,7 +22,7 @@
 
 ## 5. Icons, launch, performance, web
 
-- [ ] 5.1 Icon Composer slot and Android monochrome icon in `app.config.ts` (artwork from the owner: open); launch screen check (DES-6)
+- [x] 5.1 ~~Icon Composer slot and Android monochrome icon in `app.config.ts`~~ `assets/images/icon.png` stays (owner, 2026-11-23): Icon Composer once there is layered artwork, the Android monochrome icon with Android work; launch screen check (DES-6) with the iPhone 15 checks before submission
 - [x] 5.2 Performance pass (no blocking work before the first frame, listeners released); owner's Instruments checks in the test plan
 - [x] 5.3 Web keyboard and semantics pass (map sheets as a side panel or bottom sheet beside the live map, Escape, browser dialogs for alerts)
 

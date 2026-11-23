@@ -57,8 +57,10 @@ Transparency (solid fills instead of translucent ones) and Bold Text.
 
 ### D6: Icons and launch
 
-`ios.icon` points at an Icon Composer document (`assets/app.icon`) once the owner exports it; until
-then the current PNG stays. Android `adaptiveIcon` gains `monochromeImage` for themed icons. The
+The icon stays the PNG (`assets/images/icon.png`, owner 2026-11-23): an Icon Composer document
+(`assets/app.icon`, `ios.icon`) only pays off with layered artwork, and the photo is one flat layer;
+iOS 26 masks the PNG and derives its dark and tinted versions. Android's themed icon
+(`adaptiveIcon.monochromeImage`) waits for Android work. The
 launch screen stays the splash-screen plugin (white, the mark), which on Android 12+ is the
 SplashScreen API.
 

@@ -22,6 +22,6 @@
 
 ## 5. Owner setup and checks
 
-- [ ] 5.1 After merge: the native build check ran green on this PR (or `permissions.json` updated from its output)
-- [ ] 5.2 Setup per `docs/publishing.md` (EAS project id in `app.config.ts`, App Store Connect, Pages project, secrets); then the first release reaches TestFlight and the Pages production URL
-- [ ] 5.3 Google Play (after the iOS release, `docs/publishing.md` "Android (later)"): first upload by hand, then `--platform all` and the internal track through the pipeline
+- [x] 5.1 After merge: the native build check ran green on this PR (or `permissions.json` updated from its output): green on #8 and #9 (2026-11-22)
+- [x] 5.2 Setup per `docs/publishing.md` (EAS project id in `app.config.ts`, App Store Connect, Pages project, secrets); then the first release reaches TestFlight and the Pages production URL: 0.2.0 deployed `public/` to tourenbuddy.ch; its build was rejected for a missing usage string (ITMS-90683, fixed in #9), 0.2.1 (2) reached TestFlight 2026-11-23
+- [x] 5.3 ~~Google Play (after the iOS release, `docs/publishing.md` "Android (later)"): first upload by hand, then `--platform all` and the internal track through the pipeline~~ moved to sekael/tourenbuddy_frontend_vue#373 (Android is not a priority)
