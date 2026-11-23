@@ -1,0 +1,67 @@
+/* Ported from the PWA's core/components/full-screen-page.vue (scoped style). */
+.full-screen-page {
+  position: fixed;
+  inset: 0;
+  /* Layout-viewport height; the body scroller handles the keyboard, the fixed
+     top bar keeps the Save action visible regardless of keyboard state. */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+  z-index: 60;
+  pointer-events: auto;
+  animation: page-in var(--motion-duration-medium) var(--motion-ease-emphasized) both;
+}
+
+/* Same spot and size as `.bottom-sheet--collapsed`, so the location picker's
+   bottom offset still clears it. Same animation-name: toggling doesn't replay it. */
+.full-screen-page--collapsed {
+  inset: auto 0 0;
+  height: auto;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-lg);
+}
+
+.full-screen-page--collapsed .page-bar {
+  padding: var(--spacing-md);
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-offset));
+  }
+}
+
+.page-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+  padding: calc(var(--safe-top) + var(--spacing-sm)) var(--spacing-md) var(--spacing-sm);
+}
+
+.title {
+  font-size: var(--overlay-title-size);
+  font-weight: var(--font-weight-semibold);
+  flex: 1;
+  min-width: 0;
+  letter-spacing: var(--overlay-title-tracking);
+}
+
+.title-spacer {
+  flex: 1;
+}
+
+.page-action {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--spacing-md) var(--spacing-md) calc(var(--spacing-md) + var(--safe-bottom));
+}

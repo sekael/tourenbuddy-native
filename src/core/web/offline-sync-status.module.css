@@ -1,0 +1,177 @@
+/* Ported from the PWA's core/components/offline-sync-status.vue (scoped style). */
+.sync-toast {
+  position: fixed;
+  bottom: var(--float-bottom);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-lg);
+  background: var(--color-inverse-surface);
+  color: var(--color-on-inverse-surface);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  z-index: 210;
+  /* Centred from `left: 50%`, it would shrink to half the screen and wrap. */
+  width: max-content;
+  max-width: 90vw;
+}
+
+/* Collapsed = a warning icon anchored in the bottom-left corner. Expanding raises it
+   above the bottom action pill AND reveals the text/button — both animate together. */
+.sync-deadletter {
+  position: fixed;
+  bottom: var(--float-corner-bottom);
+  left: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: var(--spacing-xs);
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--color-warning-strong);
+  color: var(--color-on-warning);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  z-index: 210;
+  max-width: 90vw;
+  cursor: pointer;
+  transition:
+    bottom var(--motion-duration-medium) var(--motion-ease-emphasized),
+    padding var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+.sync-deadletter--expanded {
+  bottom: calc(var(--float-corner-bottom) + 6rem);
+  padding: var(--spacing-xs) var(--spacing-md);
+}
+
+/* Text + review action, clipped to zero width until the banner expands. */
+.sync-deadletter .dl-body {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width var(--motion-duration-medium) var(--motion-ease-emphasized),
+    opacity var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.sync-deadletter--expanded .dl-body {
+  max-width: 70vw;
+  opacity: 1;
+}
+
+.sync-deadletter .dl-text {
+  margin-left: var(--spacing-xs);
+}
+
+.sync-deadletter .dl-review {
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Fixed, bottom-anchored scrim host for the mobile bottom sheet. Above every route
+   surface (status toasts sit at ~210; routes/sheets well below 400). On desktop it
+   collapses to `display: contents` so DialogWindow self-centers with its own backdrop. */
+.review-host {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--color-backdrop-strong);
+}
+
+@media (min-width: 600px) {
+  .review-host {
+    display: contents;
+  }
+}
+
+.deadletter-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.deadletter-empty {
+  padding: var(--spacing-md) 0;
+  font-size: 0.875rem;
+  color: var(--color-on-surface-variant);
+  text-align: center;
+}
+
+.deadletter-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-variant);
+}
+
+.deadletter-item .meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.deadletter-item .reason {
+  font-size: 0.75rem;
+  color: var(--color-warning-text);
+}
+
+.deadletter-item .actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.deadletter-item button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  padding: var(--spacing-xxs) var(--spacing-sm);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.deadletter-item .discard {
+  color: var(--color-error);
+}
+
+.sync-toast-enter-active,
+.sync-toast-leave-active {
+  transition:
+    opacity var(--motion-duration-medium) var(--motion-ease-standard),
+    transform var(--motion-duration-medium) var(--motion-ease-spring);
+}
+
+.sync-toast-enter-from,
+.sync-toast-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 100%);
+}
+
+/* The left-anchored banner has no translateX base — slide straight up instead. */
+.sync-deadletter.sync-toast-enter-from,
+.sync-deadletter.sync-toast-leave-to {
+  opacity: 0;
+  transform: translateY(100%);
+}

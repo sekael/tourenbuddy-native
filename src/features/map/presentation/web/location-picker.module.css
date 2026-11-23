@@ -1,0 +1,141 @@
+/* Ported from the PWA's features/map/presentation/components/location-picker.vue (scoped style). */
+.location-picker {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 200;
+}
+
+/* Fixed, so it stays above Android system nav and Brave bottom chrome and clears the notch
+   in a standalone PWA (parent .location-picker is absolute inside page-root 100lvh). Spans
+   from the visible top down to its offset and stacks at the bottom, so a long result list
+   scrolls instead of running off-screen. */
+.dock {
+  position: fixed;
+  top: calc(var(--viewport-top) + var(--safe-top) + var(--spacing-md));
+  bottom: var(--dock-bottom);
+  left: 0;
+  right: 0;
+  width: min(440px, calc(100% - 2 * var(--spacing-md)));
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  pointer-events: none;
+  /* Above the crosshair (z 15): results that reach the map centre must hide the reticle. */
+  z-index: 16;
+  transition: bottom var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+/* The hint, the search field and the actions: what toasts rise above. */
+.stack {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.dock > :not(.stack),
+.stack > * {
+  pointer-events: auto;
+}
+
+/* Searching on a touch screen: field at the visible top, results open downward, so the
+   field and the best results stay clear of the keyboard wherever the browser puts it. */
+.dock--searching {
+  bottom: auto;
+  flex-direction: column-reverse;
+}
+
+/* Floating pill over the map: frosted and lifted, brand ring while typing. */
+.search-field {
+  flex-shrink: 0;
+  min-height: 52px;
+  padding: var(--spacing-xxs) var(--spacing-xs) var(--spacing-xxs) var(--spacing-md);
+  border: 1px solid color-mix(in srgb, var(--color-outline-variant) 70%, transparent);
+  border-radius: var(--radius-pill);
+  background-color: color-mix(in srgb, var(--color-background) 86%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  backdrop-filter: blur(16px) saturate(1.6);
+  box-shadow: var(--shadow-lg);
+  transition:
+    border-color var(--motion-duration-short) var(--motion-ease-standard),
+    background-color var(--motion-duration-short) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.search-field:focus-within {
+  border-color: var(--color-primary);
+  background-color: var(--color-background);
+  box-shadow: var(--shadow-lg), var(--input-focus-ring);
+}
+
+.search-field :global(.search-icon) {
+  color: var(--color-primary);
+}
+
+.search-field :global(.search-input) {
+  align-self: stretch;
+}
+
+/* Our own clear button instead of the browser's (absent in Firefox, dated elsewhere). */
+.search-field :global(.search-input::-webkit-search-cancel-button) {
+  display: none;
+}
+
+.results-enter-active,
+.results-leave-active {
+  transform-origin: bottom center;
+  transition:
+    opacity var(--motion-duration-short) var(--motion-ease-standard),
+    transform var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+.results-enter-from,
+.results-leave-to {
+  opacity: 0;
+  transform: translateY(var(--motion-offset)) scale(0.98);
+}
+
+.dock--searching .results-enter-active {
+  transform-origin: top center;
+}
+
+.dock--searching .results-enter-from {
+  transform: translateY(calc(-1 * var(--motion-offset))) scale(0.98);
+}
+
+/* The dock flips back to the bottom as the list closes; fading out there would flash. */
+@media (hover: none) {
+  .results-leave-active {
+    transition: none;
+  }
+}
+
+.actions {
+  flex-shrink: 0;
+  align-self: center;
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+/* A frosted note in the same glass as the search pill, so it reads on bright terrain. */
+.hint {
+  flex-shrink: 0;
+  align-self: center;
+  margin: 0;
+  padding: var(--spacing-xxs) var(--spacing-md);
+  border-radius: var(--radius-pill);
+  background-color: color-mix(in srgb, var(--color-background) 86%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  backdrop-filter: blur(16px) saturate(1.6);
+  box-shadow: var(--shadow-md);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+/* Tonal secondary needs a lift to stand off bright terrain */
+.on-map {
+  box-shadow: var(--shadow-md);
+}

@@ -1,0 +1,82 @@
+/* Ported from the PWA's core/components/base-icon-button.vue (scoped style). */
+.base-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-on-surface-variant);
+  transition:
+    background-color var(--motion-duration-short) var(--motion-ease-standard),
+    opacity var(--motion-duration-short) var(--motion-ease-standard),
+    transform var(--motion-duration-short) var(--motion-ease-spring);
+}
+
+.base-icon-button:active:not(:disabled) {
+  transform: scale(var(--press-scale));
+}
+
+@media (hover: hover) {
+  .base-icon-button:hover:not(:disabled) {
+    background-color: var(--color-surface-variant);
+  }
+}
+
+.base-icon-button:active:not(:disabled) {
+  background-color: var(--color-surface-variant);
+}
+
+.base-icon-button--tonal {
+  background-color: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
+}
+
+@media (hover: hover) {
+  .base-icon-button--tonal:hover:not(:disabled) {
+    background-color: var(--color-secondary-container-hover);
+  }
+}
+
+.base-icon-button--tonal:active:not(:disabled) {
+  background-color: var(--color-secondary-container-hover);
+}
+
+/* Danger tone: red glyph on hover, faint red wash instead of the neutral grey. */
+@media (hover: hover) {
+  .base-icon-button--danger:hover:not(:disabled) {
+    color: var(--color-error);
+    background-color: color-mix(in srgb, var(--color-error) 8%, transparent);
+  }
+}
+
+.base-icon-button--danger:active:not(:disabled) {
+  color: var(--color-error);
+  background-color: color-mix(in srgb, var(--color-error) 8%, transparent);
+}
+
+.base-icon-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.base-icon-button--sm {
+  width: var(--icon-button-size-sm);
+  height: var(--icon-button-size-sm);
+}
+
+.base-icon-button--md {
+  width: var(--icon-button-size-md);
+  height: var(--icon-button-size-md);
+}
+
+.base-icon-button--lg {
+  width: var(--icon-button-size-lg);
+  height: var(--icon-button-size-lg);
+}
+
+.base-icon-button--round {
+  border-radius: 50%;
+}
+
+.base-icon-button--square {
+  border-radius: var(--radius-sm);
+}

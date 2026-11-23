@@ -1,0 +1,43 @@
+/* Ported from the PWA's features/calendar/presentation/components/calendar-outbound-feed.vue (scoped style). */
+.outbound {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.group-title {
+  font-size: var(--heading-section-size);
+  font-weight: var(--heading-section-weight);
+  color: var(--heading-section-color);
+  letter-spacing: var(--heading-section-tracking);
+}
+
+.hint,
+.confirm {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.url-row,
+.confirm {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.url {
+  flex: 1;
+  min-width: 0;
+  padding: var(--spacing-sm);
+  border: 1.5px solid var(--color-outline-variant);
+  border-radius: var(--input-radius);
+  font: inherit;
+  font-size: max(1rem, 1em);
+  color: var(--color-on-surface);
+  background-color: var(--input-bg);
+}
+
+.regenerate {
+  align-self: flex-start;
+}

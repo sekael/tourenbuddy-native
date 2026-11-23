@@ -1,0 +1,85 @@
+/* Ported from the PWA's features/user/presentation/pages/onboarding-page.vue (scoped style). */
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: -webkit-fill-available;
+  min-height: 100lvh;
+  padding: calc(var(--spacing-xl) + var(--safe-top)) var(--spacing-xl) calc(var(--spacing-xl) + var(--safe-bottom));
+  background-color: var(--color-background);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  width: 100%;
+  max-width: 400px;
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  color: var(--color-on-surface-variant);
+  line-height: 1.5;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--field-label-color);
+}
+
+.required {
+  color: var(--color-error);
+}
+
+.optional {
+  font-weight: var(--font-weight-regular);
+  color: var(--color-on-surface-variant);
+}
+
+.input {
+  padding: var(--spacing-md);
+  border: 1.5px solid var(--color-outline-variant);
+  border-radius: var(--input-radius);
+  font-size: var(--font-size-base);
+  color: var(--color-on-surface);
+  background-color: var(--input-bg);
+  outline: none;
+  transition:
+    border-color var(--motion-duration-medium) var(--motion-ease-standard),
+    background-color var(--motion-duration-medium) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-medium) var(--motion-ease-standard);
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+  background-color: var(--input-bg-focus);
+  box-shadow: var(--input-focus-ring);
+}
+
+.input--error {
+  border-color: var(--color-error);
+}
+
+.error-text {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+}

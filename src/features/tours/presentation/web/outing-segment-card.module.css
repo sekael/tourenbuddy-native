@@ -1,0 +1,165 @@
+/* Ported from the PWA's features/tours/presentation/components/outing-segment-card.vue (scoped style). */
+/* A stage card: one self-contained block, the unit that is dragged around. Its dot sits at the
+   timeline's `--dot-x`, so the links between cards run through the dots. */
+.card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  padding: var(--spacing-xxs) var(--spacing-xs);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--card-radius);
+  background: var(--color-background);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--motion-duration-short) var(--motion-ease-standard),
+    background-color var(--motion-duration-short) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.card--editing {
+  padding-inline-start: var(--spacing-xxs);
+}
+
+/* Lifted and following the pointer. */
+.card--dragging {
+  z-index: 1;
+  box-shadow: var(--shadow-lg);
+  transition: none;
+}
+
+/* Where the dragged card would land: a 2 px outline (no layout shift) on a tinted card. */
+.card--over {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: -1px;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-background));
+}
+
+@media (hover: hover) {
+  .card:has(.main:hover:not(:disabled)) {
+    border-color: var(--color-outline);
+    background: var(--color-surface);
+  }
+}
+
+/* 44 px: a finger-sized grip; `touch-action: none` keeps the sheet from scrolling under it. */
+.handle,
+.remove {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-on-surface-variant);
+}
+
+.handle {
+  cursor: grab;
+  touch-action: none;
+}
+
+.card--dragging .handle {
+  cursor: grabbing;
+}
+
+.remove {
+  color: var(--color-error);
+  cursor: pointer;
+}
+
+.handle:disabled,
+.remove:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .handle:hover:not(:disabled),
+  .remove:hover:not(:disabled) {
+    background-color: var(--color-surface-variant);
+  }
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-xs);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.card--editing .main {
+  padding-inline: 0;
+}
+
+.main:disabled {
+  cursor: inherit;
+}
+
+.dot {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+
+.name {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.height {
+  flex-shrink: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+}
+
+.meta {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.meta-grade {
+  margin-inline-end: var(--spacing-xxs);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-outline-variant);
+}

@@ -1,0 +1,5 @@
+/* Ported from the PWA's features/map/presentation/components/route-planner.vue (global style). */
+/* While planning, a tap on a tour marker sets a point like anywhere else on the map. */
+.route-planning .maplibregl-marker {
+  pointer-events: none;
+}

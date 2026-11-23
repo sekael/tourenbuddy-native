@@ -1,0 +1,51 @@
+/* Ported from the PWA's features/map/presentation/components/offline-region-draw.vue (scoped style). */
+.draw-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  /* Click-through so map gestures (pan/zoom) reach the canvas underneath;
+     pointer-events inherits, so children are none unless they opt back to auto.
+     Corner clicks are captured via the map's own 'click' event, not the DOM. */
+  pointer-events: none;
+}
+
+.rect {
+  position: absolute;
+  border: 2px solid var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  pointer-events: none;
+}
+
+.mobile-frame {
+  border-radius: var(--radius-sm);
+}
+
+.hint {
+  position: fixed;
+  top: calc(var(--spacing-lg) + var(--safe-top));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-on-surface);
+  background-color: rgba(248, 250, 252, 0.9);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-sm);
+}
+
+.actions {
+  position: fixed;
+  bottom: calc(var(--spacing-lg) + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--spacing-md);
+  pointer-events: auto;
+}
+
+/* Tonal secondary needs a lift to stand off bright terrain */
+.on-map {
+  box-shadow: var(--shadow-md);
+}

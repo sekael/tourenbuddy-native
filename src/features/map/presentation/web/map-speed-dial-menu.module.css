@@ -1,0 +1,82 @@
+/* Ported from the PWA's features/map/presentation/components/map-speed-dial-menu.vue (scoped style). */
+.menu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-xs);
+}
+
+.item-slot {
+  position: relative;
+  display: flex;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Quarter-circle arc around the speed-dial trigger (bottom-right), so the menu
+     doesn't cover the bottom-center tour pill. The menu's bottom-right corner is
+     the trigger's; item i of n sits at θ = i/(n-1) · 90° from vertical (up → left)
+     on a 136px radius — wide enough that five 48px items never touch. */
+  .menu {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 184px;
+    height: 184px;
+    display: block;
+  }
+
+  .menu > .item-slot {
+    --angle: calc(var(--i) / max(var(--n) - 1, 1) * 90deg);
+    position: absolute;
+    right: calc(sin(var(--angle)) * 136px);
+    bottom: calc(cos(var(--angle)) * 136px);
+  }
+
+  /* Icon-only circles; the name stays in aria-label/title. Unfolded options keep
+     their labels — there is room beside the arc. */
+  .item-slot > :global(.item-row) {
+    width: 48px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .item-slot > :global(.item-row .label) {
+    display: none;
+  }
+}
+
+/* Sits on the pill's top-right border (the item row is its containing block), ringed
+   like the trigger's count so it reads as one signal in two places. */
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-fab-on-surface);
+  color: var(--color-primary-dark);
+  border: 2px solid var(--color-fab-surface);
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* On the pill's rounded corner, not its bounding box: the arc at 45° sits
+   r·(1 − 1/√2) ≈ 7px in from each edge (r = 24px for the 48px pill and the landscape
+   circle alike), so the 12px dot centred there half-overlaps the outline. */
+.dot {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--color-fab-on-surface);
+  border: 2px solid var(--color-fab-surface);
+  pointer-events: none;
+}

@@ -1,0 +1,72 @@
+/* Ported from the PWA's features/tours/presentation/components/outing-segment-timeline.vue (scoped style). */
+.timeline {
+  /* Dot centre from a card's left edge: border + padding (+ handle while editing) + half a dot. */
+  --dot-x: calc(1px + 2 * var(--spacing-xs) + 14px);
+
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline--editing {
+  --dot-x: calc(1px + 2 * var(--spacing-xxs) + 44px + 14px);
+}
+
+/* Between two cards: a dashed line through the dots (amber where the chain breaks), and beside it
+   what happens there. */
+.link {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+  min-height: var(--spacing-sm);
+  padding-inline-start: calc(var(--dot-x) + var(--spacing-md));
+}
+
+.link:has(.link-row) {
+  padding-block: var(--spacing-xs);
+}
+
+.link::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  left: calc(var(--dot-x) - 1px);
+  border-left: 2px dashed var(--color-outline-variant);
+}
+
+.link--warn::before {
+  border-left-color: var(--color-warning);
+}
+
+.link-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.link-row--warn {
+  color: var(--color-warning-text);
+}
+
+.connect {
+  margin-inline-start: var(--spacing-xxs);
+  min-height: 32px;
+  padding: 0 var(--spacing-sm);
+  border: 1px solid currentcolor;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.connect:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

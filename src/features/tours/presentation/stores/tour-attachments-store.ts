@@ -19,6 +19,7 @@ import {
   SupabaseTourAttachmentRepository,
 } from '@/features/tours/data/repositories/tour-attachment-repository-impl';
 import type { TourAttachment } from '@/features/tours/domain/entities/tour-attachment';
+import { movedSegment } from '@/features/tours/domain/outing';
 
 /**
  * A tour's files (tour-attachments), ported from the PWA's store: PNG, JPEG and PDF up to 10 MB,
@@ -80,6 +81,10 @@ type State = {
   discardDraft: (draftId: string, tourId: string | null) => Promise<void>;
   stage: (draftId: string, files: LocalFile[], baseCount?: number) => void;
   clearStaged: (draftId: string) => void;
+  /** Moves one create-flow (or staged) file before the tour exists (the web form's handle). */
+  stageReorder: (draftId: string, from: number, to: number) => void;
+  /** Drops one create-flow file before the tour exists: no row to delete, just the object. */
+  discardPreUploaded: (draftId: string, id: string) => Promise<void>;
   remove: (attachment: TourAttachment) => Promise<unknown>;
   reorder: (tourId: string, orderedIds: string[]) => Promise<unknown>;
   /** A local copy for the system preview: cached, else downloaded; throws when unavailable. */
@@ -441,6 +446,34 @@ export const useTourAttachmentsStore = create<State>()((set, get) => {
         const { [draftId]: _s, ...rest } = s.stagedByDraft;
         return { stagedByDraft: rest };
       }),
+
+    stageReorder: (draftId, from, to) =>
+      set((s) => {
+        const preUploaded = s.preUploadedByDraft[draftId];
+        if (preUploaded?.length)
+          return {
+            preUploadedByDraft: {
+              ...s.preUploadedByDraft,
+              [draftId]: movedSegment(preUploaded, from, to),
+            },
+          };
+        const staged = s.stagedByDraft[draftId];
+        return staged?.length
+          ? { stagedByDraft: { ...s.stagedByDraft, [draftId]: movedSegment(staged, from, to) } }
+          : {};
+      }),
+
+    discardPreUploaded: async (draftId, id) => {
+      const target = (get().preUploadedByDraft[draftId] ?? []).find((f) => f.id === id);
+      if (!target) return;
+      set((s) => ({
+        preUploadedByDraft: {
+          ...s.preUploadedByDraft,
+          [draftId]: (s.preUploadedByDraft[draftId] ?? []).filter((f) => f.id !== id),
+        },
+      }));
+      discardObject(target.storagePath);
+    },
 
     remove: (attachment) => {
       set({ error: null });

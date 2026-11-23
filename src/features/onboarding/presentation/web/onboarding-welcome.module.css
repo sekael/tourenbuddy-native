@@ -1,0 +1,159 @@
+/* Ported from the PWA's features/onboarding/presentation/components/onboarding-welcome.vue (scoped style). */
+.welcome-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Mobile: a full-screen page, not a dialog — solid background fills the
+     viewport (no dimmed map behind, no floating card). */
+  padding: var(--spacing-xl) var(--spacing-lg);
+  padding-top: calc(var(--spacing-xl) + var(--safe-top));
+  padding-bottom: calc(var(--spacing-xl) + var(--safe-bottom));
+  background-color: var(--color-background);
+}
+
+.welcome-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  width: 100%;
+  text-align: center;
+}
+
+/* Desktop: revert to a centered dialog card over a dimmed backdrop. */
+@media (min-width: 600px) {
+  .welcome-backdrop {
+    padding: var(--spacing-lg);
+    background-color: var(--color-backdrop-strong);
+    -webkit-backdrop-filter: blur(var(--overlay-backdrop-blur));
+    backdrop-filter: blur(var(--overlay-backdrop-blur));
+  }
+
+  .welcome-card {
+    max-width: 380px;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-background);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+/* Icon in a soft tinted disc with a slow halo — the one decorative flourish. */
+.welcome-badge {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: var(--spacing-xs);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-background));
+}
+
+.welcome-badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 30%, transparent);
+  animation: welcome-halo 2.4s var(--motion-ease-standard) 0.6s infinite;
+}
+
+@keyframes welcome-halo {
+  70%,
+  100% {
+    box-shadow: 0 0 0 16px transparent;
+  }
+}
+
+.welcome-icon {
+  color: var(--color-primary);
+  font-size: var(--icon-size-xl);
+}
+
+/* Entrance: card contents rise in one after another. */
+.welcome-card > * {
+  animation: welcome-rise var(--motion-duration-long) var(--motion-ease-emphasized) backwards;
+}
+
+.welcome-card > :nth-child(2) {
+  animation-delay: calc(var(--motion-stagger) * 2);
+}
+
+.welcome-card > :nth-child(3) {
+  animation-delay: calc(var(--motion-stagger) * 3);
+}
+
+.welcome-card > :nth-child(4) {
+  animation-delay: calc(var(--motion-stagger) * 4);
+}
+
+@keyframes welcome-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-offset));
+  }
+}
+
+/* <Transition name="welcome"> in the host pages: the backdrop fades, the card
+   settles in (desktop); on exit everything fades out together. */
+.welcome-enter-active,
+.welcome-leave-active {
+  transition: opacity var(--motion-duration-medium) var(--motion-ease-standard);
+}
+
+.welcome-enter-active .welcome-card,
+.welcome-leave-active .welcome-card {
+  transition: transform var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+.welcome-enter-from,
+.welcome-leave-to {
+  opacity: 0;
+}
+
+.welcome-enter-from .welcome-card {
+  transform: scale(0.97);
+}
+
+.welcome-leave-to .welcome-card {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-badge::after,
+  .welcome-card > * {
+    animation: none;
+  }
+}
+
+.welcome-title {
+  font-size: var(--overlay-title-size);
+  letter-spacing: var(--overlay-title-tracking);
+  line-height: 1.2;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-on-surface);
+}
+
+.welcome-body {
+  font-size: var(--font-size-base);
+  color: var(--color-on-surface-variant);
+  line-height: 1.5;
+}
+
+.welcome-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 100%;
+  margin-top: var(--spacing-sm);
+}
+
+.start-btn,
+.skip-btn,
+.dismiss-btn {
+  width: 100%;
+}

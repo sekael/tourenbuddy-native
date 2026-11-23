@@ -1,0 +1,33 @@
+/* Safe-area insets (iOS notch, Android nav bar, home indicator).
+   These are runtime CSS functions — env() resolves per-device at paint time,
+   not static design values — so they live here, NOT in tokens.css. */
+:root {
+  --safe-top: calc(env(safe-area-inset-top, 0px) + var(--offline-bar-height));
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* The offline bar (offline-indicator.vue) takes its own band at the top while it shows: whatever
+   clears the top through --safe-top clears the bar too, so it never covers a control. Registered
+   so the band opens and closes smoothly instead of shifting the page in one jump (its transition
+   sits with the other insets' in global.css). */
+@property --offline-bar-height {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+/* iOS 26 colors a Home Screen app's opaque status bar from the full-width fixed element at the top
+   of the page (theme-color is ignored) and keeps that color once the element is gone. Installed,
+   the bar never closes all the way, so the status bar is its dark color from launch on and never
+   flips. Over 10px tall, iOS reads its background color instead of sampling pixels. */
+@media (display-mode: standalone) {
+  :root {
+    --offline-bar-height: 0.75rem;
+  }
+}
+
+:root:has(.offline-bar--on) {
+  --offline-bar-height: 1.75rem;
+}

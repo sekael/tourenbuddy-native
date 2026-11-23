@@ -1,0 +1,145 @@
+/* Ported from the PWA's core/components/dialog-window.vue (scoped style). */
+/* Dialogs hang from a fixed top line rather than centring: when the content
+   changes height only the bottom edge moves, so the header (title, back, close)
+   never shifts under the pointer. The same inset is kept below, so a dialog that
+   reaches its full height sits balanced on the screen. */
+.dialog-backdrop {
+  --dialog-inset: clamp(var(--spacing-xl), 12dvh, 7rem);
+
+  position: fixed;
+  inset: 0;
+  background: var(--color-backdrop);
+  -webkit-backdrop-filter: blur(var(--overlay-backdrop-blur));
+  backdrop-filter: blur(var(--overlay-backdrop-blur));
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--dialog-inset) var(--spacing-xl);
+  z-index: 50;
+  transition:
+    background var(--motion-duration-medium) var(--motion-ease-emphasized),
+    backdrop-filter var(--motion-duration-medium) var(--motion-ease-emphasized),
+    padding var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+/* When picking a location: remove backdrop, pin the card to the top edge */
+.dialog-backdrop--collapsed {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  pointer-events: none;
+  padding-top: var(--safe-top);
+}
+
+.dialog-card {
+  background-color: var(--color-background);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 560px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  transform-origin: top center;
+  animation: dialog-enter var(--motion-duration-medium) var(--motion-ease-emphasized) both;
+  pointer-events: auto;
+  overflow: hidden;
+  transition:
+    max-height var(--motion-duration-medium) var(--motion-ease-emphasized),
+    border-radius var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--motion-offset))) scale(0.98);
+  }
+}
+
+/* Collapsed: header-only bar anchored to top-center, matching side-drawer--collapsed.
+   animation-name intentionally NOT overridden here — same pattern as side-drawer.vue —
+   so toggling collapsed off does not restart dialog-enter. */
+.dialog-card--collapsed {
+  max-width: 400px;
+  max-height: 4.5rem;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  pointer-events: auto;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+  padding: var(--spacing-lg) var(--spacing-xl) var(--spacing-md);
+}
+
+.dialog-title {
+  font-size: var(--overlay-title-size);
+  font-weight: var(--font-weight-semibold);
+  flex: 1;
+  letter-spacing: var(--overlay-title-tracking);
+}
+
+.title-spacer {
+  flex: 1;
+}
+
+/* Scroll box: its height follows the body (inline style); it may shrink below
+   that when the card hits its max-height, and then scrolls. */
+.dialog-content {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* Explicit: an unset overflow-x computes to `auto` alongside overflow-y here
+     (CSS Overflow spec), which would silently open a horizontal scrollbar the
+     moment any row's content is a pixel too wide. Dialogs scroll vertically only. */
+  overflow-x: hidden;
+  /* Overscroll stops here — never chains to the page behind the dialog. */
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-outline-variant) transparent;
+  opacity: 1;
+  transition: opacity var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.dialog-content--glide {
+  transition:
+    opacity var(--motion-duration-short) var(--motion-ease-standard),
+    height var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+.dialog-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.dialog-content::-webkit-scrollbar-thumb {
+  background-color: var(--color-outline-variant);
+  border-radius: var(--radius-pill);
+}
+
+/* With a footer below, content fades out over its last 24px instead of being cut off at the
+   footer's edge (as in the bottom sheet and side drawer). */
+.dialog-content:has(~ .dialog-footer) {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent);
+}
+
+.dialog-footer {
+  flex-shrink: 0;
+  padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-lg);
+}
+
+/* Natural height, never stretched — the measure the scroll box follows */
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-xl);
+}
+
+.dialog-card--collapsed .dialog-content {
+  opacity: 0;
+  flex: 0;
+  overflow: hidden;
+  pointer-events: none;
+}

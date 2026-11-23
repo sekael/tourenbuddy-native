@@ -1,0 +1,79 @@
+/* Ported from the PWA's features/map/presentation/pages/map-page.vue (scoped style). */
+.map-page {
+  /* fixed (not relative + 100lvh): pin the page to the viewport so the document
+     never scrolls. Under `#app { min-height: 100lvh }`, a 100lvh page is taller
+     than the visible browser viewport (lvh = chrome-hidden height), so the
+     document scrolled and the map slid under the fixed sheet, opening a gap above
+     the URL bar. `fixed inset:0` still fills the safe areas in PWA (viewport-fit
+     cover) and stays a containing block for the absolutely-positioned overlays. */
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* During the guided tour (and its welcome screen) the whole app subtree is made
+   inert: driver.js positions each spotlight/popover ONCE, so any MapLibre pan or
+   sheet scroll would drag it off its target. This holds continuously — including
+   the brief staging gaps where driver's own `pointer-events:none` is down. The
+   banner, welcome, and driver's backdrop overlay are all teleported to <body>,
+   outside this subtree, so they stay live and tap-to-advance keeps working.
+   `pointer-events:none` blocks taps reaching the map+sheets; `touch-action:none`
+   kills any residual touch-pan/scroll gesture. */
+/* Hidden, not unmounted: the collapsed form keeps what was typed. */
+:global(
+  html.picker-searching
+    :is(.full-screen-page--collapsed, .bottom-sheet--collapsed, .dialog-card--collapsed, .side-drawer--collapsed)
+) {
+  visibility: hidden;
+}
+
+.map-page--tour-locked {
+  pointer-events: none;
+  touch-action: none;
+}
+
+.calendar-feature-notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  color: var(--color-on-surface-variant);
+  line-height: 1.5;
+}
+
+/* MapLibre's attribution links differ from the surrounding text by color alone
+   (2.02:1); an underline makes them identifiable (WCAG 1.4.1). */
+:global(.maplibregl-ctrl-attrib a) {
+  text-decoration: underline;
+}
+
+/* Sheet → sheet: the outgoing sheet fades out quickly, the next one rises into place. */
+.sheet-swap-enter-active,
+.sheet-swap-leave-active {
+  transition:
+    transform var(--motion-duration-medium) var(--motion-ease-emphasized),
+    opacity var(--motion-duration-medium) var(--motion-ease-standard);
+}
+
+.sheet-swap-leave-active {
+  transition-duration: var(--motion-duration-short);
+}
+
+.sheet-swap-enter-from,
+.sheet-swap-leave-to {
+  transform: translateY(var(--motion-offset));
+  opacity: 0;
+}
+
+/* On desktop, disable container transitions — each overlay animates itself */
+@media (min-width: 600px) {
+  .sheet-swap-enter-active,
+  .sheet-swap-leave-active {
+    transition: none;
+  }
+
+  .sheet-swap-enter-from,
+  .sheet-swap-leave-to {
+    transform: none;
+    opacity: 1;
+  }
+}

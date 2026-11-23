@@ -1,0 +1,121 @@
+/* Ported from the PWA's features/map/presentation/components/tourenbuddy-map.vue (global style). */
+/* A scene change (D20) fades the DOM clusters and chip with the GL markers. */
+.tours-scene-hidden .maplibregl-marker {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* Stack list (design D7): built as plain DOM by the marker layer inside a MapLibre popup, so it
+   can't take scoped styles. */
+.stack-list-popup .maplibregl-popup-content {
+  padding: var(--spacing-xs) 0;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  font-family: var(--font-family-base);
+}
+
+.stack-list-popup .maplibregl-popup-close-button {
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  color: var(--color-on-surface-variant);
+}
+
+.stack-list-popup--above .stack-list__rows {
+  /* Opened upward above a tour: about the room above it when framed, under the title. */
+  max-height: min(38vh, 360px);
+}
+
+.stack-list__title {
+  margin: 0;
+  padding: var(--spacing-xxs) 40px var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-on-surface);
+}
+
+.stack-list__rows {
+  /* The marker layer pans the list into view when it runs off the visible area. */
+  max-height: min(55vh, 440px);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  /* Scroll shadows: a soft edge shows only where more rows hide (local covers vs. fixed shades). */
+  background:
+    linear-gradient(var(--white) 30%, transparent) center top / 100% 32px no-repeat local,
+    linear-gradient(transparent, var(--white) 70%) center bottom / 100% 32px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, 0.18), transparent) center top / 100% 10px no-repeat scroll,
+    radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, 0.18), transparent) center bottom / 100% 10px no-repeat
+      scroll;
+}
+
+.stack-list__row {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding: var(--spacing-xxs) var(--spacing-sm);
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: var(--color-on-surface);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--color-neutral-container);
+  }
+}
+
+.stack-list__dot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--white);
+  border-radius: var(--radius-round);
+  box-shadow: var(--shadow-control);
+
+  & img {
+    width: 16px;
+    height: 16px;
+  }
+
+  &[data-completed]::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    width: 11px;
+    height: 11px;
+    border: 1.5px solid var(--white);
+    border-radius: var(--radius-round);
+    background: #15803d
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpolyline points='5,12.5 10,17.5 19.5,7' stroke='white' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      center / 9px no-repeat;
+  }
+}
+
+.stack-list__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stack-list__name {
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stack-list__sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+}

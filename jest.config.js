@@ -16,9 +16,10 @@ const withApp = (preset, moduleNameMapper = {}) => {
         { ...babelOptions, caller: { ...babelOptions.caller, supportsReactCompiler: true } },
       ],
     },
+    // Extra mappers first: Jest takes the first match, and `@/…/x.css` must reach the CSS stub.
     moduleNameMapper: {
-      ...preset.moduleNameMapper,
       ...moduleNameMapper,
+      ...preset.moduleNameMapper,
       '^@/(.*)$': '<rootDir>/src/$1',
     },
     setupFiles: [...(preset.setupFiles ?? []), '<rootDir>/test/setup.ts'],
@@ -48,6 +49,8 @@ module.exports = {
       ...withApp(getWebPreset(), {
         // Expo's web bundler resolves this the same way (react-native-svg still imports it).
         '^@react-native/assets-registry/registry$': 'react-native-web/asset-registry',
+        // The web port's CSS Modules (`classes()` then yields the raw class names).
+        '\\.css$': '<rootDir>/test/support/css-module.js',
       }),
       // First: the preset's setup already loads react-native-web, which reads `matchMedia` once.
       setupFiles: [

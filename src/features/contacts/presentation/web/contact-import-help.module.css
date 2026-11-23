@@ -1,0 +1,25 @@
+/* Ported from the PWA's features/contacts/presentation/components/contact-import-help.vue (scoped style). */
+.import-help {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.import-help-summary {
+  cursor: pointer;
+  padding: var(--spacing-xxs) 0;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.tabs {
+  margin-top: var(--spacing-xs);
+}
+
+.steps {
+  margin: var(--spacing-sm) 0 0;
+  padding-left: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  line-height: 1.4;
+}

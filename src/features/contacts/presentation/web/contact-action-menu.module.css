@@ -1,0 +1,145 @@
+/* Ported from the PWA's features/contacts/presentation/components/contact-action-menu.vue (scoped style). */
+/* ── Desktop popover ── */
+.popover-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+
+.popover {
+  position: fixed;
+  width: 240px;
+  background-color: var(--color-background);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 61;
+  overflow: hidden;
+  animation: popover-enter var(--motion-duration-medium) var(--motion-ease-emphasized) both;
+}
+
+@keyframes popover-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-sm) var(--spacing-md);
+}
+
+.popover-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-on-surface);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Shared menu body ── */
+.menu-body,
+.sheet-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.method-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-xs) var(--spacing-lg);
+  gap: var(--spacing-sm);
+}
+
+.method-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.method-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.menu-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: var(--color-on-surface-variant);
+  transition:
+    background-color var(--motion-duration-short) var(--motion-ease-standard),
+    color var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+@media (hover: hover) {
+  .menu-action-btn:hover {
+    background-color: var(--color-surface-variant);
+    color: var(--color-primary);
+  }
+}
+
+.menu-action-btn:active {
+  background-color: var(--color-surface-variant);
+  color: var(--color-primary);
+}
+
+.menu-action-btn :global(.base-icon) {
+  font-size: 18px;
+}
+
+.sheet-action-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-outline-variant);
+}
+
+.no-methods-hint {
+  padding: var(--spacing-xs) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.menu-divider {
+  height: 1px;
+  background-color: var(--divider-color);
+  margin: 4px 0;
+}
+
+/* Edit row is a full-width left-aligned text BaseButton; layout only. */
+.edit-row {
+  width: 100%;
+  justify-content: flex-start;
+  min-height: 36px;
+}
+
+.edit-icon {
+  font-size: 18px;
+}
+
+.sheet-edit-row {
+  min-height: 44px;
+}
+
+/* ── Mobile sheet container ── */
+.sheet-host--modal {
+  z-index: 60;
+}

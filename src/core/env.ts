@@ -18,6 +18,10 @@ const schema = z.object({
   EXPO_PUBLIC_NOTIFY_HOOK_URL: optional(z.url({ protocol: /^https?$/ })),
   /** The update gate's configuration; unset, `https://tourenbuddy.ch/app-config.json`. */
   EXPO_PUBLIC_APP_CONFIG_URL: optional(z.url({ protocol: /^https?$/ })),
+  /** Web Push (web only): the VAPID public key the Worker signs with. Unset, push stays off. */
+  EXPO_PUBLIC_VAPID_PUBLIC_KEY: optional(z.string().min(1)),
+  /** Web builds: the commit a PR preview was built from, shown in the version line. */
+  EXPO_PUBLIC_BUILD_COMMIT: optional(z.string().min(1)),
 });
 
 export type Env = z.infer<typeof schema>;
@@ -41,4 +45,6 @@ export const env = parseEnv({
   EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
   EXPO_PUBLIC_NOTIFY_HOOK_URL: process.env.EXPO_PUBLIC_NOTIFY_HOOK_URL,
   EXPO_PUBLIC_APP_CONFIG_URL: process.env.EXPO_PUBLIC_APP_CONFIG_URL,
+  EXPO_PUBLIC_VAPID_PUBLIC_KEY: process.env.EXPO_PUBLIC_VAPID_PUBLIC_KEY,
+  EXPO_PUBLIC_BUILD_COMMIT: process.env.EXPO_PUBLIC_BUILD_COMMIT,
 });

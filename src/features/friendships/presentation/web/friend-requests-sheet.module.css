@@ -1,0 +1,192 @@
+/* Ported from the PWA's features/friendships/presentation/components/friend-requests-sheet.vue (scoped style). */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  min-width: 0;
+}
+
+.tab-panel--hidden {
+  display: none;
+}
+
+/* Mobile: one cell for both panels → constant height across tab switches. */
+.tab-panels--stacked {
+  display: grid;
+}
+
+.tab-panels--stacked > .tab-panel {
+  grid-area: 1 / 1;
+}
+
+.tab-panels--stacked > .tab-panel--hidden {
+  display: flex;
+  visibility: hidden;
+}
+
+.deny-rights-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.offline-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background-color: color-mix(in srgb, var(--color-on-surface-variant) 8%, transparent);
+  border: 1px solid var(--color-outline-variant);
+}
+
+.note-icon {
+  font-size: 20px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.note-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  line-height: 1.5;
+}
+
+.loading-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  text-align: center;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.section-title {
+  font-size: var(--heading-section-size);
+  font-weight: var(--heading-section-weight);
+  color: var(--heading-section-color);
+  letter-spacing: var(--heading-section-tracking);
+}
+
+.empty-state {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  padding: var(--spacing-md) 0;
+}
+
+.request-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.request-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-radius: var(--card-radius);
+  background-color: var(--color-surface);
+  container-type: inline-size;
+}
+
+.request-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.request-icon {
+  font-size: 20px;
+  color: var(--color-on-surface-variant);
+  flex-shrink: 0;
+}
+
+.request-user-block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.request-user {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.request-phone-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+}
+
+.request-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+@container (min-width: 340px) {
+  .request-actions {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+/* Visuals come from BaseButton variants; the row needs full-width controls. */
+.action-btn {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.confirm-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+.confirm-text {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+}
+
+.confirm-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.warn-icon {
+  font-size: var(--font-size-sm);
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-warning);
+}
+
+.confirm-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+}

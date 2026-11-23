@@ -26,5 +26,5 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test -- --ci
-      - name: Web export
-        run: npx expo export --platform web
+      - name: Web build (export and service worker)
+        run: npm run build:web

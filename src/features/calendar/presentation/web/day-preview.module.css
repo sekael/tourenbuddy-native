@@ -1,0 +1,46 @@
+/* Ported from the PWA's features/calendar/presentation/components/day-preview.vue (scoped style). */
+.pill,
+.friend-chip,
+.count-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  padding: 2px var(--spacing-xs);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Tour: primary-filled with its type color. Friend: neutral outlined. Count:
+   dashed generic. */
+.pill {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.friend-chip {
+  background-color: var(--color-surface-variant);
+  color: var(--color-on-surface);
+  border: 1px solid var(--color-outline-variant);
+}
+
+.count-chip {
+  background-color: transparent;
+  border: 1px dashed var(--color-outline-variant);
+  color: var(--color-on-surface-variant);
+}
+
+/* Span position, e.g. `2/3`. Tabular so the fraction doesn't jitter cell to cell. */
+.day-counter {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+.chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,54 @@
+/* Ported from the PWA's features/tours/presentation/components/tour-suggestion-review-sheet.vue (scoped style). */
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.review-error {
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+}
+
+.empty {
+  opacity: 0.7;
+}
+
+.batch {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+}
+
+.batch-head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding-bottom: var(--spacing-xs);
+}
+
+.batch-author {
+  font-weight: 600;
+  flex: 1;
+}
+
+.batch-count {
+  font-size: var(--font-size-sm);
+  opacity: 0.7;
+}
+
+.batch-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+}
+
+.batch-hint {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+}

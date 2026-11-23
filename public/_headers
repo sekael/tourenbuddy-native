@@ -12,3 +12,20 @@
 /app-config.json
   Content-Type: application/json
   Cache-Control: public, max-age=300
+
+# As the PWA: hashed bundles forever, the shell and the service worker never stale.
+/_expo/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/icons/*
+  Cache-Control: public, max-age=86400
+
+/index.html
+  Cache-Control: no-cache
+
+/sw.js
+  Cache-Control: no-cache
+
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+  Cache-Control: no-cache

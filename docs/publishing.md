@@ -2,8 +2,9 @@
 
 How a change reaches the App Store and the public pages on tourenbuddy.ch, and the one-time setup
 behind it. Android ships later: what it still needs is under "Android (later)". The web app is the
-Vue PWA, released from its own repository: this one releases no web app, and its web build runs
-locally only (development and reviews).
+port of the Vue PWA (change `port-pwa-web`): every pull request deploys a web preview, and releases
+deploy it once the repository variable `WEB_DEPLOY` is `true` (the cutover, #374; until then the Vue
+repository releases the web app). The steps to move settings over: `docs/vue-repo-migration.md`.
 Every part skips with a notice until its secrets exist, so the workflows stay green before setup.
 Follow the setup in order: `EXPO_TOKEN` comes last, because it turns the store builds on.
 
@@ -19,7 +20,9 @@ Follow the setup in order: `EXPO_TOKEN` comes last, because it turns the store b
 3. Merging it tags the release and starts two jobs:
    - **site:** `public/` as it is (the legal pages, the association file and `app-config.json`),
      deployed to the Cloudflare Pages project `tourenbuddy-native` (production branch `main`,
-     served on `tourenbuddy.ch`).
+     served on `tourenbuddy.ch`). With `WEB_DEPLOY` = `true`, the web build instead
+     (`npm run build:web`: the export, which copies `public/`, plus the service worker); it fails
+     rather than deploy without `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
    - **native:** `eas build --platform ios --profile production --auto-submit`. EAS raises the
      build number (`appVersionSource: remote`), signs the app and submits it to TestFlight once
      built.
@@ -40,7 +43,12 @@ Apple's CDN, as for users), before submitting it for review. These need a real d
 
 ## Checks on pull requests
 
-- `checks.yml`: lint, type check, tests and a web export, on every pull request.
+- `checks.yml`: lint, type check, tests and the web build (`npm run build:web`), on every pull
+  request.
+- `web-preview.yml`: the pull request's web build on the Pages project `tourenbuddy-native` at its
+  branch alias (`<branch>.tourenbuddy-native.pages.dev`), linked in a pull request comment and
+  deleted once the pull request closes. It runs against the **production** backend: use throwaway
+  accounts. Fork pull requests get none.
 - `native-build.yml`: a release build of the store identity (`APP_VARIANT=prod`) without signing,
   iOS for the Simulator on `macos-26`, when a pull request changes native inputs (dependencies,
   `app.config.ts`, `eas.json`, images, `permissions.json`), weekly on `main` and on demand
@@ -67,13 +75,27 @@ Apple's CDN, as for users), before submitting it for review. These need a real d
   | `CLOUDFLARE_API_TOKEN`  | Cloudflare API token with Account → Cloudflare Pages → Edit |
   | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id                                       |
 
+  And for the web build (previews, and releases with `WEB_DEPLOY`), the same values as the Vue
+  repository's secrets of the same names. URLs include `https://`:
+
+  | Secret              | Value                                                              |
+  | ------------------- | ------------------------------------------------------------------ |
+  | `SUPABASE_URL`      | Supabase project URL                                               |
+  | `SUPABASE_ANON_KEY` | Supabase anon key                                                  |
+  | `NOTIFY_HOOK_URL`   | Worker URL (account deletion, calendar sync and feed)              |
+  | `VAPID_PUBLIC_KEY`  | Web Push public key; must equal the Worker's `VAPID_PUBLIC_KEY`    |
+
+  Repository variable `WEB_DEPLOY`: `true` deploys the web app with each release (unset: `public/`
+  only).
+
 ### Cloudflare Pages
 
 ```sh
 npx wrangler pages project create tourenbuddy-native --production-branch main
 ```
 
-A project of its own: the PWA keeps `tourenbuddy` (test.tourenbuddy.ch).
+A project of its own: the PWA keeps `tourenbuddy` (test.tourenbuddy.ch) until the web cutover
+moves that domain here (`docs/vue-repo-migration.md`, A2).
 
 ### Expo (EAS)
 
@@ -192,7 +214,8 @@ secret `EXPO_TOKEN`. The next release builds and submits the iOS app.
 
 ## Version and build numbers
 
-- Version: `package.json` → `app.config.ts`, bumped by release-please.
+- Version: `package.json` → `app.config.ts`, bumped by release-please. The web app shows the same
+  version (Profile); the web cutover release is 1.0.0 (`docs/vue-repo-migration.md`, A2).
 - Build numbers: stored on EAS and raised per build. `npx eas-cli build:version:get` shows them,
   `build:version:set` corrects them (for example after a manual upload).
 

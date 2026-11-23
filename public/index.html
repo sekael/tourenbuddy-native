@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- The PWA's document head (port-pwa-web): icons, manifest, status bar, viewport. -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- The offline bar's color (--color-inverse-surface): Android and desktop take their app bar
+         from it. iOS ignores it, see the offline bar in safe-area.css. -->
+    <meta name="theme-color" content="#1e293b" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- No apple-mobile-web-app-status-bar-style: since iOS 26.1 a Home Screen app with
+         `black-translucent` gets a system blur over its top edge that CSS cannot remove. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>TourenBuddy</title>
+  </head>
+  <body>
+    <noscript>TourenBuddy needs JavaScript.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

@@ -1,0 +1,125 @@
+/* Overrides for driver.js popovers used by the onboarding tour.
+   Loaded from `use-onboarding-tour.ts` (the popover is teleported to <body>,
+   so scoped component styles can't reach it). */
+
+/* The scroll lock the tour relies on (its spotlight and popovers are positioned
+   once against the viewport, so the page underneath must not move) now lives in
+   app/theme/global.css as `html.scroll-locked`, applied via `useScrollLock` —
+   it is not an onboarding concern, and the map route holds it continuously. */
+
+/* --- Overlay ---------------------------------------------------------------
+   The dim fades in once when the tour starts (the driver persists across
+   steps, so later steps never re-fade it) and dissolves on exit. */
+.driver-fade .driver-overlay {
+  animation: onboarding-overlay-in var(--motion-duration-medium) var(--motion-ease-standard);
+}
+
+@keyframes onboarding-overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* --- Popover ---------------------------------------------------------------
+   The app's overlay look (Inter, soft radius, layered shadow) instead of
+   driver.js' Helvetica box. Same specificity as driver.css, which loads first. */
+.driver-popover {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--color-on-surface) 6%, transparent);
+  background-color: var(--color-background);
+  box-shadow:
+    0 2px 6px rgba(8, 15, 32, 0.08),
+    0 18px 48px -12px rgba(8, 15, 32, 0.45);
+  color: var(--color-on-surface);
+  max-width: min(320px, calc(100vw - 24px));
+}
+
+/* Entrance: rise + fade, emphasized ease. Replaces driver's flat 200 ms fade. */
+.driver-fade .driver-popover {
+  animation: onboarding-popover-in var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+@keyframes onboarding-popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
+/* Exit, before the spotlight moves on (`fadeOutPopover`) — driver itself only
+   knows display:none. */
+.driver-popover.is-leaving {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity var(--motion-duration-short) var(--motion-ease-standard),
+    transform var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.driver-popover * {
+  font-family: var(--font-family-base);
+}
+
+.driver-popover-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.driver-popover-title[style*='block'] + .driver-popover-description {
+  margin-top: var(--spacing-xs);
+}
+
+.driver-popover-description {
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  color: var(--color-on-surface-variant);
+}
+
+/* Waypoint hint popovers ("Open menu", "Open contacts"): a compact pill in the
+   map-control colour that sizes to its text instead of driver.js' default
+   250px min-width. Two-class selector out-specifies the base rule. */
+.driver-popover.onboarding-hint-popover {
+  min-width: 0;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-pill);
+  border-color: var(--color-fab-border);
+  background-color: var(--color-fab-surface);
+  white-space: nowrap;
+}
+
+.driver-popover.onboarding-hint-popover .driver-popover-description {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-fab-on-surface);
+}
+
+/* No speech-bubble arrow on any onboarding popover. driver.js positions the
+   arrow once against the target rect; when a popover is clamped to the viewport
+   (wide popover, edge-anchored / bottom-pinned target) the arrow visibly
+   detaches from the spotlight. Dropping it sidesteps the misalignment entirely
+   — the dark cutout already shows what's being pointed at. */
+.driver-popover-arrow {
+  display: none;
+}
+
+/* --- Exit ------------------------------------------------------------------
+   `releaseDriver` sets this class, then destroys the driver once the fade ran. */
+.onboarding-tour-leaving .driver-overlay,
+.onboarding-tour-leaving .driver-popover {
+  opacity: 0;
+  transition: opacity var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .driver-fade .driver-overlay,
+  .driver-fade .driver-popover {
+    animation: none;
+  }
+
+  .driver-popover.is-leaving {
+    transform: none;
+  }
+}

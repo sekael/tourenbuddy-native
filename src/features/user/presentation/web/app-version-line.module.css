@@ -1,0 +1,7 @@
+/* Ported from the PWA's features/user/presentation/components/app-version-line.vue (scoped style). */
+.version {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  text-align: center;
+}

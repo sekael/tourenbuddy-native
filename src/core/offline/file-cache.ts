@@ -91,6 +91,12 @@ export function evictCachedFile(key: string): void {
   if (file?.exists) file.delete();
 }
 
+/** Drops a staged file without uploading it (a draft's offline GPX, discarded). */
+export function dropStagedFile(key: string): void {
+  const file = fileIn(staged, key);
+  if (file?.exists) file.delete();
+}
+
 /** Stores text under `key` before it exists remotely (a GPX picked offline, replayed later). */
 export function stageFileText(key: string, text: string): void {
   const file = fileIn(staged, key);

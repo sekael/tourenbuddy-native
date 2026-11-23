@@ -1,0 +1,107 @@
+/* Ported from the PWA's features/map/presentation/components/layer-tile.vue (scoped style). */
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  width: 80px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-fab-on-surface);
+  font: inherit;
+  cursor: pointer;
+  transition: transform var(--motion-duration-short) var(--motion-ease-spring);
+}
+
+.tile:active:not(:disabled) {
+  transform: scale(var(--press-scale));
+}
+
+.tile:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.thumb {
+  position: relative;
+  display: block;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-md);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: outline-color var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+  /* Unselected tiles recede so the active set reads at a glance. */
+  filter: saturate(0.55);
+  transition: filter var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.selected .thumb {
+  outline-color: var(--color-accent);
+}
+
+.selected .thumb img {
+  filter: none;
+}
+
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--color-accent);
+  color: var(--white);
+  border: 2px solid var(--color-fab-surface);
+}
+
+.chip {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--color-fab-surface);
+  color: var(--color-fab-on-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.badge-enter-active {
+  transition: transform var(--motion-duration-short) var(--motion-ease-spring);
+}
+
+.badge-enter-from {
+  transform: scale(0);
+}
+
+.label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile,
+  .thumb,
+  .thumb img,
+  .badge-enter-active {
+    transition: none;
+  }
+}

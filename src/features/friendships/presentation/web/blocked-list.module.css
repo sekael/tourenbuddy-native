@@ -1,0 +1,74 @@
+/* Ported from the PWA's features/friendships/presentation/components/blocked-list.vue (scoped style). */
+.blocked-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-state {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  padding: var(--spacing-md) 0;
+}
+
+.block-items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.block-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: var(--card-radius);
+  background-color: var(--color-surface);
+}
+
+.block-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.block-icon {
+  color: var(--color-on-surface-variant);
+  flex-shrink: 0;
+}
+
+.block-user-block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.block-user {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.block-since {
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+}
+
+.block-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-xxs);
+  flex-shrink: 0;
+}
+
+.cooldown-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+}
+
+/* Unblock uses shared BaseButton (secondary). */

@@ -5,9 +5,12 @@ Canonical project context for all coding agents working in this repository.
 ## Project
 
 TourenBuddy is a tour-planning app. Users pin tour objectives on a Swiss topo map (Swisstopo), link
-contacts, and pick planned dates. This repository holds the iOS and Android apps (iOS first), built with
-React Native and Expo. The web app stays the Vue PWA in `sekael/tourenbuddy_frontend_vue`
-(2026-11-22): the web build here runs locally only (development, reviews) and is never released.
+contacts, and pick planned dates. This repository holds the iOS and Android apps (iOS first) and the
+web app, built with React Native and Expo. The web app is a line-by-line port of the Vue PWA
+(`sekael/tourenbuddy_frontend_vue`, release 0.54.0; change `port-pwa-web`): same design and features,
+also what Android users run until the Android app ships. It deploys to pull-request previews, and
+to production once the repository variable `WEB_DEPLOY` is on (the cutover, #374). Supabase and the
+Worker stay in the Vue repository for now (`docs/vue-repo-migration.md`).
 
 The plan lives in that repo's issues: epic sekael/tourenbuddy_frontend_vue#346 (decision IDs
 D1–D20, risks, architecture) and one issue per phase, #367 (Phase 0, done) to #374 in the same repo.
@@ -36,6 +39,11 @@ Decided or default in #346. Versions come from `npx expo install`; `package-lock
   capsule, the map button opening map layers with previews, the legend and offline maps); other
   destinations as sheet routes. Icons are the PWA's Material Symbols on every platform (SF Symbols
   only where the system draws: menus, the tab bar, swipe actions)
+- **Web app:** the PWA's components in React DOM (`features/<f>/presentation/web/`, `core/web/`,
+  routes `src/app/**/*.web.tsx`), CSS Modules extracted from the Vue styles, the PWA's `web` i18n
+  namespace; below the presentation it shares the domain, data and stores with the native apps.
+  Service worker `src/sw.web.ts` (Workbox) bundled by `scripts/build-sw.mjs`; offline tables on
+  IndexedDB (`tables.web.ts`); Web Push
 - **Fonts and icons:** iOS system font; Android embedded Inter, web a bundled Inter
   subset; Material Symbols drawn as SVG on every platform. Icons come from the registry in
   `src/core/adaptive/icons.ts`. No runtime font downloads from third parties
@@ -84,7 +92,9 @@ Switching changes the bundle identifier: run `npx expo prebuild --clean` afterwa
   `android/`.
 - Keep the layers: Presentation → Domain → Data → External. Domain has no React or React Native
   imports, features never import each other's internals, `core/` never depends on features.
-  Web-only files use the `.web.tsx` suffix.
+  Web-only files use the `.web.tsx` suffix. Until polish merges them, a feature change touches
+  both presentation layers: the native one and the web port (`presentation/web/`), which keeps the
+  PWA's design.
 - Code ported from the Vue repo's `domain` and `data` layers stays plain TypeScript, so it and its
   tests move over nearly unchanged.
 - User-facing text goes through `i18next` and every locale file. Catalogs use i18next syntax:
@@ -147,7 +157,7 @@ npm run check                  # lint + type check + tests, as in CI
 npm run lint                   # zero warnings; `npx expo lint --fix` formats
 npm run typecheck              # generates route types first, then tsc
 npm test                       # Jest
-npx expo export --platform web # web build, as in CI
+npm run build:web              # web build with the service worker, as in CI (dist/)
 npx expo install <package>     # add a dependency
 npx expo prebuild --clean      # regenerate ios/ and android/ after config or variant changes
 npx expo-doctor                # dependency and config check

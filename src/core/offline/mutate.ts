@@ -1,4 +1,5 @@
 import { Paths } from 'expo-file-system';
+import { Platform } from 'react-native';
 
 import { sessionUser } from '@/core/auth/session-user';
 import { createLogger } from '@/core/logging/logger';
@@ -94,7 +95,8 @@ const DISK_SLACK = 20 * 1024 * 1024;
 function assertHeadroom(projectedBytes: number) {
   let free = Infinity;
   try {
-    free = Paths.availableDiskSpace;
+    // The web has no free-space reading (it reads 0): IndexedDB's quota error says "full" instead.
+    if (Platform.OS !== 'web') free = Paths.availableDiskSpace;
   } catch {
     // Unknown free space never blocks a write.
   }

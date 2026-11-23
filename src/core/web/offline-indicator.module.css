@@ -1,0 +1,35 @@
+/* Ported from the PWA's core/components/offline-indicator.vue (scoped style). */
+/* Under the system status bar, full width; its height is the band safe-area.css opens for it, so
+   the bar grows and shrinks with the space the page gives up. */
+.offline-bar {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  left: 0;
+  right: 0;
+  height: var(--offline-bar-height);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: 0 calc(var(--spacing-md) + var(--safe-right)) 0 calc(var(--spacing-md) + var(--safe-left));
+  background: var(--color-inverse-surface);
+  color: var(--color-on-inverse-surface);
+  font-size: 0.8125rem;
+  font-weight: var(--font-weight-medium);
+  z-index: 190;
+}
+
+/* Its words hide (also from screen readers) once the band has closed; the bar itself stays visible,
+   as the strip iOS colors the status bar from (safe-area.css). */
+.offline-bar:not(.offline-bar--on) > * {
+  visibility: hidden;
+  transition: visibility 0s var(--motion-duration-medium);
+}
+
+.offline-bar-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,181 @@
+/* Ported from the PWA's core/components/bottom-sheet.vue (scoped style). */
+.bottom-sheet {
+  width: 100%;
+  max-width: var(--bottom-sheet-max-width, 480px);
+  /* Secondary safety net only — JS clamps the applied height to at most
+     innerHeight * 0.9 (fully expanded fit-content sheet). `dvh` (visible
+     viewport) keeps this in step; `vh` would be the larger viewport. */
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: none;
+  box-shadow: var(--shadow-lg);
+  /* Compact horizontal padding (md, not xl) so more width goes to content. */
+  padding: var(--spacing-sm) var(--spacing-md) 0;
+  transition: height var(--motion-duration-medium) var(--motion-ease-emphasized);
+  /* Restore pointer events — parent sheet-host sets pointer-events: none
+     to allow FAB clicks through transparent areas */
+  pointer-events: auto;
+}
+
+.bottom-sheet--static {
+  /* No handle above the header: keep the same breathing room it would give. */
+  padding-top: var(--spacing-md);
+}
+
+.bottom-sheet--still {
+  transition: none;
+}
+
+.bottom-sheet--collapsed {
+  max-height: none;
+  height: auto !important;
+  padding-top: var(--spacing-md);
+}
+
+.bottom-sheet--collapsed .header {
+  padding-bottom: var(--spacing-md);
+}
+
+.drag-handle {
+  position: relative;
+  width: 100%;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  flex-shrink: 0;
+  cursor: ns-resize;
+  touch-action: none;
+  outline: none;
+  /* Visual bar via pseudo-element to keep tap target large */
+}
+
+.drag-handle::after {
+  content: '';
+  display: block;
+  width: 36px;
+  height: 4px;
+  background-color: var(--color-outline-variant);
+  border-radius: var(--radius-pill);
+}
+
+.drag-handle:focus-visible::after {
+  background-color: var(--color-primary);
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: var(--spacing-sm);
+
+  /* Opaque and stacked above `.content`, which is a later sibling and would
+     otherwise paint over this one. The 1px overlap that closes the scroll seam
+     lives on `.content`, not here — see the note there for why. */
+  padding-bottom: var(--spacing-sm);
+  position: relative;
+  z-index: 1;
+  background-color: var(--color-background);
+}
+
+/* Drags like the handle: no browser pan may steal the gesture. */
+.header--drag {
+  touch-action: none;
+}
+
+.title {
+  font-size: var(--overlay-title-size);
+  font-weight: var(--font-weight-semibold);
+  flex: 1;
+  letter-spacing: var(--overlay-title-tracking);
+}
+
+.title-spacer {
+  flex: 1;
+}
+
+.content {
+  /* Published so slotted content can bleed a full-width divider to the sheet edges — content
+     sits `md` in from them on both sides (see the inline padding below). */
+  --surface-pad-left: var(--spacing-md);
+  --surface-pad-right: var(--spacing-md);
+
+  flex: 1;
+  min-height: 0;
+  /* Tucks this scroll box 1px under the opaque `.header`, then gives that pixel
+     straight back as padding. A composited scroll region whose top edge lands on
+     a fractional pixel — this one does: sheet padding + 24px handle + a
+     content-sized header with an `xl` title — paints one row of pixels outside
+     its own clip box, which shows as a hairline of scrolling text above the
+     header's bottom edge. Stacking does not govern that escape, so the header
+     has to physically reach over it.
+
+     The pair belongs HERE rather than as a negative margin on `.header`: putting
+     it there pulled this box up without compensating, so the first pixel row of
+     every sheet's slotted content sat under the header and was clipped — visible
+     as content cut off at the top of the profile and contact sheets. With the
+     padding on this side, the covered pixel is padding, not content. Do not
+     "tidy" either half away; they only work as a pair. */
+  margin-top: -1px;
+  padding-top: 1px;
+  /* Traps slotted `z-index` inside this scroll region. Load-bearing because
+     `.header` overlaps this element by 1px: a sticky header in slotted
+     content needs its own `z-index` to cover the rows scrolling under it, and
+     without a stacking context here it competes directly with `.header` — on an
+     equal `z-index` the later DOM node wins and reclaims that overlap.
+     `isolation`, not a `z-index` bump: the sheet must not care what values
+     slotted content picks. */
+  isolation: isolate;
+  overflow-y: auto;
+  /* Explicit, not incidental: leaving overflow-x unset here computes it to
+     `auto` too (CSS Overflow spec — an unset axis inherits `auto` from a sibling
+     axis that isn't `visible`), silently opening a horizontal scrollbar/gesture
+     the moment any flex row's content is a pixel too wide. Sheets scroll
+     vertically only. */
+  overflow-x: hidden;
+  /* Scroll stops here: past either end it must not chain to the page, the
+     document, or the map behind the sheet. `contain`, not `none` — the region
+     keeps its own end-of-scroll rubber-band. */
+  overscroll-behavior: contain;
+  /* `xs` of the sheet's `md` padding moves inside this box on both sides (negative margin
+     + padding): content lines up with the header and footer, the overlay scrollbar sits
+     over the right padding, and the clip box (overflow-x above) leaves room for what rows
+     paint outside their box — focus rings, the primary phone's highlight. With the left
+     padding outside this box, those were cut off at the left edge. */
+  margin-inline: calc(-1 * var(--spacing-xs));
+  padding-inline: var(--spacing-xs);
+  /* Home indicator clearance: last list item stays reachable above gesture bar */
+  padding-bottom: calc(var(--spacing-md) + var(--safe-bottom));
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-outline-variant) transparent;
+}
+
+.content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background-color: var(--color-outline-variant);
+  border-radius: 3px;
+}
+
+/* With a footer below, content fades out over its last 24px instead of being cut
+   off at the footer's edge, and gets that much more bottom room so the final row
+   can still scroll clear of the fade. */
+.content:has(~ .footer) {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent);
+  padding-bottom: var(--spacing-xl);
+}
+
+.footer {
+  flex-shrink: 0;
+  /* Base padding trimmed (md, not xl); env() still clears the home-gesture bar. */
+  padding: var(--spacing-sm) 0 calc(var(--spacing-md) + var(--safe-bottom));
+}

@@ -1,0 +1,66 @@
+/* Ported from the PWA's features/terms/presentation/pages/terms-page.vue (scoped style). */
+.page {
+  display: flex;
+  justify-content: center;
+  align-items: safe center;
+  min-height: 100lvh;
+  padding: calc(var(--spacing-xl) + var(--safe-top)) var(--spacing-xl) calc(var(--spacing-xl) + var(--safe-bottom));
+  background-color: var(--color-background);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  width: 100%;
+  max-width: 400px;
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.01em;
+}
+
+.text {
+  line-height: 1.5;
+}
+
+.text a {
+  color: var(--color-accent);
+}
+
+.points {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.point {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  line-height: 1.4;
+}
+
+.badge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--color-accent);
+  background-color: var(--color-secondary-container);
+}
+
+.muted {
+  color: var(--color-on-surface-variant);
+}
+
+.error {
+  color: var(--color-error);
+}

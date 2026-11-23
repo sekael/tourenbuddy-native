@@ -1,0 +1,37 @@
+/* Ported from the PWA's features/contacts/presentation/components/contact-chip.vue (scoped style). */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--chip-padding);
+  border-radius: var(--chip-radius);
+  border: 1.5px solid var(--color-outline-variant);
+  background-color: transparent;
+  color: var(--chip-color);
+  font-size: var(--chip-font-size);
+  font-weight: var(--font-weight-medium);
+  min-height: var(--chip-min-height);
+  transition: all var(--motion-duration-short) var(--motion-ease-standard);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .chip:hover {
+    background-color: var(--color-surface-variant);
+  }
+}
+
+.chip:active {
+  background-color: var(--color-surface-variant);
+}
+
+.chip.selected {
+  background-color: var(--chip-selected-bg);
+  border-color: var(--chip-selected-border-color);
+  color: var(--chip-selected-color);
+}
+
+.check-icon {
+  font-size: 16px;
+  line-height: 1;
+}

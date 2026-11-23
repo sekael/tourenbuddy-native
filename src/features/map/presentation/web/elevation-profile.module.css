@@ -1,0 +1,37 @@
+/* Ported from the PWA's features/map/presentation/components/elevation-profile.vue (scoped style). */
+.elevation-profile {
+  height: 72px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-variant);
+}
+
+.elevation-profile svg {
+  display: block;
+}
+
+.grid {
+  stroke: var(--color-outline-variant);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+.label {
+  fill: var(--color-on-surface-variant);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.area {
+  fill: color-mix(in srgb, #e3061b 12%, transparent);
+}
+
+.profile {
+  fill: none;
+  stroke: #e3061b;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.end {
+  fill: #e3061b;
+}

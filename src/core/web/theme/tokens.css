@@ -1,0 +1,234 @@
+:root {
+  /* ===========================================================================
+     PRIMITIVE TIER — raw, context-free values. Referenced only by the semantic
+     tier (for colors) or consumed directly as scales (spacing/radius/shadow).
+     Never give these contextual meaning; that is the semantic tier's job.
+     =========================================================================== */
+
+  /* Palette ramps (Tailwind slate/blue/red/green/amber — only shades in use) */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+
+  --red-100: #fee2e2;
+  --red-600: #dc2626;
+  --red-700: #c62828;
+  --red-800: #991b1b;
+  --red-900: #7f1d1d;
+
+  --green-600: #16a34a;
+  --green-700: #2e7d32;
+  --green-800: #166534;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --amber-700: #b45309;
+  --orange-500: #f97316;
+
+  --white: #ffffff;
+  --white-a25: rgba(255, 255, 255, 0.25);
+
+  /* Spacing (4-point scale) */
+  --spacing-xxs: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 20px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+  --spacing-3xl: 48px;
+
+  /* Border radius */
+  --radius-sm: 10px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-pill: 9999px;
+  --radius-round: 50%;
+
+  /* Overlay/contrast colors */
+  --color-backdrop: rgba(15, 23, 42, 0.35);
+  --color-backdrop-strong: rgba(0, 0, 0, 0.6);
+  --color-on-contrast: var(--white);
+  --color-contrast-surface: rgba(255, 255, 255, 0.12);
+  --color-contrast-surface-hover: rgba(255, 255, 255, 0.22);
+  --color-contrast-outline: rgba(255, 255, 255, 0.55);
+  --color-contrast-outline-strong: rgba(255, 255, 255, 0.85);
+
+  /* Soft, diffuse, blue-950-tinted shadows */
+  --shadow-sm: 0 1px 2px rgba(23, 37, 84, 0.05), 0 2px 6px rgba(23, 37, 84, 0.06);
+  --shadow-md: 0 2px 4px rgba(23, 37, 84, 0.04), 0 8px 20px -4px rgba(23, 37, 84, 0.14);
+  --shadow-lg: 0 4px 8px rgba(23, 37, 84, 0.04), 0 16px 40px -8px rgba(23, 37, 84, 0.22);
+  --shadow-control: 0 1px 2px rgba(0, 0, 0, 0.15);
+
+  /* ===========================================================================
+     SEMANTIC TIER — contextual aliases that reference primitives via var().
+     Application code references THESE, never the raw palette. A later theme
+     (e.g. dark mode) is expressed by reassigning these to other primitives,
+     leaving primitives and component code untouched.
+     =========================================================================== */
+
+  --color-primary: var(--blue-600);
+  --color-primary-dark: var(--blue-700);
+  --color-on-primary: var(--white);
+
+  --color-accent: var(--blue-500);
+
+  --color-surface: var(--slate-50);
+  --color-on-surface: var(--slate-900);
+  /* Quiet tinted containers: cards, hovered rows, info boxes */
+  --color-surface-variant: var(--blue-50);
+  --color-on-surface-variant: var(--slate-600);
+  --color-outline: var(--slate-400);
+  --color-outline-variant: var(--slate-300);
+
+  /* Tonal controls (secondary buttons, close/back circles, tab tracks): one step
+     stronger than surface-variant, so a control stands off a white sheet and off
+     a surface-variant card. Label is 8.5:1 on the fill. */
+  --color-secondary-container: var(--blue-100);
+  --color-secondary-container-hover: var(--blue-200);
+  --color-on-secondary-container: var(--blue-900);
+
+  /* Neutral tonal fills: where the activity colours carry meaning (tour detail), so a
+     control or card never reads as an activity. Labels use --color-on-surface. */
+  --color-neutral-container: var(--slate-100);
+  --color-neutral-container-hover: var(--slate-200);
+
+  --color-background: var(--white);
+  --color-on-background: var(--slate-900);
+
+  --color-error: var(--red-600);
+  --color-error-strong: var(--red-700);
+  --color-on-error: var(--white);
+  --color-error-container: var(--red-100);
+  --color-on-error-container: var(--red-900);
+  /* Error as TEXT on a tint (red-600 drops below 4.5:1 on red-100) */
+  --color-error-text: var(--red-800);
+
+  --color-success: var(--green-600);
+  /* Success as TEXT/ICON on light surfaces (green-600 is only 3.3:1 on white) */
+  --color-success-text: var(--green-800);
+  --color-on-success: var(--white);
+
+  --color-warning: var(--amber-500);
+  --color-warning-strong: var(--amber-600);
+  --color-on-warning: var(--white);
+  --color-warning-text: var(--amber-700);
+
+  /* Inverse surface — dark toasts floating over the app */
+  --color-inverse-surface: var(--slate-800);
+  --color-on-inverse-surface: var(--white);
+  --color-friend: var(--orange-500);
+  --color-route-start: var(--green-700);
+  --color-route-end: var(--red-700);
+
+  /* Map controls: brand blue-700 glass with white glyphs. White text holds
+     4.9:1 even at 85% over a white map, and the controls separate clearly from
+     any terrain. Hover/selected go one shade deeper. */
+  --color-fab-surface: var(--blue-700);
+  --color-fab-surface-strong: var(--blue-800);
+  --color-fab-on-surface: var(--white);
+  --color-fab-border: var(--white-a25);
+  --color-fab-glass: color-mix(in srgb, var(--color-fab-surface) 85%, transparent);
+  --color-fab-glass-strong: color-mix(in srgb, var(--color-fab-surface-strong) 90%, transparent);
+  --fab-backdrop: blur(10px);
+
+  /* --- Component sizing (consumed by shared Button/IconButton/Icon) --------- */
+
+  /* Icon glyph sizes (md = current global default of 20px) */
+  --icon-size-xs: 16px;
+  --icon-size-sm: 18px;
+  --icon-size-md: 20px;
+  --icon-size-lg: 24px;
+  --icon-size-xl: 48px;
+
+  /* Icon-only button touch targets (square box; shape via radius prop) */
+  --icon-button-size-sm: 32px;
+  --icon-button-size-md: 40px;
+  --icon-button-size-lg: 48px;
+
+  /* Action buttons (label) */
+  --button-radius: var(--radius-pill);
+  --button-padding-sm: var(--spacing-xs) var(--spacing-md);
+  --button-padding-md: var(--spacing-md);
+  --button-padding-lg: var(--spacing-md) var(--spacing-xl);
+  --button-font-size-sm: var(--font-size-sm);
+  --button-font-size-md: var(--font-size-base);
+  --button-font-size-lg: var(--font-size-lg);
+
+  /* --- Motion & interaction ------------------------------------------------
+     Calm and unhurried. Pick by role: standard = color/opacity state changes;
+     emphasized = things sliding in (sheets, drawers, dialogs, swaps); spring =
+     small elements popping in and press transforms. */
+  --motion-duration-short: 200ms;
+  --motion-duration-medium: 320ms;
+  --motion-duration-long: 480ms;
+  --motion-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Gentle deceleration, no overshoot (a sliding sheet never lifts off its edge) */
+  --motion-ease-emphasized: cubic-bezier(0.22, 0.7, 0.3, 1);
+  /* Soft overshoot (~3%) — small elements only */
+  --motion-ease-spring: cubic-bezier(0.34, 1.18, 0.64, 1);
+  /* Tactile press on every shared button and FAB */
+  --press-scale: 0.97;
+
+  /* Travel for anything gliding in: swapped views/tabs, menu items unfolding.
+     Swaps fade the old content out (short), then ease the new in (medium). */
+  --motion-offset: 12px;
+  /* Delay between items of a menu unfolding one after another */
+  --motion-stagger: 40ms;
+
+  /* --- Component tokens: one treatment per element family, app-wide -------- */
+
+  /* Overlay chrome — sheets, dialogs, drawers, full-screen pages */
+  --overlay-title-size: var(--font-size-2xl);
+  --overlay-title-tracking: -0.02em;
+  --overlay-backdrop-blur: 8px;
+
+  /* Section headings and field labels */
+  --heading-section-size: var(--font-size-base);
+  --heading-section-weight: var(--font-weight-semibold);
+  --heading-section-tracking: -0.01em;
+  --heading-section-color: var(--color-on-surface);
+  --field-label-color: var(--color-on-surface);
+
+  /* Text inputs — softly filled, brand focus ring */
+  --input-radius: 14px;
+  --input-bg: var(--color-surface);
+  --input-bg-focus: var(--color-background);
+  --input-focus-ring: 0 0 0 4px color-mix(in srgb, var(--color-primary) 18%, transparent);
+
+  /* Selectable chips/options — pill, one tinted selected state */
+  --chip-radius: var(--radius-pill);
+  --chip-padding: var(--spacing-xs) var(--spacing-md);
+  --chip-min-height: 40px;
+  --chip-font-size: var(--font-size-sm);
+  --chip-color: var(--color-on-surface);
+  --chip-selected-bg: color-mix(in srgb, var(--color-primary) 12%, var(--color-background));
+  --chip-selected-color: var(--color-primary-dark);
+  --chip-selected-border-color: var(--color-primary);
+
+  --divider-color: var(--slate-200);
+  --card-radius: var(--radius-md);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-ease-spring: var(--motion-ease-standard);
+    --press-scale: 1;
+    --motion-offset: 0px;
+  }
+}

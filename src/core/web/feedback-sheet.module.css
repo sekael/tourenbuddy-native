@@ -1,0 +1,17 @@
+/* Ported from the PWA's core/components/feedback-sheet.vue (scoped style). */
+.feedback-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.hint {
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  margin: 0;
+}
+
+.email-link {
+  color: var(--color-primary);
+}

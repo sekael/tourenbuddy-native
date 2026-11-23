@@ -19,7 +19,9 @@ const UNKNOWN: RouteMetrics = { ascent: null, descent: null, distance: null };
  * The track with a height on every point: as it is when it has them, else with the terrain's
  * along its lines (a drawn track, a file without `<ele>`); as it is when no profile can be had.
  */
-async function withHeights(track: GeoJSON.FeatureCollection): Promise<GeoJSON.FeatureCollection> {
+export async function withHeights(
+  track: GeoJSON.FeatureCollection,
+): Promise<GeoJSON.FeatureCollection> {
   if (trackMetrics(track).ascent !== null || !isOnline()) return track;
   const lines = trackLines(track).filter((line) => line.length > 1);
   const profiles = await Promise.all(

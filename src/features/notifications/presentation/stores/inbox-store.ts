@@ -61,6 +61,8 @@ type InboxState = {
   entries: InboxNotification[];
   hasMore: boolean;
   isLoading: boolean;
+  /** The last load failed (offline and never cached, a server error). */
+  loadFailed: boolean;
   ready: InboxSourcesReady;
   start: () => void;
   clear: () => void;
@@ -118,6 +120,7 @@ export const useInboxStore = create<InboxState>()((set, get) => {
     entries: [],
     hasMore: false,
     isLoading: false,
+    loadFailed: false,
     ready: noneReady,
 
     start: () => {
@@ -148,13 +151,13 @@ export const useInboxStore = create<InboxState>()((set, get) => {
       stops.forEach((stop) => stop());
       stops = [];
       cursor = null;
-      set({ entries: [], hasMore: false, isLoading: false, ready: noneReady });
+      set({ entries: [], hasMore: false, isLoading: false, loadFailed: false, ready: noneReady });
     },
 
     load: async () => {
       const me = uid();
       if (!me) return;
-      set({ isLoading: true });
+      set({ isLoading: true, loadFailed: false });
       try {
         await cachedLoad<InboxNotification[]>(
           `inbox:${me}`,
@@ -173,6 +176,7 @@ export const useInboxStore = create<InboxState>()((set, get) => {
         );
       } catch (error) {
         log.error('Failed to load inbox', error);
+        set({ loadFailed: true });
       } finally {
         set({ isLoading: false });
       }

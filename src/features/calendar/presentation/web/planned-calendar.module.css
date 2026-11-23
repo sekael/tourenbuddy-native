@@ -1,0 +1,209 @@
+/* Ported from the PWA's features/calendar/presentation/components/planned-calendar.vue (scoped style). */
+.calendar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-background);
+}
+
+.weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--color-outline-variant);
+  background-color: var(--color-surface);
+}
+
+.weekday {
+  padding: var(--spacing-sm);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+.day-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: minmax(96px, 1fr);
+  overflow-y: auto;
+}
+
+.day-cell {
+  padding: var(--spacing-xs);
+  border-right: 1px solid var(--color-outline-variant);
+  border-bottom: 1px solid var(--color-outline-variant);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+  min-width: 0;
+  /* Clip the preview so a busy day never spills into the cell below. */
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.day-cell--muted {
+  background-color: var(--color-surface);
+  opacity: 0.4;
+}
+
+/* Current day: darker border around the whole tile (outline avoids the layout
+   shift a real border would add over the existing right/bottom borders) plus a
+   light tint. Wins over the muted dim when today falls on an adjacent-month cell. */
+.day-cell--today {
+  outline: 1.5px solid var(--color-primary);
+  outline-offset: -1.5px;
+  background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  opacity: 1;
+}
+
+/* Own availability: light-green background. After --today so it wins on a day
+   that is both today and available. */
+.day-cell--available {
+  background-color: color-mix(in srgb, var(--color-success) 16%, transparent);
+  opacity: 1;
+}
+
+/* Editable future day: pointer + suppress scroll/selection so drag marks a run. */
+.day-cell--selectable {
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.day-number {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-on-surface);
+}
+
+/* Truncate long names in the detail-list rows. */
+.pill-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Span position, e.g. `2/3`. Pushed to the row end in the detail list. */
+.day-counter {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-on-surface-variant);
+}
+
+/* ── Per-day detail list (sheet/dialog body) ─────────────────────────────── */
+.detail-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-heading {
+  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-xs);
+  font-size: var(--heading-section-size);
+  font-weight: var(--heading-section-weight);
+  color: var(--heading-section-color);
+  letter-spacing: var(--heading-section-tracking);
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-base);
+  color: var(--color-on-surface);
+  cursor: pointer;
+}
+
+.detail-row--static {
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .detail-row:not(.detail-row--static):hover {
+    background-color: var(--color-surface-variant);
+  }
+}
+
+.detail-row:not(.detail-row--static):active {
+  background-color: var(--color-surface-variant);
+}
+
+/* ── Mobile day-tile list ────────────────────────────────────────────────── */
+.day-list {
+  height: 100%;
+  overflow-y: auto;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-md);
+  background-color: var(--color-background);
+}
+
+.day-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  min-height: 48px;
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+/* The container's rounded border already closes the bottom edge — a last-row
+   border would double it right against the corner. */
+.day-row:last-child {
+  border-bottom: none;
+}
+
+.day-row--today {
+  outline: 1.5px solid var(--color-primary);
+  outline-offset: -1.5px;
+  background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  /* Land below the container's rounded top corner when scrolled to, so the
+     outline isn't clipped. scrollIntoView honours scroll-margin. */
+  scroll-margin-top: var(--radius-md);
+}
+
+.day-row--available {
+  background-color: color-mix(in srgb, var(--color-success) 16%, transparent);
+}
+
+/* Mobile toggles on tap only (no drag), so keep native scroll — no
+   `touch-action: none` here, unlike the desktop grid cells. */
+.day-row--selectable {
+  cursor: pointer;
+}
+
+.day-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  flex-shrink: 0;
+}
+
+.day-weekday {
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+.day-num {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-on-surface);
+}
+
+/* Stretch keeps pills full-width so tour names read in full. */
+.day-entries {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--spacing-xxs);
+  min-width: 0;
+}

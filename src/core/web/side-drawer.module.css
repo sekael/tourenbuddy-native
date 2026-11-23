@@ -1,0 +1,126 @@
+/* Ported from the PWA's core/components/side-drawer.vue (scoped style). */
+.side-drawer {
+  position: fixed;
+  /* Below the offline bar while it shows (--safe-top, safe-area.css). */
+  top: var(--safe-top);
+  right: 0;
+  width: 400px;
+  height: calc(100vh - var(--safe-top));
+  max-height: calc(100vh - var(--safe-top));
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+  box-shadow: var(--shadow-lg);
+  animation: slide-in-right var(--motion-duration-long) var(--motion-ease-emphasized);
+  /* Restore pointer events — parent sheet-host sets pointer-events: none */
+  pointer-events: auto;
+  transition:
+    max-height var(--motion-duration-medium) var(--motion-ease-emphasized),
+    border-bottom-left-radius var(--motion-duration-medium) var(--motion-ease-emphasized);
+  overflow: hidden;
+}
+
+.side-drawer--collapsed {
+  /* Collapse vertically to header-only; width unchanged */
+  max-height: 4.5rem;
+  border-bottom-left-radius: var(--radius-lg);
+  border-top-left-radius: 0;
+  /* Keep the same animation-name so toggling collapsed off doesn't restart slide-in-right */
+}
+
+.side-drawer--collapsed .drawer-header {
+  border-bottom: none;
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg) var(--spacing-xl) var(--spacing-md);
+}
+
+.drawer-title {
+  font-size: var(--overlay-title-size);
+  font-weight: var(--font-weight-semibold);
+  flex: 1;
+  letter-spacing: var(--overlay-title-tracking);
+}
+
+.title-spacer {
+  flex: 1;
+}
+
+.drawer-content {
+  /* Published so slotted content can bleed a full-width divider to the drawer edges.
+     Equal on both sides (with a both-edges gutter below) so content sits centred
+     under the header and lines up with the footer's right-aligned actions. */
+  --surface-pad-left: var(--spacing-xl);
+  --surface-pad-right: var(--spacing-xl);
+
+  overflow-y: auto;
+  /* Explicit: an unset overflow-x computes to `auto` alongside overflow-y here
+     (CSS Overflow spec), which would silently open a horizontal scrollbar the
+     moment any row's content is a pixel too wide. Drawers scroll vertically only. */
+  overflow-x: hidden;
+  /* Overscroll stops here — never chains to the page or the map beside the
+     drawer. Scoped to this scroll region only: the still-visible map keeps its
+     own wheel-zoom / pinch / drag. */
+  overscroll-behavior: contain;
+  padding: var(--spacing-lg) var(--surface-pad-right) var(--spacing-lg) var(--surface-pad-left);
+  flex: 1;
+  min-height: 0;
+  /* Both edges: a classic (non-overlay) scrollbar reserves the same space on the
+     left, so it cannot push the content off centre. */
+  scrollbar-gutter: stable both-edges;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-outline-variant) transparent;
+  opacity: 1;
+  transition:
+    opacity var(--motion-duration-short) var(--motion-ease-standard),
+    padding var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+/* Same footer fade as the bottom sheet */
+.drawer-content:has(~ .drawer-footer) {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent);
+  padding-bottom: var(--spacing-xl);
+}
+
+.drawer-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.drawer-content::-webkit-scrollbar-thumb {
+  background-color: var(--color-outline-variant);
+  border-radius: 3px;
+}
+
+.drawer-footer {
+  flex-shrink: 0;
+  padding: var(--spacing-sm) var(--spacing-xl) var(--spacing-xl);
+  opacity: 1;
+  transition:
+    opacity var(--motion-duration-short) var(--motion-ease-standard),
+    padding var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+.side-drawer--collapsed .drawer-content,
+.side-drawer--collapsed .drawer-footer {
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  flex: 0;
+  overflow: hidden;
+  pointer-events: none;
+}

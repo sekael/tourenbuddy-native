@@ -1,0 +1,219 @@
+/* Ported from the PWA's features/calendar/presentation/components/seasons-gantt.vue (scoped style). */
+.gantt-wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-background);
+}
+
+/* The scroll container. `--label-w` drives both the grid's label column and the
+   marker offset; `--season-min` is the per-season floor that forces horizontal
+   overflow once the columns no longer fit (see the mobile override below). */
+.gantt {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  --label-w: 240px;
+  --season-min: 0px;
+}
+
+/* Sized to its widest row (max-content), so on narrow viewports the four season
+   columns push past the container and the .gantt scrolls sideways. */
+.gantt-track {
+  position: relative;
+  min-width: max-content;
+}
+
+/* The label/seasons divider as ONE continuous line. Hanging it off each cell's
+   border-right left gaps, because `.gantt-row` centers cells to their content
+   height. This spans the full track (header → last row) at the column boundary,
+   staying aligned via --label-w. z-index beats the sticky header (z:5) so it
+   isn't hidden behind the header's opaque background. */
+.gantt-track::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--label-w);
+  width: 1px;
+  background-color: var(--color-outline-variant);
+  pointer-events: none;
+  z-index: 6;
+}
+
+.gantt-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xxl);
+  text-align: center;
+  color: var(--color-on-surface-variant);
+}
+
+/* Content-height wrapper: the marker below the header spans only the rows and
+   ends at the last one, rather than the full track height. */
+.gantt-rows {
+  position: relative;
+}
+
+/* Thin dark line marking the current month/season across the tour rows. */
+.season-now-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--color-on-surface);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.gantt-row {
+  display: grid;
+  grid-template-columns: var(--label-w) repeat(4, minmax(var(--season-min), 1fr));
+  align-items: center;
+}
+
+.gantt-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  border-bottom: 1px solid var(--color-outline-variant);
+  background-color: var(--color-surface);
+}
+
+:global(html.scroll-locked) .gantt-track {
+  min-width: 0;
+}
+
+.header-label {
+  padding: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-on-surface-variant);
+}
+
+.header-season {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-xs);
+}
+
+.season-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+}
+
+.season-range {
+  font-size: 10px;
+  color: var(--color-on-surface-variant);
+  opacity: 0.7;
+}
+
+.gantt-tour-row {
+  width: 100%;
+  min-height: 64px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-outline-variant);
+  cursor: pointer;
+  transition: background-color var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+@media (hover: hover) {
+  .gantt-tour-row:hover {
+    background-color: var(--color-surface);
+  }
+}
+
+.gantt-tour-row:active {
+  background-color: var(--color-surface);
+}
+
+.row-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+  padding: var(--spacing-md);
+  min-width: 0;
+}
+
+/* Single-word names can't wrap, so they'd bleed across the divider — truncate
+   instead. The column is widened (see --label-w) so real names rarely hit this. */
+.tour-name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tour-type {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  min-width: 0;
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-on-surface-variant);
+}
+
+/* Keep the type icon at its intrinsic size — without this it shrinks to make
+   room for a long type label in the flex row. */
+.tour-type > :first-child {
+  flex-shrink: 0;
+}
+
+.season-bar {
+  height: 28px;
+  margin: 0 var(--spacing-sm);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-primary);
+}
+
+.no-seasons {
+  grid-column: 2 / -1;
+  padding: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-style: italic;
+  color: var(--color-on-surface-variant);
+  opacity: 0.6;
+}
+
+/* Hidden on desktop (everything fits); revealed on mobile by the override below. */
+.scroll-hint {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xxs);
+  padding: var(--spacing-xs);
+  flex-shrink: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  border-top: 1px solid var(--color-outline-variant);
+}
+
+/* Mobile: narrow the label and give the season columns a floor so they overflow
+   and the chart scrolls sideways; reveal the scroll hint. */
+@media (max-width: 599px) {
+  .gantt {
+    --label-w: 200px;
+    --season-min: 120px;
+  }
+  .scroll-hint {
+    display: flex;
+  }
+}

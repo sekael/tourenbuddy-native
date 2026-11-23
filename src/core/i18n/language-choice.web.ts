@@ -1,4 +1,5 @@
-const KEY = 'app-language';
+// The PWA's key: a PWA user's choice carries over on the same origin.
+const KEY = 'tb.locale';
 
 /** The language picked in the app (Profile), in this browser; none: the browser's languages. */
 export function readLanguageChoice(): string | null {

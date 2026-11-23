@@ -3,8 +3,9 @@ node_modules/
 
 # Expo
 .expo/
-# copied by postinstall (tour-map.web.tsx)
+# copied by postinstall (map and attachment workers)
 /public/maplibre-gl-worker.mjs
+/public/pdf.worker.min.mjs
 dist/
 web-build/
 expo-env.d.ts

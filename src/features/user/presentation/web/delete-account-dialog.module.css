@@ -1,0 +1,39 @@
+/* Ported from the PWA's features/user/presentation/components/delete-account-dialog.vue (scoped style). */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+}
+
+.body p {
+  margin: 0;
+}
+
+.hint {
+  color: var(--color-on-surface-variant);
+  font-size: var(--font-size-sm);
+}
+
+.error {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: 0 var(--spacing-md) var(--spacing-md);
+}
+
+@media (min-width: 600px) {
+  .actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+}
+
+.sheet-host--modal {
+  z-index: 60;
+}

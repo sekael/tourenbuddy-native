@@ -1,0 +1,351 @@
+/* tokens.css, typography.css and safe-area.css are imported before this file in
+   `src/app/_layout.web.tsx`: Metro's dev server drops CSS `@import`s (only the export inlines them). */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+}
+
+html {
+  /* Neutral fallback visible during route transitions before page root mounts. */
+  background-color: var(--color-background);
+}
+
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-on-background);
+  /* Pages own their safe areas — body must not paint a brand color band. */
+  background-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Page roots inherit this floor so any route without explicit root sizing still
+   fills the largest viewport — `lvh` always includes safe-area zones under
+   `viewport-fit=cover`, while `dvh` excludes them in iOS standalone PWA. */
+#root {
+  min-height: -webkit-fill-available;
+  min-height: 100lvh;
+}
+
+/* Document scroll lock, toggled by `useScrollLock`. Routes that own the whole
+   viewport (the map) hold it for their lifetime; the onboarding tour holds it
+   while its viewport-fixed spotlight is up.
+
+   This REMOVES the scroll rather than blocking it. On the map route the only box
+   taller than the viewport is `#root`'s `100lvh` floor above — the page root is
+   `position: fixed` and contributes no height, sheets likewise — so dropping
+   that floor leaves nothing to scroll. `overscroll-behavior: none` then stops
+   iOS rubber-band, and unlike the alternatives it does not change whether the
+   document is scrollable, so it is safe to apply everywhere. */
+html.scroll-locked {
+  overscroll-behavior: none;
+}
+
+/* Browser tabs only. `#root`'s floor is `100lvh` — the chrome-HIDDEN height — so
+   in a tab it exceeds the viewport (measured on iOS: 735 vs 635) and that
+   surplus is the document scroll this lock exists to remove. Standalone has no
+   chrome to hide, so `100lvh === innerHeight` (852 vs 852) and there is no
+   surplus: the floor is already harmless.
+
+   Removing it there is not merely pointless, it is the bug. A document that is
+   exactly viewport-sized is non-scrollable, and iOS then shrinks the viewport
+   itself — `innerHeight` drops 852 → 793 — clipping the bottom 59px of every
+   fixed element and leaving <html>'s background as a white band over the home
+   indicator. Verified by painting the root red: the band turned red, i.e. it is
+   the document canvas showing through where content is no longer painted. */
+@media not all and (display-mode: standalone) {
+  html.scroll-locked #root {
+    min-height: 0;
+  }
+}
+
+/* Deliberately NO `overflow: hidden` on the root, and no `body { position:
+   fixed }` — both make the document non-scrollable, which is the shrink
+   described above. A route whose CONTENT is taller than the viewport therefore
+   cannot be locked from here at all; it stops the gesture on its own subtree
+   with `touch-action: none` instead (see `.calendar-page--tour-locked`).
+
+   The root's `touch-action: pan-x pan-y` (below, Touch) only removes page
+   ZOOM: every scroll region still pans, and the map canvas sets its own
+   `touch-action: none` and handles pinch itself. Nothing here locks scrolling. */
+
+/* Segmented tabs — ONE look for every tab row and segmented switch. A row opts
+   in with `data-tab-indicator` plus inline `--tab-index` / `--tab-count`; its
+   buttons share the width equally. The selected button carries `aria-selected`
+   (tabs) or `aria-pressed` (filter switches), and a white pill glides under it
+   on the tonal track. */
+[data-tab-indicator] {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xxs);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-secondary-container);
+}
+
+[data-tab-indicator] > button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 36px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--motion-duration-medium) var(--motion-ease-standard);
+}
+
+@media (hover: hover) {
+  [data-tab-indicator] > button:hover:not([aria-selected='true'], [aria-pressed='true']) {
+    color: var(--color-on-surface);
+  }
+}
+
+[data-tab-indicator] > button:active:not([aria-selected='true'], [aria-pressed='true']) {
+  color: var(--color-on-surface);
+}
+
+[data-tab-indicator] > [aria-selected='true'],
+[data-tab-indicator] > [aria-pressed='true'] {
+  color: var(--color-primary-dark);
+}
+
+[data-tab-indicator]::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset-block: var(--spacing-xxs);
+  inset-inline-start: var(--spacing-xxs);
+  width: calc(
+    (100% - 2 * var(--spacing-xxs) - (var(--tab-count) - 1) * var(--spacing-xs)) / var(--tab-count)
+  );
+  border-radius: var(--radius-pill);
+  background-color: var(--color-background);
+  box-shadow: var(--shadow-sm);
+  transform: translateX(calc(var(--tab-index) * (100% + var(--spacing-xs))));
+  transition: transform var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+/* Views inside one sheet/dialog push and pop (`<Transition mode="out-in">`, name
+   picked from the new state): forward slides in from the right, back from the
+   left; the leaving view fades out quickly. Used by contacts and profile. */
+.view-push-enter-active,
+.view-push-leave-active,
+.view-pop-enter-active,
+.view-pop-leave-active {
+  transition:
+    opacity var(--motion-duration-medium) var(--motion-ease-standard),
+    transform var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+.view-push-leave-active,
+.view-pop-leave-active {
+  transition-duration: var(--motion-duration-short);
+}
+
+.view-push-enter-from,
+.view-pop-leave-to {
+  opacity: 0;
+  transform: translateX(var(--motion-offset));
+}
+
+.view-push-leave-to,
+.view-pop-enter-from {
+  opacity: 0;
+  transform: translateX(calc(-1 * var(--motion-offset)));
+}
+
+/* ── Mobile sheets ─────────────────────────────────────────────────────────
+   Hosts for bottom sheets (mobile only; on desktop the host is a layout no-op and
+   the dialog/drawer inside positions and animates itself).
+   - `.sheet-host` — over the map/calendar, no scrim: taps outside the sheet reach
+     the page. Wrap it in `<Transition name="sheet">` to slide in and out.
+   - `.sheet-host--modal` — teleported, scrim + tap-outside to dismiss: the scrim
+     fades and the sheet rises on mount; pair with `useExitAnimation` on the host
+     for the exit. */
+.sheet-host {
+  /* fixed (not absolute) so sheets anchor to the visual viewport bottom in
+     mobile browsers — above Android system nav and bottom browser chrome. */
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  /* Clicks pass through around the sheet so map controls stay usable. */
+  pointer-events: none;
+}
+
+.sheet-host--modal {
+  inset: 0;
+  align-items: flex-end;
+  pointer-events: auto;
+  background: var(--color-backdrop);
+  -webkit-backdrop-filter: blur(var(--overlay-backdrop-blur));
+  backdrop-filter: blur(var(--overlay-backdrop-blur));
+  animation: scrim-in var(--motion-duration-medium) var(--motion-ease-standard) both;
+}
+
+.sheet-host--modal > * {
+  animation: sheet-rise var(--motion-duration-long) var(--motion-ease-emphasized) both;
+}
+
+@keyframes scrim-in {
+  from {
+    background-color: transparent;
+    -webkit-backdrop-filter: blur(0);
+    backdrop-filter: blur(0);
+  }
+}
+
+@keyframes sheet-rise {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+.sheet-enter-active,
+.sheet-leave-active {
+  transition: transform var(--motion-duration-long) var(--motion-ease-emphasized);
+}
+
+.sheet-enter-from,
+.sheet-leave-to {
+  transform: translateY(100%);
+}
+
+@media (min-width: 600px) {
+  .sheet-host {
+    display: contents;
+  }
+
+  .sheet-enter-active,
+  .sheet-leave-active {
+    transition: none;
+  }
+
+  .sheet-enter-from,
+  .sheet-leave-to {
+    transform: none;
+  }
+}
+
+/* A surface playing its exit (`useExitAnimation`) was re-inserted to animate, which
+   would restart its entrance keyframes. */
+[data-exiting],
+[data-exiting] * {
+  animation: none !important;
+}
+
+/* Bottom-anchored toasts and status chips rise above an open sheet instead of
+   covering its actions. `--sheet-inset` is the sheet's on-screen height, published
+   by `bottom-sheet.vue` while it is up (unset otherwise → 0); `--dock-inset` the
+   same for the location picker's search and buttons (`location-picker.vue`), `--bar-inset`
+   for the map's bottom control row (`tour-action-bar.vue`). */
+:root {
+  --float-bottom: max(
+    calc(var(--spacing-xl) + var(--safe-bottom)),
+    calc(var(--sheet-inset, 0px) + var(--spacing-md)),
+    calc(var(--dock-inset, 0px) + var(--spacing-md)),
+    calc(var(--bar-inset, 0px) + var(--spacing-md))
+  );
+  --float-corner-bottom: max(
+    calc(var(--spacing-md) + var(--safe-bottom)),
+    calc(var(--sheet-inset, 0px) + var(--spacing-md)),
+    calc(var(--dock-inset, 0px) + var(--spacing-md))
+  );
+}
+
+/* Registered so the insets glide: a toast travels up with a rising sheet instead of jumping
+   ahead of it. One `transition` for every :root inset, the offline band's (safe-area.css)
+   too — a second one would replace it. */
+@property --sheet-inset {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --dock-inset {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+:root {
+  transition:
+    --offline-bar-height var(--motion-duration-medium) var(--motion-ease-emphasized),
+    --sheet-inset var(--motion-duration-long) var(--motion-ease-emphasized),
+    --dock-inset var(--motion-duration-long) var(--motion-ease-emphasized);
+}
+
+/* Touch: no grey tap flash (controls give their own press feedback via
+   --press-scale / :active fills), and no page zoom — the app is a fixed-scale
+   PWA and only the map zooms. `pan-x pan-y` allows scrolling everywhere but no
+   pinch or double-tap zoom (so no double-tap delay either); `touch-action`
+   intersects down the tree, so no descendant can re-enable it. Do NOT use
+   `manipulation` on controls: it explicitly ALLOWS pinch-zoom (it made pinching
+   the tour pill or speed dial zoom the whole app). iOS: see main.ts. */
+html {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-x pan-y;
+}
+
+/* Map-control glass — every control floating over the map (speed dial and its
+   items, compass, tour pill, base-map options, persistent status chips) wears
+   this one surface, so they read as one family and stand off any terrain. Each
+   control adds only its shape and its hover/selected fill
+   (--color-fab-glass-strong). */
+.fab-glass {
+  background-color: var(--color-fab-glass);
+  -webkit-backdrop-filter: var(--fab-backdrop);
+  backdrop-filter: var(--fab-backdrop);
+  border: 1px solid var(--color-fab-border);
+  box-shadow: var(--shadow-md);
+  color: var(--color-fab-on-surface);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* iOS zooms the page into any field under 16px on focus and never zooms back out.
+   Fields get no UA 13.33px: at least 1rem, larger where the parent text is. */
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: max(1rem, 1em);
+}
+
+/* Accessible name without visible chrome — for labels on placeholder-only
+   inputs. Clip rather than `display: none`, which hides it from AT too. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  overflow: hidden;
+}

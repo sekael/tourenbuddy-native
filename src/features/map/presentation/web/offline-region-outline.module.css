@@ -1,0 +1,10 @@
+/* Ported from the PWA's features/map/presentation/components/offline-region-outline.vue (scoped style). */
+.outline {
+  position: absolute;
+  border: 2px solid var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  pointer-events: none;
+  /* Below the download sheet (.sheet-host z-index: 50) and tour pill (.pill z-index: 15)
+    the outline is map furniture, it must sit under the dialog, above the tiles. */
+  z-index: 10;
+}

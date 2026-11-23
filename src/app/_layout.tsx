@@ -32,55 +32,19 @@ import { PageBanner } from '@/core/adaptive/page-banner';
 import { PageReturn } from '@/core/adaptive/page-return';
 import { color } from '@/core/theme/tokens';
 import { useAuthStore } from '@/features/auth/presentation/stores/auth-store';
-import { useAvailabilityStore } from '@/features/calendar/presentation/stores/availability-store';
-import { useCalendarFeedStore } from '@/features/calendar/presentation/stores/calendar-feed-store';
-import { useContactsStore } from '@/features/contacts/presentation/stores/contacts-store';
-import { useFriendshipsStore } from '@/features/friendships/presentation/stores/friendships-store';
 import { openNotificationLink } from '@/features/notifications/presentation/inbox-navigation';
-import { useInboxStore } from '@/features/notifications/presentation/stores/inbox-store';
 import {
   OfflineBanner,
   useOfflineStatus,
   watchOfflineFlashes,
 } from '@/features/shell/presentation/offline-status';
-import {
-  forgetSignedOutDevice,
-  useNotificationsStore,
-} from '@/features/notifications/presentation/stores/notifications-store';
-import { useUserBlocksStore } from '@/features/friendships/presentation/stores/user-blocks-store';
-import { useTourLinksStore } from '@/features/tour-links/presentation/stores/tour-links-store';
-import { useTourAttachmentsStore } from '@/features/tours/presentation/stores/tour-attachments-store';
-import { useTourDraftStore } from '@/features/tours/presentation/stores/tour-draft-store';
-import { useTourFiltersStore } from '@/features/tours/presentation/stores/tour-filters-store';
-import { useTourSuggestionsStore } from '@/features/tours/presentation/stores/tour-suggestions-store';
-import { useToursStore } from '@/features/tours/presentation/stores/tours-store';
+import { forgetSignedOutDevice } from '@/features/notifications/presentation/stores/notifications-store';
+import { useSessionStores } from '@/features/shell/presentation/session-stores';
 import { useUserProfileStore } from '@/features/user/presentation/stores/user-profile-store';
 import { useTermsGate } from '@/features/terms/presentation/stores/terms-store';
-import {
-  useFollowTour,
-  useTourReturn,
-  useTourWayBack,
-} from '@/features/onboarding/presentation/tour-return';
+import { useFollowTour, useTourWayBack } from '@/features/onboarding/presentation/tour-return';
 
 registerFlushTriggers();
-
-/**
- * Every signed-in store, started once a user is known and cleared when they sign out or another
- * user signs in, before that user's data loads (D3: the root layout composes the features, as the
- * PWA's `setupAuthRedirect` did).
- */
-const sessionStores = [
-  useUserProfileStore,
-  useContactsStore,
-  useFriendshipsStore,
-  useUserBlocksStore,
-  useToursStore,
-  useTourSuggestionsStore,
-  useTourLinksStore,
-  useAvailabilityStore,
-  useNotificationsStore,
-  useInboxStore,
-];
 
 // A push while the app is open shows as a banner too; the inbox updates on its own.
 if (Platform.OS !== 'web') {
@@ -151,21 +115,6 @@ function useWelcome(signedIn: boolean) {
     welcomed = true;
     router.push('/welcome');
   }, [due]);
-}
-
-function useSessionStores(userId: string | null) {
-  useEffect(() => {
-    if (!userId) return;
-    sessionStores.forEach((store) => store.getState().start());
-    return () => {
-      sessionStores.forEach((store) => store.getState().clear());
-      useTourAttachmentsStore.getState().clear();
-      useCalendarFeedStore.getState().clear();
-      useTourDraftStore.getState().reset();
-      useTourFiltersStore.getState().reset();
-      useTourReturn.setState({ start: null });
-    };
-  }, [userId]);
 }
 
 // A deep link straight to a sheet still has the tabs beneath it to return to.

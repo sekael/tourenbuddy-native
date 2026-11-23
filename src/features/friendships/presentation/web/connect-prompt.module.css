@@ -1,0 +1,61 @@
+/* Ported from the PWA's features/friendships/presentation/components/connect-prompt.vue (scoped style). */
+.connect-prompt {
+  border: 1.5px solid var(--color-outline-variant);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  background-color: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.prompt-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.prompt-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+}
+
+.security-note {
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+  line-height: 1.4;
+}
+
+.error-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+}
+
+.offline-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+}
+
+.prompt-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* Dismiss/send use shared BaseButton; fill the row like before. */
+.prompt-actions :global(.base-button) {
+  flex: 1;
+}
+
+.sent-msg {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-success-text);
+  font-weight: var(--font-weight-medium);
+}
+
+.sent-icon {
+  font-size: 18px;
+}

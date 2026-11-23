@@ -1,0 +1,121 @@
+/* Ported from the PWA's features/calendar/presentation/components/calendar-sync-settings.vue (scoped style). */
+/* Three titled groups (your calendars, availability window, your feed) spaced
+   apart, so the page reads as sections instead of one long form. */
+.calendar-sync {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.group,
+.feeds,
+.add-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.group-title {
+  flex-basis: 100%;
+  font-size: var(--heading-section-size);
+  font-weight: var(--heading-section-weight);
+  color: var(--heading-section-color);
+  letter-spacing: var(--heading-section-tracking);
+}
+
+.hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.error {
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+}
+
+.window-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--spacing-sm);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.input {
+  padding: var(--spacing-sm);
+  border: 1.5px solid var(--color-outline-variant);
+  border-radius: var(--input-radius);
+  font: inherit;
+  /* `font: inherit` would take the 14px label size; fields stay >= 16px (iOS focus zoom). */
+  font-size: max(1rem, 1em);
+  color: var(--color-on-surface);
+  background-color: var(--input-bg);
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  background-color: var(--input-bg-focus);
+  box-shadow: var(--input-focus-ring);
+}
+
+/* The native select arrow sits at a fixed inset that padding can't move, so it
+   hugged the border; draw our own chevron at the same inset as the time inputs' clock. */
+.select-wrap {
+  position: relative;
+  display: flex;
+}
+
+.select {
+  flex: 1;
+  appearance: none;
+  padding-right: calc(var(--spacing-sm) + var(--icon-size-md) + var(--spacing-xs));
+}
+
+.select-chevron {
+  position: absolute;
+  top: 50%;
+  right: var(--spacing-sm);
+  translate: 0 -50%;
+  pointer-events: none;
+  color: var(--color-on-surface-variant);
+}
+
+/* Every labelled button on the page (incl. the outbound feed) is exactly as tall as
+   the fields it sits beside, with or without an icon. */
+.calendar-sync :global(.base-button) {
+  min-height: 48px;
+  padding-block: 0;
+}
+
+.group > :global(.base-button),
+.add-form :global(.base-button) {
+  align-self: flex-start;
+}
+
+/* Success state stays legible although the button is disabled (nothing left to save). */
+.save-window.save-window--saved:disabled {
+  opacity: 1;
+  color: var(--color-success-text);
+  border-color: var(--color-success);
+  background-color: color-mix(in srgb, var(--color-success) 12%, transparent);
+}
+
+.save-window span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+}
+
+.loading-placeholder {
+  height: 4rem;
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-variant);
+}

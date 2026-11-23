@@ -1,0 +1,15 @@
+/* Ported from the PWA's features/user/presentation/components/app-update-notice.vue (scoped style). */
+.notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--card-radius);
+  background-color: var(--color-secondary-container);
+  color: var(--color-on-surface);
+}
+
+.text {
+  font-weight: var(--font-weight-medium);
+}

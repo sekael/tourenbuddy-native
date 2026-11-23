@@ -1,0 +1,540 @@
+/* Ported from the PWA's features/map/presentation/components/route-planner.vue (scoped style). */
+.planner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Above the collapsed form bar (full-screen page z 60), which it covers on phones. */
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md) calc(var(--spacing-md) + var(--safe-bottom));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--color-background);
+  box-shadow: var(--shadow-lg);
+}
+
+.planner-search {
+  position: fixed;
+  top: calc(var(--safe-top) + var(--spacing-md));
+  left: var(--spacing-md);
+  right: var(--spacing-md);
+  z-index: 62;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  /* Results scroll above the panel instead of running under it. */
+  max-height: calc(100dvh - var(--safe-top) - var(--sheet-inset, 0px) - 2 * var(--spacing-md));
+  pointer-events: none;
+}
+
+.planner-search > * {
+  pointer-events: auto;
+}
+
+/* Docked left on desktop: the middle of the map, and the form drawer on the right, stay clear. */
+@media (min-width: 600px) {
+  .planner {
+    left: var(--spacing-lg);
+    right: auto;
+    bottom: var(--spacing-lg);
+    width: 420px;
+    border-radius: var(--radius-lg);
+    padding-bottom: var(--spacing-md);
+  }
+
+  .planner-search {
+    top: calc(var(--safe-top) + var(--spacing-lg));
+    left: var(--spacing-lg);
+    right: auto;
+    width: 420px;
+  }
+}
+
+/* The sheet's grip and head: pulled down, the points' rows fold away; sideways, the days scroll. */
+.top {
+  display: flex;
+  flex-direction: column;
+  touch-action: pan-x;
+}
+
+.grip {
+  display: grid;
+  place-items: center;
+  height: 20px;
+  margin: calc(-1 * var(--spacing-xs)) calc(-1 * var(--spacing-md)) 0;
+  border: 0;
+  background: none;
+  cursor: grab;
+  touch-action: none;
+}
+
+.grip-bar {
+  width: 36px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-outline-variant);
+}
+
+.grip:focus-visible {
+  outline: none;
+}
+
+.grip:focus-visible .grip-bar {
+  box-shadow: var(--input-focus-ring);
+}
+
+/* The rows that fold: their gap to what follows is their own, so folded they leave none. */
+.fold {
+  margin-bottom: calc(-1 * var(--spacing-sm));
+  overflow: hidden;
+  transition: height var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+.fold--pulled {
+  transition: none;
+}
+
+.fold-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fold {
+    transition: none;
+  }
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-height: 44px;
+}
+
+.discard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-error-container) 70%, var(--color-background));
+}
+
+.discard-text {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin: 0;
+  font-weight: var(--font-weight-medium);
+}
+
+.discard-icon {
+  flex: none;
+  color: var(--color-error);
+}
+
+.discard-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-left: auto;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The trip's days as pills, scrolling sideways past a handful. */
+.days {
+  position: relative;
+  display: flex;
+  flex: 1;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/* The app's selectable chips (and the form's day tabs): outlined, the day on screen tinted. */
+.day {
+  flex: none;
+  min-height: var(--chip-min-height);
+  padding: 0 var(--spacing-sm);
+  border: 1.5px solid var(--color-outline-variant);
+  border-radius: var(--chip-radius);
+  background: var(--color-background);
+  color: var(--color-on-surface);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-duration-short) var(--motion-ease-standard),
+    border-color var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+@media (hover: hover) {
+  .day:hover {
+    border-color: var(--color-primary);
+  }
+}
+
+.day--active {
+  background: var(--chip-selected-bg);
+  border-color: var(--chip-selected-border-color);
+  color: var(--chip-selected-color);
+  font-weight: var(--font-weight-semibold);
+}
+
+.day:focus-visible {
+  outline: none;
+  box-shadow: var(--input-focus-ring);
+}
+
+/* Start, goal, end as a route: one row each, their marks joined by a dotted line. */
+.stops {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stop {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  min-width: 0;
+  border-radius: var(--radius-md);
+}
+
+.stop::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* Through the marks' middle: the row's padding plus half a mark. */
+  left: calc(var(--spacing-sm) + 11px);
+  border-left: 2px dotted var(--color-outline-variant);
+}
+
+.stop:first-child::before {
+  top: 22px;
+}
+
+.stop:last-child::before {
+  bottom: auto;
+  height: 22px;
+}
+
+.stop--active {
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-background));
+}
+
+.stop-main {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 24px 3.25rem minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--spacing-sm);
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--spacing-xxs) var(--spacing-sm);
+  border: 0;
+  background: none;
+  color: var(--color-on-surface);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.stop-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  /* Covers the dotted line where it passes. */
+  background: var(--color-background);
+  color: var(--color-on-surface-variant);
+}
+
+.stop--active .stop-mark {
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-background));
+}
+
+.stop--set .stop-mark,
+.stop--active .stop-mark {
+  color: var(--color-primary);
+}
+
+.stop-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-on-surface-variant);
+}
+
+.stop--active .stop-label {
+  color: var(--color-primary);
+}
+
+/* Breaks at spaces and hyphens: "Meiringen (Luftseilbahn)" reads whole, never cut. */
+.stop-name {
+  overflow-wrap: break-word;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.stop-empty {
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stop-height {
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-on-surface-variant);
+}
+
+.stop-skeleton {
+  width: 80%;
+  height: 1.25em;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-variant);
+}
+
+.stop-action {
+  flex: none;
+  margin-right: var(--spacing-xxs);
+}
+
+/* Rundtour: a tonal button, as by the form's end, a thumb's height inside its row. */
+.stop-action.base-button--secondary {
+  min-height: 40px;
+  padding: 0 var(--spacing-sm);
+}
+
+.stop > :global(.base-icon-button) {
+  flex: none;
+  margin-right: var(--spacing-xxs);
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--spacing-md);
+  row-gap: 2px;
+  margin: 0;
+  /* Two lines held: the instruction changes per step, the panel stays put. */
+  min-height: 2.8em;
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+
+.numbers {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Held while a leg finds its way: the numbers still stand, fainter, until the new ones come. */
+.numbers--stale {
+  opacity: 0.5;
+  transition: opacity var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.numbers--pending {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface-variant);
+}
+
+.instruction {
+  color: var(--color-on-surface-variant);
+}
+
+.instruction--warn {
+  color: var(--color-warning-text);
+}
+
+.route-hint {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+/* What the line follows, and the switch to straight lines. */
+.follow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-height: 36px;
+  padding: 0 var(--spacing-xxs) 0 var(--spacing-sm);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-variant);
+  font-size: var(--font-size-sm);
+}
+
+.follow-icon {
+  flex: none;
+  color: var(--color-primary);
+}
+
+/* A leg on its way: the icon turns while it loads. */
+.follow-spinner {
+  width: 16px;
+  height: 16px;
+  margin: 1px;
+  border: 2px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: follow-spin 0.9s linear infinite;
+}
+
+@keyframes follow-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .follow-spinner {
+    animation: none;
+  }
+}
+
+.follow--off .follow-icon {
+  color: var(--color-on-surface-variant);
+}
+
+.follow--gap {
+  background: color-mix(in srgb, var(--color-warning) 14%, var(--color-background));
+}
+
+.follow--gap .follow-icon {
+  color: var(--color-warning-text);
+}
+
+.follow-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.switch {
+  position: relative;
+  flex: none;
+  width: 52px;
+  height: 44px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+/* The track; the thumb slides along it. */
+.switch::before {
+  content: '';
+  position: absolute;
+  inset: 11px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-outline-variant);
+  transition: background var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.switch[aria-checked='true']::before {
+  background: var(--color-primary);
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 14px;
+  left: 9px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-background);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.switch[aria-checked='true'] .switch-thumb {
+  transform: translateX(18px);
+}
+
+.switch:focus-visible {
+  outline: none;
+}
+
+.switch:focus-visible::before {
+  box-shadow: var(--input-focus-ring);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* Floating pill over the map, as in the picker: frosted and lifted, brand ring while typing. */
+.search-field {
+  flex-shrink: 0;
+  min-height: 52px;
+  padding: var(--spacing-xxs) var(--spacing-xs) var(--spacing-xxs) var(--spacing-md);
+  border: 1px solid color-mix(in srgb, var(--color-outline-variant) 70%, transparent);
+  border-radius: var(--radius-pill);
+  background-color: color-mix(in srgb, var(--color-background) 86%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  backdrop-filter: blur(16px) saturate(1.6);
+  box-shadow: var(--shadow-lg);
+}
+
+.search-field:focus-within {
+  border-color: var(--color-primary);
+  background-color: var(--color-background);
+  box-shadow: var(--shadow-lg), var(--input-focus-ring);
+}
+
+.search-field :global(.search-icon) {
+  color: var(--color-primary);
+}
+
+.search-field :global(.search-input::-webkit-search-cancel-button) {
+  display: none;
+}
+
+.results-enter-active,
+.results-leave-active {
+  transform-origin: top center;
+  transition:
+    opacity var(--motion-duration-short) var(--motion-ease-standard),
+    transform var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+.results-enter-from,
+.results-leave-to {
+  opacity: 0;
+  transform: translateY(calc(-1 * var(--motion-offset))) scale(0.98);
+}

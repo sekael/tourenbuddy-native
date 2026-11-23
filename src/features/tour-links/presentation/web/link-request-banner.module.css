@@ -1,0 +1,42 @@
+/* Ported from the PWA's features/tour-links/presentation/components/link-request-banner.vue (scoped style). */
+.link-request-banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.link-request-banner--incoming {
+  border-left: 3px solid var(--color-primary);
+  background: var(--color-surface-variant);
+}
+
+.message {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: flex-start;
+  font-size: var(--font-size-sm);
+}
+
+.icon {
+  font-size: 18px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+/* Accept/decline/withdraw use shared BaseButton. */
+
+.error {
+  color: var(--color-error);
+  font-size: var(--font-size-xs);
+  margin: 0;
+}

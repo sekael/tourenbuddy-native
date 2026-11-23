@@ -50,21 +50,44 @@ jobs:
             echo "::notice::Store builds skipped: set EXPO_TOKEN (docs/publishing.md)."
           fi
 
-  # The public pages only (legal pages, association file, app-config.json): the web app is the Vue
-  # PWA, released from its own repository.
+  # The public pages (legal pages, association file, app-config.json) and, once the repository
+  # variable WEB_DEPLOY is `true` (the web cutover, docs/publishing.md), the web app with them: the
+  # export copies `public/` into `dist/`. Until then the Vue repository releases the web app.
   site:
     needs: secrets
     if: needs.secrets.outputs.site == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    env:
+      WEB: ${{ vars.WEB_DEPLOY == 'true' }}
     steps:
       - uses: actions/checkout@v7
+      - if: env.WEB == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - if: env.WEB == 'true'
+        run: npm ci
+      # A build without its backend would deploy an app that cannot start: fail instead.
+      - if: env.WEB == 'true'
+        run: |
+          if [ -z "$EXPO_PUBLIC_SUPABASE_URL" ] || [ -z "$EXPO_PUBLIC_SUPABASE_ANON_KEY" ]; then
+            echo "::error::WEB_DEPLOY needs the secrets SUPABASE_URL and SUPABASE_ANON_KEY (docs/publishing.md)."
+            exit 1
+          fi
+          npm run build:web
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_NOTIFY_HOOK_URL: ${{ secrets.NOTIFY_HOOK_URL }}
+          EXPO_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy public --project-name=tourenbuddy-native --branch=main
+          command: pages deploy ${{ env.WEB == 'true' && 'dist' || 'public' }} --project-name=tourenbuddy-native --branch=main
 
   native:
     needs: secrets

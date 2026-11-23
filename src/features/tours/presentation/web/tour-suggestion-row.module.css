@@ -1,0 +1,116 @@
+/* Ported from the PWA's features/tours/presentation/components/tour-suggestion-row.vue (scoped style). */
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--color-outline-variant);
+
+  /* The card's own border already closes the list — a divider under the last row doubles
+     it. In the review sheet the batch actions follow, so those rows keep theirs. */
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+/* `&--suffix` is Sass, not CSS: native nesting resolves `&` to a real selector, so the
+   concatenated form never matches. Modifiers are written out in full. */
+.row--stale {
+  border-left: 3px solid var(--color-warning);
+  padding-left: var(--spacing-sm);
+}
+
+.row-head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.row-label {
+  font-weight: 600;
+}
+
+.stale-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  font-size: var(--font-size-sm);
+  opacity: 0.8;
+}
+
+/* GitHub-style outcome pill: the tint carries the verdict at a glance, mixed off the
+   existing semantic tokens rather than adding three one-off palette entries. */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+}
+
+.status-badge--accepted {
+  color: var(--color-success-text);
+  background-color: color-mix(in srgb, var(--color-success) 14%, var(--color-background));
+}
+
+.status-badge--withdrawn {
+  color: var(--color-warning-text);
+  background-color: color-mix(in srgb, var(--color-warning) 18%, var(--color-background));
+}
+
+.status-badge--declined {
+  color: var(--color-error);
+  background-color: color-mix(in srgb, var(--color-error) 12%, var(--color-background));
+}
+
+.values {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+}
+
+.values--triple {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.value-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+  min-width: 0;
+}
+
+.value-label {
+  font-size: var(--font-size-sm);
+  opacity: 0.6;
+}
+
+.value {
+  /* Break long words at syllables with a hyphen (in the page language), and mid-word
+     only when no hyphenation point exists — never "Schreckhornhütt|e". */
+  overflow-wrap: break-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
+.value--old {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.value--new {
+  font-weight: 500;
+}
+
+.cap-hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+}
+
+.row-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
