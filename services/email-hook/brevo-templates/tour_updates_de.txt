@@ -1,0 +1,12 @@
+Subject: {% if params.action == "availability_weekly" %}Freunde haben diese Woche an deinen freien Tagen Zeit{% elif params.action == "tour_reminder" %}«{{ params.tourName }}» ist in 5 Tagen{% else %}{{ params.actorName }} hat eine Tour auf TourenBuddy {% if params.action == "created" %}geteilt{% elif params.action == "deleted" %}entfernt{% else %}aktualisiert{% endif %}{% endif %}
+
+Hallo,
+
+{% if params.action == "availability_weekly" %}{{ params.actorName }} {% if params.moreCount > 0 %}und {{ params.moreCount }} weitere haben{% else %}hat{% endif %} diese Woche an Tagen Zeit, an denen du auch Zeit hast.{% elif params.action == "tour_reminder" %}Die Tour «{{ params.tourName }}» ist in 5 Tagen. Zeit, Verhältnisse, Ausrüstung und Partner zu prüfen.{% else %}{{ params.actorName }} hat die geteilte Tour "{{ params.tourName }}", auf der du Partner bist, {% if params.action == "created" %}mit dir geteilt{% elif params.action == "deleted" %}entfernt{% else %}aktualisiert{% endif %}.{% endif %}
+
+Touren ansehen:
+{{ params.appUrl }}/?tours=1
+
+---
+Du erhältst diese E-Mail, weil Benachrichtigungen für dein TourenBuddy-Konto aktiviert sind.
+Verwalte sie in deinen Profileinstellungen.

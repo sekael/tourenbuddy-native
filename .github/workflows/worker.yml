@@ -1,0 +1,35 @@
+# The Worker (`services/email-hook/`) is its own package: its tests run only when it changes, so
+# every other pull request's checks stay as they are. Deploys stay manual (`npx wrangler deploy`).
+name: Worker
+
+on:
+  pull_request:
+    paths: [services/email-hook/**, .github/workflows/worker.yml]
+  push:
+    branches: [main]
+    paths: [services/email-hook/**, .github/workflows/worker.yml]
+
+concurrency:
+  group: worker-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: services/email-hook
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: services/email-hook/package-lock.json
+      - run: npm ci
+      - run: npm test

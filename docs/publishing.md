@@ -31,6 +31,11 @@ Follow the setup in order: `EXPO_TOKEN` comes last, because it turns the store b
 
 The marketing version comes from `package.json`, which only release-please changes.
 
+The backend has no release. The owner ships a reviewed database change with `supabase db push`
+and a Worker change with `npx wrangler@latest deploy` in `services/email-hook/` (AGENTS.md,
+"Database and Worker"). `ski-route-data.yml` publishes the ski-route dataset to the Pages project
+`tourenbuddy-data` weekly, on its own (`docs/ski-route-data.md`).
+
 ## Device checks before review
 
 On the iPhone 15, with the TestFlight build (the store identity: the association file comes through
@@ -45,6 +50,8 @@ Apple's CDN, as for users), before submitting it for review. These need a real d
 
 - `checks.yml`: lint, type check, tests and the web build (`npm run build:web`), on every pull
   request.
+- `worker.yml`: the Worker's tests (`npm test` in `services/email-hook/`), when a pull request
+  changes it.
 - `web-preview.yml`: the pull request's web build on the Pages project `tourenbuddy-native` at its
   branch alias (`<branch>.tourenbuddy-native.pages.dev`), linked in a pull request comment and
   deleted once the pull request closes. It runs against the **production** backend: use throwaway
@@ -87,6 +94,11 @@ Apple's CDN, as for users), before submitting it for review. These need a real d
 
   Repository variable `WEB_DEPLOY`: `true` deploys the web app with each release (unset: `public/`
   only).
+
+- Issues: secret `ADD_TO_PROJECT_PAT` (a token with project write) lets `add-to-project.yml` put
+  issues labeled `bug` or `user-feedback` on the backlog project. The issue forms (the app's
+  feedback sheet opens them) set those labels only if they exist here: copy them once with
+  `gh label clone sekael/tourenbuddy_frontend_vue -R sekael/tourenbuddy-native`.
 
 ### Cloudflare Pages
 
@@ -178,16 +190,16 @@ those queues drain, or the replays dead-letter.
 
 ### Supabase auth: passwords and passkeys
 
-The auth settings live in the Vue repository: `supabase/config.toml` for the local stack, the
-dashboard for the hosted project. Its change `unconfirmed-accounts-hold-no-password` brings them
-with a migration.
+The auth settings live in `supabase/config.toml` for the local stack and in the dashboard for the
+hosted project. The Vue repository's change `unconfirmed-accounts-hold-no-password` brought them
+with a migration (`20261108120000_unconfirmed_accounts_hold_no_password.sql`).
 
-1. **The migration first, as soon as it is merged there** (it fixes the live backend, whatever this
-   app does): run the audit query from that change's design in the dashboard's SQL editor and look
-   at the list, then `supabase db push`, and right after it, in Authentication → Sign In /
-   Providers → Email, turn on **Confirm email**. The migration keeps every unconfirmed account
-   without a password and drops the passwords that exist (no client ever set one; every account
-   keeps signing in with a code).
+1. **The migration first, if `supabase migration list --linked` shows it pending** (it fixes the
+   live backend, whatever this app does): run the audit query from that change's design in the
+   dashboard's SQL editor and look at the list, then `supabase db push`, and right after it, in
+   Authentication → Sign In / Providers → Email, turn on **Confirm email**. The migration keeps
+   every unconfirmed account without a password and drops the passwords that exist (no client ever
+   set one; every account keeps signing in with a code).
 2. Same page: **Minimum password length** 8, and **Secure password change** on (the Vue change
    `add-native-backend`): a password set on a session older than a day then needs a code.
 3. Authentication → Passkeys: on, display name `TourenBuddy`, relying party ID `tourenbuddy.ch`,
@@ -225,7 +237,7 @@ Not released yet. Before the first Android release:
 
 1. **Push:** a Firebase project; its `google-services.json` as `android.googleServicesFile` in
    `app.config.ts` (without it Android gets no push token), and the Worker secret
-   `FCM_SERVICE_ACCOUNT` in the Vue repository's `services/email-hook`.
+   `FCM_SERVICE_ACCOUNT` (`services/email-hook`, `npx wrangler secret put`).
 2. **Google Play:**
    1. Create the app in the Play Console (package `ch.tourenbuddy.app`), free, available in
       Switzerland only (as on the App Store).

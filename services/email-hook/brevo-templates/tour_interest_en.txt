@@ -1,0 +1,45 @@
+Subject: {% if params.action == "link_created" %}{{ params.actorName }} wants to link a tour with you{% elif params.action == "link_accepted" %}{{ params.actorName }} accepted your link request{% elif params.action == "link_declined" %}{{ params.actorName }} declined your link request{% elif params.action == "group_joined" %}A new tour joined your link{% elif params.action == "group_evicted_external" %}A tour left your link{% elif params.action == "backfill_digest" %}{{ params.actorName }} planned the same tours as you{% else %}{{ params.actorName }} planned the same tour as you{% endif %} on TourenBuddy
+
+Hi there,
+
+{% if params.action == "link_created" %}
+{{ params.actorName }} wants to link their tour with your "{{ params.tourName }}".
+
+Open the tour to accept or decline the link request.
+{% elif params.action == "link_accepted" %}
+{{ params.actorName }} accepted your link request for "{{ params.tourName }}".
+
+Your tours are now linked. Coordinate timing and partners on either side.
+{% elif params.action == "link_declined" %}
+{{ params.actorName }} declined your link request for "{{ params.tourName }}".
+
+No further action needed — you can still plan independently.
+{% elif params.action == "group_joined" %}
+A new tour joined the link around "{{ params.tourName }}".
+
+Check the linked tours to see who else is planning the same outing.
+{% elif params.action == "group_evicted_external" %}
+A tour was removed from the link around "{{ params.tourName }}".
+
+This happens when a tour is edited, made private, or a friendship is ended.
+{% elif params.action == "backfill_digest" %}
+{{ params.actorName }} planned the same tours as you.
+
+Check them out on TourenBuddy.
+{% else %}
+{{ params.actorName }} planned the same tour as your "{{ params.tourName }}".
+
+Open the tour to link with them and plan together.
+{% endif %}
+
+{% if params.action == "backfill_digest" %}
+View shared tours:
+{{ params.appUrl }}
+{% else %}
+View your tours:
+{{ params.appUrl }}/?tours=1
+{% endif %}
+
+---
+You received this email because notifications are enabled for your TourenBuddy account.
+Manage them in your profile settings.

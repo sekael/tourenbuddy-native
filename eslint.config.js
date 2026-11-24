@@ -4,8 +4,19 @@ const expoConfig = require('eslint-config-expo/flat');
 const prettierRecommended = require('eslint-plugin-prettier/recommended');
 
 module.exports = defineConfig([
-  // The map's and the PDF viewer's workers, copied minified into public/ by postinstall.
-  globalIgnores(['dist/*', 'ios/*', 'android/*', '.expo/*', 'expo-env.d.ts', 'public/*.mjs']),
+  // The map's and the PDF viewer's workers, copied minified into public/ by postinstall. The
+  // backend (database, Worker, ski-route job) keeps its own runners and the Vue repository's style.
+  globalIgnores([
+    'dist/*',
+    'ios/*',
+    'android/*',
+    '.expo/*',
+    'expo-env.d.ts',
+    'public/*.mjs',
+    'services/*',
+    'supabase/*',
+    'scripts/ski-routes/*',
+  ]),
   expoConfig,
   prettierRecommended,
   {

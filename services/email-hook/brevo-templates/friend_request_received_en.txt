@@ -1,0 +1,12 @@
+Subject: {{ params.actorName }} sent you a friend request on TourenBuddy
+
+Hi there,
+
+{{ params.actorName }} sent you a friend request on TourenBuddy.
+
+Open the app to accept or decline:
+{{ params.appUrl }}/?friendRequests=1
+
+---
+You received this email because notifications are enabled for your TourenBuddy account.
+Manage them in your profile settings.

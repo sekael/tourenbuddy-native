@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your TourenBuddy sign-in code</title>
+    <!--[if mso]>
+      <noscript>
+        <xml
+          ><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml
+        >
+      </noscript>
+    <![endif]-->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f5f5f5;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        color: #1a1a1a;
+      }
+      .wrapper {
+        width: 100%;
+        background-color: #f5f5f5;
+        padding: 40px 0;
+      }
+      .container {
+        max-width: 520px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      }
+      .header {
+        background-color: #1a56db;
+        padding: 32px 40px;
+        text-align: center;
+      }
+      .header-logo {
+        font-size: 22px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: -0.02em;
+      }
+      .body {
+        padding: 40px 40px 32px;
+      }
+      .title {
+        font-size: 22px;
+        font-weight: 600;
+        color: #111827;
+        margin: 0 0 12px;
+        letter-spacing: -0.01em;
+      }
+      .text {
+        font-size: 15px;
+        line-height: 1.6;
+        color: #4b5563;
+        margin: 0 0 28px;
+      }
+      .code-wrapper {
+        text-align: center;
+        margin: 0 0 28px;
+      }
+      .code {
+        display: inline-block;
+        font-size: 40px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        color: #111827;
+        font-family: 'Courier New', Courier, monospace;
+        background-color: #f3f4f6;
+        border-radius: 10px;
+        padding: 16px 28px;
+        border: 1px solid #e5e7eb;
+      }
+      .warning {
+        font-size: 13px;
+        color: #6b7280;
+        margin: 0 0 28px;
+        padding: 12px 16px;
+        background-color: #f9fafb;
+        border-radius: 8px;
+        border-left: 3px solid #e5e7eb;
+      }
+      .divider {
+        border: none;
+        border-top: 1px solid #e5e7eb;
+        margin: 28px 0;
+      }
+      .footnote {
+        font-size: 13px;
+        color: #6b7280;
+        line-height: 1.5;
+        margin: 0;
+      }
+      .footer {
+        padding: 0 40px 32px;
+        text-align: center;
+      }
+      .footer-text {
+        font-size: 12px;
+        color: #9ca3af;
+        line-height: 1.5;
+        margin: 0;
+      }
+      @media (max-width: 560px) {
+        .body,
+        .footer {
+          padding-left: 24px;
+          padding-right: 24px;
+        }
+        .header {
+          padding-left: 24px;
+          padding-right: 24px;
+        }
+        .code {
+          font-size: 32px;
+          padding: 12px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="container">
+        <div class="header">
+          <div class="header-logo">TourenBuddy</div>
+        </div>
+        <div class="body">
+          <h1 class="title">Sign in to TourenBuddy</h1>
+          <p class="text">Your TourenBuddy verification code is:</p>
+          <div class="code-wrapper">
+            <span class="code">{{ params.otp }}</span>
+          </div>
+          <p class="text">Enter it in the app to sign in.</p>
+          <p class="warning">
+            <strong>Do not share this code with anyone.</strong> It expires in one hour. TourenBuddy will never ask for
+            your sign-in code.
+          </p>
+          <hr class="divider" />
+          <p class="footnote">
+            Didn't request this? You can safely ignore this email. Someone may have entered
+            <strong>{{ params.email }}</strong> by mistake.
+          </p>
+        </div>
+        <div class="footer">
+          <p class="footer-text">
+            TourenBuddy &mdash; Plan your outdoor tours<br />
+            Sent to {{ params.email }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

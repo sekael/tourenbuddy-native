@@ -27,6 +27,16 @@ describe('skiDifficultyGrade', () => {
     for (const [de, fr] of pairs) expect(skiDifficultyGrade(fr!)).toBe(skiDifficultyGrade(de!));
   });
 
+  // scripts/ski-routes/build.ts grades the published dataset with this function: these are the
+  // grades the Vue module gave, so a change here re-grades every route on the next data build.
+  it.each([
+    ['German', ['L', 'WS', 'ZS', 'S', 'SS', 'AS', 'EX']],
+    ['alpine', ['F', 'PD', 'AD', 'D', 'TD', 'ED', 'EX']],
+  ])('should keep the dataset grades 0–20 for every %s letter and modifier', (_, letters) => {
+    const all = letters.flatMap((letter) => [`${letter}-`, letter, `${letter}+`]);
+    expect(all.map(skiDifficultyGrade)).toEqual([...Array(21).keys()]);
+  });
+
   it('should tolerate case and whitespace', () => {
     expect(skiDifficultyGrade(' zs+ ')).toBe(skiDifficultyGrade('ZS+'));
   });

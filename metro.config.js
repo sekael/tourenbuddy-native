@@ -8,6 +8,11 @@ const config = getDefaultConfig(__dirname);
 config.resolver.blockList = [
   ...[config.resolver.blockList].flat().filter(Boolean),
   /(^|[/\\])\.review(-kit)?[/\\]/,
+  // The backend is no app code; `wrangler dev` and the Supabase CLI write their state into it.
+  // Anchored at the project root (absolute or project-relative paths), never inside node_modules.
+  new RegExp(
+    `^(${__dirname.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')}[/\\\\])?(services|supabase)[/\\\\]`,
+  ),
 ];
 
 module.exports = config;

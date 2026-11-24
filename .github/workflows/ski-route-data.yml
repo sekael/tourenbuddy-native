@@ -1,0 +1,95 @@
+# Publishes the self-hosted ski-route dataset to the Cloudflare Pages project `tourenbuddy-data`
+# whenever Swisstopo releases a new version. Runbook: docs/ski-route-data.md
+name: Ski-route data
+
+on:
+  schedule:
+    # Weekly: Swisstopo releases mid-December at season start; a no-change run takes seconds.
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Rebuild even if unchanged, and skip the route-count drift check
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: write # keepalive: `gh workflow enable`
+
+concurrency:
+  group: ski-route-data
+  cancel-in-progress: false
+
+env:
+  DATA_URL: https://tourenbuddy-data.pages.dev
+  STAC_ITEMS: https://data.geo.admin.ch/api/stac/v0.9/collections/ch.swisstopo-karto.skitouren/items
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check for a new release
+        id: check
+        run: |
+          asset=$(curl -fsS "$STAC_ITEMS" | jq -c '[.features[].assets[] | select(.href | endswith("skitouren_2056.gpkg.zip"))][0]')
+          href=$(jq -r '.href' <<<"$asset")
+          version=$(jq -r '.updated | sub("\\..*$"; "") | gsub(":"; "")' <<<"$asset")
+          [[ "$version" =~ ^[0-9T-]+$ ]] || { echo "Unexpected STAC version '$version'"; exit 1; }
+          # No manifest yet (first run) or unreachable → build without a previous version.
+          if curl -fsS "$DATA_URL/ski-routes.json" -o previous.json; then
+            deployed=$(jq -r '.version' previous.json)
+          else
+            rm -f previous.json
+            deployed=none
+          fi
+          echo "Swisstopo: $version, published: $deployed"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "href=$href" >> "$GITHUB_OUTPUT"
+          if [[ "$version" == "$deployed" && "${{ inputs.force }}" != "true" ]]; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.check.outputs.build == 'true'
+        uses: actions/checkout@v4
+
+      - name: Install GDAL and tippecanoe
+        if: steps.check.outputs.build == 'true'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq gdal-bin tippecanoe
+
+      - name: Setup Node
+        if: steps.check.outputs.build == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build
+        if: steps.check.outputs.build == 'true'
+        run: |
+          curl -fsSL "${{ steps.check.outputs.href }}" -o ski.zip
+          unzip -q ski.zip -d ski
+          args=(--gpkg ski/ski_routes_2056.gpkg --version "${{ steps.check.outputs.version }}" --out out --base "$DATA_URL")
+          [[ -f previous.json ]] && args+=(--previous previous.json)
+          [[ "${{ inputs.force }}" == "true" ]] && args+=(--force)
+          npx --yes tsx@4 scripts/ski-routes/build.ts "${args[@]}"
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.check.outputs.build == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          # First run bootstraps the project; afterwards this fails harmlessly ("already exists").
+          npx --yes wrangler@4 pages project create tourenbuddy-data --production-branch main || true
+          npx --yes wrangler@4 pages deploy out --project-name tourenbuddy-data --branch main --commit-dirty=true
+
+      # GitHub disables scheduled workflows in public repos after 60 days without repo activity.
+      # Re-enabling on every run is meant to reset that timer (unverified, see runbook).
+      - name: Keepalive
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow enable ski-route-data.yml --repo "${{ github.repository }}"

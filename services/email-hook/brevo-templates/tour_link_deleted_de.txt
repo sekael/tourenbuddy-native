@@ -1,0 +1,14 @@
+Subject: Deine Tour-Verknüpfung für {{ params.tourName }} wurde aufgelöst auf TourenBuddy
+
+Hallo,
+
+Die Verknüpfung für "{{ params.tourName }}" wurde aufgelöst.
+
+Deine Tour ist nicht mehr mit anderen verknüpft.
+
+Tour ansehen:
+{{ params.appUrl }}/?tours=1
+
+---
+Du erhältst diese E-Mail, weil Benachrichtigungen für dein TourenBuddy-Konto aktiviert sind.
+Verwalte sie in deinen Profileinstellungen.

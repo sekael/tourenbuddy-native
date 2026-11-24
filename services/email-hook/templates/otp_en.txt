@@ -1,0 +1,14 @@
+TourenBuddy – Sign in to your account
+======================================
+
+Your TourenBuddy verification code is {{ params.otp }}
+
+Enter it in the app to sign in. It expires in one hour and can only be used once.
+
+Do not share this code with anyone. TourenBuddy will never ask for your sign-in code.
+
+If you didn't request this, you can ignore this email. Someone may have entered {{ params.email }} by mistake.
+
+---
+TourenBuddy – Plan your outdoor tours
+Sent to {{ params.email }}

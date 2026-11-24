@@ -19,6 +19,9 @@
   ],
   "exclude": [
     "node_modules",
-    "tourenbuddy_frontend_vue"
+    "tourenbuddy_frontend_vue",
+    "services",
+    "supabase",
+    "scripts/ski-routes"
   ]
 }

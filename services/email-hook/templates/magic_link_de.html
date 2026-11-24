@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dein TourenBuddy-Anmeldelink</title>
+    <!--[if mso]>
+      <noscript>
+        <xml
+          ><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml
+        >
+      </noscript>
+    <![endif]-->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f5f5f5;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        color: #1a1a1a;
+      }
+      .wrapper {
+        width: 100%;
+        background-color: #f5f5f5;
+        padding: 40px 0;
+      }
+      .container {
+        max-width: 520px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      }
+      .header {
+        background-color: #1a56db;
+        padding: 32px 40px;
+        text-align: center;
+      }
+      .header-logo {
+        font-size: 22px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: -0.02em;
+      }
+      .body {
+        padding: 40px 40px 32px;
+      }
+      .title {
+        font-size: 22px;
+        font-weight: 600;
+        color: #111827;
+        margin: 0 0 12px;
+        letter-spacing: -0.01em;
+      }
+      .text {
+        font-size: 15px;
+        line-height: 1.6;
+        color: #4b5563;
+        margin: 0 0 28px;
+      }
+      .btn-wrapper {
+        text-align: center;
+        margin: 0 0 28px;
+      }
+      .btn {
+        display: inline-block;
+        padding: 14px 32px;
+        background-color: #1a56db;
+        color: #ffffff !important;
+        text-decoration: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .fallback-link {
+        font-size: 13px;
+        color: #6b7280;
+        line-height: 1.5;
+        margin: 0 0 0;
+        overflow-wrap: break-word;
+        word-break: normal;
+      }
+      .fallback-link a {
+        color: #1a56db;
+      }
+      .divider {
+        border: none;
+        border-top: 1px solid #e5e7eb;
+        margin: 28px 0;
+      }
+      .footer {
+        padding: 0 40px 32px;
+        text-align: center;
+      }
+      .footer-text {
+        font-size: 12px;
+        color: #9ca3af;
+        line-height: 1.5;
+        margin: 0;
+      }
+      .expiry-note {
+        font-size: 13px;
+        color: #6b7280;
+        margin: 0 0 28px;
+        padding: 12px 16px;
+        background-color: #f9fafb;
+        border-radius: 8px;
+        border-left: 3px solid #e5e7eb;
+        overflow-wrap: break-word;
+        word-break: normal;
+      }
+      @media (max-width: 560px) {
+        .body,
+        .footer {
+          padding-left: 24px;
+          padding-right: 24px;
+        }
+        .header {
+          padding-left: 24px;
+          padding-right: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="container">
+        <div class="header">
+          <div class="header-logo">TourenBuddy</div>
+        </div>
+        <div class="body">
+          <h1 class="title">Bei TourenBuddy anmelden</h1>
+          <p class="text">
+            Klicke auf den Button, um dich bei deinem Konto anzumelden. Dieser Link ist
+            <strong>60 Minuten</strong> gültig und kann nur einmal verwendet werden.
+          </p>
+          <div class="btn-wrapper">
+            <a href="{{ params.magic_link }}" class="btn">Bei TourenBuddy anmelden</a>
+          </div>
+          <p class="expiry-note">
+            Öffne diesen Link auf <strong>demselben Gerät</strong>, auf dem du ihn angefordert hast. Hast du den
+            Anmeldelink auf deinem Handy angefordert, öffne diese E-Mail dort.
+          </p>
+          <p class="fallback-link">
+            Falls der Button nicht funktioniert, kopiere diesen Link und füge ihn in deinen Browser ein:<br />
+            <a href="{{ params.magic_link }}">{{ params.magic_link }}</a>
+          </p>
+          <hr class="divider" />
+          <p class="fallback-link">
+            Du hast diese E-Mail nicht angefordert? Du kannst sie einfach ignorieren. Möglicherweise hat jemand
+            versehentlich <strong>{{ params.email }}</strong> eingegeben.
+          </p>
+        </div>
+        <div class="footer">
+          <p class="footer-text">
+            TourenBuddy &mdash; Touren planen mit Sicherheit<br />
+            Gesendet an {{ params.email }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

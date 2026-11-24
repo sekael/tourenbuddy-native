@@ -9,12 +9,15 @@ contacts, and pick planned dates. This repository holds the iOS and Android apps
 web app, built with React Native and Expo. The web app is a line-by-line port of the Vue PWA
 (`sekael/tourenbuddy_frontend_vue`, release 0.54.0; change `port-pwa-web`): same design and features,
 also what Android users run until the Android app ships. It deploys to pull-request previews, and
-to production once the repository variable `WEB_DEPLOY` is on (the cutover, #374). Supabase and the
-Worker stay in the Vue repository for now (`docs/vue-repo-migration.md`).
+to production once the repository variable `WEB_DEPLOY` is on (the cutover, #374). The backend lives
+here too (change `move-backend`): the Supabase schema in `supabase/`, the Cloudflare Worker in
+`services/email-hook/`, the ski-route data job in `scripts/ski-routes/`.
 
 The plan lives in that repo's issues: epic sekael/tourenbuddy_frontend_vue#346 (decision IDs
 D1–D20, risks, architecture) and one issue per phase, #367 (Phase 0, done) to #374 in the same repo.
-Issue numbers in this file refer to that repo. Read the phase issue before proposing work in it.
+Issue numbers in this file refer to that repo; its open issues move here when it is archived
+(`docs/vue-repo-migration.md`, B), and their old links redirect. New issues are filed here. Read the
+phase issue before proposing work in it.
 
 ## Stack
 
@@ -25,7 +28,10 @@ Decided or default in #346. Versions come from `npx expo install`; `package-lock
 - **Routing:** Expo Router (file-based), auth redirects in one place
 - **State and local data:** Zustand; `expo-sqlite` (offline outbox), `expo-file-system`
 - **Backend:** Supabase through `@supabase/supabase-js`, session in `expo-secure-store`. Schema,
-  migrations and the Cloudflare Worker stay in the Vue repo (D3): no `supabase/` folder here
+  migrations, seed and pgTAP tests in `supabase/`; the Cloudflare Worker (auth email hook,
+  notifications and push, calendar feed, moderation, account deletion) in `services/email-hook/`,
+  its own npm package. Both moved unchanged from the Vue repo and keep its code style: the app's
+  lint, type check and Jest skip them (Database and Worker)
 - **Map:** `@maplibre/maplibre-react-native` on iOS and Android, `maplibre-gl` on web (`.web.tsx`),
   Swisstopo tiles (free, no API key)
 - **UI:** small in-house adaptive component layer (D5) in `src/core/adaptive/`: one iOS
@@ -66,6 +72,10 @@ test/           Jest tests, mirroring src/ (src/core/i18n/detect.ts → test/cor
 assets/         images/ (app icon, launch image, favicon), fonts/ (web Inter subset)
 modules/        local Expo modules (native code the app config cannot express)
 openspec/       specs and changes
+scripts/        build helpers; ski-routes/ builds the ski-route dataset (weekly workflow)
+supabase/       config.toml, migrations/ (immutable), seed.sql, tests/ (pgTAP)
+services/
+  email-hook/   Cloudflare Worker, own package.json and Vitest suite
 ```
 
 ## Variants
@@ -150,6 +160,51 @@ Switching changes the bundle identifier: run `npx expo prebuild --clean` afterwa
 - Local backend and env variables: README, "Backend". Releases (release-please, EAS, Pages) and
   their one-time setup: `docs/publishing.md`.
 
+## Database and Worker
+
+- IMPORTANT: every database change (schema, RLS, functions, triggers, storage policies, buckets,
+  extensions) goes to the LOCAL stack first, never to production directly, and never through
+  Studio or the SQL editor (the schema would drift from the repo). `supabase start`, then
+  `supabase migration new <name>`, edit `supabase/migrations/<timestamp>_<name>.sql`, apply with
+  `supabase migration up` or `supabase db reset`, verify against the local stack. Production gets it
+  with `supabase db push` only after review, run by the owner: never run it, or `db reset`,
+  unprompted.
+- CRITICAL: never edit an existing migration, the baseline `20260101000000_initial_schema.sql`
+  included: history is immutable, fix forward in a new file. `migrations/_archived/` holds the
+  pre-baseline patches, never run. Sole exception, the replay fix: a migration that no longer replays
+  on a fresh database (an upstream image change) may be edited in place only if it produces the same
+  end state as the original did on production (`db push` matches by version, never content); verify
+  with `supabase db reset` and `supabase migration list --linked` (Local = Remote, nothing pending),
+  and comment the edit (precedent: `20260608062430_friend_tours_realtime_messages_policy.sql`).
+- Never `alter table` Supabase-owned tables (`realtime.*`, `auth.*`, `storage.*`); policy
+  statements are fine. Never add `[db.vault]` to `supabase/config.toml`: `db push` would overwrite
+  production's Vault with local values. Vault secrets are set by hand per database
+  (`services/email-hook/SETUP-NOTIFICATIONS.md`).
+- Every `create table` in `public` grants the Data API in the same file
+  (`grant all on table public.<name> to anon, authenticated, service_role;`), or PostgREST can't see
+  it. RLS still decides the rows.
+- Functions are not executable by clients unless granted: `grant execute on function
+  public.<fn>(<args>) to authenticated;` in the migration that creates it. Helpers called only from
+  other definer functions or triggers get no client grant. Every `security definer` function sets
+  `search_path`, and every client-callable one authorizes the caller itself (`auth.uid()`).
+- Views are `with (security_invoker = true)`, `select` only (`revoke all … from anon,
+  authenticated; grant select … to authenticated`). Storage read grants that match an object by a
+  path stored in a row also pin the owner prefix (`split_part(name, '/', 1) = <owner>::text`).
+  Background and a worked example: `docs/supabase-rpc-authorization.md`.
+- IMPORTANT, expand then contract (#346 B5): store builds keep calling the backend for months. Never
+  rename, drop, or change the arguments or result shape of an RPC, table, column, view or Worker
+  route in one step: add the new shape next to the old one, ship the clients, raise
+  `min_supported_ios` / `min_supported_android` in `public/app-config.json` once old builds are
+  rare, and drop the old shape in a later migration only after that gate is live and old offline
+  queues have drained (`docs/publishing.md`, "Update gate"). The web app is a client too.
+- The Worker deploys by hand, never in CI: any change to `services/email-hook/` (code,
+  dependencies, `wrangler.toml`, secrets) needs `cd services/email-hook && npx wrangler@latest
+  deploy`, and a change's tasks that touch it include that step. Secrets: `SETUP-NOTIFICATIONS.md`
+  there (`wrangler secret put`).
+- Tests: pgTAP suites in `supabase/tests/` (`supabase db reset && supabase test db`; they assume the
+  pristine seed and roll back). The Worker: `cd services/email-hook && npm test`, also in CI when it
+  changes (`worker.yml`). Ski-route data: `docs/ski-route-data.md`.
+
 ## Commands
 
 ```bash
@@ -165,6 +220,9 @@ npm run build:web              # web build with the service worker, as in CI (di
 npx expo install <package>     # add a dependency
 npx expo prebuild --clean      # regenerate ios/ and android/ after config or variant changes
 npx expo-doctor                # dependency and config check
+supabase start                 # local backend (Docker); Mailpit at http://127.0.0.1:54324
+supabase db reset && supabase test db   # replay migrations and seed, run the pgTAP suites
+(cd services/email-hook && npm test)    # Worker tests; `npx wrangler dev` runs it on :8787
 ```
 
 ## Important Context

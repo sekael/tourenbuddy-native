@@ -1,0 +1,14 @@
+TourenBuddy – Bei deinem Konto anmelden
+========================================
+
+Klicke auf den Link, um dich anzumelden. Dieser Link ist 60 Minuten gültig und kann nur einmal verwendet werden.
+
+{{ params.magic_link }}
+
+WICHTIG: Öffne diesen Link auf demselben Gerät, auf dem du ihn angefordert hast.
+
+Du hast diese E-Mail nicht angefordert? Du kannst sie einfach ignorieren. Möglicherweise hat jemand versehentlich {{ params.email }} eingegeben.
+
+---
+TourenBuddy – Touren planen mit Sicherheit
+Gesendet an {{ params.email }}

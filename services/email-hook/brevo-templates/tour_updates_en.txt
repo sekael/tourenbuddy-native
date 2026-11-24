@@ -1,0 +1,12 @@
+Subject: {% if params.action == "availability_weekly" %}Friends are free on your free days this week{% elif params.action == "tour_reminder" %}"{{ params.tourName }}" is in 5 days{% else %}{% if params.action == "availability_weekly" %}{% if params.moreCount > 0 %}{{ params.actorName }} and {{ params.moreCount }} more are{% else %}{{ params.actorName }} is{% endif %} free this week on days you are free too.{% elif params.action == "tour_reminder" %}The tour "{{ params.tourName }}" is in 5 days. Time to check conditions, gear and partners.{% else %}{{ params.actorName }} {% if params.action == "created" %}shared{% elif params.action == "deleted" %}removed{% else %}updated{% endif %} a tour on TourenBuddy{% endif %}
+
+Hi there,
+
+{{ params.actorName }} {% if params.action == "created" %}shared the tour{% elif params.action == "deleted" %}removed the shared tour{% else %}updated the shared tour{% endif %} "{{ params.tourName }}" you partner on.{% endif %}
+
+View your tours:
+{{ params.appUrl }}/?tours=1
+
+---
+You received this email because notifications are enabled for your TourenBuddy account.
+Manage them in your profile settings.
