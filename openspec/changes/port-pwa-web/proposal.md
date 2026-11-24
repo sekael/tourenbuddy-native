@@ -31,8 +31,8 @@ To record in #346 as **D22**.
   own namespace, so no text changes.
 - **PWA platform features back on the web:** web manifest and icons, the service worker (app shell
   precache, offline navigation, tile and data caching, offline regions, push, notification click),
-  the update prompt, the install banner, Web Push, the offline data cache and outbox in the browser,
-  the guided product tour, the PDF viewer, vCard and Contact Picker import.
+  the update prompt (no install banner: owner, 2026-11-23), Web Push, the offline data cache and
+  outbox in the browser, the guided product tour, the PDF viewer, vCard and Contact Picker import.
 - **Same-origin carry-over:** served on the PWA's origin, the web app keeps a user's session,
   settings, installed icon, push subscription and offline regions, so switching is invisible.
 - **Web deploys from this repository:** pull-request previews of the web build (Pages project

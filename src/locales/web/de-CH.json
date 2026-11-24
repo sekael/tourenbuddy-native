@@ -157,11 +157,6 @@
   },
   "core": {
     "pwa": {
-      "banner": {
-        "message": "Installiere TourenBuddy für die beste Erfahrung",
-        "dismiss": "Nicht jetzt",
-        "install": "Installieren"
-      },
       "update": {
         "message": "Eine neue Version ist verfügbar",
         "action": "Neu laden",

@@ -88,7 +88,8 @@ manifest (every shell file up to 8 MB with its content hash, `index.html` the on
 `dist/sw.js`. Rejected: `workbox-build` (`injectManifest` alone pulls in a large dependency tree
 for a 20-line list). The navigation fallback excludes the public pages
 (`/privacy`, `/terms`, `/imprint`, `/account-deletion`, `/de/*`, `/.well-known/*`, `/app-config.json`).
-Update prompt and install banner as in the PWA (`workbox-window`). Rejected: hand-written worker
+Update prompt as in the PWA (`workbox-window`); no install banner, the app's or Chrome's (owner,
+2026-11-23: it covered the guided tour). Rejected: hand-written worker
 (re-implements Workbox's precache versioning).
 
 ### D9 — Same-origin carry-over

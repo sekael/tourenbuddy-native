@@ -330,6 +330,8 @@ function createTour(state: TourState, opts: () => UseOnboardingTourOptions) {
   function ensureDriver(): Driver {
     if (driverObj) return driverObj;
     flushPendingDestroy();
+    // driver.js stays at the PWA's 1.4.0: 1.14 draws its overlay in the browser's top layer, above
+    // the tour banner, so a tap on "Finish tour" hits the overlay and advances instead (O-2).
     driverObj = driver({
       animate: !reducedMotion,
       allowClose: false, // no Esc / backdrop-close; "Finish tour" is the only dismiss

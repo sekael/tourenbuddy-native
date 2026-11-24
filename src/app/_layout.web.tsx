@@ -17,7 +17,6 @@ import { connectivity } from '@/core/offline/online';
 import { registerFlushTriggers } from '@/core/offline/triggers';
 import { OfflineIndicator } from '@/core/web/offline-indicator.web';
 import { OfflineSyncStatus } from '@/core/web/offline-sync-status.web';
-import { PwaInstallBanner } from '@/core/web/pwa-install-banner.web';
 import { UpdatePrompt } from '@/core/web/update-prompt.web';
 import { registerServiceWorker } from '@/core/web/use-pwa-update.web';
 import { useAuthStore } from '@/features/auth/presentation/stores/auth-store';
@@ -34,6 +33,10 @@ registerServiceWorker();
 // reads raw touches, so cancelling these leaves the map's pinch-zoom intact.
 for (const type of ['gesturestart', 'gesturechange'])
   document.addEventListener(type, (e) => e.preventDefault());
+
+// No install banner, neither the app's nor Chrome's own (owner, 2026-11-23): it covered the guided
+// tour. Installing stays in the browser's menu.
+window.addEventListener('beforeinstallprompt', (e) => e.preventDefault());
 
 /**
  * The web app's root (port-pwa-web D4): the PWA's shell on the PWA's addresses. The routes follow
@@ -102,7 +105,6 @@ export default function WebRootLayout() {
         <>
           <OfflineIndicator />
           <OfflineSyncStatus />
-          <PwaInstallBanner />
           <UpdatePrompt />
         </>
       )}

@@ -172,11 +172,6 @@
   },
   "core": {
     "pwa": {
-      "banner": {
-        "message": "Install TourenBuddy for the best experience",
-        "dismiss": "Not now",
-        "install": "Install"
-      },
       "update": {
         "message": "A new version is available",
         "action": "Reload",

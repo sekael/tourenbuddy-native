@@ -2,11 +2,12 @@
 /* driver.js adds `.driver-active` to <body> and `.driver-active * { pointer-events: none }`.
    The banner is teleported to <body>, so without this its buttons inherit
    `pointer-events: none` and clicks fall through to the container (the real bug
-   behind the "dead" controls). The scoped attribute selector out-specifies
-   driver's `.driver-active *`, re-enabling the whole banner subtree. */
+   behind the "dead" controls). The PWA's scoped attribute selector out-specified
+   driver's `.driver-active *`; a CSS Module class ties with it, and the dev server loads driver's
+   sheet later, so "Finish tour" went dead (O-2). Hence `!important`. */
 .tour-banner,
 .tour-banner * {
-  pointer-events: auto;
+  pointer-events: auto !important;
 }
 
 .tour-banner {

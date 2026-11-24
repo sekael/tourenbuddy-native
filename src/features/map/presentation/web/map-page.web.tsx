@@ -445,9 +445,14 @@ export function MapPage() {
   const tourRunning = onboardingTour.isRunning;
   const tourWelcome = onboardingTour.showWelcome;
 
-  // Captured as the tour starts, before its first stage closes the overlay.
+  // Captured as the tour starts, before its first stage closes the overlay. A start from the
+  // profile hands its origin over: the sheet closed itself before signalling.
   const wasRunning = useRef(false);
-  if (tourRunning && !wasRunning.current) tourOrigin.current = s.activeOverlay;
+  const handedOrigin = useRef<OverlayName | null>(null);
+  if (tourRunning && !wasRunning.current) {
+    tourOrigin.current = handedOrigin.current ?? s.activeOverlay;
+    handedOrigin.current = null;
+  }
   wasRunning.current = tourRunning;
 
   function maybeShowCalendarFeatureNotice() {
@@ -474,9 +479,10 @@ export function MapPage() {
   const firstSignal = useRef(reopenSignal);
   useEffect(() => {
     if (reopenSignal === firstSignal.current) return;
+    // An early quit returns to the profile. Handed to the start capture above, which runs on the
+    // next render and would otherwise overwrite it (Vue's sync watch ran before this line).
+    handedOrigin.current = 'profile';
     onboardingTour.startTour(useUserProfileStore.getState().profile?.onboardingTourLastStep ?? 0);
-    // The profile sheet closed itself before signalling: an early quit returns to it.
-    tourOrigin.current = 'profile';
   }, [reopenSignal]);
 
   function handleTourSelectedFromList(tourId: string) {

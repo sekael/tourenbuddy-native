@@ -41,7 +41,7 @@
 ## 6. PWA platform
 
 - [x] 6.1 `tables.web.ts` (IndexedDB), file cache (Cache Storage), reachability
-- [x] 6.2 Service worker, `build-sw.mjs`, manifest, icons, `_headers`, update prompt, install banner
+- [x] 6.2 Service worker, `build-sw.mjs`, manifest, icons, `_headers`, update prompt (install banner dropped, owner 2026-11-23)
 - [x] 6.3 Web Push subscription; push and notification click
 - [x] 6.4 Guided product tour
 - [x] 6.5 Same-origin carry-over checked against a PWA profile (session, settings, regions, push)

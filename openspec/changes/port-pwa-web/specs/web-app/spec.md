@@ -89,12 +89,18 @@ answered by the app shell.
 
 The web app SHALL ship a web manifest (`TourenBuddy`, standalone, start URL `/`, 192 and 512 px
 icons). A new service worker SHALL take over only after the user accepts the update prompt.
-Browsers that offer installation SHALL show the PWA's install banner.
+Unlike the PWA, the web app SHALL show no install banner, neither its own nor the browser's:
+installing stays in the browser's menu.
 
 #### Scenario: New release
 
 - **WHEN** a new version is deployed while the app is open
 - **THEN** the update prompt appears, and the new version loads only after the user accepts it
+
+#### Scenario: Browser offers installation
+
+- **WHEN** Chrome on Android finds the app installable during the guided tour
+- **THEN** no install banner covers the app; the browser's menu still offers to install it
 
 ### Requirement: Web Push as in the PWA
 
