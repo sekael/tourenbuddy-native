@@ -22,6 +22,7 @@ import {
 import { useSheetInset } from '@/core/web/use-sheet-inset.web';
 import { TRAIL_OVERLAYS, type TrailOverlayId } from '@/features/map/data/trail-overlays';
 import type { SnapNetwork } from '@/features/map/domain/snap-network';
+import type { Share } from '@/features/map/domain/track-bands';
 import type { ProfiledLine } from '@/features/tours/data/services/swisstopo-profile-service';
 import type { RouteMetrics } from '@/features/tours/domain/route-metrics';
 
@@ -50,6 +51,8 @@ export function TrackDrawPanel(props: {
   metrics: RouteMetrics;
   minutes: number | null;
   profile: ProfiledLine | null;
+  /** The profile's colours along it: the route's activities, way by way. */
+  profileBands: readonly Share[];
   busy: boolean;
   canUndo: boolean;
   canRedo: boolean;
@@ -204,7 +207,11 @@ export function TrackDrawPanel(props: {
       </dl>
 
       {props.profile && points >= 2 ? (
-        <ElevationProfile line={props.profile.line} heights={props.profile.heights} />
+        <ElevationProfile
+          line={props.profile.line}
+          heights={props.profile.heights}
+          bands={props.profileBands}
+        />
       ) : (
         <p className={c('profile-hint')}>{hint}</p>
       )}

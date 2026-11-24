@@ -8,6 +8,7 @@ import {
   wmtsTileUrl,
 } from '@/features/map/data/trail-overlays';
 import { gradeColorExpression, registerSkiBadges, skiBadgeImage } from './ski-badge.web';
+import { TRACK_PEN } from './track-draw-layer.web';
 
 /**
  * Ski routes are marked (halo + badges) and tappable from this zoom. Below it the
@@ -24,9 +25,9 @@ const HIGHLIGHT_SOURCE_ID = 'trail-highlight';
 const FAINT_LAYER_ID = 'trail-highlight-faint';
 const CASING_LAYER_ID = 'trail-highlight-casing';
 const SELECTED_LAYER_ID = 'trail-highlight-selected';
-// Mirrors --orange-500 (MapLibre paint needs literal colors). Not blue: Swisstopo
-// draws ski routes blue, so a blue highlight would vanish into the overlay.
-const HIGHLIGHT_COLOR = '#f97316';
+// The drawing pen (owner, 2026-11-24): no activity's colour (the PWA's orange read as the glider's)
+// and not blue, which would vanish into swisstopo's blue ski routes.
+const HIGHLIGHT_COLOR = TRACK_PEN;
 /** Trail overlays behind a drawing. */
 const DIMMED_OPACITY = 0.4;
 

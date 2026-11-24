@@ -22,16 +22,12 @@
 }
 
 .area {
-  fill: color-mix(in srgb, #e3061b 12%, transparent);
+  /* Its colour, as the line's and the end dots', comes from the route's activities. */
+  fill-opacity: 0.12;
 }
 
 .profile {
   fill: none;
-  stroke: #e3061b;
   stroke-width: 2;
   stroke-linejoin: round;
-}
-
-.end {
-  fill: #e3061b;
 }

@@ -220,7 +220,8 @@ export function TourForm({
   onDrawTrack?: (seed: DrawnTrack | null) => void;
   /** The unsaved track for the map: null = the saved one stands, [] = removed. */
   onTrackChange?: (line: LngLat[] | null) => void;
-  onTourTypesChange?: (tourTypes: TourType[]) => void;
+  /** The activities and their ways (up, down, both): the drawing's profile wears them. */
+  onTourTypesChange?: (tourTypes: TourType[], legs: TourLegs | null) => void;
   onStartPointChange?: (point: Point | null) => void;
   onEndPointChange?: (point: Point | null) => void;
   /** Plan the next day's stage from here; `split`: the days a span covered, now day 1 of them. */
@@ -605,8 +606,7 @@ export function TourForm({
     return fill.status === 'failed' ? t('tours.form.swisstopo.failed') : placeholder;
   }
 
-  // Surface the live activity types and points so the map can draft-preview them.
-  useEffect(() => void onTourTypesChange?.(s.selectedTourTypes), [s.selectedTourTypes]);
+  // Surface the live points so the map can draft-preview them (the activities: below, with their ways).
   useEffect(() => void onStartPointChange?.(s.startPoint), [s.startPoint]);
   useEffect(() => void onEndPointChange?.(s.endPoint), [s.endPoint]);
 
@@ -645,6 +645,13 @@ export function TourForm({
     : s.selectedTourTypes.length > 1
       ? legsFrom(s.selectedTourTypes, legDirection)
       : null;
+  // Surface the live activities with their ways, so the map can draft-preview them. The ways by
+  // value: `legs` is a new object every render.
+  const legsKey = legs && `${legs.ascent}|${legs.descent}`;
+  useEffect(
+    () => void onTourTypesChange?.(s.selectedTourTypes, legs),
+    [s.selectedTourTypes, legsKey],
+  );
   function setLegDirection(type: TourType, direction: LegDirection) {
     if (soloFlight) {
       s.flownUp = direction === 'both';

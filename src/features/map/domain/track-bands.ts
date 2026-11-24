@@ -13,6 +13,9 @@ const SPLIT_EDGE = 0.001;
 
 export type Band = { color: string; coordinates: GeoJSON.Position[] };
 
+/** A band as a share of a line's length, `from` to `to` (0–1): a gradient's stops (the profile). */
+export type Share = { from: number; to: number; color: string };
+
 /** Where the way down takes over (activity-legs D5): its colours from share `at` (the goal) on. */
 export type WayDown = { at: number; colors: readonly string[] };
 
@@ -33,7 +36,14 @@ export function bandLine(
   }
   const total = along.at(-1)!;
   if (line.length < 2 || total === 0) return [{ color: colors[0]!, coordinates: [...line] }];
+  return bandShares(colors, down).map(({ from, to, color }) => ({
+    color,
+    coordinates: stretch(line, along, from * total, to * total),
+  }));
+}
 
+/** `bandLine`'s bands as shares of the line, whatever its shape. */
+export function bandShares(colors: readonly string[], down?: WayDown): Share[] {
   const parts: [readonly string[], number, number][] =
     !down || down.at >= 1 - SPLIT_EDGE
       ? [[colors, 0, 1]]
@@ -48,13 +58,9 @@ export function bandLine(
       palette.length < 2 ? 1 : palette.length * Math.max(1, Math.round(BAND_CYCLES * (to - from)));
     const width = (to - from) / count;
     return Array.from({ length: count }, (_, i) => ({
+      from: from + i * width,
+      to: from + (i + 1) * width,
       color: palette[i % palette.length]!,
-      coordinates: stretch(
-        line,
-        along,
-        (from + i * width) * total,
-        (from + (i + 1) * width) * total,
-      ),
     }));
   });
 }
@@ -91,15 +97,30 @@ export const NO_TYPE_COLOR = '#334155';
  */
 export function routeBands(
   line: readonly GeoJSON.Position[],
-  tour: { tourTypes: readonly TourType[]; legs?: TourLegs | null },
+  tour: RouteTour,
   at: number | null,
 ): Band[] {
+  return bandLine(line, ...routeColors(tour, at));
+}
+
+/**
+ * A route's terrain profile in the same colours (owner, 2026-11-24): each way wears the activities
+ * picked for it (up, down or both), banded when several, switching at the goal (share `at`).
+ */
+export function routeShares(tour: RouteTour, at: number | null): Share[] {
+  return bandShares(...routeColors(tour, at));
+}
+
+type RouteTour = { tourTypes: readonly TourType[]; legs?: TourLegs | null };
+
+function routeColors(
+  { tourTypes, legs }: RouteTour,
+  at: number | null,
+): [string[], WayDown | undefined] {
   const colors = (types: readonly TourType[]) =>
     types.length ? distinctTypeColors(types, TOUR_TYPE_TRACK_COLORS) : [NO_TYPE_COLOR];
-  const { legs } = tour;
-  return bandLine(
-    line,
-    colors(legs?.ascent ?? tour.tourTypes),
+  return [
+    colors(legs?.ascent ?? tourTypes),
     legs && at !== null ? { at, colors: colors(legs.descent) } : undefined,
-  );
+  ];
 }

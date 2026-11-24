@@ -9,6 +9,7 @@ import { Page, Screen } from '@/core/adaptive/screen';
 import { useFormatter } from '@/core/i18n/format';
 import { isOnline } from '@/core/offline/online';
 import {
+  goalShare,
   lineLength,
   routeStops,
   trackFromLine,
@@ -18,7 +19,7 @@ import {
 } from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import { wayFollow, type Follow, type Way } from '@/features/map/domain/snap-network';
-import { routeBands } from '@/features/map/domain/track-bands';
+import { routeBands, routeShares } from '@/features/map/domain/track-bands';
 import { tapSnapM } from '@/features/map/presentation/leg-router';
 import { useMapStore, type HandleTarget } from '@/features/map/presentation/stores/map-store';
 import { ElevationProfile } from '@/features/map/presentation/elevation-profile';
@@ -56,7 +57,7 @@ export function DrawSheet() {
   const { formatElevation, formatDistance, formatDuration } = useFormatter();
   const overlays = useMapStore((s) => s.overlays);
   const pace = usePace();
-  const draft = useTourDraftStore.getState().draft;
+  const { draft, goal: tourGoal } = useTourDraftStore.getState();
   /** The legs follow the ways (the PWA's switch); off, straight lines between the points. */
   const [following, setFollowing] = useState(true);
   /** Each way follows its own activities' network, a flown way straight (activity-legs). */
@@ -94,14 +95,7 @@ export function DrawSheet() {
     };
     const line = trackLine(track);
     // The line wears its ways' colours, the way down's from the goal on, as the saved tour will.
-    const { goal } = track;
-    const total = lineLength(line);
-    const at =
-      goal != null && goal < track.points.length - 1 && total > 0
-        ? lineLength(
-            trackLine({ points: track.points.slice(0, goal + 1), legs: track.legs.slice(0, goal) }),
-          ) / total
-        : null;
+    const at = goalShare(track, tourGoal);
     useMapStore.setState({
       previewLines: {
         type: 'FeatureCollection',
@@ -153,7 +147,7 @@ export function DrawSheet() {
         picked,
       },
     });
-  }, [track, queued, draft, drawingRef, picked]);
+  }, [track, queued, draft, tourGoal, drawingRef, picked]);
 
   // A flown way counts its height change alone, as the saved tour will.
   const goalAt = track.goal != null ? track.points[track.goal] : undefined;
@@ -217,7 +211,11 @@ export function DrawSheet() {
         title={t('map.draw.title')}
         header={
           drawing.profile && track.points.length > 1 ? (
-            <ElevationProfile line={drawing.profile.line} heights={drawing.profile.heights} />
+            <ElevationProfile
+              line={drawing.profile.line}
+              heights={drawing.profile.heights}
+              bands={routeShares(draft, goalShare(track, tourGoal))}
+            />
           ) : undefined
         }
         cancel={{ label: t('common.back'), onPress: () => router.replace('/tour/edit') }}

@@ -10,8 +10,9 @@ import {
 import { gpxCache } from '@/features/tours/data/services/gpx-cache';
 import { loadGpxTrack } from '@/features/tours/data/services/gpx-track-service';
 import { isSameGoal } from '@/features/tours/domain/distance';
+import { flownWhole } from '@/features/tours/domain/legs';
 import { outingGaps } from '@/features/tours/domain/outing';
-import { progressNearest } from '@/features/tours/domain/route-metrics';
+import { groundLine, progressNearest } from '@/features/tours/domain/route-metrics';
 import { DETAIL_CIRCLE_LAYER_ID, fadeLayer, TOUR_LAYER_IDS } from './tours-marker-layer.web';
 
 const GPX_SOURCE_ID = 'gpx-track';
@@ -142,11 +143,15 @@ interface ConnectorLeg {
  * self-placed point anchors. A round trip (end = start) is one leg with a two-way arrow — unless
  * split: one arrow can't wear two legs' colours, so both legs are drawn, the way down on top. A
  * start without an end is the single leg to the goal, an end without a start (a connected stage)
- * the single leg from the goal to the end; a leg between coinciding points is dropped.
+ * the single leg from the goal to the end; a leg between coinciding points is dropped. A tour WITH
+ * a track keeps only its ways flown whole: a flight runs straight, the track holds the rest.
+ * ponytail: a multi-line track can't be cut at the goal, so it keeps its flight beside this leg.
  */
 function connectorLegs(tour: Tour): ConnectorLeg[] {
-  const { startPoint: start, endPoint: end, goal, legs } = tour;
-  if (tour.gpxFilepath) return [];
+  const { goal, legs } = tour;
+  const flown = tour.gpxFilepath ? flownWhole(tour) : { up: true, down: true };
+  const start = flown.up ? tour.startPoint : null;
+  const end = flown.down ? tour.endPoint : null;
   const roundTrip = !legs && !!start && !!end && isSameGoal(end, start);
   const leg = (types: readonly TourType[], a: LngLat, b: LngLat, both: boolean): ConnectorLeg[] =>
     isSameGoal(a, b)
@@ -193,6 +198,22 @@ export function tourConnectors(
   tours: readonly Tour[],
 ): GeoJSON.FeatureCollection<GeoJSON.LineString> {
   return collection(tours.flatMap(connectorLegs));
+}
+
+/** A single-line track without its ways flown whole: their connector legs draw them straight. */
+function groundTrack(
+  tour: Tour,
+  track: GeoJSON.FeatureCollection | null,
+): GeoJSON.FeatureCollection | null {
+  const flown = flownWhole(tour);
+  const feature = track?.features.length === 1 ? track.features[0]! : null;
+  if ((!flown.up && !flown.down) || feature?.geometry.type !== 'LineString') return track;
+  const coordinates = groundLine(feature.geometry.coordinates, tour.goal, flown);
+  return {
+    type: 'FeatureCollection',
+    features:
+      coordinates.length > 1 ? [{ ...feature, geometry: { type: 'LineString', coordinates } }] : [],
+  };
 }
 
 /** A split tour's single-line track switches colour at the vertex nearest the goal (D5). */
@@ -363,9 +384,12 @@ export function createGpxTrackLayer(map: MapLibreMap) {
     map.getSource<GeoJSONSource>(GAP_SOURCE_ID)?.setData(outingGapLines(gaps ? tours : []));
     // A split tour's connector legs take a slot each, so each wears its own leg's gradient.
     const shown = tours.flatMap((tour): TrackSlot[] => {
-      if (tour.gpxFilepath)
-        return [{ tour, types: tour.legs?.ascent ?? tour.tourTypes, legs: null }];
       const legs = connectorLegs(tour);
+      if (tour.gpxFilepath)
+        return [
+          { tour, types: tour.legs?.ascent ?? tour.tourTypes, legs: null },
+          ...legs.map((leg) => ({ tour, types: leg.types, legs: collection([leg]) })),
+        ];
       if (tour.legs)
         return legs.map((leg) => ({ tour, types: leg.types, legs: collection([leg]) }));
       return legs.length ? [{ tour, types: tour.tourTypes, legs: collection(legs) }] : [];
@@ -394,7 +418,7 @@ export function createGpxTrackLayer(map: MapLibreMap) {
         // Empty the slot while loading, so it never shows the track it held before.
         const gpxTour = tour as Tour & { gpxFilepath: string };
         if (!cache.get(gpxTour.gpxFilepath)) source?.setData(EMPTY_GEOJSON);
-        const geojson = await loadGpxTrack(gpxTour);
+        const geojson = groundTrack(tour, await loadGpxTrack(gpxTour));
         if (gen !== generation) return;
         // Same task as the data, so the split lands with the track it was measured on.
         const split = trackSplit(tour, geojson);

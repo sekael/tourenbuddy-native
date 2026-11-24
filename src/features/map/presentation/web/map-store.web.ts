@@ -61,6 +61,8 @@ type MapState = {
   selectedOutingKey: string | null;
   previewGoal: Point | null;
   previewTourTypes: TourType[] | null;
+  /** The form's ways for those activities (up, down, both); null when they don't differ. */
+  previewLegs: TourLegs | null;
   previewStart: Point | null;
   previewEnd: Point | null;
   previewTrack: LngLat[] | null;
@@ -81,7 +83,7 @@ type MapState = {
   selectTour: (tourId: string | null) => void;
   selectOuting: (key: string | null) => void;
   setPreviewGoal: (goal: Point | null) => void;
-  setPreviewTourTypes: (tourTypes: TourType[] | null) => void;
+  setPreviewTourTypes: (tourTypes: TourType[] | null, legs?: TourLegs | null) => void;
   setPreviewStart: (start: Point | null) => void;
   setPreviewEnd: (end: Point | null) => void;
   setPreviewTrack: (line: LngLat[] | null) => void;
@@ -98,6 +100,7 @@ export const useMapStore = create<MapState>()((set, get) => ({
   selectedOutingKey: null,
   previewGoal: null,
   previewTourTypes: null,
+  previewLegs: null,
   previewStart: null,
   previewEnd: null,
   previewTrack: null,
@@ -149,7 +152,8 @@ export const useMapStore = create<MapState>()((set, get) => ({
   selectOuting: (key) =>
     set(key ? { selectedOutingKey: key, selectedTourId: null } : { selectedOutingKey: null }),
   setPreviewGoal: (previewGoal) => set({ previewGoal }),
-  setPreviewTourTypes: (previewTourTypes) => set({ previewTourTypes }),
+  setPreviewTourTypes: (previewTourTypes, previewLegs = null) =>
+    set({ previewTourTypes, previewLegs }),
   setPreviewStart: (previewStart) => set({ previewStart }),
   setPreviewEnd: (previewEnd) => set({ previewEnd }),
   setPreviewTrack: (previewTrack) => set({ previewTrack }),

@@ -4,12 +4,16 @@ import type { DrawnTrack } from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import { ARROW_LAYER_ID } from './gpx-track-layer.web';
 
-/** The drawing red (MapLibre paint needs a literal): swisstopo draws a tour in this tone. */
-const TRACK_RED = '#e3061b';
+/**
+ * The drawing pen (MapLibre paint needs a literal): dark slate, no activity's colour and none of
+ * swisstopo's blue routes, so a route being planned never reads as a hike (the PWA drew swisstopo's
+ * red; owner, 2026-11-24). The saved tour wears its activities' colours.
+ */
+export const TRACK_PEN = '#1F2937';
 
 /**
- * A drawn track on the map, the way the swisstopo app draws one: a red line on a white casing,
- * red end dots ringed in white, white dots ringed red for the points between, a small handle
+ * A drawn track on the map, the way the swisstopo app draws one: a line on a white casing,
+ * end dots ringed in white, white dots ringed in the pen for the points between, a small handle
  * halfway along each leg to pull a new point out of it, and a faint dot where a tap waits for its
  * leg. `withPoints: false` draws the line alone (an unsaved track
  * behind the form). The line runs with the tracks, under the markers and their labels; the dots
@@ -49,7 +53,7 @@ export function createTrackDrawLayer(map: MapLibreMap, id: string, { withPoints 
         filter: ['==', '$type', 'LineString'],
         layout,
         paint: {
-          'line-color': TRACK_RED,
+          'line-color': TRACK_PEN,
           'line-width': ['case', dim, 3.5, 5],
           'line-opacity': ['case', dim, 0.45, 1],
         },
@@ -64,8 +68,8 @@ export function createTrackDrawLayer(map: MapLibreMap, id: string, { withPoints 
       filter: ['==', '$type', 'Point'],
       paint: {
         'circle-radius': ['match', ['get', 'role'], 'end', 8, 'mid', 4, 5],
-        'circle-color': ['match', ['get', 'role'], 'end', TRACK_RED, '#ffffff'],
-        'circle-stroke-color': ['match', ['get', 'role'], 'end', '#ffffff', TRACK_RED],
+        'circle-color': ['match', ['get', 'role'], 'end', TRACK_PEN, '#ffffff'],
+        'circle-stroke-color': ['match', ['get', 'role'], 'end', '#ffffff', TRACK_PEN],
         'circle-stroke-width': ['match', ['get', 'role'], 'mid', 2, 3],
         'circle-opacity': ['match', ['get', 'role'], 'queued', 0.6, 'mid', 0.9, 1],
         'circle-stroke-opacity': ['match', ['get', 'role'], 'queued', 0.6, 'mid', 0.75, 1],

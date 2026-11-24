@@ -59,6 +59,7 @@ import {
   type StageContext,
 } from '@/features/onboarding/presentation/web/use-onboarding-tour.web';
 import type { TourType } from '@/features/tours/data/models/tour-type';
+import type { TourLegs } from '@/features/tours/domain/legs';
 import { isSameGoal } from '@/features/tours/domain/distance';
 import type { TourDraft } from '@/features/tours/domain/entities/tour';
 import {
@@ -134,6 +135,7 @@ type OverlayName =
 /** What a stage's form shows the map. */
 type StageLive = {
   tourTypes?: TourType[];
+  legs?: TourLegs | null;
   start?: { lng: number; lat: number } | null;
   end?: { lng: number; lat: number } | null;
   track?: LngLat[] | null;
@@ -193,6 +195,8 @@ export function MapPage() {
   const activeOverlays = useMapStore((s) => s.activeOverlays);
   const trailCard = useMapStore((s) => s.trailCard);
   const previewTourTypes = useMapStore((s) => s.previewTourTypes);
+  const previewLegs = useMapStore((s) => s.previewLegs);
+  const previewGoal = useMapStore((s) => s.previewGoal);
   const mapStore = useMapStore.getState;
   const tours = useToursStore((s) => s.tours);
   const friendTours = useToursStore((s) => s.friendTours);
@@ -1049,11 +1053,12 @@ export function MapPage() {
   useEffect(() => {
     mapStore().setPreviewStages(shownDraft);
   }, [shownDraftKey]);
-  // The active stage's activities pick what a drawing follows.
-  const activeTypes = s.stageLive[s.stages[s.activeStage]?.key ?? '']?.tourTypes;
+  // The active stage's activities pick what a drawing follows; its ways colour the profile.
+  const activeLive = s.stageLive[s.stages[s.activeStage]?.key ?? ''];
+  const [activeTypes, activeLegs] = [activeLive?.tourTypes, activeLive?.legs];
   useEffect(() => {
-    if (s.stages.length > 0) mapStore().setPreviewTourTypes(activeTypes ?? []);
-  }, [activeTypes]);
+    if (s.stages.length > 0) mapStore().setPreviewTourTypes(activeTypes ?? [], activeLegs ?? null);
+  }, [activeTypes, activeLegs]);
 
   /** On desktop the drawer covers the map's right side: the draft fills the map beside it. */
   async function frameDraft() {
@@ -1478,7 +1483,7 @@ export function MapPage() {
           onPointConsumed={handlePointConsumed}
           onEditModeChange={(editing) => void handleEditModeChange(editing)}
           onEditContact={handleEditContact}
-          onTourTypesChange={(types) => mapStore().setPreviewTourTypes(types)}
+          onTourTypesChange={(types, legs) => mapStore().setPreviewTourTypes(types, legs)}
           onStartPointChange={(p) =>
             mapStore().setPreviewStart(draftIfChanged(p, selectedTour.startPoint ?? null))
           }
@@ -1749,6 +1754,12 @@ export function MapPage() {
           map={s.map}
           seed={s.trackSeed}
           tourTypes={previewTourTypes ?? []}
+          legs={previewLegs}
+          goal={
+            (s.isPickingForEdit
+              ? (previewGoal ?? selectedTour?.goal)
+              : s.stages[s.activeStage]?.goal) ?? null
+          }
           onDone={handleTrackDrawn}
           onCancel={handleTrackCancelled}
           onLive={(live) => (s.drawingLive = s.isPickingForEdit ? null : live)}

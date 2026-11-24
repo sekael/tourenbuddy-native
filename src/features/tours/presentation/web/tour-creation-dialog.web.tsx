@@ -14,6 +14,7 @@ import type { DrawnTrack } from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import { useMapStore } from '@/features/map/presentation/web/map-store.web';
 import type { TourType } from '@/features/tours/data/models/tour-type';
+import type { TourLegs } from '@/features/tours/domain/legs';
 import { isSameGoal } from '@/features/tours/domain/distance';
 import type { TourDraft } from '@/features/tours/domain/entities/tour';
 
@@ -34,6 +35,7 @@ export type TourCreationHandle = {
 type Handover = { location: { lng: number; lat: number }; name: string; elevation: number | null };
 type StageChange = {
   tourTypes?: TourType[];
+  legs?: TourLegs | null;
   start?: { lng: number; lat: number } | null;
   end?: { lng: number; lat: number } | null;
   track?: LngLat[] | null;
@@ -420,7 +422,7 @@ export function TourCreationDialog({
           onDrawTrack={onDrawTrack}
           onNextDay={onNextDay}
           onTrackChange={(track) => onStageChange(i, { track })}
-          onTourTypesChange={(tourTypes) => onStageChange(i, { tourTypes })}
+          onTourTypesChange={(tourTypes, legs) => onStageChange(i, { tourTypes, legs })}
           onStartPointChange={(start) => onStageChange(i, { start })}
           onEndPointChange={(end) => onStageChange(i, { end })}
         />

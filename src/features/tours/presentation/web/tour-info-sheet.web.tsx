@@ -39,7 +39,7 @@ import { COLLISION_RADIUS_M, sharesActivity } from '@/features/tours/domain/coll
 import { isSameGoal } from '@/features/tours/domain/distance';
 import type { Tour, TourDraft } from '@/features/tours/domain/entities/tour';
 import type { TourAttachment } from '@/features/tours/domain/entities/tour-attachment';
-import { flight, routeOrder } from '@/features/tours/domain/legs';
+import { flight, routeOrder, type TourLegs } from '@/features/tours/domain/legs';
 import { outingKey, outingSegments } from '@/features/tours/domain/outing';
 import { tourMinutes } from '@/features/tours/domain/route-metrics';
 import {
@@ -120,7 +120,7 @@ export function TourInfoSheet({
   onEditModeChange: (editing: boolean) => void;
   /** The user asks to edit a contact from the action menu. */
   onEditContact: (contactId: string) => void;
-  onTourTypesChange: (tourTypes: TourType[]) => void;
+  onTourTypesChange: (tourTypes: TourType[], legs: TourLegs | null) => void;
   onStartPointChange: (point: Point | null) => void;
   onEndPointChange: (point: Point | null) => void;
   /** Open an outing's overview (#338). */

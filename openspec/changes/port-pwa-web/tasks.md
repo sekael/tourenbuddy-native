@@ -53,3 +53,4 @@
 - [x] 7.3 Diff PWA releases after 0.54.0 into the port
 - [x] 7.4 `npm run check`, web export, first-load size measured
 - [ ] 7.5 Persona review side by side with the PWA until PASS; owner handoff
+- [x] 7.6 Owner rules on top of the PWA (2026-11-24): a way flown whole runs straight (web and native); the web draws a route being planned in a dark pen, not the hiking red; a picked route wears the pen too (web and native); terrain profiles wear each way's activity colours (web and native)

@@ -1,10 +1,11 @@
-import { useRef } from 'react';
+import { useId, useRef } from 'react';
 
 import { haversineMeters } from '@/core/utils/haversine';
 import { classes } from '@/core/web/classes';
 import { useElementSize } from '@/core/web/use-element-size.web';
 import { useFormatter } from '@/core/web/use-formatter.web';
 import type { LngLat } from '@/features/map/domain/entities/trail';
+import type { Share } from '@/features/map/domain/track-bands';
 
 import styles from './elevation-profile.module.css';
 
@@ -15,15 +16,21 @@ const LEFT = 44;
 const BOTTOM = 16;
 const TOP = 6;
 
-/** Height over distance of a line, as the swisstopo app draws it under a tour: a red line on a filled area. */
+/**
+ * Height over distance of a line, as the swisstopo app draws it under a tour: a line on a filled
+ * area, in the route's activity colours (`routeShares`), not swisstopo's red (owner, 2026-11-24).
+ */
 export function ElevationProfile({
   line,
   heights,
+  bands,
 }: {
   line: LngLat[];
   heights: (number | null)[];
+  bands: readonly Share[];
 }) {
   const { formatElevation, formatDistance } = useFormatter();
+  const gradient = `profile-${useId()}`;
   const box = useRef<HTMLDivElement>(null);
   const { width } = useElementSize(box);
 
@@ -65,6 +72,22 @@ export function ElevationProfile({
     <div ref={box} className={c('elevation-profile')} aria-hidden="true">
       {chart && (
         <svg width={width} height={HEIGHT}>
+          <defs>
+            {/* Hard bands along the distance: two stops per band, at its ends. */}
+            <linearGradient
+              id={gradient}
+              gradientUnits="userSpaceOnUse"
+              x1={LEFT}
+              x2={chart.right}
+              y1={0}
+              y2={0}
+            >
+              {bands.flatMap((band, i) => [
+                <stop key={`${i}a`} offset={band.from} stopColor={band.color} />,
+                <stop key={`${i}b`} offset={band.to} stopColor={band.color} />,
+              ])}
+            </linearGradient>
+          </defs>
           <line
             className={c('grid')}
             x1={LEFT}
@@ -85,10 +108,10 @@ export function ElevationProfile({
           <text className={c('label')} x={chart.right} y={HEIGHT - 2} textAnchor="end">
             {chart.labels.total}
           </text>
-          <path className={c('area')} d={chart.area} />
-          <path className={c('profile')} d={chart.line} />
-          <circle className={c('end')} cx={chart.first.x} cy={chart.first.y} r="3.5" />
-          <circle className={c('end')} cx={chart.last.x} cy={chart.last.y} r="3.5" />
+          <path className={c('area')} d={chart.area} fill={`url(#${gradient})`} />
+          <path className={c('profile')} d={chart.line} stroke={`url(#${gradient})`} />
+          <circle cx={chart.first.x} cy={chart.first.y} r="3.5" fill={bands[0]?.color} />
+          <circle cx={chart.last.x} cy={chart.last.y} r="3.5" fill={bands.at(-1)?.color} />
         </svg>
       )}
     </div>

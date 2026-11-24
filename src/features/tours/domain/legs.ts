@@ -150,6 +150,15 @@ export function flight(tour: LegTour): Flight {
 }
 
 /**
+ * The ways flown whole (the glider alone): a flight runs straight between its points, never along
+ * a trail or a track (owner, 2026-11-24), and its drop is no legwork.
+ */
+export function flownWhole(tour: LegTour): { up: boolean; down: boolean } {
+  const { up, down } = flight(tour);
+  return { up: up?.length === 1, down: down?.length === 1 };
+}
+
+/**
  * Several routes' flown ways added up — an outing's totals: a way counts only where a route
  * climbs (descends) at all, and reads flown when any counted route flies it.
  */

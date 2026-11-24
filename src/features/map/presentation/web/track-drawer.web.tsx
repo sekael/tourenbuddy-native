@@ -9,10 +9,12 @@ import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 import { usePace } from '@/core/web/use-pace.web';
-import type { DrawnTrack } from '@/features/map/domain/drawn-track';
+import { goalShare, type DrawnTrack } from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import { snapNetworkFor } from '@/features/map/domain/snap-network';
+import { routeShares } from '@/features/map/domain/track-bands';
 import type { TourType } from '@/features/tours/data/models/tour-type';
+import type { TourLegs } from '@/features/tours/domain/legs';
 import { tourMinutes } from '@/features/tours/domain/route-metrics';
 
 import { isBoundsVisible } from './frame-tour.web';
@@ -35,6 +37,8 @@ export function TrackDrawer({
   map,
   seed,
   tourTypes,
+  legs,
+  goal,
   onDone,
   onCancel,
   onLive,
@@ -44,6 +48,10 @@ export function TrackDrawer({
   seed: DrawnTrack | null;
   /** The form's activities: with both trail layers shown they pick which one the line follows. */
   tourTypes: readonly TourType[];
+  /** The form's ways for them: the profile wears each way's activities. */
+  legs: TourLegs | null;
+  /** The tour's goal: where the profile turns when the drawing doesn't name it (a saved track). */
+  goal: { lng: number; lat: number } | null;
   onDone: (track: DrawnTrack) => void;
   onCancel: () => void;
   onLive: (track: DrawnTrack) => void;
@@ -208,6 +216,7 @@ export function TrackDrawer({
       metrics={drawing.metrics}
       minutes={minutes}
       profile={drawing.profile}
+      profileBands={routeShares({ tourTypes, legs }, goalShare(track, goal))}
       busy={drawing.busy}
       canUndo={drawing.canUndo}
       canRedo={drawing.canRedo}

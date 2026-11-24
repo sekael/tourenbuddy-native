@@ -55,10 +55,10 @@
   color: var(--color-on-surface);
 }
 
-/* The layer the line follows right now. */
+/* The layer the line follows right now, tinted in the drawing pen (`track-draw-layer.web.ts`). */
 .chip--snapping {
-  background: color-mix(in srgb, #e3061b 12%, var(--color-background));
-  color: #b0000f;
+  background: color-mix(in srgb, #1f2937 12%, var(--color-background));
+  color: #1f2937;
 }
 
 .status {
