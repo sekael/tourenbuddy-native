@@ -19,7 +19,7 @@ state. That refetch SHALL wait for the write-queue drain first (`flushThenRefetc
   current backend data
 
 ### Requirement: Offline cache in the app's database on native
-On iOS and Android the system SHALL keep a last-known-good copy of owned tours, friend tours, contacts, the profile, availability, friendships, the inbox and the user id to phone lookup in the app's own database, per user, hydrate each load from it and refetch when reachable, and delete a user's rows on sign-out. On the web nothing SHALL be cached for offline use.
+On iOS and Android the system SHALL keep a last-known-good copy of owned tours, friend tours, contacts, the profile, availability, friendships, the inbox and the user id to phone lookup in the app's own database, per user, hydrate each load from it and refetch when reachable, and delete a user's rows on sign-out. The web keeps the same copy in the browser (`web-app`, "Offline data on the web").
 
 #### Scenario: Cold start offline
 - **WHEN** a signed-in user starts the app in airplane mode
@@ -44,7 +44,7 @@ While offline, on an unverified session, or while changes wait to sync, a one-li
 - **THEN** the banner says two changes are waiting to sync
 
 ### Requirement: Loads hydrate, then refetch when reachable
-On iOS and Android each store load SHALL show the cached snapshot first, then refetch only when the backend is reachable (the reachability signal reports internet and the session is verified) and overwrite the cache; otherwise no request SHALL be made. When an unverified session becomes verified, the affected stores SHALL refetch. On the web a load SHALL fetch directly and show an offline message when it cannot.
+Each store load SHALL show the cached snapshot first, then refetch only when the backend is reachable (the reachability signal reports internet and the session is verified) and overwrite the cache; otherwise no request SHALL be made. When an unverified session becomes verified, the affected stores SHALL refetch. This holds on the web too, with the browser's copy.
 
 #### Scenario: Unverified session
 - **WHEN** the app starts offline on an adopted session and the connection returns

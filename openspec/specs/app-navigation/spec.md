@@ -9,11 +9,10 @@ map's menu within thumb reach, and how the destinations beyond the tabs open and
 
 ### Requirement: Map, Calendar, Contacts and Profile tabs
 
-The app SHALL offer four top-level places, Map, Calendar, Contacts and Profile, and SHALL open on
-the Map. On iOS and Android they SHALL sit in the system tab bar: Liquid Glass on iOS, the Material
-3 navigation bar on Android. On web, windows narrower than 600 px SHALL show a navigation bar at the
-bottom, wider ones a navigation rail at the leading edge. The selected place SHALL be marked, also
-for assistive technology, and the labels SHALL follow the app language.
+On iOS and Android the app SHALL offer four top-level places, Map, Calendar, Contacts and Profile,
+and SHALL open on the Map. They SHALL sit in the system tab bar: Liquid Glass on iOS, the Material
+3 navigation bar on Android. The selected place SHALL be marked, also for assistive technology, and
+the labels SHALL follow the app language. The web app has the PWA's navigation instead (`web-app`).
 
 #### Scenario: App opens on the map
 
@@ -43,7 +42,8 @@ for assistive technology, and the labels SHALL follow the app language.
 #### Scenario: Desktop window
 
 - **WHEN** the web app runs in a window 600 px or wider
-- **THEN** the places are listed in a rail at the leading edge instead of a bar at the bottom
+- **THEN** it shows the PWA's desktop layout (map page, side drawer, dialogs), with neither tabs nor
+  a rail
 
 #### Scenario: Labels follow the language
 
@@ -52,10 +52,11 @@ for assistive technology, and the labels SHALL follow the app language.
 
 ### Requirement: Map menu within thumb reach
 
-The Map tab SHALL show a menu button in the bottom-trailing corner, within thumb reach, right above
-the tab bar; the other tabs SHALL show none. It SHALL open a menu of Offline maps and Map layers,
-the first nearest the button. Choosing an item SHALL close the menu and open its destination as a
-sheet. On Android and web the button SHALL tell assistive technology whether the menu is open.
+On iOS and Android the Map tab SHALL show a menu button in the bottom-trailing corner, within thumb
+reach, right above the tab bar; the other tabs SHALL show none. It SHALL open a menu of Offline maps
+and Map layers, the first nearest the button. Choosing an item SHALL close the menu and open its
+destination as a sheet. On Android the button SHALL tell assistive technology whether the menu is
+open. The web app keeps the PWA's speed-dial menu (`web-app`).
 
 #### Scenario: Opening the menu one-handed
 
@@ -75,8 +76,9 @@ sheet. On Android and web the button SHALL tell assistive technology whether the
 
 #### Scenario: FAB menu on Android and web
 
-- **WHEN** the user opens the menu on Android or web
-- **THEN** its items unfold upwards one after another and the button turns into a close button
+- **WHEN** the user opens the menu on Android
+- **THEN** its items unfold upwards one after another and the button turns into a close button; on
+  the web the PWA's speed dial opens instead, with all of its entries
 
 #### Scenario: Choosing a destination
 
@@ -85,14 +87,13 @@ sheet. On Android and web the button SHALL tell assistive technology whether the
 
 #### Scenario: Dismissing the menu
 
-- **WHEN** the menu is open and the user taps outside it, presses Back (Android), presses Escape
-  (web) or uses the VoiceOver escape gesture (iOS)
+- **WHEN** the menu is open and the user taps outside it, presses Back (Android) or uses the
+  VoiceOver escape gesture (iOS)
 - **THEN** the menu closes without opening anything, and Back does not leave the screen
 
 #### Scenario: Reopening while it closes
 
-- **WHEN** the user taps the button on Android or web again while the menu's items are still
-  folding away
+- **WHEN** the user taps the button on Android again while the menu's items are still folding away
 - **THEN** the menu opens again instead of disappearing
 
 #### Scenario: Leaving the tab closes the menu
@@ -102,7 +103,7 @@ sheet. On Android and web the button SHALL tell assistive technology whether the
 
 #### Scenario: Reduced motion
 
-- **WHEN** the system asks for reduced motion and the user opens the menu on Android or web
+- **WHEN** the system asks for reduced motion and the user opens the menu on Android
 - **THEN** the items appear without travel or scaling, and the pressed button does not shrink
 
 ### Requirement: Destinations open as sheets above the tabs

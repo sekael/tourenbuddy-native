@@ -180,9 +180,10 @@ console directly; lint SHALL reject it.
 ### Requirement: Pull request checks
 
 Every pull request and every push to `main` SHALL run lint at zero warnings, the type check, all
-tests (including the locale checks) and a production web export. Pull requests that change native
-inputs (dependencies, app config, build config, patches or images) SHALL also build a release app
-for iOS and review its permissions. A failing step SHALL fail the check.
+tests (including the locale checks) and the production web build with its service worker. Pull
+requests that change native inputs (dependencies, app config, build config, patches or images)
+SHALL also build a release app for iOS and review its permissions. A failing step SHALL fail the
+check.
 
 #### Scenario: Missing translation in a pull request
 
@@ -191,8 +192,9 @@ for iOS and review its permissions. A failing step SHALL fail the check.
 
 #### Scenario: Web build breaks
 
-- **WHEN** a pull request introduces code that does not bundle for web
-- **THEN** the PR check fails at the web export step
+- **WHEN** a pull request introduces code that does not bundle for web, or a service worker that
+  does not build
+- **THEN** the PR check fails at the web build step
 
 #### Scenario: Native build breaks
 
@@ -208,9 +210,10 @@ for iOS and review its permissions. A failing step SHALL fail the check.
 ### Requirement: Releases
 
 Merging the release pull request SHALL tag the version from the conventional commits, deploy the
-public pages (`public/`, never a web app: the web app is the Vue PWA) and start store builds of the `prod` variant that are submitted to TestFlight (and to the Play
-internal track once Google Play is set up). Build numbers SHALL increase with every store build without a commit. A release
-step whose account is not set up yet SHALL skip with a notice instead of failing.
+public pages (`public/`), with the web app once the repository variable `WEB_DEPLOY` is `true`,
+and start store builds of the `prod` variant, submitted to TestFlight (and to the Play internal
+track once Google Play is set up). Build numbers SHALL increase with every store build without a
+commit. A release step whose account is not set up yet SHALL skip with a notice.
 
 #### Scenario: Release merged
 
@@ -223,3 +226,32 @@ step whose account is not set up yet SHALL skip with a notice instead of failing
 - **WHEN** a release runs before the Expo or Cloudflare secrets exist
 - **THEN** the affected step skips with a notice naming the missing setup, and the release itself
   succeeds
+
+#### Scenario: Web deploy switched on
+
+- **WHEN** a release runs with `WEB_DEPLOY` set to `true`
+- **THEN** the web app is deployed with the public pages, which still answer at their addresses
+
+#### Scenario: Web deploy without its backend
+
+- **WHEN** a release runs with `WEB_DEPLOY` set to `true` but without the Supabase secrets
+- **THEN** the site deploy fails rather than deploy an app that cannot start, and the previous web
+  app stays live
+
+### Requirement: Web previews on pull requests
+
+Every pull request from this repository SHALL deploy its web build to its own preview address on the
+Pages project `tourenbuddy-native`, link it in a pull request comment that follows each push, and
+delete the preview's deployments once the pull request closes. Without its secrets the preview SHALL
+skip with a notice; pull requests from forks SHALL get none.
+
+#### Scenario: Push to a pull request
+
+- **WHEN** a commit is pushed to an open pull request
+- **THEN** its web build is deployed to the branch's preview address and the comment names that
+  address and the commit
+
+#### Scenario: Pull request closed
+
+- **WHEN** the pull request is merged or closed
+- **THEN** the branch's preview deployments are deleted and the comment says so
