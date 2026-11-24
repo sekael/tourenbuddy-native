@@ -1,0 +1,16 @@
+diff --git a/node_modules/expo-router/_ctx.js b/node_modules/expo-router/_ctx.js
+index 0979e39..f2d9304 100644
+--- a/node_modules/expo-router/_ctx.js
++++ b/node_modules/expo-router/_ctx.js
+@@ -2,5 +2,10 @@ export const ctx = require.context(
+   process.env.EXPO_ROUTER_APP_ROOT,
+   true,
+   // Ignore root `./+html.js` and API route files `./generate+api.tsx`.
+-  /^(?:\.\/)(?!(?:(?:(?:.*\+api)|(?:\+html)))\.[tj]sx?$).*\.[tj]sx?$/
++  // patch(tourenbuddy): package.json `exports` sends iOS and Android here (only `browser` gets
++  // `_ctx.web.js`; `_ctx.ios.js` is never resolved), so skip `.web` routes: they pulled the whole
++  // web port into the native bundle, where Hermes rejects pdfjs's raw `import()`.
++  // ponytail: holds while web.output is 'single'; a static or server web output renders in Node
++  // through this file and would need the `.web` routes back.
++  /^(?:\.\/)(?!(?:(?:(?:.*\+api)|(?:\+html)))\.[tj]sx?$)(?!.*\.web\.[tj]sx?$).*\.[tj]sx?$/
+ );
