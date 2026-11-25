@@ -2,8 +2,8 @@ import { act, render, screen } from '@testing-library/react';
 import { ExpoRoot } from 'expo-router/build/ExpoRoot';
 import { getMockContext } from 'expo-router/build/testing-library/mock-config';
 
-import WebRootLayout from '@/app/_layout.web';
-import NotFound from '@/app/+not-found.web';
+import WebRootLayout from '@/app/_layout';
+import NotFound from '@/app/+not-found';
 import { useUserProfileStore } from '@/features/user/presentation/stores/user-profile-store';
 
 import { resetAuth, signIn } from '../support/auth';

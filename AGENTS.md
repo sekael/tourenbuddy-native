@@ -40,8 +40,8 @@ Decided or default in #346. Versions come from `npx expo install`; `package-lock
   destinations as sheet routes. Icons are the PWA's Material Symbols on every platform (SF Symbols
   only where the system draws: menus, the tab bar, swipe actions)
 - **Web app:** the PWA's components in React DOM (`features/<f>/presentation/web/`, `core/web/`,
-  routes `src/app/**/*.web.tsx`), CSS Modules extracted from the Vue styles, the PWA's `web` i18n
-  namespace; below the presentation it shares the domain, data and stores with the native apps.
+  routes `src/routes/**/*.web.tsx`), CSS Modules extracted from the Vue styles, the PWA's `web`
+  i18n namespace; below the presentation it shares the domain, data and stores with the native apps.
   Service worker `src/sw.web.ts` (Workbox) bundled by `scripts/build-sw.mjs`; offline tables on
   IndexedDB (`tables.web.ts`); Web Push
 - **Fonts and icons:** iOS system font; Android embedded Inter, web a bundled Inter
@@ -60,6 +60,8 @@ src/
   core/         shared infrastructure (adaptive/, i18n/, logging/, theme/, later offline/, realtime/)
   features/     <feature>/data, domain, presentation
   locales/      en.json, de-CH.json
+  routes/       routes that differ per platform: `<path>.tsx` (native) and `<path>.web.tsx`,
+                re-exported by `app/<path>.tsx`
 test/           Jest tests, mirroring src/ (src/core/i18n/detect.ts → test/core/i18n/detect.test.ts)
 assets/         images/ (app icon, launch image, favicon), fonts/ (web Inter subset)
 modules/        local Expo modules (native code the app config cannot express)
@@ -92,9 +94,11 @@ Switching changes the bundle identifier: run `npx expo prebuild --clean` afterwa
   `android/`.
 - Keep the layers: Presentation → Domain → Data → External. Domain has no React or React Native
   imports, features never import each other's internals, `core/` never depends on features.
-  Web-only files use the `.web.tsx` suffix. Until polish merges them, a feature change touches
-  both presentation layers: the native one and the web port (`presentation/web/`), which keeps the
-  PWA's design.
+  Web-only files use the `.web.tsx` suffix, never under `src/app`: every platform bundles all of
+  it (a web route once broke the iOS build), so a route that differs lives in `src/routes/`
+  (`test/app/platform-routes.test.ts` enforces it). Until polish merges them, a feature change
+  touches both presentation layers: the native one and the web port (`presentation/web/`), which
+  keeps the PWA's design.
 - Code ported from the Vue repo's `domain` and `data` layers stays plain TypeScript, so it and its
   tests move over nearly unchanged.
 - User-facing text goes through `i18next` and every locale file. Catalogs use i18next syntax:
@@ -135,7 +139,7 @@ Switching changes the bundle identifier: run `npx expo prebuild --clean` afterwa
   password after it (`signUp`, `verifyOtp`), so it never tells whether an address has an account.
   The relying party `tourenbuddy.ch` is permanent; the backend's auth settings: `docs/publishing.md`.
 - Routes follow the session in one place: the two `Stack.Protected` groups in
-  `src/app/_layout.tsx`. A new signed-in route goes inside the first group, never behind its own
+  `src/routes/_layout.tsx`. A new signed-in route goes inside the first group, never behind its own
   redirect.
 - Realtime only through `subscribeRealtime` (`@/core/realtime/subscribe`), and only to keep what
   the app shows current, never for notifications. A store subscribes in an action and calls the

@@ -21,7 +21,7 @@ module.exports = defineConfig([
     // watchers) and opt out of the React Compiler with `'use no memo'` where they do. These rules
     // guard the compiler's assumptions, which those components don't make. A Vue `watch` runs on
     // exactly the sources it names, so effect dependencies list those, not every value read.
-    files: ['src/core/web/**', 'src/features/*/presentation/web/**', 'src/app/**/*.web.tsx'],
+    files: ['src/core/web/**', 'src/features/*/presentation/web/**', 'src/routes/**/*.web.tsx'],
     rules: {
       'react-hooks/refs': 'off',
       'react-hooks/set-state-in-effect': 'off',

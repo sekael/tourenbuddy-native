@@ -1,5 +1,6 @@
 /* tokens.css, typography.css and safe-area.css are imported before this file in
-   `src/app/_layout.web.tsx`: Metro's dev server drops CSS `@import`s (only the export inlines them). */
+   `src/routes/_layout.web.tsx`: Metro's dev server drops CSS `@import`s (only the export inlines
+   them). */
 
 *,
 *::before,
