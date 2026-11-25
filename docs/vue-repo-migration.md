@@ -73,27 +73,22 @@ Kept as in the PWA (deliberately, polish later): the blocked list, friend reques
 actions call a snackbar the PWA never renders, so their confirmations stay invisible; the contacts
 sheet opened from the calendar has inert friend-request and friend-tour buttons.
 
-## B. Backend into this repository (later, a change of its own)
+## B. Backend into this repository (change `move-backend`)
 
-Moves the Supabase project and the Worker's source of truth. Order: copy, deploy once from here to
-prove it, then delete from the Vue repo, so no window has two sources.
+Copied unchanged from the Vue repository's `main` (release 0.54.0):
 
-| From the Vue repo | To | Notes |
-| --- | --- | --- |
-| `supabase/` (`config.toml`, `migrations/`, `seed.sql`, `tests/`) | `supabase/` | `supabase link --project-ref <ref>` from here; `supabase migration list --linked` must show Local = Remote. Skip `supabase/snippets/` (scratch queries) and `.temp/`. Never add `[db.vault]`. Keep `project_id = "tourenbuddy_frontend_vue"`: Docker names the local stack's containers and volumes after it, so `supabase start` here finds your local data; a new id starts a second, empty stack on the same ports |
-| `services/email-hook/` | `services/email-hook/` | Its own `package.json`, tests, `wrangler.toml`. Keep the Worker name `tourenbuddy-email-hook` so its URL and secrets stay. Deploy stays manual (`npx wrangler@latest deploy`) |
-| `scripts/ski-routes/` + `.github/workflows/ski-route-data.yml` | same paths | Weekly job → Pages project `tourenbuddy-data`; uses the Cloudflare secrets already here |
-| `.github/workflows/add-to-project.yml` | same path | Needs secret `ADD_TO_PROJECT_PAT` (a PAT with project write) |
-| `.github/ISSUE_TEMPLATE/` (`beta_feedback.yml`, `bug_report.yml`) | same path | The feedback sheet opens them: point the two URLs in `src/core/feedback.ts` at this repository in the same change |
-| `scripts/migrate-phones-to-e164.ts` | drop | One-off migration, done |
-| `docs/` backend docs: `notifications.md`, `moderation.md`, `supabase-rpc-authorization.md`, `ski-route-data.md`, `ski-route-hosting.md`, `track-routing.md`, `distance-limits.md`, `friendships-and-tour-visibility.md`, `otp-and-email-autofill.md`, `realtime-and-pwa-energy.md` | `docs/` | Plus the Supabase / Database rules in `.claude/conventions.md` → AGENTS.md (migrations immutable, grants, `security_invoker`, expand then contract) |
-| `README.md` → local Supabase, auth email modes, seeded users | README "Backend" | Merge with what is there |
+| From the Vue repo | Here |
+| --- | --- |
+| `supabase/` (`config.toml`, `migrations/` with `_archived/`, `seed.sql`, `tests/`, `.gitignore`) | `supabase/`; `project_id` stays `tourenbuddy_frontend_vue`: Docker names the local stack after it |
+| `services/email-hook/` | same path, its own package; Worker name `tourenbuddy-email-hook`, so URL and secrets stay |
+| `scripts/ski-routes/build.ts`, `.github/workflows/ski-route-data.yml`, `test/scripts/ski-routes/build.test.ts` | same paths (the test runs in Jest) |
+| `.github/workflows/add-to-project.yml`, `.github/ISSUE_TEMPLATE/` | same paths; the feedback sheet's links point here |
+| Backend docs (`notifications.md`, `moderation.md`, `supabase-rpc-authorization.md`, `ski-route-data.md`, `ski-route-hosting.md`, `track-routing.md`, `distance-limits.md`, `friendships-and-tour-visibility.md`, `otp-and-email-autofill.md`, `realtime-and-pwa-energy.md`, `manual-tests-preview-on-prod.md`) | `docs/` |
+| `.claude/conventions.md` → Supabase / Database, the Worker deploy rule; AGENTS.md → how notifications are delivered | AGENTS.md → "Database and Worker" |
+| README → local Supabase, auth email modes, seeded users | README → "Backend" |
 
-Local files on your Mac: copy them as they are, never commit them. They are ignored here only
-through the `.gitignore` files of `supabase/` and `services/email-hook/`, so those come first. `services/email-hook/.dev.vars` (the local Worker's secrets for `npx wrangler dev`) and
-`supabase/.env` (the values `config.toml` reads with `env(...)`: Brevo SMTP, the email hook secret
-and the rest). Not needed: `supabase/.temp` (`supabase link` recreates it), `.branches`,
-`.wrangler`, `.certs`.
+Left behind: `supabase/snippets/` (scratch queries) and `scripts/migrate-phones-to-e164.ts` (a one-off
+migration, done). New here: `worker.yml` runs the Worker's tests on pull requests that change it.
 
 Nothing to move for these: they live outside both repositories and stay as they are.
 
@@ -105,11 +100,61 @@ Nothing to move for these: they live outside both repositories and stay as they 
   Brevo SMTP relay set in the Supabase dashboard.
 - Supabase dashboard auth settings (email OTP, Confirm email, Secure password change, passkeys).
 
-Then in the Vue repo: disable `analyze-and-test.yml` and `test-build-web.yml`, move the open issues
-(#346 epic, #374, #386 and the backlog project's items) or leave a pointer, and archive the repository.
+### B1. Switch over, once the pull request is merged
 
-### Decisions this needs from you
+On your Mac, from this repository's root:
 
-- AGENTS.md D3 ("no `supabase/` folder here") is replaced.
-- The issues: transfer to `tourenbuddy-native` (GitHub keeps redirects) or keep them in the archived
-  repo read-only.
+1. **Local secrets.** Copy them as they are; the `.gitignore` files of `supabase/` and
+   `services/email-hook/` keep them out of git. Not needed: `.temp` (`supabase link` recreates it),
+   `.branches`, `.wrangler`, `.certs`.
+
+   ```sh
+   VUE=../tourenbuddy_frontend_vue   # your Vue checkout
+   cp "$VUE/supabase/.env" supabase/.env
+   cp "$VUE/services/email-hook/.dev.vars" services/email-hook/.dev.vars
+   git status --short --ignored supabase services   # both listed with !!, never with ??
+   ```
+
+2. **Local stack.** `supabase stop` in the Vue checkout (without `--no-backup`), then `supabase start`
+   here. Same `project_id`, same containers and volumes: your local data, seeded users and auth
+   settings are back. `supabase migration list --local` shows every migration applied.
+3. **Production link.** `supabase link --project-ref <ref>` (Dashboard → Project Settings →
+   General), then `supabase migration list --linked`: Local = Remote on every row, nothing pending.
+   Anything else: stop, no `db push`.
+4. **Worker.** `cd services/email-hook && npm install && npx wrangler@latest deploy`. Same name and
+   code: a no-op for users. `npx wrangler deployments list` shows it on top.
+5. **Ski-route data.** Note `curl -s https://tourenbuddy-data.pages.dev/ski-routes.json | jq
+   '{version, count}'`, run Actions → Ski-route data → Run workflow with `force`, and check the same
+   version and count come back. Then disable the Vue repo's `ski-route-data.yml` (Actions → Disable):
+   until then both repositories run it weekly, harmlessly (same data, same Pages project).
+6. **Issues.** Copy the labels (the issue forms set `bug` and `user-feedback` only if they exist):
+   `gh label clone sekael/tourenbuddy_frontend_vue -R sekael/tourenbuddy-native`. Add the secret
+   `ADD_TO_PROJECT_PAT` here (a token with project write; GitHub can't show the Vue repo's, so make a
+   new one if you have no copy).
+
+### B2. Remove the backend from the Vue repository
+
+A pull request there, after B1:
+
+- Delete `supabase/`, `services/`, `scripts/ski-routes/`, `scripts/migrate-phones-to-e164.ts`,
+  `test/scripts/ski-routes/`, `.github/workflows/ski-route-data.yml`,
+  `.github/workflows/add-to-project.yml`, `.github/ISSUE_TEMPLATE/` and the backend docs above.
+- README and `.claude/conventions.md` (Supabase / Database), `.claude/env-ci.md` (Worker, ski-route
+  data), `.claude/testing.md` (pgTAP, Worker), `AGENTS.md` (database rules, Worker, notifications),
+  `.claude/workflow.md` (Database Workflow), `.claude/structure.md` (`supabase/`, `services/`):
+  point to `sekael/tourenbuddy-native`.
+- Its PWA keeps building and deploying until the cutover (A2): it uses none of these files.
+
+Then move the open issues here; old links redirect, and the backlog project (a user project) keeps
+them. The labels from B1 carry over:
+
+```sh
+gh issue list -R sekael/tourenbuddy_frontend_vue --state open --limit 500 --json number -q '.[].number' |
+  xargs -I{} gh issue transfer {} sekael/tourenbuddy-native -R sekael/tourenbuddy_frontend_vue
+```
+
+Rollback: until the removal pull request merges, the Vue repo still has everything; after it,
+revert that pull request.
+
+At the cutover (A2), in the Vue repo: disable `analyze-and-test.yml` and `test-build-web.yml`, then
+archive the repository.

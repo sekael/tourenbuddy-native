@@ -1,0 +1,12 @@
+Subject: {{ params.actorName }} responded to your friend request on TourenBuddy
+
+Hi there,
+
+{{ params.actorName }} responded to your friend request on TourenBuddy.
+
+Open the app to see your connections:
+{{ params.appUrl }}/?friendRequests=1
+
+---
+You received this email because notifications are enabled for your TourenBuddy account.
+Manage them in your profile settings.

@@ -1,0 +1,86 @@
+name: Bug Report
+description: Something not working as expected? Let us know!
+title: '[BUG]: '
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Fill in as much as you can — even partial info helps us track it down.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What went wrong?
+      description: Describe what happened. No technical detail needed — just tell us what you saw.
+      placeholder: e.g. "I tapped the map and nothing happened" or "The app crashed when I opened a tour"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: How did it happen?
+      description: Step by step, what did you do before the problem appeared? (optional but very helpful)
+      placeholder: |
+        1. I opened the app
+        2. I tapped on a tour
+        3. The screen went blank
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect instead?
+      placeholder: e.g. "I expected the tour details to open"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Device / Operating System
+      description: What are you using when the problem occurs?
+      options:
+        - iOS (iPhone / iPad)
+        - Android
+        - macOS
+        - Windows
+        - Linux
+        - Other
+    validations:
+      required: false
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser or App
+      description: How are you accessing TourenBuddy?
+      options:
+        - Brave Browser
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Samsung Internet
+        - Installed as app (added to home screen)
+        - Other browser
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or recordings
+      description: Drag and drop images or videos here — they help a lot!
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Any other context that might be useful
+    validations:
+      required: false

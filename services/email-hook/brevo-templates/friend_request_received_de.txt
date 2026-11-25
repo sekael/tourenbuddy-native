@@ -1,0 +1,12 @@
+Subject: {{ params.actorName }} hat dir eine Freundschaftsanfrage auf TourenBuddy gesendet
+
+Hallo,
+
+{{ params.actorName }} hat dir eine Freundschaftsanfrage auf TourenBuddy gesendet.
+
+Öffne die App, um die Anfrage anzunehmen oder abzulehnen:
+{{ params.appUrl }}/?friendRequests=1
+
+---
+Du hast diese E-Mail erhalten, weil Benachrichtigungen für dein TourenBuddy-Konto aktiviert sind.
+Du kannst sie in den Profileinstellungen verwalten.

@@ -1,0 +1,12 @@
+Subject: {{ params.actorName }} hat auf deine Freundschaftsanfrage auf TourenBuddy geantwortet
+
+Hallo,
+
+{{ params.actorName }} hat auf deine Freundschaftsanfrage auf TourenBuddy geantwortet.
+
+Öffne die App, um deine Verbindungen zu sehen:
+{{ params.appUrl }}/?friendRequests=1
+
+---
+Du hast diese E-Mail erhalten, weil Benachrichtigungen für dein TourenBuddy-Konto aktiviert sind.
+Du kannst sie in den Profileinstellungen verwalten.

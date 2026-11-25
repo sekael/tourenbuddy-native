@@ -1,0 +1,50 @@
+name = "tourenbuddy-email-hook"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# #287 calendar availability sync — see src/calendar/sync.ts syncAllUsers.
+[triggers]
+crons = [ "0 */6 * * *" ]
+
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1
+
+# Secrets (set via `wrangler secret put`):
+# BREVO_API_KEY
+# SEND_EMAIL_HOOK_SECRET
+# BREVO_TEMPLATE_EN  (numeric ID of the Brevo OTP template in English)
+# BREVO_TEMPLATE_DE  (numeric ID of the Brevo OTP template in German)
+#
+# Notification secrets (see SETUP-NOTIFICATIONS.md):
+# SUPABASE_URL
+# SUPABASE_SERVICE_ROLE_KEY
+# VAPID_PUBLIC_KEY
+# VAPID_PRIVATE_KEY
+# VAPID_SUBJECT  (e.g. mailto:no-reply@tourenbuddy.ch)
+# BREVO_TEMPLATE_FRIEND_RECEIVED_EN  (numeric Brevo template ID)
+# BREVO_TEMPLATE_FRIEND_RECEIVED_DE
+# BREVO_TEMPLATE_FRIEND_RESPONDED_EN
+# BREVO_TEMPLATE_FRIEND_RESPONDED_DE
+# BREVO_TEMPLATE_TOUR_UPDATES_EN
+# BREVO_TEMPLATE_TOUR_UPDATES_DE
+# BREVO_TEMPLATE_TOUR_INTEREST_EN
+# BREVO_TEMPLATE_TOUR_INTEREST_DE
+# BREVO_TEMPLATE_TOUR_LINK_DELETED_EN  (dedicated tour-link dissolution template)
+# BREVO_TEMPLATE_TOUR_LINK_DELETED_DE
+#
+# Optional:
+# APP_URL  (used for push deep-links and email links.
+#           default if unset: https://test.tourenbuddy.ch
+#           override to https://tourenbuddy.ch (or www variant) when prod domain goes live)

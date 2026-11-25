@@ -10,6 +10,7 @@ on:
       - package.json
       - package-lock.json
       - app.config.ts
+      - metro.config.js
       - eas.json
       - patches/**
       - assets/images/**

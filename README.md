@@ -34,10 +34,14 @@ Releases and store builds run on GitHub Actions and EAS: see [docs/publishing.md
 
 ## Backend
 
-The app talks to Supabase. Schema, migrations and the local stack live in the Vue repository.
+The app talks to Supabase. This repository holds the backend: the schema in `supabase/`
+(migrations, seed, pgTAP tests) and the Cloudflare Worker in `services/email-hook/` (auth emails,
+notifications and push, calendar feed and sync, moderation, account deletion). Both deploy by hand.
+Database rules: [AGENTS.md](./AGENTS.md), "Database and Worker".
+
 Set two variables in `.env.local` (gitignored); the app refuses to start without them. A third,
-optional one points at the Worker (`services/email-hook` in the Vue repository) for account
-deletion and calendar sync; without it those actions say they are unavailable:
+optional one points at the Worker for account deletion and calendar sync; without it those actions
+say they are unavailable:
 
 ```sh
 EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
@@ -46,28 +50,33 @@ EXPO_PUBLIC_NOTIFY_HOOK_URL=http://127.0.0.1:8787   # `npx wrangler dev` in serv
 EXPO_PUBLIC_VAPID_PUBLIC_KEY=<public key>            # web only: Web Push, the Worker's VAPID key
 ```
 
-The Vue repository's `.env.local` has the same values as `VITE_*`; its `.env.phone.local` has no
-counterpart here (test the web app on a phone through the pull request preview).
-
 A fourth, only for testing the update gate, replaces `https://tourenbuddy.ch/app-config.json`
 (`EXPO_PUBLIC_APP_CONFIG_URL=http://127.0.0.1:8099/app-config.json`; see
 `docs/manual-test-plan.md`, UPD).
 
-- **Local stack:** `supabase start` in `tourenbuddy_frontend_vue` (up to date with its `main`).
-  Then, still there, write both variables for the Simulator into this repository's `.env.local`:
+- **Local stack:** Docker Desktop and the [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started), then `supabase start` here (the first run pulls images).
+  Write both variables for the Simulator into `.env.local`:
 
   ```sh
   supabase status -o env \
     --override-name api.url=EXPO_PUBLIC_SUPABASE_URL \
     --override-name auth.anon_key=EXPO_PUBLIC_SUPABASE_ANON_KEY \
-    | grep '^EXPO_PUBLIC_' > ../tourenbuddy-native/.env.local
+    | grep '^EXPO_PUBLIC_' > .env.local
   ```
 
-  The path assumes both checkouts side by side. The `grep` keeps the service role key and the JWT secret out of the app's environment.
-  Sign-in codes land in Mailpit at `http://127.0.0.1:54324`.
+  The `grep` keeps the service role key and the JWT secret out of the app's environment.
+  Sign-in codes land in Mailpit at `http://127.0.0.1:54324`; Studio is at `http://127.0.0.1:54323`.
   The URL depends on where the app runs: iOS Simulator and web `http://127.0.0.1:54321`, Android emulator `http://10.0.2.2:54321`, a phone your Mac's address on the same Wi-Fi (`http://192.168.x.y:54321`).
+  `supabase db reset` replays every migration and `supabase/seed.sql`; `supabase test db` then runs the pgTAP suites in `supabase/tests/`.
+  `config.toml` changes need `supabase stop && supabase start` (`db reset` does not reload it).
+- **Seeded users** (`supabase/seed.sql`, never pushed): Patrick, Jakob, Reni, Selim, Anna and Lena, `<name>@tourenbuddy.ch`, phones `+41790000001` to `…06`, with friendships, requests and tours to try every friend and tour view (the file's header lists them). Sign in with an email code from Mailpit; phone codes for the first three numbers are `123456`.
+- **Local secrets:** `supabase/.env` (the values `config.toml` reads with `env(...)`: Brevo SMTP, the email hook secret, the Twilio placeholder token) and `services/email-hook/.dev.vars` (the Worker's, for `npx wrangler dev`; start from `.dev.vars.example`). Both are gitignored; never commit them.
+  `SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN` needs a value (any, e.g. `test`) in `supabase/.env` or your shell before `supabase start`: the placeholder Twilio provider behind the test phone codes needs it.
+- **Auth emails:** by default every email lands in Mailpit. To send them like production (the Worker as Send Email Hook with the Brevo templates), set `enabled = true` under `[auth.hook.send_email]` in `config.toml` (never commit the flip), put the same `SEND_EMAIL_HOOK_SECRET` into both secret files, run `npx wrangler dev` in `services/email-hook/` and restart the stack. Notification and calendar values: [services/email-hook/SETUP-NOTIFICATIONS.md](./services/email-hook/SETUP-NOTIFICATIONS.md).
+- **Worker:** `cd services/email-hook && npm install`, then `npx wrangler dev` (port 8787) or `npm test`. It is its own package: its dependencies stay out of the app's `node_modules`. Deploy: `npx wrangler@latest deploy` there, by hand after review.
+- **Database changes:** `supabase migration new <name>`, apply locally, test, then the owner runs `supabase db push` ([AGENTS.md](./AGENTS.md), "Database and Worker").
 - **Hosted project:** the project URL and anon key from the Supabase dashboard (Project Settings → API).
-- **Passwords and passkeys** need the auth settings in the Vue repository's `supabase/config.toml` (email confirmations, minimum password length 8, passkeys for `tourenbuddy.ch`): [docs/publishing.md](./docs/publishing.md), "Supabase auth".
+- **Passwords and passkeys** need the auth settings in `supabase/config.toml` (email confirmations, minimum password length 8, passkeys for `tourenbuddy.ch`): [docs/publishing.md](./docs/publishing.md), "Supabase auth".
   Passkeys also need the association file online at `https://tourenbuddy.ch/.well-known/`, even against the local stack, and Face ID in the Simulator.
   Xcode 27's Device Hub has no Face ID menu (Simulator.app had Features → Face ID); enroll once, then send a matching face each time the gray Face ID icon waits:
 
@@ -92,7 +101,7 @@ Releases get them from EAS environment variables and GitHub secrets: see [docs/p
 
 - `main`: the app.
 - `spike/route-gate`: Phase 0 feasibility spikes ([#367](https://github.com/sekael/tourenbuddy_frontend_vue/issues/367)). Throwaway code, never merged.
-- The backend (Supabase schema and migrations, the `email-hook` Cloudflare Worker, ski-route data) stays in `sekael/tourenbuddy_frontend_vue` during the migration.
+- The backend (Supabase schema and migrations, the `email-hook` Cloudflare Worker, ski-route data) moved here from `sekael/tourenbuddy_frontend_vue` (change `move-backend`); new issues are filed here.
 
 ## Disclaimer
 

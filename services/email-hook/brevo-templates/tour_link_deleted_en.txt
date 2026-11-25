@@ -1,0 +1,14 @@
+Subject: Your tour link for {{ params.tourName }} was dissolved on TourenBuddy
+
+Hi there,
+
+The link for "{{ params.tourName }}" was dissolved.
+
+Your tour is no longer linked with any other.
+
+View tour:
+{{ params.appUrl }}/?tours=1
+
+---
+You received this email because notifications are enabled for your TourenBuddy account.
+Manage them in your profile settings.

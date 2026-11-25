@@ -1,0 +1,115 @@
+<!-- Subject: {% if params.action == "link_created" %}{{ params.actorName }} möchte eine Tour mit dir verknüpfen{% elif params.action == "link_accepted" %}{{ params.actorName }} hat deine Verknüpfungsanfrage angenommen{% elif params.action == "link_declined" %}{{ params.actorName }} hat deine Verknüpfungsanfrage abgelehnt{% elif params.action == "group_joined" %}Eine neue Tour ist deiner Verknüpfung beigetreten{% elif params.action == "group_evicted_external" %}Eine Tour wurde aus deiner Verknüpfung entfernt{% elif params.action == "backfill_digest" %}{{ params.actorName }} hat dieselben Touren wie du geplant{% else %}{{ params.actorName }} hat dieselbe Tour wie du geplant{% endif %} auf TourenBuddy -->
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tour-Verknüpfung</title>
+    <style>
+      body {
+        font-family:
+          Inter,
+          -apple-system,
+          sans-serif;
+        background: #f8f9fa;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 480px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+      .header {
+        background: #e65100;
+        padding: 24px 32px;
+      }
+      .header h1 {
+        color: #fff;
+        margin: 0;
+        font-size: 22px;
+        font-weight: 600;
+      }
+      .body {
+        padding: 32px;
+        color: #1a1a1a;
+      }
+      .body p {
+        margin: 0 0 16px;
+        line-height: 1.6;
+      }
+      .cta {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 12px 24px;
+        background: #e65100;
+        color: #fff;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .footer {
+        padding: 20px 32px;
+        font-size: 12px;
+        color: #888;
+        border-top: 1px solid #f0f0f0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>TourenBuddy</h1>
+      </div>
+      <div class="body">
+        <p>Hallo,</p>
+
+        {% if params.action == "link_created" %}
+        <p>
+          <strong>{{ params.actorName }}</strong> möchte seine/ihre Tour mit deiner
+          <strong>{{ params.tourName }}</strong> verknüpfen.
+        </p>
+        <p>Öffne die Tour, um die Verknüpfungsanfrage anzunehmen oder abzulehnen.</p>
+        {% elif params.action == "link_accepted" %}
+        <p>
+          <strong>{{ params.actorName }}</strong> hat deine Verknüpfungsanfrage für
+          <strong>{{ params.tourName }}</strong> angenommen.
+        </p>
+        <p>Eure Touren sind nun verknüpft. Stimmt Zeitpunkt und Partner auf beiden Seiten ab.</p>
+        {% elif params.action == "link_declined" %}
+        <p>
+          <strong>{{ params.actorName }}</strong> hat deine Verknüpfungsanfrage für
+          <strong>{{ params.tourName }}</strong> abgelehnt.
+        </p>
+        <p>Keine weitere Aktion nötig — du kannst weiterhin unabhängig planen.</p>
+        {% elif params.action == "group_joined" %}
+        <p>Eine neue Tour ist der Verknüpfung um <strong>{{ params.tourName }}</strong> beigetreten.</p>
+        <p>Sieh dir die verknüpften Touren an, um zu sehen, wer dasselbe plant.</p>
+        {% elif params.action == "group_evicted_external" %}
+        <p>Eine Tour wurde aus der Verknüpfung um <strong>{{ params.tourName }}</strong> entfernt.</p>
+        <p>Das passiert, wenn eine Tour bearbeitet, privat gemacht oder eine Freundschaft beendet wurde.</p>
+        {% elif params.action == "backfill_digest" %}
+        <p><strong>{{ params.actorName }}</strong> hat dieselben Touren wie du geplant.</p>
+        <p>Schau sie dir auf TourenBuddy an.</p>
+        {% else %}
+        <p>
+          <strong>{{ params.actorName }}</strong> hat dieselbe Tour wie deine
+          <strong>{{ params.tourName }}</strong> geplant.
+        </p>
+        <p>Öffne die Tour, um zu verknüpfen und gemeinsam zu planen.</p>
+        {% endif %} {% if params.action == "backfill_digest" %}
+        <a href="{{ params.appUrl }}" class="cta">Gemeinsame Touren ansehen</a>
+        {% else %}
+        <a href="{{ params.appUrl }}/?tours=1" class="cta">Tour ansehen</a>
+        {% endif %}
+      </div>
+      <div class="footer">
+        Du erhältst diese E-Mail, weil Benachrichtigungen für dein TourenBuddy-Konto aktiviert sind. Du kannst sie in
+        deinen Profileinstellungen verwalten.
+      </div>
+    </div>
+  </body>
+</html>

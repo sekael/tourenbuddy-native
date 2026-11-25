@@ -8,7 +8,8 @@ The IDs follow the required minimum in #346 section 12; cases that go further th
 update gate details, backend, public pages, performance) have their own prefixes. Not covered here,
 and still owed before release: the Android devices (Android is deprioritized), the oldest iPhone on
 the minimum iOS, the browser matrix, the PWA cutover (WEB-1) and store review (STO), all in #346
-section 12.
+section 12. What only production shows (real email, push with the production keys, Realtime over
+the public socket, long sessions): `docs/manual-tests-preview-on-prod.md`.
 
 **Where:** **S** = Simulator in Xcode 27 Device Hub (an iPhone 17 Pro on iOS 27 unless a case says
 otherwise), **S+S** = two Simulators side by side, **15** = the real iPhone 15, **W** = web (Safari
@@ -20,12 +21,12 @@ A failure gets a note: what you did, what you saw, a screenshot.
 
 ## Setup
 
-### Backend (Vue repository)
+### Backend
 
-1. In `tourenbuddy_frontend_vue` on `main`: `supabase db reset && supabase test db` (seed users
-   below, all pgTAP green).
+1. Here, on the branch under test: `supabase db reset && supabase test db` (seed users below, all
+   pgTAP green).
 2. Worker: `cd services/email-hook && npx wrangler dev --ip 0.0.0.0`. For real pushes to the
-   iPhone 15 put the APNs key in `.dev.vars` (`SETUP-NOTIFICATIONS.md`, "Native push"); without it
+   iPhone 15 put the APNs key in `.dev.vars` (`services/email-hook/SETUP-NOTIFICATIONS.md`, "Native push"); without it
    push cases run in the Simulator with `simctl push` only.
 3. `.env.local` here as in the README ("Backend"), with `EXPO_PUBLIC_NOTIFY_HOOK_URL` set to the
    Worker (`http://127.0.0.1:8787` for the Simulator, `http://<Mac's address>:8787` for the
@@ -44,7 +45,7 @@ npm run web                  # web cases
 ### Accounts (seed)
 
 Sign in with email and code; codes land in Mailpit (`http://127.0.0.1:54324`). The SMS code for
-phone verification is the fixed test code in the Vue repo's `supabase/config.toml`
+phone verification is the fixed test code in `supabase/config.toml`
 (`[auth.sms.test_otp]`).
 
 | Account | Email                    | Has                                                                    |
@@ -205,7 +206,7 @@ that could not sync, or for a moment an action refused offline or changes just s
 | ID    | Where | Steps                                                                                        | Expected                                                                                              |
 | ----- | ----- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | NOT-1 | S     | Profile → Notifications: turn push on; deny; Open Settings; allow; turn off                  | The system prompt only when turning on; denied shows the Settings row; off removes the token row       |
-| NOT-2 | S     | For three types in `docs/notifications.md` (Vue repo): `simctl push` with the app killed, in the background, in front; mute one type, turn email off | Banner each time in your language (also in front); a muted type stays silent but lands in the inbox |
+| NOT-2 | S     | For three types in `docs/notifications.md`: `simctl push` with the app killed, in the background, in front; mute one type, turn email off | Banner each time in your language (also in front); a muted type stays silent but lands in the inbox |
 | NOT-3 | S     | Tap the pushes from NOT-2 (killed and background)                                             | Opens the entry's target and marks it read                                                            |
 | NOT-4 | 15    | Real push from the Worker (Jakob suggests a change to Patrick's tour); sign in as Patrick on a second device too | Arrives on both within seconds; uninstalling on one deletes its token row on the next push (BE-4)      |
 | NOT-5 | S     | Profile → Inbox: collapse, mark all read, swipe delete, clear, load more, release note; offline mark read | Badge on Profile counts unread; release note opens with its settings shortcut and records once across devices; the offline read syncs |

@@ -1,0 +1,16 @@
+name: User Feedback
+description: Report a bug or suggest a feature for TourenBuddy
+title: '[FEEDBACK]: '
+labels: [user-feedback]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping us improve TourenBuddy!
+  - type: textarea
+    id: feedback
+    attributes:
+      label: What's on your mind?
+      description: Describe the issue or your suggestion in detail.
+    validations:
+      required: true

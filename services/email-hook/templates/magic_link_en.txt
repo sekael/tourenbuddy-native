@@ -1,0 +1,14 @@
+TourenBuddy – Sign in to your account
+======================================
+
+Click the link below to sign in. This link is valid for 60 minutes and can only be used once.
+
+{{ params.magic_link }}
+
+IMPORTANT: Open this link on the same device where you requested it.
+
+If you didn't request this, you can ignore this email. Someone may have entered {{ params.email }} by mistake.
+
+---
+TourenBuddy – Plan your outdoor tours
+Sent to {{ params.email }}
