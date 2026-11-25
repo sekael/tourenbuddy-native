@@ -8,7 +8,8 @@ The IDs follow the required minimum in #346 section 12; cases that go further th
 update gate details, backend, public pages, performance) have their own prefixes. Not covered here,
 and still owed before release: the Android devices (Android is deprioritized), the oldest iPhone on
 the minimum iOS, the browser matrix, the PWA cutover (WEB-1) and store review (STO), all in #346
-section 12.
+section 12. What only production shows (real email, push with the production keys, Realtime over
+the public socket, long sessions): `docs/manual-tests-preview-on-prod.md`.
 
 **Where:** **S** = Simulator in Xcode 27 Device Hub (an iPhone 17 Pro on iOS 27 unless a case says
 otherwise), **S+S** = two Simulators side by side, **15** = the real iPhone 15, **W** = web (Safari

@@ -83,8 +83,8 @@ Copied unchanged from the Vue repository's `main` (release 0.54.0):
 | `services/email-hook/` | same path, its own package; Worker name `tourenbuddy-email-hook`, so URL and secrets stay |
 | `scripts/ski-routes/build.ts`, `.github/workflows/ski-route-data.yml`, `test/scripts/ski-routes/build.test.ts` | same paths (the test runs in Jest) |
 | `.github/workflows/add-to-project.yml`, `.github/ISSUE_TEMPLATE/` | same paths; the feedback sheet's links point here |
-| Backend docs (`notifications.md`, `moderation.md`, `supabase-rpc-authorization.md`, `ski-route-data.md`, `ski-route-hosting.md`, `track-routing.md`, `distance-limits.md`, `friendships-and-tour-visibility.md`, `otp-and-email-autofill.md`, `realtime-and-pwa-energy.md`) | `docs/` |
-| `.claude/conventions.md` → Supabase / Database, the Worker deploy rule | AGENTS.md → "Database and Worker" |
+| Backend docs (`notifications.md`, `moderation.md`, `supabase-rpc-authorization.md`, `ski-route-data.md`, `ski-route-hosting.md`, `track-routing.md`, `distance-limits.md`, `friendships-and-tour-visibility.md`, `otp-and-email-autofill.md`, `realtime-and-pwa-energy.md`, `manual-tests-preview-on-prod.md`) | `docs/` |
+| `.claude/conventions.md` → Supabase / Database, the Worker deploy rule; AGENTS.md → how notifications are delivered | AGENTS.md → "Database and Worker" |
 | README → local Supabase, auth email modes, seeded users | README → "Backend" |
 
 Left behind: `supabase/snippets/` (scratch queries) and `scripts/migrate-phones-to-e164.ts` (a one-off
@@ -140,7 +140,9 @@ A pull request there, after B1:
   `test/scripts/ski-routes/`, `.github/workflows/ski-route-data.yml`,
   `.github/workflows/add-to-project.yml`, `.github/ISSUE_TEMPLATE/` and the backend docs above.
 - README and `.claude/conventions.md` (Supabase / Database), `.claude/env-ci.md` (Worker, ski-route
-  data), `.claude/testing.md` (pgTAP, Worker): point to `sekael/tourenbuddy-native`.
+  data), `.claude/testing.md` (pgTAP, Worker), `AGENTS.md` (database rules, Worker, notifications),
+  `.claude/workflow.md` (Database Workflow), `.claude/structure.md` (`supabase/`, `services/`):
+  point to `sekael/tourenbuddy-native`.
 - Its PWA keeps building and deploying until the cutover (A2): it uses none of these files.
 
 Then move the open issues here; old links redirect, and the backlog project (a user project) keeps

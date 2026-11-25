@@ -191,6 +191,9 @@ Switching changes the bundle identifier: run `npx expo prebuild --clean` afterwa
   authenticated; grant select … to authenticated`). Storage read grants that match an object by a
   path stored in a row also pin the owner prefix (`split_part(name, '/', 1) = <owner>::text`).
   Background and a worked example: `docs/supabase-rpc-authorization.md`.
+- Notifications are recorded by the database: the writing transaction inserts the inbox row
+  (`public.notifications`), and a dispatch trigger hands it to the Worker, which sends push and
+  email. Clients never send notifications (`docs/notifications.md`).
 - IMPORTANT, expand then contract (#346 B5): store builds keep calling the backend for months. Never
   rename, drop, or change the arguments or result shape of an RPC, table, column, view or Worker
   route in one step: add the new shape next to the old one, ship the clients, raise
