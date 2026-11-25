@@ -1,0 +1,176 @@
+/* Ported from the PWA's features/onboarding/presentation/components/onboarding-tour-banner.vue (scoped style). */
+/* driver.js adds `.driver-active` to <body> and `.driver-active * { pointer-events: none }`.
+   The banner is teleported to <body>, so without this its buttons inherit
+   `pointer-events: none` and clicks fall through to the container (the real bug
+   behind the "dead" controls). The PWA's scoped attribute selector out-specified
+   driver's `.driver-active *`; a CSS Module class ties with it, and the dev server loads driver's
+   sheet later, so "Finish tour" went dead (O-2). Hence `!important`. */
+.tour-banner,
+.tour-banner * {
+  pointer-events: auto !important;
+}
+
+.tour-banner {
+  /* Above driver.js' overlay + popover so the controls stay clickable and the
+     backdrop-tap-to-advance never swallows banner clicks. */
+  position: fixed;
+  top: calc(var(--spacing-md) + var(--safe-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483000;
+  /* Two rows: the title gets the full banner width on top, the controls
+     (finish / progress / nav) sit on their own row beneath it. A long step
+     name now wraps across the whole width instead of being squeezed into a
+     narrow column and breaking mid-word. */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  /* Constant width across steps so a long title never resizes the banner;
+     capped to the viewport on narrow screens. */
+  width: min(24rem, calc(100vw - 2 * var(--spacing-md)));
+  padding: var(--spacing-md) var(--spacing-md) var(--spacing-sm);
+  border-radius: var(--radius-lg);
+  /* Surface, blur and border from the shared `.fab-glass` (same family as the
+     map controls); only the deeper shadow is the banner's own. */
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+}
+
+/* Thin progress line: scales instead of animating width, so it's compositor-only. */
+.progress-track {
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background-color: color-mix(in srgb, var(--color-fab-on-surface) 18%, transparent);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background-color: var(--color-fab-on-surface);
+  transform-origin: left center;
+  transition: transform var(--motion-duration-long) var(--motion-ease-emphasized);
+}
+
+.title-swap-enter-active,
+.title-swap-leave-active {
+  transition:
+    opacity var(--motion-duration-short) var(--motion-ease-standard),
+    transform var(--motion-duration-short) var(--motion-ease-emphasized);
+}
+
+.title-swap-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.title-swap-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+/* The banner is always the map-control surface, so "finish" is a ghost button in
+   that surface's on-color — never the variant's secondary fill (a tonal fill under
+   the white label was unreadable). The extra class out-specifies BaseButton's
+   variant rules regardless of stylesheet order. */
+.tour-banner .finish-btn {
+  background-color: transparent;
+  border-color: var(--color-contrast-outline);
+  color: var(--color-fab-on-surface);
+}
+
+@media (hover: hover) {
+  .tour-banner .finish-btn:hover {
+    background-color: var(--color-contrast-surface);
+    border-color: var(--color-contrast-outline-strong);
+  }
+}
+
+.tour-banner .finish-btn:active {
+  background-color: var(--color-contrast-surface);
+  border-color: var(--color-contrast-outline-strong);
+}
+
+.step-title {
+  display: block;
+  /* Full banner width, wrapping at word boundaries — there's room now, so a
+     long label breaks between words (never mid-word). */
+  width: 100%;
+  text-align: center;
+  line-height: 1.25;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-fab-on-surface);
+}
+
+.progress {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-fab-on-surface);
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+}
+
+.nav-btn {
+  color: var(--color-fab-on-surface);
+}
+
+@media (hover: hover) {
+  .nav-btn:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--color-fab-surface-strong) 60%, transparent);
+  }
+}
+
+.nav-btn:active:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-fab-surface-strong) 60%, transparent);
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.nav-btn {
+  transition:
+    opacity var(--motion-duration-short) var(--motion-ease-standard),
+    background-color var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+/* Forward is the primary action: a filled circle in the on-colour. */
+.tour-banner .nav-btn--next:not(:disabled) {
+  background-color: var(--color-fab-on-surface);
+  color: var(--color-fab-surface);
+}
+
+@media (hover: hover) {
+  .tour-banner .nav-btn--next:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--color-fab-on-surface) 88%, transparent);
+  }
+}
+
+/* Slide/fade in from the top (Transition name="tour-slide" in map-page). */
+.tour-slide-enter-active,
+.tour-slide-leave-active {
+  transition:
+    transform var(--motion-duration-medium) var(--motion-ease-emphasized),
+    opacity var(--motion-duration-medium) var(--motion-ease-standard);
+}
+
+.tour-slide-enter-from,
+.tour-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-16px) scale(0.98);
+}

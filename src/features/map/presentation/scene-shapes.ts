@@ -14,8 +14,9 @@ import {
 import { loadGpxTrack } from '@/features/tours/data/services/gpx-track-service';
 import { isSameGoal } from '@/features/tours/domain/distance';
 import type { Tour } from '@/features/tours/domain/entities/tour';
+import { flownWhole } from '@/features/tours/domain/legs';
 import { outingGaps } from '@/features/tours/domain/outing';
-import { progressNearest, trackLines } from '@/features/tours/domain/route-metrics';
+import { groundLine, progressNearest, trackLines } from '@/features/tours/domain/route-metrics';
 import { outingDetailMarkers } from '@/features/tours/domain/tour-detail-markers';
 
 import {
@@ -104,25 +105,35 @@ export function useFocusLines(focus: readonly Tour[], outing: boolean): Lines {
       const down = tour.legs?.descent ?? tour.tourTypes;
       const track = tour.gpxFilepath ? tracks[tour.id] : undefined;
       if (tour.gpxFilepath && (!track || track.path !== tour.gpxFilepath)) continue;
+      let straight = tour;
       if (track?.lines?.length) {
         // One line splits at the goal; a track in pieces can't tell which piece is the way down.
-        const [only] = track.lines;
+        // A way flown whole leaves the line there and runs straight (`flownWhole`).
+        const flown = flownWhole(tour);
+        const lines =
+          track.lines.length === 1 ? [groundLine(track.lines[0]!, tour.goal, flown)] : track.lines;
+        const [only] = lines;
         const split =
-          tour.legs && only && track.lines.length === 1
+          tour.legs && only && lines.length === 1
             ? {
                 at: progressNearest(only, tour.goal),
                 colors: colorsOf(down, TOUR_TYPE_TRACK_COLORS),
               }
             : undefined;
-        for (const line of track.lines) {
+        for (const line of lines.filter((l) => l.length > 1)) {
           add(bandLine(line, colorsOf(up, TOUR_TYPE_TRACK_COLORS), split), {
             width: outing ? 3 : 4,
             casing: true,
           });
         }
-        continue;
+        if (lines.length > 1 || (!flown.up && !flown.down)) continue;
+        straight = {
+          ...tour,
+          startPoint: flown.up ? tour.startPoint : null,
+          endPoint: flown.down ? tour.endPoint : null,
+        };
       }
-      for (const leg of connectorLegs(tour, up, down)) {
+      for (const leg of connectorLegs(straight, up, down)) {
         add(bandLine(leg.coordinates, leg.colors), { width: 3, opacity: 0.85 });
         features.push({
           type: 'Feature',

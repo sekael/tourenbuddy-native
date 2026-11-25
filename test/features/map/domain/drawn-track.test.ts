@@ -1,6 +1,7 @@
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import {
   draggedLine,
+  goalShare,
   legsAlong,
   routeStops,
   trackFromLine,
@@ -198,5 +199,43 @@ describe('draggedLine', () => {
 
   it('should give no line before there is a leg (a lone goal)', () => {
     expect(draggedLine([], { point: 0 }, finger)).toEqual([]);
+  });
+});
+
+describe('goalShare', () => {
+  const [a, b, c]: LngLat[] = [
+    [7.8, 46.5],
+    [7.81, 46.5],
+    [7.83, 46.5],
+  ];
+  const legs = [
+    [a, b],
+    [b, c],
+  ];
+
+  it('should measure the way to the goal as a share of the whole line', () => {
+    expect(goalShare({ points: [a, b, c], legs, goal: 1 })).toBeCloseTo(1 / 3, 2);
+  });
+
+  it('should have no share without a way on from the goal, or without a goal', () => {
+    expect(goalShare({ points: [a, b, c], legs, goal: 2 })).toBeNull();
+    expect(goalShare({ points: [a, b, c], legs })).toBeNull();
+  });
+
+  it('should turn a saved track, which names no goal, at its point nearest the tour goal', () => {
+    // Out and back: up to c, back to a.
+    const outAndBack = {
+      points: [a, c, a],
+      legs: [
+        [a, b, c],
+        [c, b, a],
+      ] as LngLat[][],
+    };
+    expect(goalShare(outAndBack, { lng: 7.83, lat: 46.5 })).toBeCloseTo(0.5, 2);
+    // A drawing that names its goal keeps it, wherever the tour goal lies.
+    expect(goalShare({ points: [a, b, c], legs, goal: 1 }, { lng: 7.83, lat: 46.5 })).toBeCloseTo(
+      1 / 3,
+      2,
+    );
   });
 });

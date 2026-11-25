@@ -20,9 +20,8 @@ const palette = {
   blue700: '#1d4ed8',
   blue900: '#1e3a8a',
   red600: '#dc2626',
-  swisstopoRed: '#e3061b',
+  gray800: '#1f2937',
   green800: '#166534',
-  orange500: '#f97316',
   amber700: '#b45309',
 } as const;
 
@@ -39,8 +38,11 @@ export const color = {
   // Floating controls over the map (Android and web): brand blue with white glyphs.
   fab: palette.blue700,
   onFab: palette.white,
-  /** A picked ski route on the map: orange, since swisstopo draws the routes themselves blue. */
-  trailHighlight: palette.orange500,
+  /**
+   * A picked ski route on the map: the drawing pen's dark slate, no activity's colour and none of
+   * swisstopo's blue routes (owner, 2026-11-24; the PWA's orange read as the glider's).
+   */
+  trailHighlight: palette.gray800,
   /** A blue glass chip (iOS, a layer switch that's on): blue enough for white glyphs over snow. */
   fabGlass: 'rgba(29, 78, 216, 0.7)',
   /**
@@ -75,9 +77,6 @@ export const color = {
   success: palette.green800,
   /** Needs the user's eye, nothing broke (a number an import couldn't add); 4.5:1 on white. */
   warning: palette.amber700,
-  /** A terrain profile's line, as the swisstopo app draws it under a tour. */
-  elevation: palette.swisstopoRed,
-  elevationFill: 'rgba(227, 6, 27, 0.12)',
   /** Text over photos, under `scrim`. */
   onContrast: palette.white,
   backdrop: 'rgba(15, 23, 42, 0.35)',

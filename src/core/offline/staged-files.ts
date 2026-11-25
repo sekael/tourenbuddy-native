@@ -1,4 +1,4 @@
-import { cachedUri, stageFileText, unstageFile } from './file-cache';
+import { cachedUri, dropStagedFile, stageFileText, unstageFile } from './file-cache';
 import { tables } from './tables';
 
 /**
@@ -18,6 +18,12 @@ export async function isPendingUpload(key: string): Promise<boolean> {
 export async function clearPendingUpload(key: string): Promise<void> {
   await (await tables()).delete('cache', `pending-upload:${key}`);
   unstageFile(key);
+}
+
+/** A staged file given up before its replay: marker and bytes go, nothing uploads. */
+export async function discardStaged(key: string): Promise<void> {
+  await (await tables()).delete('cache', `pending-upload:${key}`);
+  dropStagedFile(key);
 }
 
 /** The staged file's local URI, for the upload on replay. */

@@ -1,0 +1,141 @@
+/* Ported from the PWA's features/map/presentation/components/map-action-overlay.vue (scoped style). */
+.overlay {
+  /* fixed (not absolute) so position tracks the visual viewport in mobile
+     browsers — keeps the speed-dial above Android system nav and Brave/Chrome
+     bottom chrome, not buried under page-root 100lvh. */
+  position: fixed;
+  /* Docked at the screen edge, level with the location picker: floating higher, the controls
+     blocked a band of live map (objectives) instead of the edge. */
+  bottom: calc(var(--spacing-lg) + var(--safe-bottom));
+  right: calc(var(--spacing-lg) + var(--safe-right));
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  align-items: flex-end;
+  z-index: 15;
+  /* Only the controls and the backdrop take taps: a tap anywhere else — gaps,
+     the space beside the layers panel — lands on the backdrop (open)
+     or the map (closed). */
+  pointer-events: none;
+}
+
+.overlay :global(button) {
+  pointer-events: auto;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: transparent;
+  pointer-events: auto;
+}
+
+.legend-anchor {
+  position: fixed;
+  left: calc(var(--spacing-lg) + var(--safe-left));
+  /* Centred on the 52 px tour bar. */
+  bottom: calc(var(--spacing-lg) + var(--safe-bottom) + 6px);
+}
+
+.legend-fab {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.legend-panel {
+  position: fixed;
+  left: calc(var(--spacing-lg) + var(--safe-left));
+  bottom: calc(var(--spacing-lg) + var(--safe-bottom) + 52px + var(--spacing-sm));
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  pointer-events: auto;
+  max-width: min(320px, calc(100vw - 2 * var(--spacing-lg)));
+  max-height: calc(100dvh - 160px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y: auto;
+  animation: dial-rise var(--motion-duration-medium) var(--motion-ease-emphasized) backwards;
+}
+
+.legend-heading {
+  margin: 0 0 var(--spacing-xs);
+  color: var(--color-fab-on-surface);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.compass-fab {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  transition:
+    background-color var(--motion-duration-medium) var(--motion-ease-standard),
+    transform var(--motion-duration-short) var(--motion-ease-spring);
+}
+
+@media (hover: hover) {
+  .compass-fab:hover {
+    background-color: var(--color-fab-glass-strong);
+  }
+}
+
+.compass-fab:active {
+  background-color: var(--color-fab-glass-strong);
+}
+
+.compass-fab:active:not(:disabled) {
+  transform: scale(var(--press-scale));
+}
+
+.compass-icon {
+  transition: transform var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+/* Expanding menus unfold from where they were opened: the speed-dial items rise
+   from the trigger one after another, nearest first; the layers panel rises in
+   their place. Closing is one quiet fade. The items animate
+   on mount (they mount only when a menu opens) rather than under
+   `dial-enter-active`: the Transition root has no transition of its own, so Vue
+   would drop that class after one frame and cut the animation short. */
+.overlay :global(.item-row) {
+  animation: dial-rise var(--motion-duration-medium) var(--motion-ease-emphasized) backwards;
+  animation-delay: calc(var(--ri) * var(--motion-stagger));
+}
+
+.dial-leave-active {
+  transition: opacity var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.dial-leave-to {
+  opacity: 0;
+}
+
+@keyframes dial-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-offset)) scale(0.96);
+  }
+}
+
+:global(.trigger--overlay-active .fab) {
+  opacity: 0.45;
+  cursor: default;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Menu fans as a quarter-circle arc around the trigger so it doesn't overlap
+     the bottom-center tour action pill. Trigger stays at bottom-right. */
+  .overlay {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+}

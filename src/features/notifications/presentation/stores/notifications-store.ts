@@ -19,6 +19,7 @@ import type {
   NotificationPreferences,
   NotificationType,
 } from '@/features/notifications/domain/entities/notification-preferences';
+import { webPush } from './web-push';
 
 /**
  * Notification settings (notifications, native-push): email and the muted types, synced with
@@ -165,7 +166,11 @@ export const useNotificationsStore = create<NotificationsState>()((set, get) => 
   };
 
   const refreshPermission = async () => {
-    if (Platform.OS === 'web') return 'denied' as const;
+    if (Platform.OS === 'web') {
+      const permission = webPush.permission();
+      set({ permission });
+      return permission;
+    }
     const { status } = await Notifications.getPermissionsAsync();
     set({ permission: status as PushPermission });
     return status as PushPermission;
@@ -217,7 +222,20 @@ export const useNotificationsStore = create<NotificationsState>()((set, get) => 
     },
 
     setPushEnabled: async (enabled) => {
-      if (!uid() || !isReachable() || Platform.OS === 'web') return;
+      if (!uid() || !isReachable()) return;
+      if (Platform.OS === 'web') {
+        // This browser only, never queued (the PWA's toggle): subscribing needs the network.
+        if (enabled) {
+          set({ pushPending: true });
+          const on = await webPush.subscribe();
+          set({ pushEnabled: on, pushPending: false });
+          await refreshPermission();
+        } else {
+          await webPush.unsubscribe();
+          set({ pushEnabled: false });
+        }
+        return;
+      }
       try {
         if (!enabled) {
           await deleteToken();
@@ -248,7 +266,11 @@ export const useNotificationsStore = create<NotificationsState>()((set, get) => 
     },
 
     ensurePushToken: async () => {
-      if (Platform.OS === 'web') return;
+      if (Platform.OS === 'web') {
+        await refreshPermission();
+        set({ pushEnabled: await webPush.ensureSubscription() });
+        return;
+      }
       try {
         const [permission, token] = await Promise.all([
           refreshPermission(),
@@ -268,7 +290,9 @@ export const useNotificationsStore = create<NotificationsState>()((set, get) => 
     removeThisDevice: async () => {
       // Bounded: sign-out must not hang on a slow network.
       await Promise.race([
-        deleteToken().catch((error) => log.warn('Removing the push token failed', error)),
+        Platform.OS === 'web'
+          ? webPush.unsubscribe()
+          : deleteToken().catch((error) => log.warn('Removing the push token failed', error)),
         new Promise((resolve) => setTimeout(resolve, 3000)),
       ]);
       set({ pushEnabled: false });

@@ -1,5 +1,6 @@
 import {
   estimatedMinutes,
+  groundLine,
   labelMinutes,
   pointMetrics,
   progressNearest,
@@ -267,6 +268,31 @@ describe('routeMetrics of a split tour (activity-legs)', () => {
       ascent: 1400,
       descent: 1400,
     });
+  });
+});
+
+describe('groundLine', () => {
+  // Out and back: up to the goal at 8.02, back down the same way.
+  const outAndBack = [
+    [8, 46.6],
+    [8.01, 46.6],
+    [8.02, 46.6],
+    [8.01, 46.6],
+    [8, 46.6],
+  ];
+  const goal = { lng: 8.02, lat: 46.6 };
+
+  it('should end the line at the goal when the way down is flown whole', () => {
+    expect(groundLine(outAndBack, goal, { up: false, down: true })).toEqual(outAndBack.slice(0, 3));
+  });
+
+  it('should start the line at the goal when the way up is flown whole', () => {
+    expect(groundLine(outAndBack, goal, { up: true, down: false })).toEqual(outAndBack.slice(2));
+  });
+
+  it('should leave only the goal for a day flown both ways, and the whole line for none', () => {
+    expect(groundLine(outAndBack, goal, { up: true, down: true })).toEqual([[8.02, 46.6]]);
+    expect(groundLine(outAndBack, goal, { up: false, down: false })).toEqual(outAndBack);
   });
 });
 

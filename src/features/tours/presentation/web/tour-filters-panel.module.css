@@ -1,0 +1,114 @@
+/* Ported from the PWA's features/tours/presentation/components/tour-filters-panel.vue (scoped style). */
+.filters-panel {
+  /* Glove-sized targets: filters get tapped outdoors, often with cold or gloved hands. */
+  --chip-min-height: 44px;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding-block: var(--spacing-sm);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.filter-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--field-label-color);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  /* One chip row's height even while empty (owners not yet named). */
+  min-height: var(--chip-min-height);
+}
+
+.scale-icon {
+  flex: none;
+  align-self: center;
+  width: 24px;
+  color: var(--color-on-surface-variant);
+}
+
+/* Short labels ("T3", "ZS"): one grid row per scale, columns shared by every scale, so the
+   longest — seven alpine grades — fits one row in a phone sheet and the desktop drawer alike and
+   the scales line up. Doubled class: `.chip` below sets the `padding` shorthand and would win on
+   source order. */
+.chip-row.chip-row--grades {
+  display: grid;
+  grid-template-columns: 24px repeat(7, minmax(0, 1fr));
+  gap: var(--spacing-xxs);
+}
+
+.chip.chip--grade {
+  min-width: 0;
+  padding-inline: 0;
+}
+
+.chip {
+  padding: var(--chip-padding);
+  border-radius: var(--chip-radius);
+  border: 1.5px solid var(--color-outline-variant);
+  font-size: var(--chip-font-size);
+  color: var(--chip-color);
+  transition:
+    background-color var(--motion-duration-short) var(--motion-ease-standard),
+    color var(--motion-duration-short) var(--motion-ease-standard),
+    border-color var(--motion-duration-short) var(--motion-ease-standard);
+  cursor: pointer;
+  min-height: var(--chip-min-height);
+}
+
+.chip.active {
+  background-color: var(--chip-selected-bg);
+  border-color: var(--chip-selected-border-color);
+  color: var(--chip-selected-color);
+}
+
+@media (hover: hover) {
+  .chip:hover:not(.active) {
+    background-color: var(--color-surface-variant);
+  }
+}
+
+.chip:active:not(.active) {
+  background-color: var(--color-surface-variant);
+}
+
+.date-row {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.date-field {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.date-label-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.date-input {
+  min-height: var(--chip-min-height);
+  border: 1.5px solid var(--color-outline-variant);
+  border-radius: var(--input-radius);
+  padding: var(--spacing-xxs) var(--spacing-sm);
+  font-size: var(--font-size-base);
+  color: var(--color-on-surface);
+  background: var(--input-bg);
+}
+
+/* Status: the same glove-sized target as the chips (track padding adds the rest). */
+.segmented > .segment {
+  min-height: 40px;
+}

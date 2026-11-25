@@ -1,5 +1,6 @@
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import { haversineMeters } from '@/core/utils/haversine';
+import { progressNearest } from '@/features/tours/domain/route-metrics';
 
 /** A track drawn on the map: the points the user set and the way between each two. */
 export interface DrawnTrack {
@@ -86,6 +87,25 @@ export function trackLine({ points, legs }: DrawnTrack): LngLat[] {
 /** Metres along the line. */
 export function lineLength(line: readonly LngLat[]): number {
   return line.reduce((sum, p, i) => (i > 0 ? sum + haversineMeters(line[i - 1]!, p) : sum), 0);
+}
+
+/**
+ * Share (0–1) of the line's length at its goal; null without a way on from the goal. A line that
+ * doesn't name its goal (a saved or picked track) turns at its point nearest the tour's `at`, as
+ * the saved track does on the map.
+ */
+export function goalShare(
+  track: DrawnTrack,
+  at?: { lng: number; lat: number } | null,
+): number | null {
+  const { goal, points, legs } = track;
+  const line = trackLine(track);
+  if (goal == null) return at && line.length > 1 ? progressNearest(line, at) : null;
+  const total = lineLength(line);
+  return goal != null && goal < points.length - 1 && total > 0
+    ? lineLength(trackLine({ points: points.slice(0, goal + 1), legs: legs.slice(0, goal) })) /
+        total
+    : null;
 }
 
 /** The point `share` (0–1) of the way along `line`. */

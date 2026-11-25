@@ -1,0 +1,46 @@
+/* Ported from the PWA's features/map/presentation/components/speed-dial-item.vue (scoped style). */
+.item-row {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-height: 48px;
+  /* 15px + 1px border + half the 20px icon = 26px: every icon centres on the
+     52px trigger's vertical axis, so the menu reads as one column. */
+  padding: 0 15px 0 var(--spacing-lg);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  transition:
+    background-color var(--motion-duration-short) var(--motion-ease-standard),
+    opacity var(--motion-duration-medium) var(--motion-ease-standard),
+    transform var(--motion-duration-short) var(--motion-ease-spring);
+}
+
+@media (hover: hover) {
+  .item-row:hover:not(:disabled) {
+    background-color: var(--color-fab-glass-strong);
+  }
+}
+
+.item-row:active:not(:disabled) {
+  background-color: var(--color-fab-glass-strong);
+}
+
+.item-row:active:not(:disabled) {
+  transform: scale(var(--press-scale));
+}
+
+.item-row:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.icon-wrap {
+  display: flex;
+}
+
+.icon {
+  font-size: var(--icon-size-md);
+}

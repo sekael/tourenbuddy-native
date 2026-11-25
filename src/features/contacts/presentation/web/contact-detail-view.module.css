@@ -1,0 +1,424 @@
+/* Ported from the PWA's features/contacts/presentation/components/contact-detail-view.vue (scoped style). */
+.detail-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.hero-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-xxs);
+}
+
+.hero-subtitle {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+}
+
+.hero-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.hero-status--friend {
+  color: var(--color-friend);
+}
+
+.hero-status--blocked {
+  color: var(--color-error);
+}
+
+/* Field actions: equal tiles, icon over label, glove-sized. */
+.quick-actions {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.quick-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xxs);
+  min-height: 64px;
+  padding: var(--spacing-sm) var(--spacing-xs);
+  border-radius: var(--radius-md);
+  background-color: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+  text-decoration: none;
+  transition:
+    background-color var(--motion-duration-short) var(--motion-ease-standard),
+    transform var(--motion-duration-short) var(--motion-ease-spring);
+}
+
+@media (hover: hover) {
+  .quick-action:hover {
+    background-color: var(--color-secondary-container-hover);
+  }
+}
+
+.quick-action:active {
+  background-color: var(--color-secondary-container-hover);
+  transform: scale(var(--press-scale));
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding-bottom: var(--spacing-md);
+}
+
+.section:last-child {
+  border-bottom: none;
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--heading-section-size);
+  font-weight: var(--heading-section-weight);
+  color: var(--heading-section-color);
+  letter-spacing: var(--heading-section-tracking);
+}
+
+.view-value {
+  font-size: var(--font-size-base);
+  color: var(--color-on-surface);
+}
+
+.view-label-sm {
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  color: var(--field-label-color);
+}
+
+.required {
+  color: var(--color-error);
+}
+
+.input {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1.5px solid var(--color-outline-variant);
+  border-radius: var(--input-radius);
+  font-size: var(--font-size-base);
+  color: var(--color-on-surface);
+  background-color: var(--input-bg);
+  outline: none;
+  transition:
+    border-color var(--motion-duration-medium) var(--motion-ease-standard),
+    background-color var(--motion-duration-medium) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-medium) var(--motion-ease-standard);
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+  background-color: var(--input-bg-focus);
+  box-shadow: var(--input-focus-ring);
+}
+
+.input-sm {
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.input--warning {
+  border-color: var(--color-warning);
+}
+
+.invalid-phone-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--color-warning-text);
+}
+
+.warn-icon {
+  font-size: var(--font-size-sm);
+}
+
+.error-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+}
+
+.duplicate-disclaimer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-variant);
+}
+
+.duplicate-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+}
+
+.duplicate-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.duplicate-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+}
+
+/* save/cancel/delete-confirm now use shared BaseButton. */
+
+.empty-methods {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.phone-methods,
+.phone-method {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* Deliberately slow so the eye can follow a promoted phone to the top (#320).
+   Durations come from use-primary-switch-sequence, which times the steps in JS. */
+.phone-move {
+  transition: transform var(--phone-move) var(--motion-ease-emphasized);
+}
+
+/* The promoted phone (now first) crosses over the one it displaces. */
+.phone-move:first-child {
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phone-move {
+    transition: none;
+  }
+}
+
+.method-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  outline: 1px solid transparent;
+  outline-offset: var(--spacing-xxs);
+  transition:
+    background-color var(--phone-fade, var(--motion-duration-medium)) var(--motion-ease-standard),
+    box-shadow var(--phone-fade, var(--motion-duration-medium)) var(--motion-ease-standard),
+    outline-color var(--phone-fade, var(--motion-duration-medium)) var(--motion-ease-standard);
+}
+
+/* Soft highlight drawn outside the box (spread tint + offset hairline), so rows
+   never shift. A separate outline, not a second shadow ring: a ring under the
+   translucent tint would show through it as one thick band. */
+.method-row--primary {
+  --primary-tint: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  background-color: var(--primary-tint);
+  box-shadow: 0 0 0 var(--spacing-xxs) var(--primary-tint);
+  outline-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+.primary-star {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-round);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-outline-variant);
+  flex-shrink: 0;
+  margin-top: 4px;
+  transition: color var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.primary-star :global(.base-icon) {
+  font-size: var(--icon-size-sm);
+}
+
+.primary-star--selected {
+  color: var(--color-primary);
+}
+
+@media (hover: hover) {
+  button.primary-star:hover {
+    color: var(--color-primary);
+  }
+}
+
+button.primary-star:active {
+  color: var(--color-primary);
+}
+
+.method-type-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-round);
+  background-color: var(--color-surface-variant);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: background-color var(--phone-fade, var(--motion-duration-medium)) var(--motion-ease-standard);
+}
+
+/* The badge's fill is about the primary tint's colour and would vanish into it. */
+.method-row--primary .method-type-badge {
+  background-color: var(--color-background);
+}
+
+.method-type-badge :global(.base-icon) {
+  font-size: var(--icon-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.method-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+
+/* Read-only value centres on the badge and star (edit mode stays top-aligned
+   with its inputs) */
+.method-fields--view {
+  min-height: 40px;
+  justify-content: center;
+  gap: 0;
+}
+
+.method-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.method-delete-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-error);
+  background-color: color-mix(in srgb, var(--color-error) 6%, transparent);
+}
+
+/* Text BaseButton; only its left-align lives here. */
+.add-method-btn {
+  align-self: flex-start;
+}
+
+.add-method-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-variant);
+}
+
+.type-selector {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.type-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-outline-variant);
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  transition: all var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.type-btn :global(.base-icon) {
+  font-size: var(--icon-size-xs);
+}
+
+.type-btn--active {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.add-method-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+}
+
+.section--actions {
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+}
+
+.delete-confirm-text {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-error);
+}
+
+.delete-friend-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.delete-friend-warning .warn-icon {
+  font-size: var(--icon-size-xs);
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-warning);
+}
+
+/* Equal-width cancel/confirm (point 7: button groups same size). */
+.delete-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+}

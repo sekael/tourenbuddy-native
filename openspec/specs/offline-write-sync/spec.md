@@ -196,7 +196,7 @@ On iOS and Android offline mutations SHALL be stored in the app's database with 
 - **THEN** one entry holds the last state and one write replays
 
 ### Requirement: The outbox survives the app on native
-The outbox SHALL survive the app being killed and drain when the device becomes reachable, when the app returns to the foreground and when Realtime subscribes. Writes on the web SHALL never queue: they fail with a clear message while offline. A queue left by a signed-out user SHALL never replay under another user.
+The outbox SHALL survive the app being killed and drain when the device becomes reachable, when the app returns to the foreground and when Realtime subscribes. On the web it SHALL survive a closed tab or browser the same way, kept in the browser's storage. A queue left by a signed-out user SHALL never replay under another user.
 
 #### Scenario: Kill during drain
 - **WHEN** the app is killed while replaying queued writes and started again online

@@ -1,0 +1,6 @@
+/* Ported from the PWA's core/components/base-tooltip.vue (scoped style). */
+.tooltip-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,0 +1,92 @@
+/* Ported from the PWA's features/map/presentation/components/trail-card.vue (scoped style). */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+}
+
+.hero,
+.actions,
+.no-info,
+.credit {
+  margin: 0;
+  padding: 0 var(--spacing-md);
+}
+
+/* The tour sheet's hero, in small: disc, then altitude, route name and facts. */
+.hero {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+.hero-badge {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+}
+
+.hero-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-xxs);
+  min-width: 0;
+}
+
+.hero-headline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-on-surface);
+}
+
+.hero-headline-icon {
+  color: var(--color-on-surface-variant);
+}
+
+.hero-name {
+  color: var(--color-on-surface);
+}
+
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-xxs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.fact {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  white-space: nowrap;
+}
+
+/* Side by side when both labels fit, else stacked full width — the plan first. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.actions > * {
+  flex: 1 1 auto;
+}
+
+.no-info {
+  color: var(--color-on-surface-variant);
+}
+
+.credit {
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+}

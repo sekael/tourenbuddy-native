@@ -1,0 +1,25 @@
+/* Ported from the PWA's core/components/base-tooltip.vue (global style). */
+.tooltip-bubble {
+  position: fixed;
+  background-color: var(--color-on-surface);
+  color: var(--color-surface);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  padding: var(--spacing-xxs) var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  max-width: 200px;
+  white-space: normal;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+  z-index: 9999;
+
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.tooltip-bubble--visible {
+  opacity: 1;
+  visibility: visible;
+}

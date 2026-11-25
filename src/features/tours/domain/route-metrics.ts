@@ -1,7 +1,7 @@
 import type { Tour } from '@/features/tours/domain/entities/tour';
 import { haversineMeters } from '@/core/utils/haversine';
 import { isSameGoal } from '@/features/tours/domain/distance';
-import { flight } from '@/features/tours/domain/legs';
+import { flight, flownWhole } from '@/features/tours/domain/legs';
 
 /**
  * A route's numbers (design D19): what a guide plans by, derived from data the tour already
@@ -101,6 +101,20 @@ function lineLength(line: readonly GeoJSON.Position[]) {
   );
 }
 
+/**
+ * A track line without its ways flown whole, cut at the vertex nearest the goal: the flight is
+ * drawn straight instead (`flownWhole`). The line itself when no way is flown whole.
+ */
+export function groundLine(
+  line: readonly GeoJSON.Position[],
+  goal: LngLat,
+  flown: { up: boolean; down: boolean },
+): GeoJSON.Position[] {
+  if (!flown.up && !flown.down) return [...line];
+  const cut = nearestVertex(line, goal);
+  return line.slice(flown.up ? cut : 0, flown.down ? cut + 1 : line.length);
+}
+
 /** Share of the line's length (0–1) at its vertex nearest `point`; 0 for a line without length. */
 export function progressNearest(line: readonly GeoJSON.Position[], point: LngLat): number {
   const total = lineLength(line);
@@ -174,8 +188,10 @@ export function flownTrackMetrics(
   track: GeoJSON.FeatureCollection,
 ): RouteMetrics | null {
   const geometry = track.features.length === 1 ? track.features[0]!.geometry : null;
-  const flown = flight({ tourTypes: tour.tourTypes ?? [], legs: tour.legs });
-  const [upFlown, downFlown] = [flown.up?.length === 1, flown.down?.length === 1];
+  const { up: upFlown, down: downFlown } = flownWhole({
+    tourTypes: tour.tourTypes ?? [],
+    legs: tour.legs,
+  });
   if (!tour.goal || geometry?.type !== 'LineString' || !(upFlown || downFlown)) return null;
   const line = geometry.coordinates;
   const cut = nearestVertex(line, tour.goal);

@@ -1,0 +1,52 @@
+/* Ported from the PWA's features/calendar/presentation/components/calendar-feed-row.vue (scoped style). */
+/* Every feed is a tile; a failing one turns to the error container */
+.feed {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-variant);
+}
+
+.feed-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.label-input {
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+}
+
+.label-input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.host,
+.status {
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed--error {
+  background-color: var(--color-error-container);
+}
+
+.status--error {
+  display: flex;
+  gap: var(--spacing-xxs);
+  align-items: flex-start;
+  color: var(--color-error-text);
+  white-space: normal;
+}

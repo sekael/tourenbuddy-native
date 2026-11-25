@@ -1,0 +1,110 @@
+name: Web preview
+
+# Each pull request's web build on the Pages project `tourenbuddy-native`, at its branch alias
+# (`<branch>.tourenbuddy-native.pages.dev`, allowed by the Worker's CORS), removed once closed.
+# Ported from the Vue repository's deploy-preview.yml and cleanup-preview.yml. Skips with a notice
+# until its secrets exist (docs/publishing.md, "Web").
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, closed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    # Fork pull requests get no secrets.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: web-preview-${{ github.head_ref }}
+      cancel-in-progress: true
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PROJECT: tourenbuddy-native
+    steps:
+      - id: check
+        # Via env, never `${{ }}` inside `run:`: a branch named `x$(cmd)` would execute.
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ] || [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::notice::Web preview skipped: set CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, SUPABASE_URL and SUPABASE_ANON_KEY (docs/publishing.md)."
+            exit 0
+          fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+          # Pages branch aliases: lowercase letters, digits and dashes, at most 28 characters.
+          slug=$(echo "$HEAD_REF" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | cut -c1-28 | sed 's/-*$//')
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+
+      - if: steps.check.outputs.ready && github.event.action != 'closed'
+        uses: actions/checkout@v7
+      - if: steps.check.outputs.ready && github.event.action != 'closed'
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - if: steps.check.outputs.ready && github.event.action != 'closed'
+        run: npm ci
+      - if: steps.check.outputs.ready && github.event.action != 'closed'
+        run: npm run build:web
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_NOTIFY_HOOK_URL: ${{ secrets.NOTIFY_HOOK_URL }}
+          EXPO_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          EXPO_PUBLIC_BUILD_COMMIT: ${{ github.event.pull_request.head.sha }}
+      - if: steps.check.outputs.ready && github.event.action != 'closed'
+        id: deploy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ env.PROJECT }} --branch=${{ steps.check.outputs.slug }}
+      - if: steps.check.outputs.ready && github.event.action != 'closed'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: web-preview
+          message: |
+            ### Web preview
+
+            ${{ steps.deploy.outputs.pages-deployment-alias-url || steps.deploy.outputs.deployment-url }}
+
+            Connected to the **production** backend (Supabase, Worker, push): use throwaway accounts and clean up after.
+
+            Commit: ${{ github.event.pull_request.head.sha }}
+
+      # Closed: delete the branch's deployments, the alias with them (`force=true`).
+      - if: steps.check.outputs.ready && github.event.action == 'closed'
+        env:
+          SLUG: ${{ steps.check.outputs.slug }}
+        run: |
+          set -euo pipefail
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PROJECT"
+          page=1
+          while :; do
+            resp=$(curl -sf -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api/deployments?env=preview&page=$page&per_page=25")
+            ids=$(echo "$resp" | jq -r --arg slug "$SLUG" '.result[] | select(.deployment_trigger.metadata.branch == $slug) | .id')
+            for id in $ids; do
+              curl -sf -X DELETE -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api/deployments/$id?force=true" > /dev/null
+              echo "Deleted $id"
+            done
+            # Deleting shifts the later deployments onto this page: read it again before moving on.
+            [ -n "$ids" ] && continue
+            [ "$(echo "$resp" | jq '.result | length')" -lt 25 ] && break
+            page=$((page + 1))
+          done
+      - if: steps.check.outputs.ready && github.event.action == 'closed'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: web-preview
+          message: |
+            ### Web preview
+
+            Removed: the pull request is closed.

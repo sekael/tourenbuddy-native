@@ -1,0 +1,382 @@
+/* Ported from the PWA's features/tours/presentation/components/tour-info-sheet.vue (scoped style). */
+/* ── View mode ──────────────────────────────────────────────────────────────── */
+/* The activity colours are the view's only colour (hero badge, activity chips): controls,
+   cards and links inside go neutral, so no blue, red or amber reads as an activity. */
+.details,
+.view-actions {
+  --color-primary: var(--color-inverse-surface);
+  --color-primary-dark: var(--color-on-surface);
+  --color-surface-variant: var(--color-neutral-container);
+  --color-secondary-container: var(--color-neutral-container);
+  --color-secondary-container-hover: var(--color-neutral-container-hover);
+  --color-on-secondary-container: var(--color-on-surface);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.view-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-sm);
+}
+
+.split-btn {
+  align-self: stretch;
+}
+
+.edit-delete-row {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--chip-radius);
+  min-height: var(--chip-min-height);
+  background-color: var(--color-secondary-container);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-secondary-container);
+  transition:
+    background-color var(--motion-duration-short) var(--motion-ease-standard),
+    color var(--motion-duration-short) var(--motion-ease-standard),
+    transform var(--motion-duration-short) var(--motion-ease-spring);
+}
+
+.action-btn:active:not(:disabled) {
+  transform: scale(var(--press-scale));
+}
+
+.suggestion-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+}
+
+@media (hover: hover) {
+  .action-btn:hover:not(:disabled) {
+    background-color: var(--color-secondary-container-hover);
+  }
+}
+
+.action-btn:active:not(:disabled) {
+  background-color: var(--color-secondary-container-hover);
+}
+
+.action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.action-btn :global(.base-icon) {
+  font-size: 16px;
+}
+
+/* Equal-width cancel/confirm (point 7). 1fr 1fr sizes both to the wider button
+   regardless of available width — flex:1 collapses here because the footer row
+   is shrink-wrapped (no free space to distribute). */
+.delete-confirm-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+}
+
+.delete-confirm-text {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-error);
+}
+
+.delete-error {
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+}
+
+/* Owner toggles: a compact row — each pill keeps its natural width and they wrap
+   rather than squeezing a label onto two lines. Both rest in the tonal container;
+   only the non-default state (completed / private) takes its own tint. */
+.owner-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.owner-toggles > .action-btn {
+  flex: 1 1 auto;
+  justify-content: center;
+  padding-inline: var(--spacing-sm);
+}
+
+/* Each label also lays out its other state's text (zero height, hidden), so a pill is as
+   wide in both states and flipping a toggle never changes whether the row wraps. */
+.toggle-label {
+  display: inline-flex;
+  flex-direction: column;
+  text-align: start;
+}
+
+.toggle-label::after {
+  content: attr(data-alt);
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+
+.completion-toggle--done {
+  background-color: color-mix(in srgb, var(--color-success) 12%, var(--color-background));
+  color: var(--color-success-text);
+}
+
+@media (hover: hover) {
+  .completion-toggle--done:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--color-success) 20%, var(--color-background));
+  }
+}
+
+.completion-toggle--done:active:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-success) 20%, var(--color-background));
+}
+
+/* Private reads as "on" in the neutral scale — red would read as an activity. */
+.visibility-toggle--private {
+  background-color: var(--color-inverse-surface);
+  color: var(--color-on-inverse-surface);
+}
+
+@media (hover: hover) {
+  .visibility-toggle--private:hover:not(:disabled) {
+    background-color: var(--color-on-surface-variant);
+  }
+}
+
+.visibility-toggle--private:active:not(:disabled) {
+  background-color: var(--color-on-surface-variant);
+}
+
+/* Same line box as the resolved owner text, so the swap causes no reflow. Fill derives
+   from the row's own color — blends on both themes without a new token. */
+.owner-skeleton {
+  min-height: 1em;
+  width: 12ch;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, currentcolor 10%, transparent);
+  animation: owner-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes owner-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .owner-skeleton {
+    animation: none;
+  }
+}
+
+.coords {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Hero: badge + two text lines, no card ── */
+.hero {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+/* The sheet's scroll box starts flush on the hero and clips what pokes out above it: room
+   for the private stamp's overhang (-4px + its 2px ring). The drawer's padding has it already. */
+.hero--sheet {
+  padding-top: 6px;
+}
+
+.hero-badge {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+}
+
+.hero-stamp {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  /* Ring in the card colour cuts the stamp out of the badge. */
+  box-shadow: 0 0 0 2px var(--color-background);
+  color: var(--color-on-primary);
+}
+
+.hero-stamp--done {
+  right: -4px;
+  bottom: -4px;
+  background-color: var(--color-success);
+}
+
+.hero-stamp--private {
+  right: -4px;
+  top: -4px;
+  background-color: var(--color-on-surface-variant);
+}
+
+.stamp-enter-active {
+  transition:
+    transform var(--motion-duration-medium) var(--motion-ease-spring),
+    opacity var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.stamp-leave-active {
+  transition:
+    transform var(--motion-duration-short) var(--motion-ease-standard),
+    opacity var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+.stamp-enter-from,
+.stamp-leave-to {
+  transform: scale(0);
+  opacity: 0;
+}
+
+.hero-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-xxs);
+  min-width: 0;
+}
+
+.hero-line {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.hero-headline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  min-width: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-on-surface);
+}
+
+.hero-headline--date {
+  font-size: var(--font-size-lg);
+}
+
+.hero-headline-icon {
+  color: var(--color-on-surface-variant);
+}
+
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  margin-top: var(--spacing-xxs);
+  padding: 2px var(--spacing-sm);
+  border-radius: var(--chip-radius);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  background-color: color-mix(in srgb, var(--color-success) 12%, var(--color-background));
+  color: var(--color-success-text);
+}
+
+/* Groups below the fact rows (attachments, suggestions) get the fact groups' divider. */
+.group {
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--divider-color);
+}
+
+/* BaseButton (secondary) provides the look; keep the 44px touch target. */
+.gpx-download-btn {
+  min-height: 44px;
+}
+
+.partner-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.friend-partner-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--chip-min-height);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--chip-radius);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  background-color: var(--color-surface-variant);
+  color: var(--color-on-surface);
+}
+
+/* Avatar pill: initial on a neutral disc. Two
+   classes so it outranks ContactChip's own scoped `.chip` padding and border. */
+.partner-chips .partner-pill {
+  gap: var(--spacing-xs);
+  padding: 3px var(--spacing-md) 3px 3px;
+  border: none;
+  background-color: var(--color-surface-variant);
+}
+
+.partner-pill::before {
+  content: attr(data-initial);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  background-color: var(--color-neutral-container-hover);
+  color: var(--color-on-surface);
+}
+
+.friend-partner-chip--more {
+  background-color: transparent;
+  border: 1px dashed var(--color-outline-variant);
+  color: var(--color-on-surface-variant);
+  font-style: italic;
+}
+
+/* ── Edit mode ──────────────────────────────────────────────────────────────── */
+.save-error {
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+  /* Align with the sheet's content inset (now md, was xl). */
+  padding: 0 var(--spacing-md);
+  margin-bottom: calc(-1 * var(--spacing-md));
+}

@@ -1,0 +1,7 @@
+/* Ported from the PWA's features/map/presentation/components/tourenbuddy-map.vue (scoped style). */
+.map-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

@@ -43,7 +43,11 @@ deletion and calendar sync; without it those actions say they are unavailable:
 EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon key>
 EXPO_PUBLIC_NOTIFY_HOOK_URL=http://127.0.0.1:8787   # `npx wrangler dev` in services/email-hook
+EXPO_PUBLIC_VAPID_PUBLIC_KEY=<public key>            # web only: Web Push, the Worker's VAPID key
 ```
+
+The Vue repository's `.env.local` has the same values as `VITE_*`; its `.env.phone.local` has no
+counterpart here (test the web app on a phone through the pull request preview).
 
 A fourth, only for testing the update gate, replaces `https://tourenbuddy.ch/app-config.json`
 (`EXPO_PUBLIC_APP_CONFIG_URL=http://127.0.0.1:8099/app-config.json`; see

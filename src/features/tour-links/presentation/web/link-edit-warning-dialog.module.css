@@ -1,0 +1,36 @@
+/* Ported from the PWA's features/tour-links/presentation/components/link-edit-warning-dialog.vue (scoped style). */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+}
+
+.hint {
+  color: var(--color-on-surface-variant);
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: 0 var(--spacing-md) var(--spacing-md);
+}
+
+/* Desktop dialog: conventional row, actions bottom-right. */
+@media (min-width: 600px) {
+  .actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+}
+
+/* Cancel/confirm use shared BaseButton (secondary/danger). */
+
+/* Mobile bottom-sheet backdrop. Teleported to body, z-index above the edit
+   sheet (.sheet-host z-index 50) so the warning stacks on top. */
+.sheet-host--modal {
+  z-index: 60;
+}

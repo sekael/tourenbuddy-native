@@ -1,0 +1,43 @@
+/* Ported from the PWA's core/components/extended-fab.vue (scoped style). */
+/* Extended FAB: the primary action floating over a page — the primary button's
+   fill and glow at FAB height. */
+.ext-fab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  height: 52px;
+  padding: 0 var(--spacing-xl);
+  border-radius: var(--button-radius);
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  box-shadow:
+    0 8px 20px -6px rgba(37, 99, 235, 0.55),
+    var(--shadow-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-duration-medium) var(--motion-ease-standard),
+    opacity var(--motion-duration-medium) var(--motion-ease-standard),
+    transform var(--motion-duration-short) var(--motion-ease-spring);
+}
+
+@media (hover: hover) {
+  .ext-fab:hover:not(:disabled) {
+    background-color: var(--color-primary-dark);
+  }
+}
+
+.ext-fab:active:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.ext-fab:active:not(:disabled) {
+  transform: scale(var(--press-scale));
+}
+
+.ext-fab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

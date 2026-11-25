@@ -1,0 +1,19 @@
+/* Ported from the PWA's core/components/crosshair.vue (scoped style). */
+.crosshair-wrapper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.crosshair {
+  width: 40px;
+  height: 40px;
+  /* Drives the mark pass via currentColor on the `<use>`. Red over the accent blue:
+     Swisstopo renders water, glacier polygons and contour shading in cool blues, so
+     a blue reticle vanished exactly where goal placement matters most. */
+  color: var(--color-error);
+}

@@ -46,6 +46,8 @@ type State = {
   dismissTourAtSignIn: () => Promise<void>;
   saveTourStep: (n: number) => Promise<void>;
   dismissCalendarTour: () => Promise<void>;
+  /** The web's calendar feature notice (the PWA's), shown once at sign-in. */
+  dismissCalendarFeatureNotice: () => Promise<void>;
 };
 
 const uid = () => sessionUser.getState().id;
@@ -234,6 +236,10 @@ export const useUserProfileStore = create<State>()((set, get) => {
     dismissCalendarTour: () =>
       persist({ calendarTourShowOnFirstOpen: false }).catch((e) =>
         log.error('Failed to dismiss the calendar tour', e),
+      ),
+    dismissCalendarFeatureNotice: () =>
+      persist({ calendarFeatureNoticeShowAtSignIn: false }).catch((e) =>
+        log.error('Failed to dismiss the calendar feature notice', e),
       ),
   };
 });

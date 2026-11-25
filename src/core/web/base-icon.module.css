@@ -1,0 +1,26 @@
+/* Ported from the PWA's core/components/base-icon.vue (scoped style). */
+/* SVG icons are 1em square, so font-size drives their rendered size — mirroring
+   the previous icon-font default of 20px and the token-based size modifiers. */
+.base-icon {
+  font-size: 20px;
+}
+
+.base-icon--xs {
+  font-size: var(--icon-size-xs);
+}
+
+.base-icon--sm {
+  font-size: var(--icon-size-sm);
+}
+
+.base-icon--md {
+  font-size: var(--icon-size-md);
+}
+
+.base-icon--lg {
+  font-size: var(--icon-size-lg);
+}
+
+.base-icon--xl {
+  font-size: var(--icon-size-xl);
+}

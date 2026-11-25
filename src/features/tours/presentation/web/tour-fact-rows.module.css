@@ -1,0 +1,119 @@
+/* Ported from the PWA's features/tours/presentation/components/tour-fact-rows.vue (scoped style). */
+/* The groups sit in the sheet's column (its gap spaces them); a divider leads each one,
+   since they always follow the hero. */
+.fact-rows {
+  display: contents;
+}
+
+.fact-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin: 0;
+  padding: var(--spacing-md) 0 0;
+  border-top: 1px solid var(--divider-color);
+  list-style: none;
+}
+
+/* Icon column + value; the icon sits on the first text line. */
+.fact-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
+  column-gap: var(--spacing-sm);
+}
+
+.fact-row--wide {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.row-icon {
+  margin-top: 2px;
+  color: var(--color-on-surface-variant);
+}
+
+.row-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--spacing-xs);
+  margin: 0;
+  min-width: 0;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-on-surface);
+}
+
+.row-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface-variant);
+}
+
+.row-sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.coords {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Free text keeps its own line breaks; the row's flex would collapse them. */
+.body-text {
+  display: block;
+  white-space: pre-wrap;
+  /* Break long words at syllables with a hyphen (in the page language), and mid-word
+     only when no hyphenation point exists — never "Schreckhornhütt|e". */
+  overflow-wrap: break-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  padding: 2px var(--spacing-sm);
+  border-radius: var(--chip-radius);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.type-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.leg-arrow {
+  color: var(--color-on-surface-variant);
+}
+
+.type-tag {
+  background-color: color-mix(in srgb, var(--tag-color) 12%, var(--color-background));
+  /* Darkened for the label: amber at full strength is under 4.5:1 on its own tint. */
+  color: color-mix(in srgb, var(--tag-color) 75%, black);
+}
+
+.type-tag :global(.base-icon) {
+  color: var(--tag-color);
+}
+
+.season-tag {
+  background-color: var(--color-neutral-container);
+  color: var(--color-on-surface);
+}
+
+.season-tag :global(.base-icon) {
+  color: var(--color-on-surface-variant);
+}
+
+.description-link {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

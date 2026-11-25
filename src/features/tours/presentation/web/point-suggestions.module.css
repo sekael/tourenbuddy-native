@@ -1,0 +1,52 @@
+/* Ported from the PWA's features/tours/presentation/components/point-suggestions.vue (scoped style). */
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.label {
+  flex-basis: 100%;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.suggestion {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  min-height: 36px;
+  max-width: 100%;
+  padding: var(--spacing-xxs) var(--spacing-sm);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-pill);
+  background: var(--color-background);
+  color: var(--color-on-surface);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .suggestion:hover {
+    background: var(--color-surface-variant);
+  }
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  flex-shrink: 0;
+  color: var(--color-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+}

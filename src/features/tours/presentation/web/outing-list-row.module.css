@@ -1,0 +1,89 @@
+/* Ported from the PWA's features/tours/presentation/components/outing-list-row.vue (scoped style). */
+/* Same row anatomy as TourListRow, so the two read as one list. */
+.tour-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+@media (hover: hover) {
+  .tour-row:hover {
+    background-color: var(--color-surface-variant);
+  }
+}
+
+.tour-row:active {
+  background-color: var(--color-surface-variant);
+}
+
+.tour-avatar {
+  --avatar-tint: var(--color-primary);
+
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: color-mix(in srgb, var(--avatar-tint) 16%, transparent);
+  color: var(--avatar-tint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.friend-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  font-size: 14px;
+  padding: 2px;
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  color: var(--color-on-surface-variant);
+}
+
+.tour-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tour-name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tour-subtitle,
+.tour-owner {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tour-owner {
+  color: var(--color-primary);
+}
+
+.tour-owner-skeleton {
+  font-size: var(--font-size-sm);
+  min-height: 1em;
+  width: 7ch;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, currentcolor 10%, transparent);
+}
+
+.row-arrow {
+  color: var(--color-outline-variant);
+  flex-shrink: 0;
+}

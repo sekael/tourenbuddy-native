@@ -1,0 +1,335 @@
+/* Ported from the PWA's features/contacts/presentation/components/contacts-list-sheet.vue (scoped style). */
+/* ── List view ── */
+.list-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.list-actions-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.loading-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  text-align: center;
+  padding: var(--spacing-xl) 0;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xl) 0;
+  text-align: center;
+}
+
+.empty-icon {
+  color: var(--color-outline-variant);
+}
+
+.empty-text {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface-variant);
+}
+
+.empty-sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  opacity: 0.7;
+}
+
+.contacts-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+@media (hover: hover) {
+  .contact-row:hover {
+    background-color: var(--color-surface-variant);
+  }
+}
+
+.contact-row:active {
+  background-color: var(--color-surface-variant);
+}
+
+.contact-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-round);
+  background-color: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  color: var(--color-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contact-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.contact-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.contact-name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.friend-icon {
+  font-size: var(--icon-size-xs);
+  color: var(--color-friend);
+  flex-shrink: 0;
+}
+
+.blocked-icon {
+  font-size: var(--icon-size-sm);
+  color: var(--color-error);
+  flex-shrink: 0;
+}
+
+.contact-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row-arrow {
+  font-size: var(--icon-size-md);
+  color: var(--color-outline-variant);
+  flex-shrink: 0;
+}
+
+.detail-connect-prompt {
+  margin-top: var(--spacing-md);
+}
+
+/* ── Add view ── */
+.add-view {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.import-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.format-hint {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.divider {
+  height: 1px;
+  background-color: var(--divider-color);
+}
+
+.error-text {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+}
+
+/* ── Duplicate disclaimer ── */
+.duplicate-disclaimer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-variant);
+}
+
+.duplicate-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+}
+
+.warn-icon {
+  color: var(--color-warning);
+  font-size: 18px;
+}
+
+.duplicate-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.duplicate-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+}
+
+/* ── Import results ── */
+.results-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.results-summary-box {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-variant);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface-variant);
+}
+
+.results-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-variant);
+}
+
+.result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.result-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-phone {
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.result-phone-warning {
+  color: var(--color-error);
+}
+
+/* Contact was created — the dropped numbers are a caveat, not a failure. */
+.result-phone-discarded {
+  color: var(--color-warning);
+}
+
+.star-icon-sm {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  font-variation-settings: 'FILL' 1;
+}
+
+.extra-phones {
+  opacity: 0.7;
+}
+
+.result-badge {
+  flex-shrink: 0;
+  padding: 2px var(--spacing-sm);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.badge-imported {
+  background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+}
+
+.badge-skipped {
+  background-color: var(--color-surface-variant);
+  border: 1px solid var(--color-outline-variant);
+  color: var(--color-on-surface-variant);
+}
+
+.results-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+/* Add/import/manual actions use shared BaseButton (secondary/text). */

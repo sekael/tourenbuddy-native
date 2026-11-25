@@ -1,0 +1,51 @@
+/* Ported from the PWA's features/notifications/presentation/components/inbox-overlay.vue (scoped style). */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding-bottom: var(--spacing-md);
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+  margin: 0;
+  padding: 0;
+}
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin: 0;
+  padding: var(--spacing-lg) 0;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+.empty-icon {
+  color: var(--color-outline-variant);
+}
+.more {
+  align-self: center;
+}
+.clear {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--divider-color);
+}
+/* Question on its own line, then two equal buttons: never wraps into a ragged row. */
+.clear--confirm {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.clear-question {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}

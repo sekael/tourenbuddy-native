@@ -1,0 +1,16 @@
+/* Ported from the PWA's features/tours/presentation/components/point-distance.vue (scoped style). */
+.point-distance {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+  white-space: nowrap;
+}
+
+.far {
+  color: var(--color-warning-text);
+  font-weight: var(--font-weight-medium);
+}
+
+.icon {
+  vertical-align: -2px;
+}

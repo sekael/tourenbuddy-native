@@ -10,6 +10,7 @@ import en from '@/locales/en.json';
 import { detectLocale } from './detect';
 import { readLanguageChoice, writeLanguageChoice } from './language-choice';
 import { SUPPORTED_LOCALES } from './supported';
+import { webCatalogs } from './web-catalogs';
 
 const deviceLocale = (locales: readonly { languageTag: string }[]) =>
   detectLocale(locales.map((l) => l.languageTag));
@@ -24,7 +25,10 @@ const i18n = createInstance();
 
 // Synchronous init with bundled catalogs: the first frame is already in the right language.
 i18n.use(initReactI18next).init({
-  resources: { en: { translation: en }, 'de-CH': { translation: deCH } },
+  resources: {
+    en: { translation: en, web: webCatalogs.en },
+    'de-CH': { translation: deCH, web: webCatalogs['de-CH'] },
+  },
   lng: choice() ?? deviceLocale(getLocales()),
   fallbackLng: 'en',
   initAsync: false,

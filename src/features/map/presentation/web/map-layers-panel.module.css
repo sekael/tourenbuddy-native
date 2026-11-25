@@ -1,0 +1,52 @@
+/* Ported from the PWA's features/map/presentation/components/map-layers-panel.vue (scoped style). */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  /* The speed-dial overlay passes taps through; the card itself must catch them
+     so a tap between tiles doesn't close the menu. */
+  pointer-events: auto;
+  max-width: calc(100vw - 2 * var(--spacing-lg));
+  /* A short phone may still not fit it: it scrolls instead (D11). The legend has its own button,
+     so it stays out of here and the layer tiles in thumb reach. */
+  max-height: calc(100dvh - 160px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: panel-unfold var(--motion-duration-medium) var(--motion-ease-emphasized) backwards;
+}
+
+.heading {
+  margin: 0 0 var(--spacing-xs);
+  color: var(--color-fab-on-surface);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hint {
+  margin: 0 0 var(--spacing-xs);
+  color: var(--color-fab-on-surface);
+  font-size: var(--font-size-xs);
+  opacity: 0.8;
+}
+
+.tiles {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+@keyframes panel-unfold {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-offset)) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+}

@@ -1,0 +1,93 @@
+/* Ported from the PWA's features/map/presentation/components/speed-dial-trigger.vue (scoped style). */
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fab {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color var(--motion-duration-medium) var(--motion-ease-standard),
+    opacity var(--motion-duration-medium) var(--motion-ease-standard),
+    transform var(--motion-duration-short) var(--motion-ease-spring);
+}
+
+.fab.open {
+  background-color: var(--color-fab-glass-strong);
+}
+
+@media (hover: hover) {
+  .fab:hover {
+    background-color: var(--color-fab-glass-strong);
+  }
+}
+
+.fab:active {
+  background-color: var(--color-fab-glass-strong);
+}
+
+.fab:active:not(:disabled) {
+  transform: scale(var(--press-scale));
+}
+
+/* Menu ⇄ close: the glyphs cross-fade while turning a quarter, so the button
+   reads as one control changing state rather than two icons swapping. */
+.icon {
+  position: absolute;
+  transition:
+    opacity var(--motion-duration-medium) var(--motion-ease-standard),
+    transform var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+.icon.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.icon-menu.hidden {
+  transform: rotate(90deg) scale(0.8);
+}
+
+.icon-close.hidden {
+  transform: rotate(-90deg) scale(0.8);
+}
+
+/* Same pill as the menu item badges, so the count reads as one signal in two places. */
+.count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-fab-on-surface);
+  color: var(--color-primary-dark);
+  border: 2px solid var(--color-fab-surface);
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* On the circle's edge at 45° (r = 26px → ~7.6px in from the box corner). */
+.dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--color-fab-on-surface);
+  border: 2px solid var(--color-fab-surface);
+  pointer-events: none;
+}

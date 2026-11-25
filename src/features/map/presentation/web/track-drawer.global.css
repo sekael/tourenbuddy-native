@@ -1,0 +1,5 @@
+/* Ported from the PWA's features/map/presentation/components/track-drawer.vue (global style). */
+/* While drawing, a tap on a tour marker sets a point like anywhere else on the map. */
+.track-drawing .maplibregl-marker {
+  pointer-events: none;
+}

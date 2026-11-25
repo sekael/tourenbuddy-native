@@ -6,7 +6,7 @@ TBD - created by archiving change port-app-features. Update Purpose after archiv
 ## Requirements
 
 ### Requirement: Lists and forms use system components on iOS
-On iOS, every screen that is a list or a form (settings, contacts, inbox, tour lists, the tour form, sheets with fields) SHALL be built from the system's grouped list and form, so rows, separators, row heights, swipe actions, context menus, Dynamic Type, haptics and VoiceOver behave as in the system apps. Android and web SHALL render the same screens with Material 3 list items. Feature screens SHALL use the shared adaptive components and SHALL NOT branch on the platform.
+On iOS, every screen that is a list or a form (settings, contacts, inbox, tour lists, the tour form, sheets with fields) SHALL be built from the system's grouped list and form, so rows, separators, row heights, swipe actions, context menus, Dynamic Type, haptics and VoiceOver behave as in the system apps. Android SHALL render the same screens with Material 3 list items. Feature screens SHALL use the shared adaptive components and SHALL NOT branch on the platform.
 
 #### Scenario: A settings row on iOS
 - **WHEN** the Profile tab shows its Language row on an iPhone
@@ -21,8 +21,12 @@ On iOS, every screen that is a list or a form (settings, contacts, inbox, tour l
 - **THEN** the system swipe action appears and a full swipe runs the destructive action
 
 #### Scenario: Same screen on Android
-- **WHEN** the same screen renders on Android or the web
+- **WHEN** the same screen renders on Android
 - **THEN** it shows Material 3 list items with the same rows, values and actions
+
+#### Scenario: Web keeps the PWA's lists
+- **WHEN** the same screen renders in the web app
+- **THEN** it shows the PWA's lists and forms (`web-app`), not Material 3 list items
 
 ### Requirement: Content that is not a list stays content
 Views with no system counterpart (the map, the month grid, the seasons chart, the elevation profile, coach marks) SHALL be drawn by the app on every platform, using the design tokens, and SHALL sit inside system lists and sheets where they appear in one, never replacing the list with a look-alike.

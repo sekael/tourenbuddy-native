@@ -1,0 +1,91 @@
+/* Ported from the PWA's features/map/presentation/components/tour-action-bar.vue (scoped style). */
+.pill {
+  /* fixed (not absolute) so position tracks the visual viewport in mobile
+     browsers — keeps the pill above Android system nav and Brave/Chrome bottom
+     chrome, not buried under page-root 100lvh. */
+  position: fixed;
+  /* Docked at the screen edge, level with the location picker: floating higher, the controls
+     blocked a band of live map (objectives) instead of the edge. */
+  bottom: calc(var(--spacing-lg) + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: stretch;
+  height: 52px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  pointer-events: auto;
+  white-space: nowrap;
+}
+
+/* While the pill shows, bottom toasts (`--float-bottom`, global.css) rise above the map's control
+   row — pill, speed dial and info button, all docked at this height — instead of covering it. */
+:global(:root:has(.tour-action-pill)) {
+  --bar-inset: calc(52px + var(--spacing-lg) + var(--safe-bottom));
+}
+
+.segment {
+  display: flex;
+  /* Fill the pill's full height. BaseTooltip's wrapper centers its slot at content
+     height, which left ~14px of pill above and below each button looking clickable
+     but inert. `align-self` is what overrides the wrapper's `align-items: center`
+     — same form `.divider` uses below. */
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: 0 var(--spacing-lg);
+  color: var(--color-fab-on-surface);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  transition: background-color var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+@media (hover: hover) {
+  .segment:hover:not(:disabled) {
+    background-color: var(--color-fab-glass-strong);
+  }
+}
+
+.segment:active:not(:disabled) {
+  background-color: var(--color-fab-glass-strong);
+}
+
+/* Pressing darkens the segment (scaling one half of a joined pill would tear it) */
+.segment:active:not(:disabled) {
+  background-color: var(--color-fab-surface-strong);
+}
+
+.segment:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.segment--add {
+  padding: 0 var(--spacing-md);
+}
+
+.segment-label {
+  line-height: 1;
+}
+
+.divider {
+  width: 1px;
+  background-color: var(--color-fab-border);
+  align-self: stretch;
+  flex-shrink: 0;
+}
+
+.pill-enter-active,
+.pill-leave-active {
+  transition:
+    opacity var(--motion-duration-medium) var(--motion-ease-standard),
+    transform var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+.pill-enter-from,
+.pill-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(var(--motion-offset));
+}

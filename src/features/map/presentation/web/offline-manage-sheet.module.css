@@ -1,0 +1,88 @@
+/* Ported from the PWA's features/map/presentation/components/offline-manage-sheet.vue (scoped style). */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+}
+
+.install-hint {
+  margin: 0;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-variant);
+  font-size: var(--font-size-sm);
+}
+
+.usage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+}
+
+.bar {
+  height: 8px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-variant);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  background-color: var(--color-accent);
+}
+
+.usage-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.regions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.region {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-variant);
+}
+
+.region-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.region-name {
+  font-weight: var(--font-weight-medium);
+}
+
+.region-meta {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.delete {
+  color: var(--color-error);
+  padding: var(--spacing-xs);
+}
+
+.empty,
+.tip {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.cta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}

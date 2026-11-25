@@ -86,7 +86,7 @@ While any overlay is active, all FABs not part of that overlay SHALL be disabled
 - **THEN** the compass FAB SHALL retain its existing behaviour (visible when bearing is non-zero, click resets bearing) and SHALL NOT be disabled
 
 ### Requirement: Glass tour capsule in the map's thumb zone
-The Map tab SHALL show, centred right above the tab bar, a capsule with "My tours" (opens the tours list) and an "Add tour" button (starts tour creation), in Liquid Glass on iOS and as Material floating controls on Android and web, level with the menu circle at the trailing edge and the legend button at the leading edge. The capsule SHALL hide while a tour or the tours list is open and while picking or drawing.
+On iOS and Android the Map tab SHALL show, centred right above the tab bar, a capsule with "My tours" (opens the tours list) and an "Add tour" button (starts tour creation), in Liquid Glass on iOS and as Material floating controls on Android, level with the menu circle at the trailing edge and the legend button at the leading edge. The capsule SHALL hide while a tour or the tours list is open and while picking or drawing. The web app keeps the PWA's map controls (`web-app`).
 
 #### Scenario: Open my tours
 - **WHEN** the user taps "My tours"

@@ -1,0 +1,95 @@
+/* Ported from the PWA's features/tours/presentation/components/activity-legs.vue (scoped style). */
+.legs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.label {
+  padding: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--field-label-color);
+}
+
+.leg {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-xxs) var(--spacing-sm);
+}
+
+.leg-type {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+}
+
+.leg-icon {
+  flex: none;
+  color: var(--leg-color);
+}
+
+.leg-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* One pill cut in three: the choice reads as one of three, not three toggles. */
+.ways {
+  display: inline-flex;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.way {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 36px;
+  padding: 0 var(--spacing-sm);
+  border: none;
+  background: var(--color-background);
+  color: var(--color-on-surface-variant);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.way + .way {
+  border-inline-start: 1px solid var(--color-outline-variant);
+}
+
+.way.selected {
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-background));
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.way:disabled {
+  color: var(--color-outline);
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .way:hover:not(.selected, :disabled) {
+    background: var(--color-surface-variant);
+  }
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+}

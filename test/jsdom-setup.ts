@@ -5,5 +5,8 @@ Object.defineProperty(window, 'matchMedia', {
     media: query,
     addEventListener: () => {},
     removeEventListener: () => {},
+    // The legacy pair, still used by react-native-web's color scheme.
+    addListener: () => {},
+    removeListener: () => {},
   }),
 });

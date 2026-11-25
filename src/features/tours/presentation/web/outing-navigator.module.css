@@ -1,0 +1,72 @@
+/* Ported from the PWA's features/tours/presentation/components/outing-navigator.vue (scoped style). */
+.navigator {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  padding: var(--spacing-xxs);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-variant);
+}
+
+.outing {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.outing-icon {
+  flex-shrink: 0;
+  color: var(--color-on-surface-variant);
+}
+
+.outing-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.outing-name {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.outing-position {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.step {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-on-surface);
+  cursor: pointer;
+}
+
+.step:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .outing:hover,
+  .step:hover:not(:disabled) {
+    background-color: var(--color-background);
+  }
+}

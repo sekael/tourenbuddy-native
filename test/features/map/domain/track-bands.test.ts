@@ -1,4 +1,9 @@
-import { bandLine, NO_TYPE_COLOR, routeBands } from '@/features/map/domain/track-bands';
+import {
+  bandLine,
+  NO_TYPE_COLOR,
+  routeBands,
+  routeShares,
+} from '@/features/map/domain/track-bands';
 import { TOUR_TYPE_TRACK_COLORS } from '@/features/tours/data/models/tour-type';
 
 // About 1.5 km east along a parallel, with a vertex in the middle.
@@ -78,5 +83,36 @@ describe('routeBands', () => {
       new Set([TOUR_TYPE_TRACK_COLORS.skitour, TOUR_TYPE_TRACK_COLORS.paragliding]),
     );
     expect(routeBands(route, { tourTypes: [] }, 0.5).map((b) => b.color)).toEqual([NO_TYPE_COLOR]);
+  });
+});
+
+describe('routeShares', () => {
+  const { skitour, paragliding, hiking } = TOUR_TYPE_TRACK_COLORS;
+
+  it('should switch at the goal when the ways differ, banding a way with both ways’ activities', () => {
+    // Skitour both ways ("beides"), the glider down only.
+    const shares = routeShares(
+      {
+        tourTypes: ['skitour', 'paragliding'],
+        legs: { ascent: ['skitour'], descent: ['skitour', 'paragliding'] },
+      },
+      0.6,
+    );
+    const up = shares.filter((b) => b.to <= 0.6);
+    const down = shares.filter((b) => b.from >= 0.6);
+    expect(up).toEqual([{ from: 0, to: 0.6, color: skitour }]);
+    expect(down.length + up.length).toBe(shares.length);
+    expect(new Set(down.map((b) => b.color))).toEqual(new Set([skitour, paragliding]));
+    // Adjacent bands meet: the gradient has no gap.
+    shares.slice(1).forEach((b, i) => expect(b.from).toBeCloseTo(shares[i]!.to));
+    expect(shares.at(-1)!.to).toBeCloseTo(1);
+  });
+
+  it('should band an unsplit tour’s activities all along, and grey without one', () => {
+    const shares = routeShares({ tourTypes: ['hiking', 'paragliding'] }, 0.5);
+    expect(new Set(shares.map((b) => b.color))).toEqual(new Set([hiking, paragliding]));
+    expect(routeShares({ tourTypes: [] }, null)).toEqual([
+      { from: 0, to: 1, color: NO_TYPE_COLOR },
+    ]);
   });
 });

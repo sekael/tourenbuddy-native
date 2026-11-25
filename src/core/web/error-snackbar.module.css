@@ -1,0 +1,59 @@
+/* Ported from the PWA's core/components/error-snackbar.vue (scoped style). */
+.snackbar {
+  position: fixed;
+  bottom: var(--float-bottom);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  max-width: 90vw;
+  z-index: 200;
+  box-shadow: var(--shadow-lg);
+}
+
+.error {
+  background-color: var(--color-error);
+  color: var(--color-on-error);
+}
+
+.info {
+  background-color: var(--color-inverse-surface);
+  color: var(--color-on-inverse-surface);
+}
+
+.message {
+  font-size: var(--font-size-sm);
+  flex: 1;
+}
+
+.dismiss-btn {
+  color: inherit;
+  font-size: var(--font-size-sm);
+  opacity: 0.8;
+}
+
+@media (hover: hover) {
+  .dismiss-btn:hover {
+    opacity: 1;
+  }
+}
+
+.dismiss-btn:active {
+  opacity: 1;
+}
+
+.snackbar-enter-active,
+.snackbar-leave-active {
+  transition:
+    opacity var(--motion-duration-medium) var(--motion-ease-standard),
+    transform var(--motion-duration-medium) var(--motion-ease-spring);
+}
+
+.snackbar-enter-from,
+.snackbar-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+}

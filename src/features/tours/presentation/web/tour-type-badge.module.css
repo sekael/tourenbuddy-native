@@ -1,0 +1,41 @@
+/* Ported from the PWA's features/tours/presentation/components/tour-type-badge.vue (scoped style). */
+.type-badge {
+  position: relative;
+}
+
+.disc {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-on-surface-variant);
+  color: var(--color-on-primary);
+}
+
+.slice {
+  position: absolute;
+  inset: 0;
+}
+
+.slice-icon {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.slice-more {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+}
+
+.seam {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 1px);
+  width: 2px;
+  height: 50%;
+  background: var(--color-background);
+  transform-origin: 50% 100%;
+}

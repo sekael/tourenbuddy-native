@@ -1,0 +1,144 @@
+/* Ported from the PWA's features/tours/presentation/components/tour-list-sheet.vue (scoped style). */
+/* Mobile: the sheet's `.content` is the one scroller. Its body keeps its natural
+   height (that is how the sheet measures what to fit), so nothing in here ever gets
+   a definite height to scroll within. Keep it that way: a nested `overflow: auto`
+   that never overflows still catches the touch on Chromium (Android), and with
+   `overscroll-behavior: contain` it refuses to hand the gesture on to the sheet —
+   the list stops scrolling. iOS skips such boxes, which hides the bug there.
+   Desktop is the opposite: the side drawer is 100vh, so `height: 100%` resolves,
+   the list exactly fills the drawer's scroller and `.list-region` clips the rows —
+   there the list must scroll itself (`.list-view--drawer`). */
+.list-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.list-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+  z-index: 1;
+  background-color: var(--color-background);
+  padding-bottom: var(--spacing-xs);
+}
+
+/* Switching My Tours ↔ Friends slides the list toward the chosen tab. */
+.tab-swap-enter-active,
+.tab-swap-leave-active {
+  transition:
+    opacity var(--motion-duration-medium) var(--motion-ease-standard),
+    transform var(--motion-duration-medium) var(--motion-ease-emphasized);
+}
+
+.tab-swap-leave-active {
+  transition-duration: var(--motion-duration-short);
+}
+
+.tab-swap-enter-from {
+  opacity: 0;
+  transform: translateX(calc(var(--swap-dir) * var(--motion-offset)));
+}
+
+.tab-swap-leave-to {
+  opacity: 0;
+  transform: translateX(calc(var(--swap-dir) * -1 * var(--motion-offset)));
+}
+
+/* Visual styling comes from BaseButton (secondary); only layout lives here. */
+.filters-trigger {
+  flex-shrink: 0;
+}
+
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.list-region {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Desktop only (see `.list-view`): the rows or the filters scroll themselves.
+   `overflow-x` explicit: unset, it computes to `auto` and the tab-swap slide would
+   flash a horizontal scrollbar. */
+.list-view--drawer .region-scroll {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.region-scroll:focus {
+  outline: none;
+}
+
+/* Thumb zone: reset and apply sit side by side, apply wider — it is the way back. */
+.filters-footer {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.show-results {
+  flex: 1;
+}
+
+.loading-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  text-align: center;
+  padding: var(--spacing-xl) 0;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xl) 0;
+  text-align: center;
+}
+
+.empty-icon {
+  color: var(--color-outline-variant);
+}
+
+.empty-text {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface-variant);
+}
+
+.empty-sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  opacity: 0.7;
+}
+
+.map-note {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding-block: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.tours-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}

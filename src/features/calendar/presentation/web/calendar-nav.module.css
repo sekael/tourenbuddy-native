@@ -1,0 +1,108 @@
+/* Ported from the PWA's features/calendar/presentation/components/calendar-nav.vue (scoped style). */
+/* ── Desktop sidebar ─────────────────────────────────────────────────────── */
+.sidebar {
+  display: none;
+  flex-direction: column;
+  width: 256px;
+  flex-shrink: 0;
+  padding: var(--spacing-xxl) var(--spacing-md);
+  gap: var(--spacing-xxl);
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-outline-variant);
+}
+
+.sidebar-brand {
+  padding: 0 var(--spacing-xs);
+}
+
+.brand-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+}
+
+.brand-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface-variant);
+  transition:
+    background-color var(--motion-duration-short) var(--motion-ease-standard),
+    color var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+@media (hover: hover) {
+  .nav-item:hover {
+    background-color: var(--color-surface-variant);
+  }
+}
+
+.nav-item:active {
+  background-color: var(--color-surface-variant);
+}
+
+.nav-item--active {
+  background-color: var(--color-secondary-container);
+  color: var(--color-primary-dark);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ── Mobile bottom nav ───────────────────────────────────────────────────── */
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: calc(64px + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  flex-shrink: 0;
+  /* Tonal bar instead of a hairline: separated from the white canvas by fill. */
+  background-color: var(--color-surface-variant);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  /* The active indicator is a rounded rectangle covering icon + label, so the
+     padding here defines its inset around both. */
+  padding: var(--spacing-xs) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-on-surface-variant);
+  transition:
+    background-color var(--motion-duration-short) var(--motion-ease-standard),
+    color var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+/* Active: darker filled rectangle behind both icon and label. */
+.bottom-nav-item--active {
+  background-color: var(--color-secondary-container);
+  color: var(--color-primary-dark);
+}
+
+@media (min-width: 600px) {
+  .sidebar {
+    display: flex;
+  }
+
+  .bottom-nav {
+    display: none;
+  }
+}

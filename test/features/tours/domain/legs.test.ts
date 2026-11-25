@@ -5,6 +5,7 @@ import {
   defaultDirection,
   directionOf,
   flight,
+  flownWhole,
   landsByAir,
   legsApart,
   legsFrom,
@@ -210,5 +211,29 @@ describe('picked ways (the form, as the PWA)', () => {
       }),
     ).toEqual({ paragliding: 'both' });
     expect(choicesOf({ tourTypes: [], legs: null })).toEqual({});
+  });
+});
+
+describe('flownWhole', () => {
+  it('should fly a way whole only on the glider alone', () => {
+    const tourTypes = ['paragliding', 'hiking', 'skitour'] as const;
+    expect(
+      flownWhole({ tourTypes, legs: { ascent: ['hiking'], descent: ['paragliding'] } }),
+    ).toEqual({ up: false, down: true });
+    // Skiing down to a lower launch first: the flight can't be told from the run.
+    expect(
+      flownWhole({
+        tourTypes,
+        legs: { ascent: ['skitour'], descent: ['paragliding', 'skitour'] },
+      }),
+    ).toEqual({ up: false, down: false });
+  });
+
+  it("should fly a lone glider's way down but not an unsplit hike & fly, and never its way up", () => {
+    expect(flownWhole({ tourTypes: ['paragliding'] })).toEqual({ up: false, down: true });
+    expect(flownWhole({ tourTypes: ['paragliding', 'hiking'] })).toEqual({
+      up: false,
+      down: false,
+    });
   });
 });

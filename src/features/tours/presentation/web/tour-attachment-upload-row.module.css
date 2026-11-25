@@ -1,0 +1,5 @@
+/* Ported from the PWA's features/tours/presentation/components/tour-attachment-upload-row.vue (scoped style). */
+.upload-row__failed {
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+}

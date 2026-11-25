@@ -1,0 +1,115 @@
+/* Ported from the PWA's features/user/presentation/components/user-profile-sheet.vue (scoped style). */
+/* Edit form */
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--field-label-color);
+}
+
+.optional {
+  font-weight: var(--font-weight-regular);
+}
+
+.input {
+  padding: var(--spacing-md);
+  border: 1.5px solid var(--color-outline-variant);
+  border-radius: var(--input-radius);
+  font-size: var(--font-size-base);
+  color: var(--color-on-surface);
+  background-color: var(--input-bg);
+  outline: none;
+  transition:
+    border-color var(--motion-duration-medium) var(--motion-ease-standard),
+    background-color var(--motion-duration-medium) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-medium) var(--motion-ease-standard);
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+  background-color: var(--input-bg-focus);
+  box-shadow: var(--input-focus-ring);
+}
+
+.error-text {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+}
+
+.edit-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* Edit-actions cancel/save use shared BaseButton; fill the row like before. */
+.edit-actions :global(.base-button) {
+  flex: 1;
+}
+
+.phone-input-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.phone-input-row .input {
+  flex: 1;
+  min-width: 0;
+}
+
+.remove-phone-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-error-container);
+}
+
+.remove-phone-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+}
+
+.remove-phone-warning .warn-icon {
+  font-size: var(--icon-size-sm);
+  color: var(--color-error);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Disclaimer lines stack in the column beside the icon, sharing one indent. */
+.remove-phone-disclaimers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.remove-phone-disclaimer {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface);
+  line-height: 1.5;
+}
+
+.remove-phone-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* Remove-phone cancel/confirm use shared BaseButton; fill the row. */
+.remove-phone-actions :global(.base-button) {
+  flex: 1;
+}

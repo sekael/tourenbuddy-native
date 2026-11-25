@@ -572,7 +572,7 @@ unchanged. The name shown while uploading SHALL be the name that is persisted.
 - **THEN** the stored filename SHALL be `Hoernli-summit.jpg` unchanged
 
 ### Requirement: Attachments from system pickers, out through the share sheet
-Adding an attachment SHALL offer the photo library, the camera and Files on iOS and Android (the file picker on the web), keeping the PWA's types, size and count limits. Sharing SHALL hand the file to the system share sheet. Signed URLs SHALL NOT be stored anywhere.
+Adding an attachment SHALL offer the photo library, the camera and Files on iOS and Android (the file picker on the web), keeping the PWA's types, size and count limits. On iOS and Android sharing SHALL hand the file to the system share sheet; the web keeps the PWA's download. Signed URLs SHALL NOT be stored anywhere.
 
 #### Scenario: Photo from the library
 - **WHEN** the owner picks two photos from the library
@@ -583,11 +583,11 @@ Adding an attachment SHALL offer the photo library, the camera and Files on iOS 
 - **THEN** it is rejected with the localized size message and the others continue
 
 #### Scenario: Share an attachment
-- **WHEN** the user taps share in the previewer
+- **WHEN** the user taps share in the previewer on iOS or Android
 - **THEN** the system share sheet opens with that file
 
 ### Requirement: Attachments open in the system preview
-Tapping an attachment SHALL open the system's previewer at that file: on iOS with every attachment of the tour, swiping between them, zooming images and paging PDFs, with the system's share and close controls; on Android the system viewer for that one file; on the web a new browser tab. The bytes SHALL come from the device's file cache when present.
+Tapping an attachment SHALL open the system's previewer at that file: on iOS with every attachment of the tour, swiping between them, zooming images and paging PDFs, with the system's share and close controls; on Android the system viewer for that one file. On the web it SHALL open the PWA's attachment viewer (images and PDFs in the app, with download). The bytes SHALL come from the device's file cache when present.
 
 #### Scenario: Swipe to the next file on iOS
 - **WHEN** the user opens the first of three attachments and swipes left

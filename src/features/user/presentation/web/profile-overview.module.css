@@ -1,0 +1,181 @@
+/* Ported from the PWA's features/user/presentation/components/profile-overview.vue (scoped style). */
+/* Sized to fit the sheet's 70% cap on a 780px-tall phone without scrolling */
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* Identity card and settings rows share one tappable-tile look */
+.identity,
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  width: 100%;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--color-surface-variant);
+  color: var(--color-on-surface);
+  text-align: start;
+  transition:
+    background-color var(--motion-duration-short) var(--motion-ease-standard),
+    transform var(--motion-duration-short) var(--motion-ease-spring);
+}
+
+@media (hover: hover) {
+  .identity:hover,
+  .row--nav:hover {
+    background-color: var(--color-secondary-container);
+  }
+}
+
+.identity:active,
+.row--nav:active {
+  background-color: var(--color-secondary-container);
+}
+
+.identity:active,
+.row--nav:active {
+  transform: scale(var(--press-scale));
+}
+
+.identity {
+  padding-block: var(--spacing-sm);
+  border-radius: var(--card-radius);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-round);
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+.identity-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  font-weight: var(--font-weight-semibold);
+}
+
+.secondary-text {
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phone {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.verified-icon {
+  font-size: var(--icon-size-sm);
+  color: var(--color-primary);
+}
+
+.badge {
+  padding: 0 var(--spacing-sm);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 20px;
+}
+
+.badge--alert {
+  background-color: var(--color-error-container);
+  color: var(--color-error-text);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-on-surface-variant);
+}
+
+/* Settings: one card of rows, 2px seams of the sheet between them */
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--card-radius);
+  list-style: none;
+}
+
+/* One height for one- and two-line rows, so summaries loading in never shift
+   the sheet */
+.row {
+  min-height: 58px;
+}
+
+.row-icon {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+/* Label over its current value: reads at a glance, and long (German) labels
+   never collide with the value. */
+.row-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.row-label {
+  font-weight: var(--font-weight-medium);
+}
+
+.row-value {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.row-value:empty {
+  display: none;
+}
+
+.row-value--alert {
+  color: var(--color-error-text);
+}
+
+.row > .row-label {
+  flex: 1 0 auto;
+}
+
+.language {
+  flex: 0 1 184px;
+  min-width: 0;
+}
+
+.language > button {
+  min-height: 32px;
+  padding-inline: var(--spacing-xs);
+}
+
+.sign-out {
+  width: 100%;
+}
+
+.delete-account {
+  align-self: center;
+  color: var(--color-error);
+}

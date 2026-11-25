@@ -1,0 +1,14 @@
+/* Ported from the PWA's features/tours/presentation/components/route-numbers.vue (scoped style). */
+.flown {
+  vertical-align: -2px;
+}
+
+.route-numbers {
+  display: inline-flex;
+  flex-wrap: wrap;
+  column-gap: var(--spacing-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  /* Figures on one line, whichever item carries an icon. */
+  align-items: baseline;
+}

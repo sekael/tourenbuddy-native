@@ -1,0 +1,106 @@
+/* Ported from the PWA's features/tours/presentation/components/tour-attachments-picker.vue (scoped style). */
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.picker__error {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+}
+
+.picker__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+}
+
+.picker__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-variant);
+  min-height: 40px;
+}
+
+/* Lifted and following the pointer; the row it would land on is outlined. */
+.picker__item--dragging {
+  position: relative;
+  z-index: 1;
+  box-shadow: var(--shadow-lg);
+}
+
+.picker__item--over {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: -1px;
+}
+
+.picker__item--confirm {
+  cursor: default;
+  border-color: var(--color-error);
+  justify-content: center;
+}
+
+.picker__drag-handle,
+.picker__file-icon {
+  color: var(--color-on-surface-variant);
+  flex-shrink: 0;
+}
+
+/* Finger-sized grip; `touch-action: none` keeps the page from scrolling under the drag. */
+.picker__drag-handle {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 40px;
+  margin-inline-start: calc(-1 * var(--spacing-sm));
+  border: none;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+
+.picker__drag-handle:disabled {
+  cursor: default;
+}
+
+.picker__filename {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker__add-row {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+}
+
+.picker__limit-reached {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.picker__uploads {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+}
+
+.picker__hidden-input {
+  display: none;
+}
+
+/* Inline delete confirm — centered in the row via .picker__item--confirm. */
+.picker__confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xs);
+}

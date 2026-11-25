@@ -1,0 +1,12 @@
+/* Ported from the PWA's core/components/pace-badge.vue (scoped style). */
+.pace-badge {
+  display: inline-block;
+  padding: 0 0.45em;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-variant);
+  color: var(--color-on-surface-variant);
+  font-size: 0.8em;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.5;
+  white-space: nowrap;
+}

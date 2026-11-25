@@ -1,0 +1,129 @@
+/* Ported from the PWA's features/notifications/presentation/components/inbox-item.vue (scoped style). */
+.item-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  list-style: none;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.item {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  text-align: start;
+  touch-action: pan-y;
+  transition:
+    transform var(--motion-duration-short) var(--motion-ease-standard),
+    background-color var(--motion-duration-short) var(--motion-ease-standard);
+}
+
+/* D7 token table: unread / read / stale. Rows are opaque so the swipe layer only
+   shows where the row has moved off it. */
+.item--unread {
+  background-color: var(--color-surface-variant);
+  color: var(--color-on-surface);
+  font-weight: var(--font-weight-medium);
+}
+.item--read {
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+  font-weight: var(--font-weight-regular);
+}
+.item--stale {
+  background-color: var(--color-background);
+  color: var(--color-on-surface-variant);
+  font-weight: var(--font-weight-regular);
+}
+
+@media (hover: hover) {
+  .item--read:hover,
+  .item--stale:hover {
+    background-color: var(--color-surface-variant);
+  }
+}
+.item--read:active,
+.item--stale:active {
+  background-color: var(--color-surface-variant);
+}
+
+.swipe-bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-inline-end: var(--spacing-lg);
+  background-color: var(--color-error-container);
+  color: var(--color-error-text);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.text {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-on-surface-variant);
+}
+.count {
+  font-weight: var(--font-weight-semibold);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 var(--spacing-xs);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-pill);
+}
+
+.chip-icon {
+  width: 14px;
+  height: 14px;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+/* Touch: the swipe deletes. Pointer devices get the button on hover/focus. */
+.delete {
+  display: none;
+}
+
+@media (hover: hover) {
+  .delete {
+    display: flex;
+    opacity: 0;
+    transition: opacity var(--motion-duration-short) var(--motion-ease-standard);
+  }
+  .item-wrap:hover .delete,
+  .delete:focus-visible {
+    opacity: 1;
+  }
+}
