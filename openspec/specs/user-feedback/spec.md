@@ -25,13 +25,13 @@ The Feedback sheet SHALL offer two actions that open GitHub issue forms in a new
 #### Scenario: Open bug report
 
 - **WHEN** the user activates the bug report action
-- **THEN** the application SHALL open `https://github.com/sekael/tourenbuddy_frontend_vue/issues/new?template=bug_report.yml` in a new tab
+- **THEN** the application SHALL open `https://github.com/sekael/tourenbuddy-native/issues/new?template=bug_report.yml` in a new tab
 - **AND** the Feedback sheet SHALL close
 
 #### Scenario: Open feedback form
 
 - **WHEN** the user activates the feedback action
-- **THEN** the application SHALL open `https://github.com/sekael/tourenbuddy_frontend_vue/issues/new?template=beta_feedback.yml` in a new tab
+- **THEN** the application SHALL open `https://github.com/sekael/tourenbuddy-native/issues/new?template=beta_feedback.yml` in a new tab
 - **AND** the Feedback sheet SHALL close
 
 #### Scenario: New tab blocked

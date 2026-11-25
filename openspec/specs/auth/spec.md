@@ -566,7 +566,7 @@ action that signs in with the email and the password. Every answer SHALL be loca
 - **WHEN** someone created an account for an address with a password through the auth API, and the
   address's owner later confirms the address with an email code
 - **THEN** that password never signs in, neither before nor after the confirmation (enforced by
-  the backend in the Vue repository, not by the app)
+  the backend, not by the app)
 
 #### Scenario: Requests do not overlap
 
