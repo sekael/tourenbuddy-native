@@ -94,6 +94,8 @@ export type MapState = {
   regionsShown: number;
   /** A region is being framed for download: the frame shows over the map. */
   regionFrame: boolean;
+  /** The layers sheet is open: the overlays are a tap away (`tourMapLayers`' `warm`). */
+  layersOpen: boolean;
   /** Height the open sheet covers at the bottom, so the camera frames tours above it. */
   bottomInset: number;
   /** While a step runs (route, pick, draw, region), map taps go to it instead of the tours. */
@@ -174,6 +176,7 @@ export const useMapStore = create<MapState>()((set, get) => ({
   bounds: null,
   regionsShown: 0,
   regionFrame: false,
+  layersOpen: false,
   bottomInset: 0,
   tapHandler: null,
   previewLines: null,

@@ -254,7 +254,7 @@ describe('auth store: account creation', () => {
       return { data: {}, error: null };
     });
 
-    expect(await store().verifyOtp('anna@example.com', '123456')).toBe('signedIn');
+    expect(await store().verifyOtp('anna@example.com', '123456')).toEqual({});
     expect(supabase.auth.updateUser).toHaveBeenCalledWith({ password: 'chosen-123' });
   });
 
@@ -343,14 +343,15 @@ describe('auth store: account creation', () => {
     });
     await store().signUp('anna@example.com', 'chosen-123');
 
-    expect(await store().verifyOtp('anna@example.com', '123456')).toBe('signedIn');
+    expect(await store().verifyOtp('anna@example.com', '123456')).toEqual({});
   });
 
-  it('should stay signed in and say so when the password does not stick', async () => {
-    supabase.auth.updateUser.mockResolvedValueOnce({ data: {}, error: offline() });
+  it('should stay signed in and say why when the password does not stick', async () => {
+    const error = offline();
+    supabase.auth.updateUser.mockResolvedValueOnce({ data: {}, error });
     await store().signUp('anna@example.com', 'chosen-123');
 
-    expect(await store().verifyOtp('anna@example.com', '123456')).toBe('passwordNotSaved');
+    expect(await store().verifyOtp('anna@example.com', '123456')).toEqual({ passwordError: error });
     expect(store().user?.email).toBe('anna@example.com');
   });
 });

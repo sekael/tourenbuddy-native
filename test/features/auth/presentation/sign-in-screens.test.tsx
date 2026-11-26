@@ -1,4 +1,4 @@
-import { AuthApiError, AuthRetryableFetchError } from '@supabase/supabase-js';
+import { AuthApiError, AuthRetryableFetchError, AuthWeakPasswordError } from '@supabase/supabase-js';
 import { act, fireEvent, screen } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { renderRouter } from 'expo-router/testing-library';
@@ -328,7 +328,10 @@ describe('account creation screen', () => {
 
   it('should tell a user signed in without the password where to set it', async () => {
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
-    supabase.auth.updateUser.mockResolvedValueOnce({ data: {}, error: offline() });
+    supabase.auth.updateUser.mockResolvedValueOnce({
+      data: {},
+      error: new AuthApiError('boom', 500, 'unexpected_failure'),
+    });
 
     await create('anna@example.com', 'chosen-123');
     await type('Sign-in code', '123456');
@@ -337,6 +340,25 @@ describe('account creation screen', () => {
     expect(alert).toHaveBeenCalledWith(
       'Password not saved',
       "You're signed in, but your password couldn't be saved. Set it in Profile → Password.",
+    );
+  });
+
+  it('should say which rule the refused password broke', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    supabase.auth.updateUser.mockResolvedValueOnce({
+      data: {},
+      error: new AuthWeakPasswordError('Password should be at least 10 characters.', 422, [
+        'length',
+      ]),
+    });
+
+    await create('anna@example.com', 'chosen-123');
+    await type('Sign-in code', '123456');
+
+    expect(screen).toHavePathname('/');
+    expect(alert).toHaveBeenCalledWith(
+      'Password not saved',
+      "You're signed in, but your password wasn't saved: Use at least 10 characters\n\nSet a new one in Profile → Password.",
     );
   });
 });

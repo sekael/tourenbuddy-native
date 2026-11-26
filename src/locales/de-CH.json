@@ -250,7 +250,8 @@
       "subtitle": "Wir senden dir einen Code, um deine Adresse zu bestätigen",
       "createBtn": "Konto erstellen",
       "passwordNotSavedTitle": "Passwort nicht gespeichert",
-      "passwordNotSaved": "Du bist angemeldet, aber dein Passwort konnte nicht gespeichert werden. Lege es unter Profil → Passwort fest."
+      "passwordNotSaved": "Du bist angemeldet, aber dein Passwort konnte nicht gespeichert werden. Lege es unter Profil → Passwort fest.",
+      "passwordNotSavedBecause": "Du bist angemeldet, aber dein Passwort wurde nicht gespeichert: {{reason}}\n\nLege unter Profil → Passwort ein neues fest."
     },
     "password": {
       "entryBtn": "Passwort",
@@ -261,6 +262,8 @@
       "tooShort_other": "Verwende mindestens {{count}} Zeichen",
       "same": "Das ist dein aktuelles Passwort. Wähle ein anderes.",
       "weak": "Dieses Passwort ist zu schwach. Wähle ein stärkeres.",
+      "characters": "Mische Gross- und Kleinbuchstaben, Ziffern und Sonderzeichen.",
+      "pwned": "Dieses Passwort ist aus einem Datenleck bekannt. Wähle ein anderes.",
       "saveBtn": "Passwort speichern",
       "savingBtn": "Wird gespeichert…",
       "saveError": "Das Passwort konnte nicht gespeichert werden. Bitte versuche es erneut.",
@@ -1822,7 +1825,7 @@
               "text": "Wir stellen TourenBuddy kostenlos und so bereit, wie es ist. Wir gewährleisten weder, dass die App verfügbar ist und fehlerfrei funktioniert, noch dass ihre Inhalte richtig, vollständig oder aktuell sind, noch dass deine Daten erhalten bleiben: Bewahre selbst eine Kopie von allem auf, was dir wichtig ist."
             },
             {
-              "text": "Soweit das Schweizer Recht es zulässt, schliessen wir jede Haftung für Schäden jeder Art aus, die aus dem Planen, Vorbereiten oder Durchführen von Aktivitäten, aus dem Vertrauen auf Inhalte der App oder aus Unterbrüchen, Fehlern oder Datenverlust entstehen. Das umfasst Personen-, Sach- und Vermögensschäden aus leichter und mittlerer Fahrlässigkeit. Wir haften einzig für Absicht und grobe Fahrlässigkeit; diese Haftung lässt das Schweizer Recht nicht zum Voraus ausschliessen (Art. 100 Abs. 1 OR). Soweit das Gesetz es zulässt, schliessen wir die Haftung für Personen und Unternehmen, die wir für den Betrieb von TourenBuddy beiziehen, vollständig aus (Art. 101 OR)."
+              "text": "Soweit das Schweizer Recht es zulässt, schliessen wir jede Haftung für Schäden jeder Art aus, die aus dem Planen, Vorbereiten oder Durchführen von Aktivitäten, aus dem Vertrauen auf Inhalte der App oder aus Unterbrüchen, Fehlern oder Datenverlust entstehen. Das umfasst Personen-, Sach- und Vermögensschäden aus leichter und mittlerer Fahrlässigkeit sowie Schäden, die Personen und Unternehmen verursachen, die wir für den Betrieb von TourenBuddy beiziehen."
             },
             {
               "text": "Machen Dritte wegen Inhalten, die du eingestellt hast, oder wegen eines Verstosses gegen diese Bedingungen Ansprüche gegen uns geltend, stellst du uns davon frei, soweit du den Anspruch verursacht hast. Das gilt nicht für Ansprüche, die auf unsere Absicht oder grobe Fahrlässigkeit zurückgehen."

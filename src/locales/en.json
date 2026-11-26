@@ -250,7 +250,8 @@
       "subtitle": "We'll email you a code to confirm your address",
       "createBtn": "Create account",
       "passwordNotSavedTitle": "Password not saved",
-      "passwordNotSaved": "You're signed in, but your password couldn't be saved. Set it in Profile → Password."
+      "passwordNotSaved": "You're signed in, but your password couldn't be saved. Set it in Profile → Password.",
+      "passwordNotSavedBecause": "You're signed in, but your password wasn't saved: {{reason}}\n\nSet a new one in Profile → Password."
     },
     "password": {
       "entryBtn": "Password",
@@ -261,6 +262,8 @@
       "tooShort_other": "Use at least {{count}} characters",
       "same": "That's your current password. Choose a different one.",
       "weak": "This password is too weak. Choose a stronger one.",
+      "characters": "Mix upper- and lowercase letters, digits and symbols.",
+      "pwned": "This password is known from a data leak. Choose a different one.",
       "saveBtn": "Save password",
       "savingBtn": "Saving…",
       "saveError": "The password couldn't be saved. Please try again.",
@@ -1822,7 +1825,7 @@
               "text": "We provide TourenBuddy free of charge and as is. We do not guarantee that it is available or works without errors, that its content is correct, complete or up to date, or that your data is kept: keep your own copy of what matters to you."
             },
             {
-              "text": "As far as Swiss law allows, we exclude all liability for damage of any kind arising from planning, preparing or carrying out activities, from relying on content in the app, or from interruptions, errors or loss of data. This includes personal injury, damage to property and financial loss caused by slight or medium negligence. We are liable only for intent and gross negligence; Swiss law does not allow that liability to be excluded in advance (Art. 100 para. 1 CO). As far as the law allows, we fully exclude liability for the people and companies we use to run TourenBuddy (Art. 101 CO)."
+              "text": "As far as Swiss law allows, we exclude all liability for damage of any kind arising from planning, preparing or carrying out activities, from relying on content in the app, or from interruptions, errors or loss of data. This includes personal injury, damage to property and financial loss caused by slight or medium negligence, and damage caused by the people and companies we use to run TourenBuddy."
             },
             {
               "text": "If third parties make claims against us because of content you posted or because you breached these terms, you indemnify us, as far as you caused the claim. This does not apply to claims caused by our intent or gross negligence."

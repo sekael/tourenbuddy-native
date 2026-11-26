@@ -1,4 +1,4 @@
-import { AuthApiError, AuthRetryableFetchError } from '@supabase/supabase-js';
+import { AuthApiError, AuthRetryableFetchError, AuthWeakPasswordError } from '@supabase/supabase-js';
 import { act, fireEvent, screen } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 import { Alert, Keyboard, type AlertButton } from 'react-native';
@@ -86,9 +86,27 @@ describe('password sheet, just signed in', () => {
       new AuthApiError('same', 422, 'same_password'),
       "That's your current password. Choose a different one.",
     ],
+    // What auth-js makes of the server's `weak_password`: its own class, never an API error.
     [
-      'weak',
-      new AuthApiError('weak', 422, 'weak_password'),
+      'shorter than the server allows',
+      new AuthWeakPasswordError('Password should be at least 10 characters.', 422, ['length']),
+      'Use at least 10 characters',
+    ],
+    [
+      'missing a kind of character',
+      new AuthWeakPasswordError('Password should contain at least one character of each: …', 422, [
+        'characters',
+      ]),
+      'Mix upper- and lowercase letters, digits and symbols.',
+    ],
+    [
+      'known from a leak',
+      new AuthWeakPasswordError('Password is known to be weak and easy to guess.', 422, ['pwned']),
+      'This password is known from a data leak. Choose a different one.',
+    ],
+    [
+      'weak for no stated reason',
+      new AuthWeakPasswordError('weak', 422, []),
       'This password is too weak. Choose a stronger one.',
     ],
     ['offline', offline(), "This action isn't available offline"],
@@ -121,8 +139,10 @@ describe('password sheet, just signed in', () => {
       options: { shouldCreateUser: false },
     });
     expect(screen.getByText(/we sent a 6-digit code to anna@example.com/)).toBeOnTheScreen();
+    await type('Code from your email', '12345');
+    expect(supabase.auth.verifyOtp).not.toHaveBeenCalled();
+    // The sixth digit saves: the number pad has no return key.
     await type('Code from your email', '123456');
-    await pressSwift('Save password');
 
     expect(supabase.auth.verifyOtp).toHaveBeenCalledWith({
       email: 'anna@example.com',
@@ -176,7 +196,6 @@ describe('password sheet, the app relaunched since the sign-in', () => {
     });
 
     await type('Code from your email', '000000');
-    await pressSwift('Save password');
 
     expect(
       screen.getByText('That code is wrong or has expired. Send a new one and try again.'),

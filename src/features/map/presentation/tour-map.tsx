@@ -100,6 +100,8 @@ export type TourMapProps = {
   areas?: GeoJSON.FeatureCollection<GeoJSON.Polygon>;
   /** Trails step back while a track is drawn (track-drawing). */
   dimTrails?: boolean;
+  /** The overlays are a tap away: those switched off load unseen (`tourMapLayers`). */
+  warmOverlays?: boolean;
   /** While drawing, tours take no taps and double-tap zoom is off (track-drawing). */
   drawing?: boolean;
   /** The area the chrome and sheets cover, so the camera frames what is left. */
@@ -153,6 +155,7 @@ export function TourMap({
   points,
   areas,
   dimTrails = false,
+  warmOverlays = false,
   drawing = false,
   padding,
   initialCenter,
@@ -208,7 +211,10 @@ export function TourMap({
     zoom: async () => (await mapRef.current?.getZoom()) ?? 0,
   }));
 
-  const layers = useMemo(() => tourMapLayers({ overlays, dimTrails }), [overlays, dimTrails]);
+  const layers = useMemo(
+    () => tourMapLayers({ overlays, dimTrails, warm: warmOverlays }),
+    [overlays, dimTrails, warmOverlays],
+  );
   const labels = useMemo(() => labelPoints(points, focus), [points, focus]);
 
   return (

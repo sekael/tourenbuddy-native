@@ -39,8 +39,11 @@ async function readStoredUser(): Promise<User | null> {
   }
 }
 
-/** `passwordNotSaved`: the code signed in, but the password chosen on Create account did not stick. */
-export type VerifyResult = 'signedIn' | 'passwordNotSaved';
+/**
+ * The code signed in. `passwordError`: why the password chosen on Create account did not stick, so
+ * the screen can say which rule it broke.
+ */
+export type VerifyResult = { passwordError?: Error };
 /** For the Passkeys sheet, which reaches the data layer only through this store. */
 export type PasskeyItem = passkeys.PasskeyItem;
 
@@ -170,13 +173,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     if (error) throw error;
     set({ provenAt: Date.now() });
     const pending = get().pendingPassword;
-    if (pending?.email !== email) return 'signedIn';
+    if (pending?.email !== email) return {};
     set({ pendingPassword: undefined });
     // Only now, with the address proven: the session has arrived, so this changes that account.
     const { error: passwordError } = await supabase.auth.updateUser({ password: pending.password });
-    if (!passwordError || passwordError.code === 'same_password') return 'signedIn';
+    if (!passwordError || passwordError.code === 'same_password') return {};
     log.warn('The password chosen on Create account was not saved', passwordError);
-    return 'passwordNotSaved';
+    return { passwordError };
   },
 
   signInWithPassword: async (email, password) => {

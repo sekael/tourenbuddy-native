@@ -1,7 +1,13 @@
-import { isAuthApiError, isAuthRetryableFetchError } from '@supabase/supabase-js';
+import {
+  isAuthApiError,
+  isAuthRetryableFetchError,
+  isAuthWeakPasswordError,
+  type AuthWeakPasswordError,
+} from '@supabase/supabase-js';
 import type { TFunction } from 'i18next';
 
 import { PasskeyError } from '../data/passkeys';
+import { PASSWORD_MIN_LENGTH } from '../domain/credentials';
 
 /**
  * Seconds the server asks to wait before sending another code: its 429 says
@@ -41,23 +47,42 @@ export function signInErrorMessage(error: unknown, t: TFunction): string {
   return t('auth.signIn.signInError');
 }
 
-/** Why setting a password failed, in the app's language. */
 /** The server wants the emailed code before it changes the password. */
 export function needsPasswordCode(error: unknown): boolean {
   return isAuthApiError(error) && error.code === 'reauthentication_needed';
 }
 
-export function passwordErrorMessage(error: unknown, t: TFunction): string {
+/**
+ * The rule a refused password broke. auth-js reports it as its own error class (with the reasons
+ * the server gave), not as an API error: "Password should be at least 8 characters." for `length`.
+ */
+function weakPasswordMessage(error: AuthWeakPasswordError, t: TFunction): string {
+  if (error.reasons.includes('length')) {
+    const min = Number(/(\d+) characters?/.exec(error.message)?.[1]);
+    return t('auth.password.tooShort', { count: min > 0 ? min : PASSWORD_MIN_LENGTH });
+  }
+  if (error.reasons.includes('characters')) return t('auth.password.characters');
+  if (error.reasons.includes('pwned')) return t('auth.password.pwned');
+  return t('auth.password.weak');
+}
+
+/** Why setting a password failed, in the app's language; null for a failure it can't explain. */
+export function passwordFailureReason(error: unknown, t: TFunction): string | null {
   if (isOffline(error)) return t('offline.actionUnavailable');
+  if (isAuthWeakPasswordError(error)) return weakPasswordMessage(error, t);
   if (isAuthApiError(error) && error.code === 'same_password') return t('auth.password.same');
-  if (isAuthApiError(error) && error.code === 'weak_password') return t('auth.password.weak');
   if (
     isAuthApiError(error) &&
     (error.code === 'otp_expired' || error.code === 'reauthentication_not_valid')
   ) {
     return t('auth.password.codeInvalid');
   }
-  return t('auth.password.saveError');
+  return null;
+}
+
+/** Why setting a password failed, in the app's language. */
+export function passwordErrorMessage(error: unknown, t: TFunction): string {
+  return passwordFailureReason(error, t) ?? t('auth.password.saveError');
 }
 
 /** What to say about a failed passkey action; nothing when the user cancelled the sheet. */
