@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/sekael/tourenbuddy-native/compare/tourenbuddy-native-v0.2.1...tourenbuddy-native-v0.3.0) (2026-11-27)
+
+
+### Features
+
+* **tours:** Track editing, tour profile and multi-day tours in one go ([#47](https://github.com/sekael/tourenbuddy-native/issues/47)) ([562f018](https://github.com/sekael/tourenbuddy-native/commit/562f0181960878f5bc6dbcdaaec103b526b9511a))
+* Web port from vue to react ([#11](https://github.com/sekael/tourenbuddy-native/issues/11)) ([ca30b06](https://github.com/sekael/tourenbuddy-native/commit/ca30b06a6cd0d879644d70c686eb95e3f0cbe957))
+
 ## [0.2.1](https://github.com/sekael/tourenbuddy-native/compare/tourenbuddy-native-v0.2.0...tourenbuddy-native-v0.2.1) (2026-11-22)
 
 
