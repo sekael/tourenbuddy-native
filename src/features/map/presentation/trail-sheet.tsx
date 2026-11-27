@@ -13,6 +13,7 @@ import { trackLine } from '@/features/map/domain/drawn-track';
 import type { Trail } from '@/features/map/domain/entities/trail';
 import { TOUR_TYPE_COLORS } from '@/features/tours/data/models/tour-type';
 import { gpxFromLine } from '@/features/tours/data/services/gpx-writer';
+import { lineEnds } from '@/features/tours/domain/distance';
 import { labelMinutes } from '@/features/tours/domain/route-metrics';
 import { useTourDraftStore } from '@/features/tours/presentation/stores/tour-draft-store';
 import { usePace } from '@/features/user/presentation/stores/user-profile-store';
@@ -118,10 +119,9 @@ function TrailPage({ trail, onClose }: { trail: Trail; onClose?: () => void }) {
         line,
         drawing: planned.track,
       });
-      store.update({
-        startPoint: { lng: line[0]![0], lat: line[0]![1] },
-        endPoint: { lng: line.at(-1)![0], lat: line.at(-1)![1] },
-      });
+      // A route without a way down ends at its summit: no end, so "Round trip" is a tap away.
+      const { start, end } = lineEnds(line[0]!, line.at(-1)!, planned.goal);
+      store.setEnds(start, end);
       router.replace('/tour/edit');
     } finally {
       setPlanning(false);

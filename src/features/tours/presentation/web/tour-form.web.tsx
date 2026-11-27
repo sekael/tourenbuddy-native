@@ -921,7 +921,9 @@ export function TourForm({
   function handleRoundTrip() {
     if (!s.startPoint) return;
     const drawing = !s.gpxRemoved && s.gpxFile ? files.drawings.get(s.gpxFile) : undefined;
-    if (drawing?.goal && drawing.goal === drawing.points.length - 1) {
+    // A drawing that ends at its goal (a ski route's has no goal marked: it ends on the summit).
+    const last = (drawing?.points.length ?? 0) - 1;
+    if (drawing && last > 0 && (drawing.goal ?? last) === last) {
       void acceptDrawnTrack(withWayBack(drawing));
       return;
     }
@@ -1216,7 +1218,7 @@ export function TourForm({
             )}
           </div>
 
-          {/* Tour type */}
+          {/* Tour type, its ways and its grade: above the route, as in the app */}
           <div className={c('section')}>
             <p className={c('section-label')}>{t('tours.form.activityLabel')}</p>
             <div className={c('type-chips')}>
@@ -1245,9 +1247,30 @@ export function TourForm({
                 onSet={setLegDirection}
               />
             )}
+            <div className={c('field')}>
+              <label className={c('label')} htmlFor={id('grade')}>
+                {t('tours.form.gradeLabel')}
+              </label>
+              <input
+                id={id('grade')}
+                value={s.grade}
+                className={c('input')}
+                type="text"
+                maxLength={GRADE_MAX_LENGTH}
+                placeholder={gradePlaceholder()}
+                autoComplete="off"
+                data-testid="grade-input"
+                onChange={(e) => (s.grade = e.target.value)}
+              />
+              <GradeChips
+                value={s.grade}
+                tourTypes={s.selectedTourTypes}
+                onChange={(value) => (s.grade = value)}
+              />
+            </div>
           </div>
 
-          {/* Route: the track first, start and end after it, then its grade (design D9) */}
+          {/* Route: the track first, start and end after it (design D9) */}
           <div className={c('section')}>
             <p className={c('section-label')}>{t('tours.form.routeSectionLabel')}</p>
             <input
@@ -1545,27 +1568,6 @@ export function TourForm({
                 </span>
               </button>
             )}
-            <div className={c('field')}>
-              <label className={c('label')} htmlFor={id('grade')}>
-                {t('tours.form.gradeLabel')}
-              </label>
-              <input
-                id={id('grade')}
-                value={s.grade}
-                className={c('input')}
-                type="text"
-                maxLength={GRADE_MAX_LENGTH}
-                placeholder={gradePlaceholder()}
-                autoComplete="off"
-                data-testid="grade-input"
-                onChange={(e) => (s.grade = e.target.value)}
-              />
-              <GradeChips
-                value={s.grade}
-                tourTypes={s.selectedTourTypes}
-                onChange={(value) => (s.grade = value)}
-              />
-            </div>
           </div>
 
           {/* When: the seasons follow the dates (design D6) */}

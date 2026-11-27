@@ -40,6 +40,11 @@ export function MapLayersSheet() {
   useEffect(() => {
     void useOfflineMapsStore.getState().load();
   }, []);
+  // The overlays load unseen while the sheet is open, so one switched on comes in whole.
+  useEffect(() => {
+    useMapStore.setState({ layersOpen: true });
+    return () => useMapStore.setState({ layersOpen: false });
+  }, []);
   return (
     <Screen
       fit

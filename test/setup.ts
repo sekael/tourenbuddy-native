@@ -65,3 +65,8 @@ jest.mock('expo-notifications', () => ({
 }));
 // No system passkey sheet either.
 jest.mock('react-native-passkey', () => require('./support/fake-passkey'));
+// The launch screen's fade: jest-expo reports Expo Go, where setting it only warns.
+jest.mock('expo-splash-screen', () => ({
+  ...jest.requireActual('expo-splash-screen'),
+  setOptions: jest.fn(),
+}));

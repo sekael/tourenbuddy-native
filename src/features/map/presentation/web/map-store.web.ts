@@ -5,6 +5,7 @@ import { TRAIL_OVERLAYS, type TrailOverlayId } from '@/features/map/data/trail-o
 import type { LngLat, Trail } from '@/features/map/domain/entities/trail';
 import type { TourType } from '@/features/tours/data/models/tour-type';
 import type { TourLegs } from '@/features/tours/domain/legs';
+import type { TrackCursor } from '@/features/map/domain/profile-cursor';
 
 // The PWA's key: a user switching from the PWA keeps the overlays they had on (web-app carry-over).
 const OVERLAYS_STORAGE_KEY = 'tb.map.overlays';
@@ -67,6 +68,8 @@ type MapState = {
   previewEnd: Point | null;
   previewTrack: LngLat[] | null;
   previewStages: DraftStage[];
+  /** The place a finger or the mouse on the open tour's elevation profile points at. */
+  trackCursor: TrackCursor | null;
   pendingIntent: PendingIntent | null;
   activeOverlays: TrailOverlayId[];
   trailCard: TrailCard | null;
@@ -104,6 +107,7 @@ export const useMapStore = create<MapState>()((set, get) => ({
   previewStart: null,
   previewEnd: null,
   previewTrack: null,
+  trackCursor: null,
   previewStages: [],
   pendingIntent: null,
   activeOverlays: readStoredOverlays(),

@@ -150,7 +150,9 @@ export function TermsPage({ onOpen, onSignOut, onDelete, deleting }: Props) {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: color.background },
+  // No fill of its own: the page's background runs from the bar to the bottom edge in one shade, as
+  // on every other page (a white scroll view showed between a grey bar and a grey strip).
+  page: { flex: 1 },
   // Short content sits in the middle of the screen, long content scrolls from the top.
   content: {
     flexGrow: 1,

@@ -5,6 +5,7 @@ import '@/core/theme/load-fonts';
 import '@/core/offline/session';
 
 import * as Notifications from 'expo-notifications';
+import { setOptions as setLaunchScreenOptions } from 'expo-splash-screen';
 import {
   router,
   SplashScreen,
@@ -121,7 +122,9 @@ function useWelcome(signedIn: boolean) {
 export const unstable_settings = { anchor: '(tabs)' };
 
 // The launch screen stays until the session is known, so neither sign-in nor the map flashes.
+// It is a full-screen photo (iOS): it dissolves into the app rather than cutting to it.
 void SplashScreen.preventAutoHideAsync();
+setLaunchScreenOptions({ fade: true, duration: 300 });
 
 /**
  * The routes follow the session, both ways, in one place: signed out, only sign-in is reachable;

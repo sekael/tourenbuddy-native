@@ -10,6 +10,7 @@ import { TOUR_TYPE_VALUES, type TourType } from '@/features/tours/data/models/to
 import { getElevation } from '@/features/tours/data/services/swisstopo-elevation-service';
 import { suggestTourName } from '@/features/tours/data/services/swisstopo-name-service';
 import { isSameGoal } from '@/features/tours/domain/distance';
+import { carriedForward, nextSegmentSeed } from '@/features/tours/domain/outing';
 import type { Tour, TourDraft } from '@/features/tours/domain/entities/tour';
 import {
   chosenDirection,
@@ -89,6 +90,14 @@ type DraftState = {
   segmentOf: string | null;
   /** The tour whose sheet closed so its route could be edited on the map: reopened after. */
   returnTo: string | null;
+  /**
+   * Every day of a trip laid out before its first save (tour-outings "Lay out stages before the
+   * first save"); empty for one tour. The active day's entry is stale: the fields above hold it.
+   */
+  stages: DraftDay[];
+  active: number;
+  /** The days a span split into daily stages has ("Day 2 of 3"), counted from the outing's first. */
+  dayCount: number | null;
   begin: (mode: DraftMode, tour?: Tour | null, seed?: Partial<TourDraft>) => void;
   update: (patch: Partial<TourDraft>) => void;
   /** An activity on or off; each activity keeps the way picked for it, a new one takes its default. */
@@ -104,8 +113,73 @@ type DraftState = {
   setEnds: (start: LngLat | null, end: LngLat | null) => void;
   removeTrack: () => void;
   setSegmentOf: (id: string | null) => void;
+  /** Every day as it is now: the one tour, or each day of the trip in order. */
+  days: () => DraftDay[];
+  /** A day after the last, seeded from it (starting where it ends, the day after), on screen. */
+  nextDay: () => void;
+  selectDay: (index: number) => void;
+  /** Drops a later day; the one before it shows. */
+  removeDay: (index: number) => void;
   reset: () => void;
 };
+
+/** One day of a trip laid out before its first save: what is each tour's own. */
+export type DraftDay = Pick<
+  DraftState,
+  | 'tourId'
+  | 'draftId'
+  | 'draft'
+  | 'goal'
+  | 'track'
+  | 'gpxRemoved'
+  | 'dirty'
+  | 'legChoices'
+  | 'route'
+>;
+
+const dayOf = (s: DraftDay): DraftDay => ({
+  tourId: s.tourId,
+  draftId: s.draftId,
+  draft: s.draft,
+  goal: s.goal,
+  track: s.track,
+  gpxRemoved: s.gpxRemoved,
+  dirty: s.dirty,
+  legChoices: s.legChoices,
+  route: s.route,
+});
+
+/** The draft with `patch` applied; the seasons follow the dates while the user hasn't chosen them. */
+function withSeasons(before: TourDraft, patch: Partial<TourDraft>): TourDraft {
+  const draft = { ...before, ...patch };
+  if (('plannedDate' in patch || 'endDate' in patch) && !('seasons' in patch)) {
+    const auto = seasonsForDates(draft.plannedDate, draft.endDate);
+    const was = seasonsForDates(before.plannedDate, before.endDate);
+    const untouched = !before.seasons?.length || same(before.seasons, was);
+    if (untouched) draft.seasons = auto.length ? auto : before.seasons;
+  }
+  return draft;
+}
+
+/** The later days, once the active one changed to `draft` (D11: what they still shared follows). */
+function carried(s: DraftState, draft: TourDraft): Partial<DraftState> {
+  if (s.stages.length < 2) return {};
+  const patches = carriedForward(
+    s.stages.map((day, i) => (i === s.active ? draft : day.draft)),
+    s.active,
+    s.draft,
+  );
+  if (!patches.some(Boolean)) return {};
+  return {
+    stages: s.stages.map((day, j) => {
+      const patch = patches[j];
+      if (!patch) return day;
+      const next = withSeasons(day.draft, patch);
+      if (patch.tourTypes) next.legs = chosenLegs(next.tourTypes, day.legChoices);
+      return { ...day, draft: next };
+    }),
+  };
+}
 
 const point = (p: RoutePoints['start']) => (p ? { ...p.location } : null);
 
@@ -122,6 +196,9 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
   route: null,
   segmentOf: null,
   returnTo: null,
+  stages: [],
+  active: 0,
+  dayCount: null,
 
   begin: (mode, tour = null, seed = {}) => {
     const draft = { ...(tour ? tourToDraft(tour) : emptyDraft()), ...seed };
@@ -138,20 +215,17 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
       route: null,
       segmentOf: null,
       returnTo: null,
+      stages: [],
+      active: 0,
+      dayCount: null,
     });
   },
 
   update: (patch) =>
     set((s) => {
-      const draft = { ...s.draft, ...patch };
       // Seasons follow the dates while the user has not chosen them (tour-form-extended).
-      if (('plannedDate' in patch || 'endDate' in patch) && !('seasons' in patch)) {
-        const auto = seasonsForDates(draft.plannedDate, draft.endDate);
-        const before = seasonsForDates(s.draft.plannedDate, s.draft.endDate);
-        const untouched = !s.draft.seasons?.length || same(s.draft.seasons, before);
-        if (untouched) draft.seasons = auto.length ? auto : s.draft.seasons;
-      }
-      return { draft, dirty: true };
+      const draft = withSeasons(s.draft, patch);
+      return { draft, dirty: true, ...carried(s, draft) };
     }),
 
   toggleType: (type) =>
@@ -160,10 +234,8 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
       const next = TOUR_TYPE_VALUES.filter((v) =>
         v === type ? !types.includes(v) : types.includes(v),
       );
-      return {
-        draft: { ...s.draft, tourTypes: next, legs: chosenLegs(next, s.legChoices) },
-        dirty: true,
-      };
+      const draft = { ...s.draft, tourTypes: next, legs: chosenLegs(next, s.legChoices) };
+      return { draft, dirty: true, ...carried(s, draft) };
     }),
 
   setWay: (type, way) =>
@@ -233,18 +305,13 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
       },
       dirty: true,
     }));
-    const lookUp = (at: Spot, apply: (name: string | null, elevation: number | null) => void) =>
-      void Promise.all([
-        suggestTourName(at).catch(() => null),
-        getElevation(at).catch(() => null),
-      ]).then(([name, elevation]) => apply(name, elevation));
     if (s)
-      lookUp(s, (startPointName, startPointElevation) => {
+      lookUpPlace(s, (startPointName, startPointElevation) => {
         if (get().draft.startPoint !== s) return;
         set((state) => ({ draft: { ...state.draft, startPointName, startPointElevation } }));
       });
     if (e)
-      lookUp(e, (endPointName, endPointElevation) => {
+      lookUpPlace(e, (endPointName, endPointElevation) => {
         if (get().draft.endPoint !== e) return;
         set((state) => ({ draft: { ...state.draft, endPointName, endPointElevation } }));
       });
@@ -252,6 +319,70 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
 
   removeTrack: () => set((s) => ({ track: null, gpxRemoved: !!s.draft.gpxFilepath, dirty: true })),
   setSegmentOf: (segmentOf) => set({ segmentOf }),
+
+  days: () => {
+    const s = get();
+    return s.stages.length
+      ? s.stages.map((day, i) => (i === s.active ? dayOf(s) : day))
+      : [dayOf(s)];
+  },
+
+  nextDay: () => {
+    const days = get().days();
+    const last = days.at(-1)!;
+    if (!last.goal) return;
+    // Starting at the goal, the day takes the goal's place name, not the tour's.
+    const place = last.route?.points.goal?.name;
+    const draft: TourDraft = {
+      ...emptyDraft(),
+      ...nextSegmentSeed({ ...last.draft, name: place ?? last.draft.name, goal: last.goal }),
+    };
+    const day: DraftDay = {
+      tourId: newId(),
+      draftId: newId(),
+      draft,
+      goal: null,
+      track: null,
+      gpxRemoved: false,
+      dirty: true,
+      legChoices: choicesOf(draft),
+      route: null,
+    };
+    set({ stages: [...days, day], active: days.length, ...day });
+    // The day before ended at a spot without a name: the start is named and measured.
+    const start = draft.startPoint;
+    if (start && !draft.startPointName) {
+      lookUpPlace(start, (startPointName, elevation) => {
+        if (get().draft.startPoint !== start) return;
+        set((st) => ({
+          draft: {
+            ...st.draft,
+            startPointName,
+            startPointElevation: st.draft.startPointElevation ?? elevation,
+          },
+        }));
+      });
+    }
+  },
+
+  selectDay: (index) => {
+    const days = get().days();
+    if (!days[index]) return;
+    set({ stages: days, active: index, ...days[index] });
+  },
+
+  removeDay: (index) => {
+    const days = get().days();
+    if (index <= 0 || !days[index]) return;
+    const kept = days.filter((_, i) => i !== index);
+    const active = Math.min(index - 1, kept.length - 1);
+    set({
+      stages: kept.length > 1 ? kept : [],
+      active: kept.length > 1 ? active : 0,
+      ...kept[active]!,
+    });
+  },
+
   reset: () =>
     set({
       mode: null,
@@ -266,8 +397,29 @@ export const useTourDraftStore = create<DraftState>()((set, get) => ({
       route: null,
       segmentOf: null,
       returnTo: null,
+      stages: [],
+      active: 0,
+      dayCount: null,
     }),
 }));
+
+/** The first day a save can't take (no name, no goal, ends before it starts), or -1. */
+export function firstUnsavableDay(days: readonly DraftDay[]): number {
+  return days.findIndex(
+    ({ draft, goal }) =>
+      !draft.name?.trim() ||
+      !goal ||
+      (!!draft.endDate && !!draft.plannedDate && draft.endDate < draft.plannedDate),
+  );
+}
+
+/** A spot's place name and height, looked up together. */
+function lookUpPlace(at: Spot, apply: (name: string | null, elevation: number | null) => void) {
+  void Promise.all([
+    suggestTourName(at).catch(() => null),
+    getElevation(at).catch(() => null),
+  ]).then(([name, elevation]) => apply(name, elevation));
+}
 
 type Spot = { lng: number; lat: number };
 /** A start or end this close to where it was keeps its name and height. */

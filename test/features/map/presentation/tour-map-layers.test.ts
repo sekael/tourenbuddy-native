@@ -137,3 +137,58 @@ describe('outing chains', () => {
     expect(drawnBy('line-dots', { color: '#c00', width: 4 })).toBe(false);
   });
 });
+
+describe('trail overlays', () => {
+  const overlay = (layers: ReturnType<typeof tourMapLayers>, id: string) =>
+    layers.overlays.find((layer) => layer.id === `overlay-${id}`)!;
+  const ski = (layers: ReturnType<typeof tourMapLayers>, id: string) =>
+    layers.ski.find((layer) => layer.id === id)!;
+
+  it('should load nothing for an overlay that is off and not at hand', () => {
+    const layers = tourMapLayers({ overlays: [], dimTrails: false });
+
+    expect(overlay(layers, 'hiking').layout).toMatchObject({ visibility: 'none' });
+    expect(ski(layers, 'ski-halo').layout).toMatchObject({ visibility: 'none' });
+    expect(ski(layers, 'ski-badges').layout).toMatchObject({ visibility: 'none' });
+  });
+
+  it('should load an overlay that is off but at hand, unseen, its badges kept out', () => {
+    const layers = tourMapLayers({ overlays: [], dimTrails: false, warm: true });
+
+    expect(overlay(layers, 'hiking')).toMatchObject({
+      layout: { visibility: 'visible' },
+      paint: { 'raster-opacity': 0 },
+    });
+    expect(ski(layers, 'ski-halo')).toMatchObject({
+      layout: { visibility: 'visible' },
+      paint: { 'line-opacity': 0 },
+    });
+    // A placed badge would push other labels aside even unseen.
+    expect(ski(layers, 'ski-badges').layout).toMatchObject({ visibility: 'none' });
+  });
+
+  it('should show an overlay that is on, dimmed while a track is drawn', () => {
+    const on = tourMapLayers({ overlays: ['hiking', 'ski'], dimTrails: false, warm: true });
+    const dimmed = tourMapLayers({ overlays: ['hiking'], dimTrails: true });
+
+    expect(overlay(on, 'hiking').paint).toMatchObject({ 'raster-opacity': 1 });
+    expect(ski(on, 'ski-halo').paint).toMatchObject({ 'line-opacity': 0.5 });
+    expect(ski(on, 'ski-badges').layout).toMatchObject({ visibility: 'visible' });
+    expect(overlay(dimmed, 'hiking').paint).toMatchObject({ 'raster-opacity': 0.4 });
+  });
+
+  it('should be valid style for MapLibre, transitions included', () => {
+    const layers = tourMapLayers({ overlays: ['ski'], dimTrails: false, warm: true });
+    const style = {
+      version: 8 as const,
+      sources: {
+        'overlay-hiking': { type: 'raster' as const, tiles: ['https://x/{z}/{x}/{y}.png'] },
+        'overlay-ski': { type: 'raster' as const, tiles: ['https://x/{z}/{x}/{y}.png'] },
+        'ski-routes': { type: 'vector' as const, tiles: ['https://x/{z}/{x}/{y}.pbf'] },
+      },
+      layers: [...layers.overlays, ...layers.ski],
+    };
+
+    expect(validateStyleMin(style as never)).toEqual([]);
+  });
+});

@@ -40,6 +40,7 @@ import {
 } from '@/features/tours/data/models/tour-type';
 import { GpxFileTooLargeError, parseGpxText } from '@/features/tours/data/services/gpx-parser';
 import { gpxStorageKey, uploadGpxToKey } from '@/features/tours/data/services/gpx-storage-service';
+import { isSameGoal, lineEnds, TRACK_END_NEAR_M } from '@/features/tours/domain/distance';
 import type { TourDraft } from '@/features/tours/domain/entities/tour';
 import {
   chosenDirection,
@@ -53,12 +54,15 @@ import { buildSuggestionItems } from '@/features/tours/domain/suggestion-diff';
 
 import { AttachmentsSection, usePickActions } from './attachments-section';
 import { useTourAttachmentsStore } from './stores/tour-attachments-store';
-import { useReplannedTrack } from './replan-track';
-import { useTourDraftStore } from './stores/tour-draft-store';
+import { makeRoundTrip, useReplannedTrack } from './replan-track';
+import { firstUnsavableDay, useTourDraftStore } from './stores/tour-draft-store';
 import { useTourSuggestionsStore } from './stores/tour-suggestions-store';
 import { useToursStore } from './stores/tours-store';
 import { useTour } from './tour-detail-page';
-import { openTour } from '@/features/map/presentation/open-tour';
+import { openOuting, openTour } from '@/features/map/presentation/open-tour';
+import { outingKey } from '@/features/tours/domain/outing';
+
+import { DayPills, useDayLabel, useDayOffset } from './day-pills';
 import type { Contact } from '@/features/contacts/domain/entities/contact';
 
 const log = createLogger('TourForm');
@@ -70,11 +74,12 @@ const typeLabel = (t: TFunction, type: TourType) =>
   t(`tours.type.${TOUR_TYPE_I18N_KEYS[type]}` as 'tours.type.hiking');
 
 /**
- * The tour form (tour-form-extended), a full-screen system form with Cancel and Save: name,
- * activities (and, with several, which way each goes), grade, dates and start time, the route (its
- * points; "Change route" and "Draw on map" open the step over the live map and come back here with
- * every field kept), the track (import a GPX file, remove), height, seasons, partners, visibility,
- * texts and attachments. Create, edit and (a partner on a friend's tour) suggest changes.
+ * The tour form (tour-form-extended "Form order"), a full-screen system form with Cancel and Save:
+ * name and the goal's height; activities (and, with several, which way each goes) and grade; the
+ * route (its points, "Round trip", "Change route" and "Draw on map" opening the step over the live
+ * map and coming back here with every field kept, the track: import a GPX file, remove); dates,
+ * start time and seasons; partners; visibility; texts and attachments. Create, edit and (a partner
+ * on a friend's tour) suggest changes.
  */
 export function TourFormScreen() {
   const [path, setPath] = useState<string[]>([]);
@@ -120,12 +125,29 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
   const pending = useTourAttachmentsStore((s) => (tourId ? s.pendingByTour[tourId] : undefined));
   const preUploaded = useTourAttachmentsStore((s) => s.preUploadedByDraft[draftId]);
   const staged = useTourAttachmentsStore((s) => s.stagedByDraft[draftId]);
-  const unsaved = dirty || !!(preUploaded?.length || staged?.length);
+  // The days of a trip laid out before its first save (tour-outings).
+  const days = useTourDraftStore((s) => Math.max(1, s.stages.length));
+  const active = useTourDraftStore((s) => s.active);
+  /** A split span's length ("Day 2 of 3"), counted from the outing's first day. */
+  const spanDays = useTourDraftStore((s) => s.dayCount);
+  const dayOffset = useDayOffset();
+  const dayLabel = useDayLabel();
+  /** The days this day's dates cover: more than one offers "Split into daily stages". */
+  const span =
+    draft.plannedDate && draft.endDate
+      ? Math.round((draft.endDate.getTime() - draft.plannedDate.getTime()) / 86_400_000) + 1
+      : 1;
+  /** The day a split span still lacks (by index among the days laid out), or null. */
+  const missingDay = spanDays && dayOffset + days < spanDays ? days : null;
+  const unsaved = dirty || days > 1 || !!(preUploaded?.length || staged?.length);
   // Unsaved, the form can't be swiped away: Cancel asks first.
   const navigation = useNavigation();
   useEffect(() => navigation.setOptions({ gestureEnabled: !unsaved }), [navigation, unsaved]);
   const [saving, setSaving] = useState(false);
-  const [nameError, setNameError] = useState<string | null>(null);
+  /** The missing name's message, for the day it belongs to (a save may show another day). */
+  const [nameError, setNameErrorOf] = useState<{ draftId: string; text: string } | null>(null);
+  const setNameError = (text: string | null) =>
+    setNameErrorOf(text ? { draftId: useTourDraftStore.getState().draftId, text } : null);
   const [gpxError, setGpxError] = useState<string | null>(null);
   const store = useTourDraftStore.getState();
   const update = store.update;
@@ -179,16 +201,21 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
 
   function close() {
     const finish = () => {
-      void useTourAttachmentsStore
-        .getState()
-        .discardDraft(draftId, mode === 'create' ? tourId : null);
+      // Every day's uploads go: cancelling a trip's layout creates nothing.
+      for (const day of useTourDraftStore.getState().days()) {
+        void useTourAttachmentsStore
+          .getState()
+          .discardDraft(day.draftId, mode === 'create' ? day.tourId : null);
+      }
       leaveForm();
     };
     if (!unsaved) {
       finish();
       return;
     }
-    Alert.alert(t('tours.form.discardTitle'), undefined, [
+    const title =
+      days > 1 ? t('tours.creation.discardDays', { count: days }) : t('tours.form.discardTitle');
+    Alert.alert(title, undefined, [
       { text: t('tours.creation.keepEditing'), style: 'cancel' },
       { text: t('contacts.shared.discardBtn'), style: 'destructive', onPress: finish },
     ]);
@@ -209,7 +236,87 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
     return key;
   }
 
+  /** Days on the map (tour-outings): to the route step, for a day's goal. */
+  function planDay() {
+    router.replace({ pathname: '/plan', params: { keep: '1' } });
+  }
+
+  function nextDay() {
+    void Haptics.selectionAsync();
+    store.nextDay();
+    planDay();
+  }
+
+  /** "Split into daily stages" (D5): this day keeps its first date, the next day's stage follows. */
+  function splitDays(span: number) {
+    update({ endDate: null });
+    useTourDraftStore.setState({ dayCount: dayOffset + active + span });
+    nextDay();
+  }
+
+  /** Drops the day on screen and its uploads; the day before shows. */
+  function removeDay() {
+    const day = useTourDraftStore.getState().days()[active];
+    if (!day) return;
+    void useTourAttachmentsStore.getState().discardDraft(day.draftId, day.tourId);
+    store.removeDay(active);
+  }
+
+  /**
+   * One save, every day (tour-outings "Lay out stages before the first save"): each a segment of one
+   * outing, in order; a day that can't be saved comes to the front and nothing is saved.
+   */
+  async function saveDays() {
+    const days = useTourDraftStore.getState().days();
+    const bad = firstUnsavableDay(days);
+    if (bad >= 0) {
+      store.selectDay(bad);
+      if (!days[bad]!.draft.name?.trim()) setNameError(t('tours.form.nameRequired'));
+      return;
+    }
+    setSaving(true);
+    try {
+      const tours = useToursStore.getState();
+      const anchor = useTourDraftStore.getState().segmentOf;
+      const outing = anchor
+        ? await tours.ensureOuting(anchor)
+        : { id: newId(), name: null, position: 0 };
+      if (!outing) throw new Error('The outing to add to is gone');
+      const first = anchor ? useToursStore.getState().nextInOuting(outing).position : 0;
+      let last: string | null = null;
+      for (const [i, day] of days.entries()) {
+        const next: TourDraft = {
+          ...day.draft,
+          name: day.draft.name!.trim(),
+          outing: { ...outing, position: first + i },
+        };
+        if (day.track) next.gpxFilepath = await uploadTrack(day.track.text);
+        const id = await tours.createTourFromDraft(next, day.goal!, day.tourId);
+        if (!id) continue;
+        last = id;
+        await useTourAttachmentsStore.getState().commitStaged(day.draftId, id);
+      }
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // The trip opens on its overview, every day on the map.
+      const userId = sessionUser.getState().id;
+      const key = userId ? outingKey({ userId, outing }) : null;
+      if (key && last) {
+        useTourDraftStore.getState().reset();
+        openOuting(key, last);
+      } else leaveForm(last);
+    } catch (error) {
+      log.error('Saving the days failed', error);
+      Alert.alert(t('tours.infoSheet.saveFailed'));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function save() {
+    if (days > 1) {
+      await saveDays();
+      return;
+    }
     if (!draft.name?.trim()) {
       setNameError(t('tours.form.nameRequired'));
       return;
@@ -288,8 +395,10 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
         .map(([lng, lat]) => [lng!, lat!] as LngLat);
       if (line.length < 2) throw new Error('empty track');
       store.setTrack({ text, label: asset.name, line, drawing: null });
-      // Its ends are the route's start and end: one each, where the track begins and ends.
-      store.setEnds(line[0]!, line.at(-1)!);
+      // Its ends are the route's start and end, where the track begins and ends (one at the goal
+      // is the goal).
+      const { start, end } = lineEnds(line[0]!, line.at(-1)!, useTourDraftStore.getState().goal);
+      store.setEnds(start, end);
     } catch (error) {
       setGpxError(
         error instanceof GpxFileTooLargeError
@@ -308,6 +417,13 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
     .map(resolveContactName);
   const suggested = useSuggestedPartners(draft.partnerIds);
   const hasTrack = !!track || (!!draft.gpxFilepath && !gpxRemoved);
+  const roundTrip =
+    !!draft.startPoint && !!draft.endPoint && isSameGoal(draft.startPoint, draft.endPoint);
+  // Offered while the tour ends at its goal (no end, or one on it), not for a flown way down.
+  const roundTripOffered =
+    !!draft.startPoint &&
+    !landsByAir(draft) &&
+    (!draft.endPoint || (!!goal && isSameGoal(draft.endPoint, goal, TRACK_END_NEAR_M)));
   const trackLabel = track
     ? track.label
     : hasTrack
@@ -330,11 +446,29 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
       cancel={{ label: t('common.cancel'), onPress: close }}
       confirm={{
         label:
-          mode === 'suggest' ? t('tours.suggestions.submitBtn') : t('tours.infoSheet.saveLabel'),
+          mode === 'suggest'
+            ? t('tours.suggestions.submitBtn')
+            : days > 1
+              ? t('tours.creation.saveDays', { count: spanDays ? dayOffset + days : days })
+              : t('tours.infoSheet.saveLabel'),
         onPress: () => void save(),
-        disabled: saving || uploading || replanning || !goal || !draft.name?.trim(),
+        disabled: saving || uploading || replanning || (days < 2 && (!goal || !draft.name?.trim())),
       }}
     >
+      <DayPills onSelect={(i) => store.selectDay(i)} />
+      {missingDay ? (
+        <ListSection>
+          <ListRow
+            title={t('tours.creation.planDay', { day: dayLabel(missingDay) })}
+            subtitle={t('tours.creation.dayMissing', { day: dayLabel(missingDay) })}
+            icon="add_location_alt"
+            onPress={() => {
+              store.selectDay(days - 1);
+              nextDay();
+            }}
+          />
+        </ListSection>
+      ) : null}
       <ListSection>
         <TextRow
           label={t('tours.form.nameLabel')}
@@ -345,7 +479,17 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
             update({ name });
           }}
           autoCapitalize="words"
-          error={nameError ?? undefined}
+          error={nameError?.draftId === draftId ? nameError.text : undefined}
+        />
+        <TextRow
+          label={t('tours.form.elevationLabel')}
+          placeholder={t('tours.form.elevationPlaceholder')}
+          keyboardType="numeric"
+          value={draft.elevation != null ? String(draft.elevation) : ''}
+          onChangeText={(text) => {
+            const n = Number.parseInt(text.replace(/\D/g, ''), 10);
+            update({ elevation: Number.isFinite(n) ? n : null });
+          }}
         />
       </ListSection>
 
@@ -406,52 +550,6 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
         />
       </ListSection>
 
-      <ListSection
-        title={t('tours.form.whenSectionLabel')}
-        footer={draft.endDate ? t('tours.form.multiDayHint') : undefined}
-      >
-        <DateRow
-          title={t('tours.form.plannedDateLabel')}
-          value={draft.plannedDate}
-          placeholder={t('tours.form.pointNotSet')}
-          onChange={(plannedDate) => {
-            const day = utcDay(plannedDate);
-            update({
-              plannedDate: day,
-              endDate: draft.endDate && draft.endDate < day ? null : draft.endDate,
-            });
-          }}
-          onClear={() => update({ plannedDate: null, endDate: null, startTime: null })}
-          clearLabel={t('tours.form.gpxRemoveBtn')}
-        />
-        {draft.plannedDate ? (
-          <DateRow
-            title={t('tours.form.endDateLabel')}
-            value={draft.endDate}
-            minimumDate={draft.plannedDate}
-            placeholder={t('tours.form.pointNotSet')}
-            onChange={(endDate) => update({ endDate: utcDay(endDate) })}
-            onClear={() => update({ endDate: null })}
-            clearLabel={t('tours.form.gpxRemoveBtn')}
-          />
-        ) : null}
-        {draft.plannedDate ? (
-          <DateRow
-            mode="time"
-            title={t('tours.form.startTimeLabel')}
-            value={draft.startTime ? timeOf(draft.startTime) : null}
-            placeholder={t('tours.form.pointNotSet')}
-            onChange={(time) =>
-              update({
-                startTime: `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`,
-              })
-            }
-            onClear={() => update({ startTime: null })}
-            clearLabel={t('tours.form.gpxRemoveBtn')}
-          />
-        ) : null}
-      </ListSection>
-
       <ListSection title={t('tours.form.routeSectionLabel')} footer={gpxError ?? undefined}>
         <ListRow
           title={point(draft.startPoint, draft.startPointName, draft.startPointElevation)}
@@ -477,9 +575,29 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
             landsByAir(draft) ? t('tours.form.landingLabel') : t('tours.form.endPointLabel'),
             draft.endPoint,
           )}
-          icon="sports_score"
+          icon={roundTrip ? 'u_turn_left' : 'sports_score'}
           chevron={false}
         />
+        {roundTripOffered ? (
+          <ListRow
+            title={t('tours.form.roundTripBtn')}
+            subtitle={t('map.draw.returnToStartHint')}
+            icon="u_turn_left"
+            onPress={() => {
+              void Haptics.selectionAsync();
+              void makeRoundTrip(t('tours.form.gpxDrawn'));
+            }}
+          />
+        ) : null}
+        {/* "+ Next day" after the end (tour-outings): the next day's goal on the map, then its form. */}
+        {mode === 'create' && goal && active === days - 1 && !missingDay ? (
+          <ListRow
+            title={t('tours.form.nextDayBtn')}
+            subtitle={t('tours.form.nextDayHint')}
+            icon="add"
+            onPress={nextDay}
+          />
+        ) : null}
         <ListRow
           title={t('tours.form.changeRouteBtn')}
           icon="edit"
@@ -520,27 +638,59 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
         />
       </ListSection>
 
-      <ListSection title={t('tours.form.detailSectionLabel')}>
-        <TextRow
-          label={t('tours.form.elevationLabel')}
-          placeholder={t('tours.form.elevationPlaceholder')}
-          keyboardType="numeric"
-          value={draft.elevation != null ? String(draft.elevation) : ''}
-          onChangeText={(text) => {
-            const n = Number.parseInt(text.replace(/\D/g, ''), 10);
-            update({ elevation: Number.isFinite(n) ? n : null });
+      <ListSection
+        title={t('tours.form.whenSectionLabel')}
+        footer={draft.endDate && mode !== 'create' ? t('tours.form.multiDayHint') : undefined}
+      >
+        <DateRow
+          title={t('tours.form.plannedDateLabel')}
+          value={draft.plannedDate}
+          placeholder={t('tours.form.pointNotSet')}
+          onChange={(plannedDate) => {
+            const day = utcDay(plannedDate);
+            update({
+              plannedDate: day,
+              endDate: draft.endDate && draft.endDate < day ? null : draft.endDate,
+            });
           }}
+          onClear={() => update({ plannedDate: null, endDate: null, startTime: null })}
+          clearLabel={t('tours.form.gpxRemoveBtn')}
         />
-        {mode !== 'suggest' && suggested.length === 0 ? (
+        {draft.plannedDate ? (
+          <DateRow
+            title={t('tours.form.endDateLabel')}
+            value={draft.endDate}
+            minimumDate={draft.plannedDate}
+            placeholder={t('tours.form.pointNotSet')}
+            onChange={(endDate) => update({ endDate: utcDay(endDate) })}
+            onClear={() => update({ endDate: null })}
+            clearLabel={t('tours.form.gpxRemoveBtn')}
+          />
+        ) : null}
+        {mode === 'create' && span > 1 && goal && active === days - 1 ? (
           <ListRow
-            title={t('tours.form.partnersLabel')}
-            value={partners.length ? partners.join(', ') : undefined}
-            icon="group"
-            onPress={() => onPush('partners')}
+            title={t('tours.form.splitDaysBtn')}
+            subtitle={t('tours.form.splitDaysHint', { count: span })}
+            icon="calendar_view_day"
+            onPress={() => splitDays(span)}
+          />
+        ) : null}
+        {draft.plannedDate ? (
+          <DateRow
+            mode="time"
+            title={t('tours.form.startTimeLabel')}
+            value={draft.startTime ? timeOf(draft.startTime) : null}
+            placeholder={t('tours.form.pointNotSet')}
+            onChange={(time) =>
+              update({
+                startTime: `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`,
+              })
+            }
+            onClear={() => update({ startTime: null })}
+            clearLabel={t('tours.form.gpxRemoveBtn')}
           />
         ) : null}
       </ListSection>
-
       <ListSection title={t('tours.form.seasonLabel')}>
         <ContentRow>
           <Pills
@@ -562,40 +712,51 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
         </ContentRow>
       </ListSection>
 
-      {mode !== 'suggest' && suggested.length ? (
-        // Who comes along is a tap per person, as the PWA's chips: the people most often along
-        // first, the rest of the contacts one row further.
-        <ListSection title={t('tours.form.partnersLabel')}>
-          <ContentRow>
-            <Pills
-              accessibilityLabel={t('tours.form.partnersLabel')}
-              options={suggested.map((contact) => ({
-                value: contact.id,
-                label: resolveContactName(contact),
-              }))}
-              selected={draft.partnerIds}
-              onToggle={(id) =>
-                update({
-                  partnerIds: draft.partnerIds.includes(id)
-                    ? draft.partnerIds.filter((x) => x !== id)
-                    : [...draft.partnerIds, id],
-                })
-              }
-            />
-          </ContentRow>
-          {contacts.length > suggested.length ? (
+      {mode !== 'suggest' ? (
+        suggested.length ? (
+          // Who comes along is a tap per person, as the PWA's chips: the people most often along
+          // first, the rest of the contacts one row further.
+          <ListSection title={t('tours.form.partnersLabel')}>
+            <ContentRow>
+              <Pills
+                accessibilityLabel={t('tours.form.partnersLabel')}
+                options={suggested.map((contact) => ({
+                  value: contact.id,
+                  label: resolveContactName(contact),
+                }))}
+                selected={draft.partnerIds}
+                onToggle={(id) =>
+                  update({
+                    partnerIds: draft.partnerIds.includes(id)
+                      ? draft.partnerIds.filter((x) => x !== id)
+                      : [...draft.partnerIds, id],
+                  })
+                }
+              />
+            </ContentRow>
+            {contacts.length > suggested.length ? (
+              <ListRow
+                title={t('tours.form.allContacts')}
+                value={
+                  partners.length > suggested.filter((c) => draft.partnerIds.includes(c.id)).length
+                    ? partners.join(', ')
+                    : undefined
+                }
+                icon="group"
+                onPress={() => onPush('partners')}
+              />
+            ) : null}
+          </ListSection>
+        ) : (
+          <ListSection>
             <ListRow
-              title={t('tours.form.allContacts')}
-              value={
-                partners.length > suggested.filter((c) => draft.partnerIds.includes(c.id)).length
-                  ? partners.join(', ')
-                  : undefined
-              }
+              title={t('tours.form.partnersLabel')}
+              value={partners.length ? partners.join(', ') : undefined}
               icon="group"
               onPress={() => onPush('partners')}
             />
-          ) : null}
-        </ListSection>
+          </ListSection>
+        )
       ) : null}
 
       {mode !== 'suggest' ? (
@@ -650,6 +811,17 @@ function FormPage({ onPush }: { onPush: (value: string) => void }) {
       ) : (
         <DraftAttachments draftId={draftId} tourId={tourId} pickActions={pickAttachments} />
       )}
+
+      {active > 0 ? (
+        <ListSection>
+          <ListRow
+            title={t('tours.creation.removeDay', { day: dayLabel(active) })}
+            icon="delete"
+            destructive
+            onPress={removeDay}
+          />
+        </ListSection>
+      ) : null}
     </Page>
   );
 }

@@ -19,10 +19,15 @@ const LABELS = {
 export function useRouteNumbers(
   tour: Tour | null,
   minutesFor: (metrics: RouteMetrics) => number | null,
-): { metrics: RouteMetrics; numbers: { text: string; label: string } | null } {
+): {
+  metrics: RouteMetrics;
+  numbers: { text: string; label: string } | null;
+  /** The tour's track with the heights it could get (null without one, or while it loads). */
+  track: GeoJSON.FeatureCollection | null;
+} {
   const { t } = useTranslation();
   const { formatElevation, formatDistance, formatDuration } = useFormatter();
-  const { metrics } = useRouteMetrics(tour);
+  const { metrics, track } = useRouteMetrics(tour);
   const minutes = minutesFor(metrics);
   const flown = tour ? flight(tour) : { up: null, down: null };
   const way = (key: keyof typeof LABELS, ways: FlownWay) =>
@@ -47,6 +52,7 @@ export function useRouteNumbers(
   }
   return {
     metrics,
+    track,
     numbers: parts.length
       ? {
           // A number keeps its unit and arrow on its line ("10:31 h"); lines break between numbers.

@@ -182,3 +182,51 @@ export function fittedView(sw: LngLat, ne: LngLat, size: ViewSize, padding: Inse
   const lat = (Math.atan(Math.sinh(Math.PI * (1 - 2 * y))) * 180) / Math.PI;
   return { center: [(sw[0] + ne[0]) / 2, lat], zoom: Math.min(zoom, MAX_ZOOM) };
 }
+
+/** A point on the map from the Web Mercator square (`project`'s inverse). */
+const unproject = ([x, y]: LngLat): LngLat => [
+  x * 360 - 180,
+  (Math.atan(Math.sinh(Math.PI * (1 - 2 * y))) * 180) / Math.PI,
+];
+
+/** How far in from the visible area's edges a followed point may roam: its middle half. */
+export const FOLLOW_INSET = 0.25;
+
+/**
+ * The pan that keeps `point` in frame (tour-info-extended "Elevation profile in the tour sheet"):
+ * the map showing `bounds` (west, south, east, north) on a `size` view, of which `padding` is
+ * covered (bars, the sheet). While the point stays in the middle of what is left (`inset` in from
+ * each edge), null: the map stays. Past it, the view moves just so far that the point is back on
+ * that edge, as a camera that follows without jumps. The new view's centre (beside `padding`), its
+ * bounds, and the pan in points (`by`); a map turned off north is taken as unturned.
+ */
+export function keptInFrame(
+  [west, south, east, north]: Box,
+  size: ViewSize,
+  padding: Insets,
+  point: LngLat,
+  inset = FOLLOW_INSET,
+): { center: LngLat; bounds: Box; by: [number, number] } | null {
+  if (size.width <= 0 || size.height <= 0) return null;
+  const [x0, y0] = project([west, north]);
+  const [x1, y1] = project([east, south]);
+  const [kx, ky] = [(x1 - x0) / size.width, (y1 - y0) / size.height];
+  const [px, py] = project(point);
+  const [x, y] = [(px - x0) / kx, (py - y0) / ky];
+  const [left, right] = [padding.left, size.width - padding.right];
+  const [top, bottom] = [padding.top, size.height - padding.bottom];
+  const [ix, iy] = [(right - left) * inset, (bottom - top) * inset];
+  // Under half a point past is still on the edge: no pan for rounding.
+  const past = (v: number, lo: number, hi: number) =>
+    v < lo - 0.5 ? v - lo : v > hi + 0.5 ? v - hi : 0;
+  const [dx, dy] = [past(x, left + ix, right - ix), past(y, top + iy, bottom - iy)];
+  if (dx === 0 && dy === 0) return null;
+  const [sx, sy] = [dx * kx, dy * ky];
+  const [w, n] = unproject([x0 + sx, y0 + sy]);
+  const [e, s] = unproject([x1 + sx, y1 + sy]);
+  return {
+    center: unproject([x0 + sx + ((left + right) / 2) * kx, y0 + sy + ((top + bottom) / 2) * ky]),
+    bounds: [w, s, e, n],
+    by: [dx, dy],
+  };
+}

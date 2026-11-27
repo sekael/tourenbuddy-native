@@ -1,4 +1,7 @@
-import { useTourDraftStore } from '@/features/tours/presentation/stores/tour-draft-store';
+import {
+  firstUnsavableDay,
+  useTourDraftStore,
+} from '@/features/tours/presentation/stores/tour-draft-store';
 
 jest.mock('@/features/tours/data/services/swisstopo-name-service', () => ({
   suggestTourName: jest.fn(async () => 'Bletscha'),
@@ -82,5 +85,111 @@ describe('tour draft: ways up and down', () => {
       ascent: ['hiking', 'trailrunning'],
       descent: ['paragliding', 'hiking', 'trailrunning'],
     });
+  });
+});
+
+describe('tour draft: days laid out before the first save', () => {
+  const day1 = () => {
+    store().begin('create', null, {
+      name: 'Cabane des Dix',
+      plannedDate: new Date(Date.UTC(2027, 2, 12)),
+      tourTypes: ['hiking'],
+      partnerIds: ['a'],
+    });
+    useTourDraftStore.setState({ goal: { lng: 7.4, lat: 46.0 } });
+    store().update({ endPoint: { lng: 7.41, lat: 46.01 }, endPointName: 'Hütte' });
+  };
+
+  it('should start the next day where the last ends, the day after, and show it', () => {
+    day1();
+    store().nextDay();
+    expect(store().stages).toHaveLength(2);
+    expect(store().active).toBe(1);
+    expect(store().goal).toBeNull();
+    expect(store().draft).toMatchObject({
+      startPoint: { lng: 7.41, lat: 46.01 },
+      startPointName: 'Hütte',
+      plannedDate: new Date(Date.UTC(2027, 2, 13)),
+      tourTypes: ['hiking'],
+      partnerIds: ['a'],
+    });
+  });
+
+  it('should not lay out a next day before the last has its goal', () => {
+    store().begin('create');
+    store().nextDay();
+    expect(store().stages).toEqual([]);
+  });
+
+  it('should keep each day as it was left when switching between them', () => {
+    day1();
+    store().nextDay();
+    store().update({ name: 'Day two' });
+    store().selectDay(0);
+    expect(store().draft.name).toBe('Cabane des Dix');
+    store().selectDay(1);
+    expect(store().draft.name).toBe('Day two');
+    expect(
+      store()
+        .days()
+        .map((d) => d.draft.name),
+    ).toEqual(['Cabane des Dix', 'Day two']);
+  });
+
+  it('should carry a partner added on day 1 to the later days that shared them', () => {
+    day1();
+    store().nextDay();
+    store().selectDay(0);
+    store().update({ partnerIds: ['a', 'b'] });
+    store().toggleType('paragliding');
+    const [, two] = store().days();
+    expect(two!.draft.partnerIds).toEqual(['a', 'b']);
+    expect(two!.draft.tourTypes).toEqual(store().draft.tourTypes);
+    expect(two!.draft.legs).not.toBeNull();
+  });
+
+  it('should move the later days along when day 1 moves', () => {
+    day1();
+    store().nextDay();
+    store().selectDay(0);
+    store().update({ plannedDate: new Date(Date.UTC(2027, 2, 20)) });
+    expect(store().days()[1]!.draft.plannedDate).toEqual(new Date(Date.UTC(2027, 2, 21)));
+  });
+
+  it('should drop a later day and show the one before; one day left is one tour again', () => {
+    day1();
+    store().nextDay();
+    store().removeDay(1);
+    expect(store().stages).toEqual([]);
+    expect(store().active).toBe(0);
+    expect(store().draft.name).toBe('Cabane des Dix');
+    store().removeDay(0);
+    expect(store().draft.name).toBe('Cabane des Dix');
+  });
+
+  it('should name a start the day before left unnamed', async () => {
+    day1();
+    store().update({ endPoint: null, endPointName: null });
+    useTourDraftStore.setState({
+      route: { points: { start: null, goal: null, end: null }, track: null } as never,
+    });
+    store().update({ name: '' });
+    store().nextDay();
+    expect(store().draft.startPoint).toEqual({ lng: 7.4, lat: 46.0 });
+    await settle();
+    expect(store().draft.startPointName).toBe('Bletscha');
+  });
+
+  it('should point a save at the first day without a name or goal', () => {
+    day1();
+    store().nextDay();
+    expect(firstUnsavableDay(store().days())).toBe(1);
+    useTourDraftStore.setState({ goal: { lng: 7.5, lat: 46.1 } });
+    expect(firstUnsavableDay(store().days())).toBe(1);
+    store().update({ name: 'Day two' });
+    expect(firstUnsavableDay(store().days())).toBe(-1);
+    store().selectDay(0);
+    store().update({ name: '  ' });
+    expect(firstUnsavableDay(store().days())).toBe(0);
   });
 });

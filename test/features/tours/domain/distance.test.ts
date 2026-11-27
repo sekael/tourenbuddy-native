@@ -1,4 +1,4 @@
-import { isSameGoal } from '@/features/tours/domain/distance';
+import { isSameGoal, lineEnds } from '@/features/tours/domain/distance';
 
 // Swiss reference: Bern area (~46.95°N, 7.44°E)
 const BASE = { lng: 7.44, lat: 46.95 };
@@ -36,5 +36,38 @@ describe('isSameGoal', () => {
     const at15m = offsetByMeters(BASE, 15, 0);
     expect(isSameGoal(BASE, at15m, 10)).toBe(false);
     expect(isSameGoal(BASE, at15m, 20)).toBe(true);
+  });
+});
+
+describe('lineEnds', () => {
+  const at = (dE: number, dN: number): [number, number] => {
+    const p = offsetByMeters(BASE, dE, dN);
+    return [p.lng, p.lat];
+  };
+  const goal = offsetByMeters(BASE, 0, 3000);
+
+  it('sets no end where the track ends at the goal (a ski route up to its summit)', () => {
+    const first = at(0, 0);
+    expect(lineEnds(first, at(50, 2900), goal)).toEqual({ start: first, end: null });
+  });
+
+  it('sets no start where the track begins at the goal (a flight from it)', () => {
+    const last = at(2000, 0);
+    expect(lineEnds(at(0, 2950), last, goal)).toEqual({ start: null, end: last });
+  });
+
+  it('ends a loop exactly at its start', () => {
+    const first = at(0, 0);
+    expect(lineEnds(first, at(120, 0), goal).end).toBe(first);
+  });
+
+  it('keeps an end elsewhere (a traverse), with or without a goal', () => {
+    const [first, last] = [at(0, 0), at(3000, 0)];
+    expect(lineEnds(first, last, goal)).toEqual({ start: first, end: last });
+    expect(lineEnds(first, last, null)).toEqual({ start: first, end: last });
+  });
+
+  it('keeps both ends of a loop from the goal back to it empty', () => {
+    expect(lineEnds(at(0, 2990), at(10, 2980), goal)).toEqual({ start: null, end: null });
   });
 });

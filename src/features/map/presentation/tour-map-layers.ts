@@ -234,23 +234,37 @@ function markerLayers(source: 'tours' | 'focus' | 'focus-names'): LayerSpecifica
   return layers;
 }
 
+/** How long an overlay takes to fade in or out. */
+const OVERLAY_FADE = { duration: 250, delay: 0 };
+
 export function tourMapLayers({
   overlays,
   dimTrails,
+  warm = false,
 }: {
   overlays: readonly TrailOverlayId[];
   dimTrails: boolean;
+  /**
+   * The overlays are a tap away (the layers sheet, the planning toggles): those switched off still
+   * load their tiles, unseen, so one switched on fades in whole and sharp. Hidden, a layer loads
+   * nothing, and switched on it came in a blurred low-zoom tile first, then the sharp one, then the
+   * ski routes' lines and badges, each a jump.
+   */
+  warm?: boolean;
 }): TourMapLayers {
-  const visible = (id: TrailOverlayId) => (overlays.includes(id) ? 'visible' : 'none');
-  const ski = visible('ski');
+  const on = (id: TrailOverlayId) => overlays.includes(id);
+  const loaded = (id: TrailOverlayId) => (on(id) || warm ? 'visible' : 'none');
 
   return {
     overlays: TRAIL_OVERLAYS.map((overlay) => ({
       id: overlaySourceId(overlay.id),
       source: overlaySourceId(overlay.id),
       type: 'raster',
-      layout: { visibility: visible(overlay.id) },
-      paint: { 'raster-opacity': dimTrails ? 0.4 : 1 },
+      layout: { visibility: loaded(overlay.id) },
+      paint: {
+        'raster-opacity': on(overlay.id) ? (dimTrails ? 0.4 : 1) : 0,
+        'raster-opacity-transition': OVERLAY_FADE,
+      },
     })),
     ski: [
       {
@@ -259,11 +273,12 @@ export function tourMapLayers({
         type: 'line',
         'source-layer': 'routes',
         minzoom: 11,
-        layout: { ...LINE, visibility: ski },
+        layout: { ...LINE, visibility: loaded('ski') },
         paint: {
           'line-color': GRADE_COLOR_EXPRESSION,
           'line-width': 10,
-          'line-opacity': dimTrails ? 0.2 : 0.5,
+          'line-opacity': on('ski') ? (dimTrails ? 0.2 : 0.5) : 0,
+          'line-opacity-transition': OVERLAY_FADE,
           'line-blur': 2,
         },
       },
@@ -274,7 +289,9 @@ export function tourMapLayers({
         'source-layer': 'routes',
         minzoom: 11,
         layout: {
-          visibility: ski,
+          // Only while on: a placed badge keeps others clear of its place even when unseen. The
+          // halo above has its tiles loaded, so the badges follow at once.
+          visibility: on('ski') ? 'visible' : 'none',
           'icon-image': ['concat', SKI_BADGE_PREFIX, ['coalesce', ['get', 'difficulty_de'], '']],
           'symbol-placement': 'line',
           'symbol-spacing': 220,

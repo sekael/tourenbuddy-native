@@ -31,6 +31,7 @@ import { currentPace } from '@/core/web/use-pace.web';
 import { useReactive } from '@/core/web/use-reactive.web';
 import { useSheetInset } from '@/core/web/use-sheet-inset.web';
 import type { LocationResult } from '@/features/map/data/services/swisstopo-search-service';
+import { TRAIL_OVERLAYS } from '@/features/map/data/trail-overlays';
 import type { DrawnTrack } from '@/features/map/domain/drawn-track';
 import type { LngLat } from '@/features/map/domain/entities/trail';
 import {
@@ -1066,6 +1067,30 @@ export function RoutePlanner(props: RoutePlannerProps) {
             </ol>
 
             {props.hint && <p className={c('route-hint')}>{props.hint}</p>}
+
+            {/* The trail overlays, as in the drawing panel: the menu's layers are hidden while picking. */}
+            <div
+              className={c('overlays')}
+              role="group"
+              aria-label={t('map.layers.overlays.title')}
+              data-testid="planner-overlays"
+            >
+              {TRAIL_OVERLAYS.map((o) => (
+                <button
+                  key={o.id}
+                  type="button"
+                  className={c('chip', {
+                    'chip--on': activeOverlays.includes(o.id),
+                    'chip--snapping': follow && network === o.id,
+                  })}
+                  aria-pressed={activeOverlays.includes(o.id)}
+                  onClick={() => useMapStore.getState().toggleOverlay(o.id)}
+                >
+                  <BaseIcon name={o.icon} size="sm" />
+                  {t(o.labelKey as never)}
+                </button>
+              ))}
+            </div>
 
             <div
               className={c('follow', {

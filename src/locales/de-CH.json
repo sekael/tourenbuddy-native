@@ -250,7 +250,8 @@
       "subtitle": "Wir senden dir einen Code, um deine Adresse zu bestätigen",
       "createBtn": "Konto erstellen",
       "passwordNotSavedTitle": "Passwort nicht gespeichert",
-      "passwordNotSaved": "Du bist angemeldet, aber dein Passwort konnte nicht gespeichert werden. Lege es unter Profil → Passwort fest."
+      "passwordNotSaved": "Du bist angemeldet, aber dein Passwort konnte nicht gespeichert werden. Lege es unter Profil → Passwort fest.",
+      "passwordNotSavedBecause": "Du bist angemeldet, aber dein Passwort wurde nicht gespeichert: {{reason}}\n\nLege unter Profil → Passwort ein neues fest."
     },
     "password": {
       "entryBtn": "Passwort",
@@ -261,6 +262,8 @@
       "tooShort_other": "Verwende mindestens {{count}} Zeichen",
       "same": "Das ist dein aktuelles Passwort. Wähle ein anderes.",
       "weak": "Dieses Passwort ist zu schwach. Wähle ein stärkeres.",
+      "characters": "Mische Gross- und Kleinbuchstaben, Ziffern und Sonderzeichen.",
+      "pwned": "Dieses Passwort ist aus einem Datenleck bekannt. Wähle ein anderes.",
       "saveBtn": "Passwort speichern",
       "savingBtn": "Wird gespeichert…",
       "saveError": "Das Passwort konnte nicht gespeichert werden. Bitte versuche es erneut.",
@@ -1045,13 +1048,15 @@
         "next": "Tippe entlang des Wegs, um Punkte zu setzen. Ziehe einen Punkt, um ihn zu verschieben.",
         "profileLoading": "Höhenprofil wird geladen …",
         "profileOffline": "Das Höhenprofil braucht eine Verbindung.",
-        "shape": "Tippe auf einen Punkt, um ihn zu entfernen, oder halte und ziehe ihn, um ihn zu verschieben. Den Punkt in der Mitte einer Linie ziehst du auf einen anderen Weg."
+        "shape": "Tippe auf einen Punkt oder den Punkt in der Mitte einer Linie, um ihn auszuwählen; dann ziehe ihn oder tippe auf die Karte, wohin er soll.",
+        "add": "Tippe entlang des Wegs, um Punkte zu setzen."
       },
       "pace": {
         "open": "Tempo einstellen"
       },
       "undo": "Rückgängig",
       "redo": "Wiederholen",
+      "delete": "Punkt löschen",
       "done": "Fertig",
       "returnToStart": "Zum Start",
       "returnToStartHint": "Auf demselben Weg zurück zum Start",
@@ -1067,7 +1072,11 @@
         "shape": "Um den Weg zu ändern, tippe auf den Punkt in der Mitte einer Linie (oder einen Routenpunkt) und dann auf die Karte – oder halte und ziehe ihn.",
         "via": "Tippe einen herausgezogenen Punkt an, um ihn wieder zu entfernen.",
         "pull": "Tippe jetzt auf die Karte, wo der Weg durchgehen soll.",
-        "landing": "Wo landest du? Auf die Karte tippen oder suchen – oder ohne Landeplatz weiter."
+        "landing": "Wo landest du? Auf die Karte tippen oder suchen – oder ohne Landeplatz weiter.",
+        "select": "Um den Weg zu ändern, tippe auf einen Punkt oder den Punkt in der Mitte einer Linie, um ihn auszuwählen.",
+        "selected": "Ziehe den ausgewählten Punkt oder tippe auf die Karte, wohin er soll.",
+        "selectedLeg": "Ziehe den ausgewählten Punkt oder tippe auf die Karte, wo der Weg durchgehen soll.",
+        "remove": "Der Papierkorb entfernt den ausgewählten Punkt."
       },
       "required": "Erforderlich",
       "optional": "Optional",
@@ -1822,7 +1831,7 @@
               "text": "Wir stellen TourenBuddy kostenlos und so bereit, wie es ist. Wir gewährleisten weder, dass die App verfügbar ist und fehlerfrei funktioniert, noch dass ihre Inhalte richtig, vollständig oder aktuell sind, noch dass deine Daten erhalten bleiben: Bewahre selbst eine Kopie von allem auf, was dir wichtig ist."
             },
             {
-              "text": "Soweit das Schweizer Recht es zulässt, schliessen wir jede Haftung für Schäden jeder Art aus, die aus dem Planen, Vorbereiten oder Durchführen von Aktivitäten, aus dem Vertrauen auf Inhalte der App oder aus Unterbrüchen, Fehlern oder Datenverlust entstehen. Das umfasst Personen-, Sach- und Vermögensschäden aus leichter und mittlerer Fahrlässigkeit. Wir haften einzig für Absicht und grobe Fahrlässigkeit; diese Haftung lässt das Schweizer Recht nicht zum Voraus ausschliessen (Art. 100 Abs. 1 OR). Soweit das Gesetz es zulässt, schliessen wir die Haftung für Personen und Unternehmen, die wir für den Betrieb von TourenBuddy beiziehen, vollständig aus (Art. 101 OR)."
+              "text": "Soweit das Schweizer Recht es zulässt, schliessen wir jede Haftung für Schäden jeder Art aus, die aus dem Planen, Vorbereiten oder Durchführen von Aktivitäten, aus dem Vertrauen auf Inhalte der App oder aus Unterbrüchen, Fehlern oder Datenverlust entstehen. Das umfasst Personen-, Sach- und Vermögensschäden aus leichter und mittlerer Fahrlässigkeit sowie Schäden, die Personen und Unternehmen verursachen, die wir für den Betrieb von TourenBuddy beiziehen."
             },
             {
               "text": "Machen Dritte wegen Inhalten, die du eingestellt hast, oder wegen eines Verstosses gegen diese Bedingungen Ansprüche gegen uns geltend, stellst du uns davon frei, soweit du den Anspruch verursacht hast. Das gilt nicht für Ansprüche, die auf unsere Absicht oder grobe Fahrlässigkeit zurückgehen."

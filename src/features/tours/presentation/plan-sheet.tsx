@@ -22,6 +22,7 @@ import {
 } from '@/features/map/domain/route-plan';
 import { wayFollow, type Follow, type Way } from '@/features/map/domain/snap-network';
 import type { HandleTarget } from '@/features/map/presentation/stores/map-store';
+import { EditActions } from '@/features/map/presentation/edit-actions';
 import { FollowSection, followStatus } from '@/features/map/presentation/follow-section';
 import { openTour } from '@/features/map/presentation/open-tour';
 import { isGap, legEnd, legRouters, tapSnapM } from '@/features/map/presentation/leg-router';
@@ -33,15 +34,16 @@ import {
 } from '@/features/map/presentation/use-location-search';
 import { getElevation } from '@/features/tours/data/services/swisstopo-elevation-service';
 import { suggestTourName } from '@/features/tours/data/services/swisstopo-name-service';
-import { loadGpxTrack } from '@/features/tours/data/services/gpx-track-service';
 import { isSameGoal } from '@/features/tours/domain/distance';
 import { landsByAir } from '@/features/tours/domain/legs';
-import { tourMinutes, trackLines, type RouteMetrics } from '@/features/tours/domain/route-metrics';
+import { tourMinutes, type RouteMetrics } from '@/features/tours/domain/route-metrics';
 import { usePace } from '@/features/user/presentation/stores/user-profile-store';
 import { TOUR_TYPE_TRACK_COLORS } from '@/features/tours/data/models/tour-type';
 
+import { DayPills, useDayLabel } from './day-pills';
 import { useTourDraftStore } from './stores/tour-draft-store';
-import { FLOWN_NOTE_M, gpxOf } from './replan-track';
+import { FLOWN_NOTE_M, gpxOf, savedLine } from './replan-track';
+import { useHistory } from './use-history';
 import { profiledMetrics } from './use-route-metrics';
 
 const STEP_ICONS = { start: 'trip_origin', goal: 'flag', end: 'sports_score' } as const;
@@ -112,6 +114,10 @@ export function PlanSheet({ back }: { back: boolean }) {
   const pace = usePace();
   const draftState = useTourDraftStore.getState();
   const overlays = useMapStore((s) => s.overlays);
+  // A trip's days (tour-outings "Days in the route step"): this sheet plans the one on screen.
+  const days = Math.max(1, draftState.stages.length);
+  const day = draftState.active;
+  const dayLabel = useDayLabel();
 
   const [placed, setPoints] = useState<RoutePoints>(() => initialPoints());
   /**
@@ -130,8 +136,13 @@ export function PlanSheet({ back }: { back: boolean }) {
     !!points.start && !!points.end && isSameGoal(points.start.location, points.end.location, 1);
   const [drawnVias, setVias] = useState<Vias>(() => initialVias());
   const vias: Vias = backSame ? { ...drawnVias, goal: [...drawnVias.start].reverse() } : drawnVias;
-  /** A leg's dot picked by a tap: the next map tap sends the route through there. */
+  /** A leg's dot selected by a tap: dragged, or the next map tap sends the route through there. */
   const [pickedLeg, setPickedLeg] = useState<number | null>(null);
+  /** A point between selected by a tap (its place among the route's points): dragged, or moved to
+   * the next map tap; the bin takes it out. A start, goal or end is selected as the active row. */
+  const [pickedVia, setPickedVia] = useState<number | null>(null);
+  /** Points between still finding their way (a move or pull): undo waits for them. */
+  const [settling, setSettling] = useState(0);
   const [legs, setLegs] = useState<Map<string, LngLat[]>>(new Map());
   /** The saved track's legs, by key: they win over routing until a point moves. */
   const [savedLegs, setSavedLegs] = useState<Map<string, LngLat[]>>(new Map());
@@ -143,13 +154,43 @@ export function PlanSheet({ back }: { back: boolean }) {
   const viasRef = useLatest(vias);
   const moveRef = useLatest(movePoint);
   const pullRef = useLatest(pullLeg);
-  const dropRef = useLatest(dropPoint);
   const pickRef = useLatest(pick);
   const tapRef = useLatest(tapMap);
   const pickedLegRef = useLatest(pickedLeg);
+  const pickedViaRef = useLatest(pickedVia);
+  const placedRef = useLatest(placed);
+  const drawnViasRef = useLatest(drawnVias);
+  const backSameRef = useLatest(backSame);
   const activeRef = useLatest(active);
   const [lookups] = useState(() => new PointLookups());
   const search = useLocationSearch(active);
+  // Every change to the route's points can be undone (owner, 2026-11-26); its legs follow.
+  const history = useHistory(
+    () => ({
+      placed: placedRef.current,
+      vias: drawnViasRef.current,
+      backSame: backSameRef.current,
+    }),
+    (state) => {
+      lookups.abortAll();
+      setPoints(state.placed);
+      setVias(state.vias);
+      setBackSame(state.backSame);
+      setPickedLeg(null);
+      setPickedVia(null);
+      // A point brought back while it was still being named is named again.
+      ROUTE_STEPS.forEach((step) => {
+        const p = state.placed[step];
+        if (p?.loading) place(step, p.location, p.name ?? undefined);
+      });
+    },
+  );
+
+  /** A point between finding its way: undo and redo wait until it has. */
+  function settle(work: Promise<void>) {
+    setSettling((n) => n + 1);
+    void work.finally(() => setSettling((n) => n - 1));
+  }
 
   const tourTypes = draftState.draft.tourTypes;
   /** What each way follows: its own activities' network, a flown way straight (activity-legs). */
@@ -179,6 +220,7 @@ export function PlanSheet({ back }: { back: boolean }) {
   }
 
   function setAndAdvance(step: RouteStep, location: { lng: number; lat: number }, name?: string) {
+    history.record();
     // An end of its own: the way back goes its own way.
     if (step === 'end') setBackSame(false);
     place(step, location, name);
@@ -188,6 +230,7 @@ export function PlanSheet({ back }: { back: boolean }) {
   }
 
   function clear(step: RouteStep) {
+    history.record();
     if (step !== 'goal') setBackSame(false);
     lookups.abort(step);
     setPoints((p) => ({ ...p, [step]: null }));
@@ -214,13 +257,19 @@ export function PlanSheet({ back }: { back: boolean }) {
   function movePoint(index: number, to: LngLat) {
     const where = pointAt(index);
     if (!where) return;
+    history.record();
     void Haptics.selectionAsync();
     if ('step' in where) {
       place(where.step, { lng: to[0], lat: to[1] });
       return;
     }
-    void onWay(to, where.leg === 'start' ? 'up' : 'down').then((at) =>
-      setVias((v) => ({ ...v, [where.leg]: v[where.leg].map((p, i) => (i === where.i ? at : p)) })),
+    settle(
+      onWay(to, where.leg === 'start' ? 'up' : 'down').then((at) =>
+        setVias((v) => ({
+          ...v,
+          [where.leg]: v[where.leg].map((p, i) => (i === where.i ? at : p)),
+        })),
+      ),
     );
   }
 
@@ -239,36 +288,53 @@ export function PlanSheet({ back }: { back: boolean }) {
   function pullLeg(leg: number, to: LngLat) {
     const r = stopsOf(pointsRef.current, viasRef.current);
     if (!r) return;
+    history.record();
     void Haptics.selectionAsync();
+    // The leg is two now: its dot, and any point selected after it, sit elsewhere.
+    setPickedLeg(null);
+    setPickedVia(null);
     const first = pointsRef.current.start ? 1 : 0;
     const [part, i] =
       leg < r.goal ? (['start', leg + 1 - first] as const) : (['goal', leg - r.goal] as const);
-    void onWay(to, part === 'start' ? 'up' : 'down').then((at) =>
-      setVias((v) => ({ ...v, [part]: [...v[part].slice(0, i), at, ...v[part].slice(i)] })),
+    settle(
+      onWay(to, part === 'start' ? 'up' : 'down').then((at) => {
+        setVias((v) => ({ ...v, [part]: [...v[part].slice(0, i), at, ...v[part].slice(i)] }));
+        // The new point is selected: it drags on, or the bin takes it out again.
+        setPickedVia(leg + 1);
+      }),
     );
   }
 
-  /** A tap on a point or a leg's dot: a start or end goes, the goal or a leg waits for a tap. */
+  /**
+   * A tap on a point or a leg's dot selects it (owner, 2026-11-26: a tap never removes): a start,
+   * goal or end becomes the active point, a point between or a leg's dot is selected, and a tap on
+   * the selected one lets it go.
+   */
   function pick(target: HandleTarget) {
     void Haptics.selectionAsync();
     if ('leg' in target) {
+      setPickedVia(null);
       setPickedLeg((leg) => (leg === target.leg ? null : target.leg));
       return;
     }
     const where = pointAt(target.point);
     setPickedLeg(null);
-    if (!where || !('step' in where)) return;
-    // As in drawing, a tap takes a point out: a start or end goes (the next map tap sets it anew);
-    // the goal, which the route needs, waits for the next map tap to move it.
-    if (where.step === 'goal') setActive('goal');
-    else clear(where.step);
+    if (!where) return;
+    if ('step' in where) {
+      setPickedVia(null);
+      setActive(where.step);
+    } else setPickedVia((i) => (i === target.point ? null : target.point));
   }
 
-  /** A map tap: through a picked leg, else the active point set or moved there. */
+  /** A map tap: through a selected leg, to a selected point between, else the active point there. */
   function tapMap(location: LngLat) {
     if (pickedLegRef.current !== null) {
       pullLeg(pickedLegRef.current, location);
-      setPickedLeg(null);
+      return;
+    }
+    if (pickedViaRef.current !== null) {
+      movePoint(pickedViaRef.current, location);
+      setPickedVia(null);
       return;
     }
     setAndAdvance(activeRef.current, { lng: location[0], lat: location[1] });
@@ -277,7 +343,9 @@ export function PlanSheet({ back }: { back: boolean }) {
   function dropPoint(index: number) {
     const where = pointAt(index);
     if (!where || 'step' in where) return;
-    void Haptics.selectionAsync();
+    history.record();
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setPickedVia(null);
     setVias((v) => ({ ...v, [where.leg]: v[where.leg].filter((_, i) => i !== where.i) }));
   }
 
@@ -460,20 +528,21 @@ export function PlanSheet({ back }: { back: boolean }) {
             ...(backSame ? { upTo: route.goal } : {}),
             move: (i, to) => moveRef.current(i, to),
             pull: (leg, to) => pullRef.current(leg, to),
-            drop: (i) => dropRef.current(i),
             pick: (target) => pickRef.current(target),
             picked:
               pickedLeg !== null
                 ? { leg: pickedLeg }
-                : points[active]
-                  ? { point: activeIndex(route, active) }
-                  : null,
+                : pickedVia !== null
+                  ? { point: pickedVia }
+                  : points[active]
+                    ? { point: activeIndex(route, active) }
+                    : null,
           }
         : null,
     });
     // Drawn from what the step holds; the line follows from points and legs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [points, vias, legs, savedLegs, opened, following, active, pickedLeg, backSame]);
+  }, [points, vias, legs, savedLegs, opened, following, active, pickedLeg, pickedVia, backSame]);
 
   // Climb and time measured along the line, as the saved tour will show them (route-planner in the
   // PWA). They appear once measured, never first as the points' estimate; that only when the line
@@ -520,7 +589,9 @@ export function PlanSheet({ back }: { back: boolean }) {
   const waiting = ROUTE_STEPS.some((s) => points[s]?.loading);
 
   function cancel() {
-    if (back) {
+    if (back || days > 1) {
+      // A day laid out but never given its goal goes; the trip's other days stay.
+      if (!useTourDraftStore.getState().goal) useTourDraftStore.getState().removeDay(day);
       router.replace('/tour/edit');
       return;
     }
@@ -541,8 +612,34 @@ export function PlanSheet({ back }: { back: boolean }) {
     ]);
   }
 
+  /** Back to the form with the route. */
   async function finish() {
-    if (!points.goal) return;
+    if (await commit()) router.replace('/tour/edit');
+  }
+
+  /** "Next day": this day kept as planned, the next planned here from its end (remounts, keyed). */
+  async function planNextDay() {
+    if (!(await commit())) return;
+    void Haptics.selectionAsync();
+    useTourDraftStore.getState().nextDay();
+  }
+
+  /** A day's pill: this day kept (or, without a goal yet, dropped), that one planned here. */
+  async function showDay(index: number) {
+    if (index === day) return;
+    const store = useTourDraftStore.getState();
+    if (points.goal) {
+      await commit();
+      store.selectDay(index);
+    } else {
+      store.removeDay(day);
+      useTourDraftStore.getState().selectDay(index < day ? index : index - 1);
+    }
+  }
+
+  /** The planned points and line into the draft: its route, start, end and track. */
+  async function commit(): Promise<boolean> {
+    if (!points.goal) return false;
     setFinishing(true);
     const store = useTourDraftStore.getState();
     try {
@@ -570,7 +667,7 @@ export function PlanSheet({ back }: { back: boolean }) {
         // A route gone straight takes a planned track away; an uploaded file stays.
         store.setTrack(null);
       }
-      router.replace('/tour/edit');
+      return true;
     } finally {
       setFinishing(false);
     }
@@ -588,6 +685,15 @@ export function PlanSheet({ back }: { back: boolean }) {
     unavailable: issue === 'unavailable',
     gap,
   });
+  /** What the bin takes out: the selected point between, else a set start or end (never the goal). */
+  const removable: { via: number } | { step: RouteStep } | null =
+    pickedVia !== null
+      ? { via: pickedVia }
+      : pickedLeg === null && active !== 'goal' && points[active]
+        ? { step: active }
+        : null;
+  const busy = settling > 0 || finding;
+
   /** A step's name: the end of a flown way down is the landing. */
   const stepName = (step: RouteStep) =>
     step === 'end' && landing ? t('map.plan.step.landing') : t(`map.plan.step.${step}`);
@@ -598,8 +704,8 @@ export function PlanSheet({ back }: { back: boolean }) {
         title={
           draftState.mode !== 'create'
             ? t('map.plan.editTitle')
-            : draftState.segmentOf
-              ? t('tours.outing.newTitle')
+            : days > 1 || draftState.segmentOf
+              ? dayLabel(day)
               : t('tours.creation.title')
         }
         cancel={{ label: back ? t('common.back') : t('common.cancel'), onPress: cancel }}
@@ -616,6 +722,19 @@ export function PlanSheet({ back }: { back: boolean }) {
               ? t('tours.picker.search.placeholder')
               : t('tours.picker.search.placeholderAccess'),
         }}
+        header={
+          <EditActions
+            undo={{ onPress: history.undo, disabled: !history.canUndo || busy }}
+            redo={{ onPress: history.redo, disabled: !history.canRedo || busy }}
+            remove={{
+              onPress: () => {
+                if (removable && 'via' in removable) dropPoint(removable.via);
+                else if (removable) clear(removable.step);
+              },
+              disabled: !removable || busy,
+            }}
+          />
+        }
       >
         {search.results.length > 0 || search.failed ? (
           <ListSection title={t('tours.picker.search.label')}>
@@ -639,6 +758,8 @@ export function PlanSheet({ back }: { back: boolean }) {
           </ListSection>
         ) : null}
 
+        <DayPills onSelect={(i) => void showDay(i)} />
+
         {numbers ? (
           // The route's climb, distance and time first, in view at the sheet's half height.
           <ListSection>
@@ -659,12 +780,16 @@ export function PlanSheet({ back }: { back: boolean }) {
           title={t('map.plan.stepsLabel')}
           footer={[
             pickedLeg !== null
-              ? t('map.plan.hint.pull')
-              : active === 'end' && landing
-                ? t('map.plan.hint.landing')
-                : t(`map.plan.hint.${active}`),
-            route && route.stops.length > 1 ? t('map.plan.hint.shape') : null,
-            vias.start.length + vias.goal.length ? t('map.plan.hint.via') : null,
+              ? t('map.plan.hint.selectedLeg')
+              : pickedVia !== null
+                ? t('map.plan.hint.selected')
+                : active === 'end' && landing
+                  ? t('map.plan.hint.landing')
+                  : t(`map.plan.hint.${active}`),
+            removable ? t('map.plan.hint.remove') : null,
+            route && route.stops.length > 1 && pickedLeg === null && pickedVia === null
+              ? t('map.plan.hint.select')
+              : null,
           ]
             .filter(Boolean)
             .join(' ')}
@@ -709,7 +834,11 @@ export function PlanSheet({ back }: { back: boolean }) {
                 iconColor={active === step ? undefined : '#94a3b8'}
                 checked={active === step}
                 chevron={false}
-                onPress={() => setActive(step)}
+                onPress={() => {
+                  setPickedLeg(null);
+                  setPickedVia(null);
+                  setActive(step);
+                }}
                 swipeActions={actions.length ? actions : undefined}
                 contextActions={actions.length ? actions : undefined}
                 accessibilityLabel={`${stepName(step)}: ${p?.name ?? (step === 'goal' ? t('map.plan.required') : t('map.plan.optional'))}`}
@@ -722,6 +851,7 @@ export function PlanSheet({ back }: { back: boolean }) {
               icon="u_turn_left"
               onPress={() => {
                 void Haptics.selectionAsync();
+                history.record();
                 setBackSame(true);
               }}
             />
@@ -731,6 +861,16 @@ export function PlanSheet({ back }: { back: boolean }) {
               title={t('map.plan.skip')}
               icon="arrow_forward"
               onPress={() => setActive(nextStep(points, 'start'))}
+            />
+          ) : null}
+          {/* The next day from this one's end, without leaving the step (the last day of a new trip). */}
+          {draftState.mode === 'create' && day === days - 1 ? (
+            <ListRow
+              title={t('map.plan.nextDay')}
+              subtitle={t('tours.form.nextDayHint')}
+              icon="add"
+              disabled={!points.goal || waiting || finishing}
+              onPress={() => void planNextDay()}
             />
           ) : null}
         </ListSection>
@@ -745,17 +885,6 @@ export function PlanSheet({ back }: { back: boolean }) {
 function activeIndex(route: { stops: LngLat[]; goal: number }, step: RouteStep): number {
   if (step === 'goal') return route.goal;
   return step === 'start' ? 0 : route.stops.length - 1;
-}
-
-/** The tour's track: one waiting in the form, else the saved GPX (unless removed); null without. */
-async function savedLine(): Promise<LngLat[] | null> {
-  const { track, gpxRemoved, draft, tourId } = useTourDraftStore.getState();
-  if (track) return track.line;
-  if (gpxRemoved || !draft.gpxFilepath || !tourId) return null;
-  const geojson = await loadGpxTrack({ id: tourId, gpxFilepath: draft.gpxFilepath }).catch(
-    () => null,
-  );
-  return geojson ? (trackLines(geojson).flat() as LngLat[]) : null;
 }
 
 /** The points between from a route planned before (back from the form), else none. */

@@ -140,7 +140,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ['expo-router', { asyncRoutes: { web: false } }],
     [
       'expo-splash-screen',
-      { image: './assets/images/splash-icon.png', imageWidth: 160, backgroundColor: '#ffffff' },
+      {
+        image: './assets/images/splash-icon.png',
+        imageWidth: 160,
+        backgroundColor: '#ffffff',
+        // iOS: the sign-in photo across the whole screen, cropped as the sign-in screen crops it, so
+        // a signed-out launch hands over to sign-in in place. A 256-colour PNG of
+        // `sign-in-portrait.webp` (the plugin takes PNG only; a full-colour one is 6 MB). Android
+        // 12+ can only show an icon at launch, so it keeps the one above.
+        ios: {
+          image: './assets/images/launch-screen.png',
+          enableFullScreenImage_legacy: true,
+          resizeMode: 'cover',
+        },
+      },
     ],
     // Per-app language in system settings. "de" covers every German region; the app maps it to de-CH.
     ['expo-localization', { supportedLocales: ['en', 'de'] }],

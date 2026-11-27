@@ -2,11 +2,13 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet, View } from 'react-native';
 
 import { useLatest } from '@/core/use-latest';
 import { ListRow, ListSection } from '@/core/adaptive/list';
 import { Page, Screen } from '@/core/adaptive/screen';
 import { useFormatter } from '@/core/i18n/format';
+import { space } from '@/core/theme/tokens';
 import { isOnline } from '@/core/offline/online';
 import {
   goalShare,
@@ -22,9 +24,11 @@ import { wayFollow, type Follow, type Way } from '@/features/map/domain/snap-net
 import { routeBands, routeShares } from '@/features/map/domain/track-bands';
 import { tapSnapM } from '@/features/map/presentation/leg-router';
 import { useMapStore, type HandleTarget } from '@/features/map/presentation/stores/map-store';
+import { EditActions } from '@/features/map/presentation/edit-actions';
 import { ElevationProfile } from '@/features/map/presentation/elevation-profile';
 import { FollowSection, followStatus } from '@/features/map/presentation/follow-section';
 import { profileMetrics, useTrackDrawing } from '@/features/map/presentation/use-track-drawing';
+import { lineEnds } from '@/features/tours/domain/distance';
 import { landsByAir } from '@/features/tours/domain/legs';
 import { tourMinutes } from '@/features/tours/domain/route-metrics';
 import { usePace } from '@/features/user/presentation/stores/user-profile-store';
@@ -49,8 +53,9 @@ function seedTrack(): DrawnTrack | null {
 
 /**
  * Drawing a track (track-drawing, D4) on the live map, in a small sheet: each tap adds a point,
- * joined to the one before along the shown trails; undo, redo, back to the start, live distance,
- * climb, descent and time at the user's pace. Done hands the line to the form as its GPX.
+ * joined to the one before along the shown trails; a tap on a point selects it to move or delete;
+ * undo, redo and delete at the sheet's top, back to the start, live distance, climb, descent and
+ * time at the user's pace. Done hands the line to the form as its GPX.
  */
 export function DrawSheet() {
   const { t } = useTranslation();
@@ -69,7 +74,7 @@ export function DrawSheet() {
   const drawing = useTrackDrawing(seed, ways);
   const [saving, setSaving] = useState(false);
   const drawingRef = useLatest(drawing);
-  /** A point or leg's dot picked by a tap: the next map tap moves it or sends the leg there. */
+  /** A point or leg's dot selected by a tap: dragged, or the next map tap moves it there. */
   const [picked, setPicked] = useState<HandleTarget | null>(null);
   const pickedRef = useLatest(picked);
 
@@ -77,10 +82,10 @@ export function DrawSheet() {
     useMapStore.getState().beginStep('draw', (point) => {
       const target = pickedRef.current;
       const draw = drawingRef.current;
-      if (target && 'point' in target) draw.move(target.point, point, snapRadius(point));
-      else if (target) draw.pull(target.leg, point, snapRadius(point));
-      else draw.add(point, snapRadius(point));
       setPicked(null);
+      if (target && 'point' in target) draw.move(target.point, point, snapRadius(point));
+      else if (target) pullThrough(draw, target.leg, point, setPicked);
+      else draw.add(point, snapRadius(point));
     });
     return () => useMapStore.getState().endStep();
   }, [drawingRef, pickedRef]);
@@ -88,11 +93,6 @@ export function DrawSheet() {
   // The drawing on the map: its line, its points and the taps still waiting for their leg.
   const { track, queued } = drawing;
   useEffect(() => {
-    const remove = (index: number) => {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setPicked(null);
-      drawingRef.current.drop(index);
-    };
     const line = trackLine(track);
     // The line wears its ways' colours, the way down's from the goal on, as the saved tour will.
     const at = goalShare(track, tourGoal);
@@ -132,15 +132,9 @@ export function DrawSheet() {
         })),
         legs: track.legs,
         move: (i, to) => drawingRef.current.move(i, to, snapRadius(to)),
-        pull: (leg, at) => drawingRef.current.pull(leg, at, snapRadius(at)),
-        drop: (i) => remove(i),
-        // A tap on a point takes it out (track-drawing "Remove a point"), the goal excepted: a tap
-        // on it, or on a leg's dot, picks it for the next map tap.
+        pull: (leg, at) => pullThrough(drawingRef.current, leg, at, setPicked),
+        // A tap selects (owner, 2026-11-26), a tap on the selected one lets it go; the bin removes.
         pick: (target) => {
-          if ('point' in target && target.point !== track.goal) {
-            remove(target.point);
-            return;
-          }
           void Haptics.selectionAsync();
           setPicked((p) => (JSON.stringify(p) === JSON.stringify(target) ? null : target));
         },
@@ -148,6 +142,20 @@ export function DrawSheet() {
       },
     });
   }, [track, queued, draft, tourGoal, drawingRef, picked]);
+
+  /** The selected point taken out (never the goal): its neighbours join along the ways. */
+  function remove(index: number) {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setPicked(null);
+    drawingRef.current.drop(index);
+  }
+  const removable =
+    picked && 'point' in picked && picked.point !== track.goal ? picked.point : null;
+  /** Undo and redo change the points: a selection by index would land on another one. */
+  const step = (go: () => void) => () => {
+    setPicked(null);
+    go();
+  };
 
   // A flown way counts its height change alone, as the saved tour will.
   const goalAt = track.goal != null ? track.points[track.goal] : undefined;
@@ -187,8 +195,10 @@ export function DrawSheet() {
         follows: following ? ways : null,
       });
       // One start and one end, where the line begins and ends (a goal at either end is the goal).
-      if (track.goal == null) store.setEnds(line[0]!, line.at(-1)!);
-      else {
+      if (track.goal == null) {
+        const { start, end } = lineEnds(line[0]!, line.at(-1)!, store.goal);
+        store.setEnds(start, end);
+      } else {
         const { start, end } = routeStops({ ...track, goal: track.goal });
         store.setEnds(start, end);
       }
@@ -210,13 +220,23 @@ export function DrawSheet() {
       <Page
         title={t('map.draw.title')}
         header={
-          drawing.profile && track.points.length > 1 ? (
-            <ElevationProfile
-              line={drawing.profile.line}
-              heights={drawing.profile.heights}
-              bands={routeShares(draft, goalShare(track, tourGoal))}
+          <View style={styles.header}>
+            <EditActions
+              undo={{ onPress: step(drawing.undo), disabled: !drawing.canUndo }}
+              redo={{ onPress: step(drawing.redo), disabled: !drawing.canRedo }}
+              remove={{
+                onPress: () => removable !== null && remove(removable),
+                disabled: removable === null || drawing.busy,
+              }}
             />
-          ) : undefined
+            {drawing.profile && track.points.length > 1 ? (
+              <ElevationProfile
+                line={drawing.profile.line}
+                heights={drawing.profile.heights}
+                bands={routeShares(draft, goalShare(track, tourGoal))}
+              />
+            ) : null}
+          </View>
         }
         cancel={{ label: t('common.back'), onPress: () => router.replace('/tour/edit') }}
         confirm={{
@@ -224,29 +244,15 @@ export function DrawSheet() {
           onPress: () => void done(),
           disabled: drawing.busy || saving,
         }}
-        actions={[
-          {
-            id: 'undo',
-            label: t('map.draw.undo'),
-            icon: 'undo',
-            disabled: !drawing.canUndo,
-            onPress: drawing.undo,
-          },
-          {
-            id: 'redo',
-            label: t('map.draw.redo'),
-            icon: 'redo',
-            disabled: !drawing.canRedo,
-            onPress: drawing.redo,
-          },
-        ]}
       >
         <ListSection
           footer={
             picked
               ? 'point' in picked
-                ? t('map.plan.hint.move')
-                : t('map.plan.hint.pull')
+                ? [t('map.plan.hint.selected'), removable !== null ? t('map.plan.hint.remove') : '']
+                    .join(' ')
+                    .trim()
+                : t('map.plan.hint.selectedLeg')
               : track.legs.length
                 ? t('map.draw.hint.shape')
                 : undefined
@@ -254,7 +260,7 @@ export function DrawSheet() {
         >
           <ListRow
             title={
-              numbers || (track.points.length ? t('map.draw.hint.next') : t('map.draw.hint.start'))
+              numbers || (track.points.length ? t('map.draw.hint.add') : t('map.draw.hint.start'))
             }
             subtitle={
               track.points.length > 1 && !metrics.ascent
@@ -290,6 +296,19 @@ export function DrawSheet() {
       </Page>
     </Screen>
   );
+}
+
+const styles = StyleSheet.create({ header: { gap: space.xs } });
+
+/** A leg sent through `at`: its dot is gone, and the new point there is the selected one. */
+function pullThrough(
+  draw: ReturnType<typeof useTrackDrawing>,
+  leg: number,
+  at: LngLat,
+  select: (target: HandleTarget | null) => void,
+) {
+  select(null);
+  void draw.pull(leg, at, snapRadius(at)).then((done) => done && select({ point: leg + 1 }));
 }
 
 /** How far a dragged point jumps to a way: a finger's width at the current zoom. */

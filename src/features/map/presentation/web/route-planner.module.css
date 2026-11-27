@@ -384,6 +384,41 @@
 }
 
 /* What the line follows, and the switch to straight lines. */
+/* The trail overlays' toggles (as `track-draw-panel.module.css`). */
+.overlays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  min-height: 36px;
+  padding: 0 var(--spacing-sm);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-pill);
+  background: var(--color-background);
+  color: var(--color-on-surface-variant);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.chip--on {
+  border-color: transparent;
+  background: var(--color-surface-variant);
+  color: var(--color-on-surface);
+}
+
+/* The layer the route follows right now, tinted in the drawing pen. */
+.chip--snapping {
+  background: color-mix(in srgb, #1f2937 12%, var(--color-background));
+  color: #1f2937;
+}
+
 .follow {
   display: flex;
   align-items: center;

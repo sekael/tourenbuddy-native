@@ -57,28 +57,29 @@ export function PasswordSheet() {
     Keyboard.dismiss();
   }
 
-  async function save() {
+  /** `typed`: the code as it is typed, before its state has caught up (the sixth digit). */
+  async function save(typed = code) {
     if (inFlight.current) return;
     setError(null);
     if (password.length < PASSWORD_MIN_LENGTH) {
       fail(t('auth.password.tooShort', { count: PASSWORD_MIN_LENGTH }));
       return;
     }
-    if (code !== null && code.trim().length < 6) {
+    if (typed !== null && typed.trim().length < 6) {
       fail(t('auth.password.codeMissing'));
       return;
     }
     inFlight.current = true;
     setSaving(true);
     try {
-      if (code === null && !recent) {
+      if (typed === null && !recent) {
         await askForCode();
         return;
       }
-      await setPassword(password, code?.trim() || undefined);
+      await setPassword(password, typed?.trim() || undefined);
       router.back();
     } catch (err) {
-      if (code === null && needsPasswordCode(err)) {
+      if (typed === null && needsPasswordCode(err)) {
         try {
           await askForCode();
         } catch (sendError) {
@@ -120,22 +121,26 @@ export function PasswordSheet() {
           autoFocus
           returnKeyType="done"
           submitBehavior="blurAndSubmit"
-          onSubmitEditing={save}
+          onSubmitEditing={() => void save()}
         />
         {code !== null && (
           <>
             <Text style={styles.muted}>{t('auth.password.codeSent', { email })}</Text>
+            {/* The sixth digit saves, as the sign-in code does: the number pad has no return key,
+                and the keyboard would hide the answer under the button. */}
             <TextField
               label={t('auth.password.codeLabel')}
               value={code}
-              onChangeText={setCode}
+              onChangeText={(value) => {
+                const digits = value.replace(/\D/g, '').slice(0, 6);
+                setCode(digits);
+                if (digits.length === 6) void save(digits);
+              }}
               textContentType="oneTimeCode"
               autoComplete="one-time-code"
               keyboardType="number-pad"
               maxLength={6}
               autoFocus
-              returnKeyType="done"
-              onSubmitEditing={save}
             />
             <Button
               variant="plain"
@@ -160,7 +165,7 @@ export function PasswordSheet() {
                 ? t('auth.password.continueBtn')
                 : t('auth.password.saveBtn')
           }
-          onPress={save}
+          onPress={() => void save()}
           disabled={saving}
         />
       </View>

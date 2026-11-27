@@ -259,6 +259,18 @@ pass = "env(BREVO_SMTP_API_KEY)"
 admin_email = "env(BREVO_SENDER_EMAIL)"
 sender_name = "TourenBuddy"
 
+# Local sign-in emails (Mailpit): the code the app asks for, and the link. Production never uses
+# these: its email hook sends the code (services/email-hook/templates/otp_*). Newer auth images
+# dropped the code from the default templates. signInWithOtp mails `magic_link` to an existing
+# account and `confirmation` to a new one. Paths are relative to the repo root.
+[auth.email.template.magic_link]
+subject = "Your TourenBuddy code"
+content_path = "./supabase/templates/sign-in-code.html"
+
+[auth.email.template.confirmation]
+subject = "Your TourenBuddy code"
+content_path = "./supabase/templates/sign-in-code.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"

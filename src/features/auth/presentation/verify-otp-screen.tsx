@@ -10,7 +10,7 @@ import { createLogger } from '@/core/logging/logger';
 import { color, fieldType, strong } from '@/core/theme/tokens';
 
 import { AuthHero } from './auth-hero';
-import { isOffline, rateLimitWait } from './auth-errors';
+import { isOffline, passwordFailureReason, rateLimitWait } from './auth-errors';
 import { useAuthStore } from './stores/auth-store';
 
 const log = createLogger('VerifyOtp');
@@ -68,8 +68,15 @@ export function VerifyOtpScreen({ email }: { email: string }) {
     setVerifying(true);
     try {
       // Signed in either way; the user is already on the map when this alert shows.
-      if ((await verifyOtp(email, value)) === 'passwordNotSaved') {
-        showAlert(t('auth.signUp.passwordNotSavedTitle'), t('auth.signUp.passwordNotSaved'));
+      const { passwordError } = await verifyOtp(email, value);
+      if (passwordError) {
+        const reason = passwordFailureReason(passwordError, t);
+        showAlert(
+          t('auth.signUp.passwordNotSavedTitle'),
+          reason
+            ? t('auth.signUp.passwordNotSavedBecause', { reason })
+            : t('auth.signUp.passwordNotSaved'),
+        );
       }
     } catch (err) {
       log.warn('Verification failed', err);

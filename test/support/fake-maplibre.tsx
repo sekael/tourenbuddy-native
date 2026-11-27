@@ -30,3 +30,18 @@ export const OfflineManager = {
   deletePack: async () => {},
   addListener: async () => {},
 };
+
+/** A track handle: a view carrying its props, so tests can press and drag it. */
+export const ViewAnnotation = ({
+  id,
+  children,
+  ...props
+}: {
+  id: string;
+  children?: ReactNode;
+  [prop: string]: unknown;
+}) => (
+  <View testID={`annotation-${id}`} {...props}>
+    {children}
+  </View>
+);
