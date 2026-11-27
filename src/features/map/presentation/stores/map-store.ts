@@ -5,6 +5,7 @@ import { TRAIL_OVERLAYS, type TrailOverlayId } from '@/features/map/data/trail-o
 import type { LngLat, Trail } from '@/features/map/domain/entities/trail';
 import type { TourType } from '@/features/tours/data/models/tour-type';
 import type { TourLegs } from '@/features/tours/domain/legs';
+import type { TrackCursor } from '@/features/map/domain/profile-cursor';
 
 /**
  * The map's state, ported from the PWA's map store: base map, overlays (kept on the device), the
@@ -37,10 +38,10 @@ export type CameraRequest =
 export type HandleTarget = { point: number } | { leg: number };
 
 /**
- * A line being planned or drawn, as handles on the map (track-drawing "Shape the line"): its points
- * to drag, a handle halfway along each leg to pull a new point out of, a tap on a pulled point
- * to take it out again. Without dragging, a tap picks a point or a leg's dot and the next map tap
- * moves the point there or sends the leg through there.
+ * A line being planned or drawn, as handles on the map (track-drawing "Shape the line"): its points,
+ * and a handle halfway along each leg to pull a new point out of. A tap selects one (`pick`); the
+ * selected one drags, or the next map tap moves the point there or sends the leg through there. The
+ * sheet's delete button takes a selected point out.
  */
 export type EditHandles = {
   points: { at: LngLat; kind: 'start' | 'goal' | 'end' | 'via' }[];
@@ -49,7 +50,6 @@ export type EditHandles = {
   upTo?: number;
   move: (index: number, to: LngLat) => void;
   pull: (leg: number, at: LngLat) => void;
-  drop: (index: number) => void;
   pick: (target: HandleTarget) => void;
   picked: HandleTarget | null;
 };
@@ -96,6 +96,8 @@ export type MapState = {
   regionFrame: boolean;
   /** The layers sheet is open: the overlays are a tap away (`tourMapLayers`' `warm`). */
   layersOpen: boolean;
+  /** The place a finger on the open tour's elevation profile points at, on its track. */
+  trackCursor: TrackCursor | null;
   /** Height the open sheet covers at the bottom, so the camera frames tours above it. */
   bottomInset: number;
   /** While a step runs (route, pick, draw, region), map taps go to it instead of the tours. */
@@ -177,6 +179,7 @@ export const useMapStore = create<MapState>()((set, get) => ({
   regionsShown: 0,
   regionFrame: false,
   layersOpen: false,
+  trackCursor: null,
   bottomInset: 0,
   tapHandler: null,
   previewLines: null,

@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Linking, StyleSheet, View } from 'react-native';
@@ -18,6 +18,9 @@ import { useContactsStore } from '@/features/contacts/presentation/stores/contac
 import { resolveFriendName } from '@/features/friendships/domain/resolve-friend-name';
 import { useFriendshipsStore } from '@/features/friendships/presentation/stores/friendships-store';
 import { useFriendDisplayName } from '@/features/friendships/presentation/use-friend-display-name';
+import { trackProfile } from '@/features/map/domain/profile-cursor';
+import { routeShares } from '@/features/map/domain/track-bands';
+import { ElevationProfile } from '@/features/map/presentation/elevation-profile';
 import { useMapStore } from '@/features/map/presentation/stores/map-store';
 import type { Season } from '@/features/tours/data/models/season';
 import {
@@ -30,7 +33,7 @@ import { isSameGoal } from '@/features/tours/domain/distance';
 import type { Tour } from '@/features/tours/domain/entities/tour';
 import { landsByAir, legsApart, routeOrder } from '@/features/tours/domain/legs';
 import { outingKey, outingSegments } from '@/features/tours/domain/outing';
-import { tourMinutes } from '@/features/tours/domain/route-metrics';
+import { progressNearest, tourMinutes, trackLines } from '@/features/tours/domain/route-metrics';
 import { usePace } from '@/features/user/presentation/stores/user-profile-store';
 import { useAuthStore } from '@/features/auth/presentation/stores/auth-store';
 
@@ -119,9 +122,25 @@ export function TourDetailPage({
     };
   }, [id, onTop]);
 
-  const { metrics, numbers } = useRouteNumbers(tour, (m) =>
+  const { metrics, numbers, track } = useRouteNumbers(tour, (m) =>
     tour ? tourMinutes(m, tour, pace) : null,
   );
+  // The track's profile, in its ways' colours as on the map; only when it has heights.
+  const profile = useMemo(() => {
+    if (!tour || !track) return null;
+    const lines = trackLines(track).filter((line) => line.length > 1);
+    const shape = trackProfile(lines);
+    if (!shape) return null;
+    const at = tour.legs && lines.length === 1 ? progressNearest(lines[0]!, tour.goal) : null;
+    // The cursor's dot in the activities' own colours: brighter than the line it sits on.
+    return {
+      ...shape,
+      bands: routeShares(tour, at),
+      marks: routeShares(tour, at, TOUR_TYPE_COLORS),
+    };
+  }, [tour, track]);
+  // The profile's cursor shows on the map only while a finger is on it.
+  useEffect(() => () => useMapStore.setState({ trackCursor: null }), []);
 
   const backAction = back
     ? [{ id: 'back', icon: 'arrow_back' as const, leading: true, ...back }]
@@ -341,6 +360,16 @@ export function TourDetailPage({
             </View>
           ))}
         </View>
+      ) : null}
+      {profile ? (
+        // At the sheet's top, so the map shows the place a finger on it points at.
+        <ElevationProfile
+          line={profile.line}
+          heights={profile.heights}
+          bands={profile.bands}
+          marks={profile.marks}
+          onScrub={(spot) => useMapStore.setState({ trackCursor: spot })}
+        />
       ) : null}
     </View>
   );

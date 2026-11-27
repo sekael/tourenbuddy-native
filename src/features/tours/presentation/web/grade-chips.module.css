@@ -1,8 +1,13 @@
 /* Ported from the PWA's features/tours/presentation/components/grade-chips.vue (scoped style). */
 .scale {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
+  gap: var(--spacing-xxs);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--spacing-xxs);
 }
 

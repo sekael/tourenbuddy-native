@@ -16,6 +16,11 @@ export type Band = { color: string; coordinates: GeoJSON.Position[] };
 /** A band as a share of a line's length, `from` to `to` (0–1): a gradient's stops (the profile). */
 export type Share = { from: number; to: number; color: string };
 
+/** The colour a profile's bands give the place `share` of the way along (the last one's past it). */
+export function shareColor(shares: readonly Share[], share: number): string | undefined {
+  return (shares.find((band) => share >= band.from && share <= band.to) ?? shares.at(-1))?.color;
+}
+
 /** Where the way down takes over (activity-legs D5): its colours from share `at` (the goal) on. */
 export type WayDown = { at: number; colors: readonly string[] };
 
@@ -105,10 +110,15 @@ export function routeBands(
 
 /**
  * A route's terrain profile in the same colours (owner, 2026-11-24): each way wears the activities
- * picked for it (up, down or both), banded when several, switching at the goal (share `at`).
+ * picked for it (up, down or both), banded when several, switching at the goal (share `at`). With
+ * `palette`, in other shades: the activities' own, brighter than the line's, for a dot on it.
  */
-export function routeShares(tour: RouteTour, at: number | null): Share[] {
-  return bandShares(...routeColors(tour, at));
+export function routeShares(
+  tour: RouteTour,
+  at: number | null,
+  palette: Record<TourType, string> = TOUR_TYPE_TRACK_COLORS,
+): Share[] {
+  return bandShares(...routeColors(tour, at, palette));
 }
 
 type RouteTour = { tourTypes: readonly TourType[]; legs?: TourLegs | null };
@@ -116,9 +126,10 @@ type RouteTour = { tourTypes: readonly TourType[]; legs?: TourLegs | null };
 function routeColors(
   { tourTypes, legs }: RouteTour,
   at: number | null,
+  palette: Record<TourType, string> = TOUR_TYPE_TRACK_COLORS,
 ): [string[], WayDown | undefined] {
   const colors = (types: readonly TourType[]) =>
-    types.length ? distinctTypeColors(types, TOUR_TYPE_TRACK_COLORS) : [NO_TYPE_COLOR];
+    types.length ? distinctTypeColors(types, palette) : [NO_TYPE_COLOR];
   return [
     colors(legs?.ascent ?? tourTypes),
     legs && at !== null ? { at, colors: colors(legs.descent) } : undefined,

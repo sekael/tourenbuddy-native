@@ -31,3 +31,34 @@
   stroke-width: 2;
   stroke-linejoin: round;
 }
+
+/* Scrubbing (the tour sheet's): taller, and a finger drags along it, never the page or the sheet. */
+.elevation-profile--scrub {
+  height: 112px;
+  touch-action: none;
+  user-select: none;
+  cursor: crosshair;
+}
+
+.cursor {
+  stroke: var(--color-on-surface);
+  stroke-width: 1;
+}
+
+.cursor-dot {
+  fill: var(--color-primary);
+  stroke: var(--color-surface);
+  stroke-width: 2;
+}
+
+.cursor-box {
+  fill: var(--color-surface);
+  fill-opacity: 0.92;
+}
+
+.cursor-label {
+  fill: var(--color-on-surface);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

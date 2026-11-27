@@ -77,6 +77,17 @@ describe('useTrackDrawing: shaping the line', () => {
     expect(track.points[track.goal!]).toEqual(B);
   });
 
+  it('should tell once a pull went through, so its new point can be selected', async () => {
+    const { hook } = await draw();
+    let done: boolean | undefined;
+    await act(async () => {
+      done = await hook.result.current.pull(1, D, 30);
+    });
+    expect(done).toBe(true);
+    // The new point is the leg's index plus one.
+    expect(hook.result.current.track.points[2]).toEqual(D);
+  });
+
   it('should take a pulled point out again, joining its neighbours', async () => {
     const { hook, step } = await draw();
     await step(() => hook.result.current.pull(1, D, 30));

@@ -5,6 +5,7 @@ import {
   fittedView,
   flight,
   GLIDE_MS,
+  keptInFrame,
   keptOnMap,
   minZoomFor,
   MAX_FLIGHT_MS,
@@ -72,7 +73,7 @@ describe('aboutFramed', () => {
     [8.06, 46.66],
   ];
 
-  it('should move a goal that is in view but off-centre, as in the owner\'s screenshot', () => {
+  it("should move a goal that is in view but off-centre, as in the owner's screenshot", () => {
     expect(aboutFramed(goal, [7.75, 46.55, 8.15, 46.85], 11, first)).toBe(false);
   });
 
@@ -129,7 +130,7 @@ describe('minZoomFor', () => {
     expect(minZoomFor(1366)).toBeGreaterThan(minZoomFor(874));
   });
 
-  it('should never let a short view zoom out past the PWA\'s limit', () => {
+  it("should never let a short view zoom out past the PWA's limit", () => {
     expect(minZoomFor(200)).toBe(5.8);
     expect(minZoomFor(0)).toBe(5.8);
   });
@@ -145,5 +146,43 @@ describe('keptOnMap', () => {
     expect(back[0]).toBeCloseTo(8.2, 6);
     expect(back[1]).toBeLessThan(48.8);
     expect(keptOnMap(at(back[0], back[1], 8), phone)).toBeNull();
+  });
+});
+
+describe('keptInFrame', () => {
+  // A 400 × 800 pt phone at about zoom 14 over Fiesch; the sheet covers the lower half.
+  const bounds: Box = [8.1, 46.38, 8.14, 46.43];
+  const size = { width: 400, height: 800 };
+  const sheet = { top: 60, right: 20, bottom: 420, left: 20 };
+  const middle: [number, number] = [8.12, 46.42];
+
+  it('should leave the map still while the dot is in the middle of the map above the sheet', () => {
+    expect(keptInFrame(bounds, size, sheet, middle)).toBeNull();
+  });
+
+  it('should move the map just so far that a dot past the middle is back on its edge', () => {
+    const east: [number, number] = [8.139, 46.42];
+    const pan = keptInFrame(bounds, size, sheet, east)!;
+    expect(pan.bounds[0]).toBeGreaterThan(bounds[0]);
+    // No further than needed: the dot sits on the middle's edge now, and the map stays from here.
+    expect(keptInFrame(pan.bounds, size, sheet, east)).toBeNull();
+    expect(keptInFrame(pan.bounds, size, sheet, [east[0] + 0.0005, east[1]])).not.toBeNull();
+    // North and south stay put for a dot that only went east.
+    expect(pan.bounds[1]).toBeCloseTo(bounds[1], 9);
+    expect(pan.bounds[3]).toBeCloseTo(bounds[3], 9);
+  });
+
+  it('should bring a dot under the sheet up above it', () => {
+    const under: [number, number] = [8.12, 46.39];
+    const pan = keptInFrame(bounds, size, sheet, under)!;
+    expect(pan.bounds[1]).toBeLessThan(bounds[1]);
+    expect(keptInFrame(pan.bounds, size, sheet, under)).toBeNull();
+    // The new centre is the middle beside the sheet: south of the dot, never west or east of it.
+    expect(pan.center[0]).toBeCloseTo(8.12, 6);
+    expect(pan.center[1]).toBeGreaterThan(under[1]);
+  });
+
+  it("should not move a map it hasn't measured yet", () => {
+    expect(keptInFrame(bounds, { width: 0, height: 0 }, sheet, [9, 47])).toBeNull();
   });
 });

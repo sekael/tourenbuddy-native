@@ -11,13 +11,19 @@ import { legHandle } from './leg-router';
 import { useMapStore, type HandleTarget } from './stores/map-store';
 
 const STOP_ICONS = { start: 'trip_origin', goal: 'flag', end: 'sports_score' } as const;
+/** How far a finger may wander on the selected handle and still tap it (points). */
+const TAP_SLOP = 8;
+
+type DragEvent = { nativeEvent: { lngLat: unknown; point?: [number, number] } };
+/** Where the selected handle's touch began (one finger, one drag at a time). */
+let from: [number, number] | null | undefined = null;
 
 /**
- * The line's handles (track-drawing "Shape the line"): hold a point and drag it to move it; hold
- * the dot halfway along a leg and drag it onto another way to send the line through there. A
- * quick tap on a point takes it out (the step decides: the goal is picked instead, it turns blue
- * and the next map tap moves it); a tap on a leg's dot picks it for the next map tap. While a
- * handle is dragged the line runs straight through it; the drop routes the legs it touches anew.
+ * The line's handles (track-drawing "Shape the line"): a tap on a point or on the dot halfway along
+ * a leg selects it (blue), a tap on the selected one lets it go. Only the selected handle drags, from
+ * the first touch (the MapLibre patch): a drag that started elsewhere still pans the map. A touch on
+ * it that doesn't move is that tap. While a handle is dragged the line runs straight through it; the
+ * drop routes the legs it touches anew.
  */
 export function TrackHandles() {
   const { t } = useTranslation();
@@ -31,10 +37,32 @@ export function TrackHandles() {
     !!moving && 'point' in moving && (leg === moving.point - 1 || leg === moving.point);
   const lngLat = (event: { nativeEvent: { lngLat: unknown } }) =>
     event.nativeEvent.lngLat as LngLat;
-  const grab = () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const isPicked = (target: HandleTarget) =>
+    JSON.stringify(handles.picked) === JSON.stringify(target);
   // The line follows the finger, straight through it (map-screen draws it from `drag`).
   const follow = (target: HandleTarget) => (event: { nativeEvent: { lngLat: unknown } }) =>
     useMapStore.setState({ drag: { handles, target, at: lngLat(event) } });
+  /** The selected handle: dragged from the first touch, a touch that stays put lets it go. */
+  const dragging = (target: HandleTarget, drop: (to: LngLat) => void) =>
+    isPicked(target)
+      ? {
+          draggable: true,
+          onDragStart: (event: DragEvent) => {
+            from = event.nativeEvent.point;
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          },
+          onDrag: follow(target),
+          onDragEnd: (event: DragEvent) => {
+            const to = event.nativeEvent.point;
+            const still = !!from && !!to && Math.hypot(to[0] - from[0], to[1] - from[1]) < TAP_SLOP;
+            from = null;
+            if (still) {
+              useMapStore.setState({ drag: null });
+              handles.pick(target);
+            } else drop(lngLat(event));
+          },
+        }
+      : {};
 
   return (
     <>
@@ -44,17 +72,13 @@ export function TrackHandles() {
             ? legHandle(leg, zoom)
             : null;
         if (!mid) return null;
-        const picked =
-          handles.picked !== null && 'leg' in handles.picked && handles.picked.leg === i;
+        const picked = isPicked({ leg: i });
         return (
           <ViewAnnotation
             key={`leg-${i}-${mid.join()}`}
             id={`leg-${i}`}
             lngLat={mid}
-            draggable
-            onDragStart={grab}
-            onDrag={follow({ leg: i })}
-            onDragEnd={(event) => handles.pull(i, lngLat(event))}
+            {...dragging({ leg: i }, (to) => handles.pull(i, to))}
             onPress={() => handles.pick({ leg: i })}
           >
             <View
@@ -69,22 +93,18 @@ export function TrackHandles() {
       })}
       {handles.points.map((point, i) => {
         if (i > (handles.upTo ?? Infinity)) return null;
-        const picked =
-          handles.picked !== null && 'point' in handles.picked && handles.picked.point === i;
+        const picked = isPicked({ point: i });
         return (
           <ViewAnnotation
             key={`point-${i}-${point.at.join()}`}
             id={`point-${i}`}
             lngLat={point.at}
-            draggable
-            onDragStart={grab}
-            onDrag={follow({ point: i })}
-            onDragEnd={(event) => handles.move(i, lngLat(event))}
-            onPress={() => (point.kind === 'via' ? handles.drop(i) : handles.pick({ point: i }))}
+            {...dragging({ point: i }, (to) => handles.move(i, to))}
+            onPress={() => handles.pick({ point: i })}
           >
             <View style={styles.target} accessibilityElementsHidden>
               {point.kind === 'via' ? (
-                <View style={styles.via} />
+                <View style={[styles.via, picked && styles.viaPicked]} />
               ) : (
                 <View style={[styles.stop, picked && styles.stopPicked]}>
                   <Icon
@@ -115,9 +135,9 @@ const styles = StyleSheet.create({
     boxShadow: shadow.md,
   },
   midPicked: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: color.primary,
     borderColor: color.background,
   },
@@ -130,6 +150,13 @@ const styles = StyleSheet.create({
     borderColor: color.primary,
     boxShadow: shadow.md,
   },
+  viaPicked: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: color.primary,
+    borderColor: color.background,
+  },
   stop: {
     width: 30,
     height: 30,
@@ -141,5 +168,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     boxShadow: shadow.md,
   },
-  stopPicked: { backgroundColor: color.primary, borderColor: color.background },
+  stopPicked: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: color.primary,
+    borderColor: color.background,
+  },
 });

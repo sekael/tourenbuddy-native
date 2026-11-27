@@ -107,6 +107,11 @@
 /* Owner toggles: a compact row — each pill keeps its natural width and they wrap
    rather than squeezing a label onto two lines. Both rest in the tonal container;
    only the non-default state (completed / private) takes its own tint. */
+/* The track's elevation profile, right under the hero (tour-info-extended). */
+.profile {
+  margin-block: var(--spacing-xs);
+}
+
 .owner-toggles {
   display: flex;
   flex-wrap: wrap;

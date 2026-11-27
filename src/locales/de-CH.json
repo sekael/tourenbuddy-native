@@ -1048,13 +1048,15 @@
         "next": "Tippe entlang des Wegs, um Punkte zu setzen. Ziehe einen Punkt, um ihn zu verschieben.",
         "profileLoading": "Höhenprofil wird geladen …",
         "profileOffline": "Das Höhenprofil braucht eine Verbindung.",
-        "shape": "Tippe auf einen Punkt, um ihn zu entfernen, oder halte und ziehe ihn, um ihn zu verschieben. Den Punkt in der Mitte einer Linie ziehst du auf einen anderen Weg."
+        "shape": "Tippe auf einen Punkt oder den Punkt in der Mitte einer Linie, um ihn auszuwählen; dann ziehe ihn oder tippe auf die Karte, wohin er soll.",
+        "add": "Tippe entlang des Wegs, um Punkte zu setzen."
       },
       "pace": {
         "open": "Tempo einstellen"
       },
       "undo": "Rückgängig",
       "redo": "Wiederholen",
+      "delete": "Punkt löschen",
       "done": "Fertig",
       "returnToStart": "Zum Start",
       "returnToStartHint": "Auf demselben Weg zurück zum Start",
@@ -1070,7 +1072,11 @@
         "shape": "Um den Weg zu ändern, tippe auf den Punkt in der Mitte einer Linie (oder einen Routenpunkt) und dann auf die Karte – oder halte und ziehe ihn.",
         "via": "Tippe einen herausgezogenen Punkt an, um ihn wieder zu entfernen.",
         "pull": "Tippe jetzt auf die Karte, wo der Weg durchgehen soll.",
-        "landing": "Wo landest du? Auf die Karte tippen oder suchen – oder ohne Landeplatz weiter."
+        "landing": "Wo landest du? Auf die Karte tippen oder suchen – oder ohne Landeplatz weiter.",
+        "select": "Um den Weg zu ändern, tippe auf einen Punkt oder den Punkt in der Mitte einer Linie, um ihn auszuwählen.",
+        "selected": "Ziehe den ausgewählten Punkt oder tippe auf die Karte, wohin er soll.",
+        "selectedLeg": "Ziehe den ausgewählten Punkt oder tippe auf die Karte, wo der Weg durchgehen soll.",
+        "remove": "Der Papierkorb entfernt den ausgewählten Punkt."
       },
       "required": "Erforderlich",
       "optional": "Optional",

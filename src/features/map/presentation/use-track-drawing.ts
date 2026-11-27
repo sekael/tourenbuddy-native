@@ -79,12 +79,18 @@ export function useTrackDrawing(seed: DrawnTrack | null, ways: Record<Way, Follo
   const trackRef = useLatest(track);
   const chain = useRef(Promise.resolve());
 
-  function enqueue(step: () => Promise<void>) {
+  /** Runs `step` after the steps before it; resolves whether it went through. */
+  function enqueue(step: () => Promise<void>): Promise<boolean> {
     setRunning((n) => n + 1);
-    chain.current = chain.current
-      .then(step)
-      .catch((error) => log.warn('Drawing step failed', error))
-      .finally(() => setRunning((n) => n - 1));
+    const done = chain.current.then(step).then(
+      () => true,
+      (error) => {
+        log.warn('Drawing step failed', error);
+        return false;
+      },
+    );
+    chain.current = done.then(() => setRunning((n) => n - 1));
+    return done;
   }
 
   function commit(next: DrawnTrack) {
@@ -213,8 +219,11 @@ export function useTrackDrawing(seed: DrawnTrack | null, ways: Record<Way, Follo
         commit({ points: next, legs: nextLegs, goal });
       });
     },
-    /** A point pulled out of leg `leg` to `to`: the leg goes through it, both halves along the ways. */
-    pull: (leg: number, to: LngLat, radiusM: number) => {
+    /**
+     * A point pulled out of leg `leg` to `to`: the leg goes through it, both halves along the ways.
+     * Resolves once it has (true), so the new point, `leg + 1`, can be selected.
+     */
+    pull: (leg: number, to: LngLat, radiusM: number) =>
       enqueue(async () => {
         const { points: pts, legs, goal } = trackRef.current;
         if (!pts[leg + 1]) return;
@@ -232,8 +241,7 @@ export function useTrackDrawing(seed: DrawnTrack | null, ways: Record<Way, Follo
           legs: [...legs.slice(0, leg), a, b, ...legs.slice(leg + 1)],
           goal: g,
         });
-      });
-    },
+      }),
     /** Point `index` taken out (never the goal): its neighbours join along the ways. */
     drop: (index: number) => {
       enqueue(async () => {

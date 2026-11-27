@@ -18,7 +18,9 @@ export function PlanRoute({ back, keep }: { back: boolean; keep: boolean }) {
       useTourDraftStore.getState().begin('create', null, newTourGuess(new Date()));
     }
   });
-  return <PlanSheet back={back} />;
+  // Each day of a trip is planned by a sheet of its own: another day, a fresh sheet.
+  const draftId = useTourDraftStore((s) => s.draftId);
+  return <PlanSheet key={draftId} back={back} />;
 }
 
 /**

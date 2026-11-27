@@ -52,19 +52,22 @@ export function GradeChips({
       })}
     >
       <BaseIcon name={TOUR_TYPE_ICONS[scale.type]} className={c('scale-icon')} />
-      {scale.grades.map((grade) => (
-        <button
-          key={grade}
-          type="button"
-          className={c('chip', { selected: lit.has(grade) })}
-          aria-pressed={lit.has(grade)}
-          disabled={disabled}
-          data-testid="grade-chip"
-          onClick={() => tap(grade)}
-        >
-          {grade}
-        </button>
-      ))}
+      {/* The chips wrap beside the icon, which stays centred on them (owner, 2026-11-26). */}
+      <div className={c('chips')}>
+        {scale.grades.map((grade) => (
+          <button
+            key={grade}
+            type="button"
+            className={c('chip', { selected: lit.has(grade) })}
+            aria-pressed={lit.has(grade)}
+            disabled={disabled}
+            data-testid="grade-chip"
+            onClick={() => tap(grade)}
+          >
+            {grade}
+          </button>
+        ))}
+      </div>
     </div>
   ));
 }

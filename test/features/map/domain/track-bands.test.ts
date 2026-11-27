@@ -3,8 +3,9 @@ import {
   NO_TYPE_COLOR,
   routeBands,
   routeShares,
+  shareColor,
 } from '@/features/map/domain/track-bands';
-import { TOUR_TYPE_TRACK_COLORS } from '@/features/tours/data/models/tour-type';
+import { TOUR_TYPE_COLORS, TOUR_TYPE_TRACK_COLORS } from '@/features/tours/data/models/tour-type';
 
 // About 1.5 km east along a parallel, with a vertex in the middle.
 const line = [
@@ -89,6 +90,20 @@ describe('routeBands', () => {
 describe('routeShares', () => {
   const { skitour, paragliding, hiking } = TOUR_TYPE_TRACK_COLORS;
 
+  it('should give a dot on the line the activities’ own colours when asked, at the same places', () => {
+    const tour = {
+      tourTypes: ['hiking', 'paragliding'] as const,
+      legs: { ascent: ['hiking' as const], descent: ['paragliding' as const] },
+    };
+    const line = routeShares(tour, 0.5);
+    const dots = routeShares(tour, 0.5, TOUR_TYPE_COLORS);
+    expect(dots.map(({ from, to }) => [from, to])).toEqual(line.map(({ from, to }) => [from, to]));
+    expect(dots.map((b) => b.color)).toEqual([
+      TOUR_TYPE_COLORS.hiking,
+      TOUR_TYPE_COLORS.paragliding,
+    ]);
+  });
+
   it('should switch at the goal when the ways differ, banding a way with both ways’ activities', () => {
     // Skitour both ways ("beides"), the glider down only.
     const shares = routeShares(
@@ -114,5 +129,22 @@ describe('routeShares', () => {
     expect(routeShares({ tourTypes: [] }, null)).toEqual([
       { from: 0, to: 1, color: NO_TYPE_COLOR },
     ]);
+  });
+});
+
+describe('shareColor', () => {
+  const shares = [
+    { from: 0, to: 0.6, color: 'up' },
+    { from: 0.6, to: 1, color: 'down' },
+  ];
+
+  it('should give the colour of the band a spot lies in', () => {
+    expect(shareColor(shares, 0.3)).toBe('up');
+    expect(shareColor(shares, 0.8)).toBe('down');
+  });
+
+  it('should hold to the last band past the end, and give none without bands', () => {
+    expect(shareColor(shares, 1.2)).toBe('down');
+    expect(shareColor([], 0.5)).toBeUndefined();
   });
 });

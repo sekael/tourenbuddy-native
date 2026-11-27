@@ -1,4 +1,4 @@
-import type { StyleSpecification } from '@maplibre/maplibre-gl-style-spec';
+import type { LayerSpecification, StyleSpecification } from '@maplibre/maplibre-gl-style-spec';
 import {
   Camera,
   GeoJSONSource,
@@ -12,7 +12,7 @@ import {
   type GeoJSONSourceRef,
   type MapRef,
 } from '@maplibre/maplibre-react-native';
-import { useImperativeHandle, useMemo, useRef, type ReactNode, type Ref } from 'react';
+import { useEffect, useImperativeHandle, useMemo, useRef, type ReactNode, type Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions } from 'react-native';
 
@@ -29,11 +29,14 @@ import { useReducedMotion } from '@/core/theme/use-reduced-motion';
 import {
   fittedView,
   flight,
+  keptInFrame,
   keptOnMap,
   minZoomFor,
+  type Box,
   type CameraView,
 } from '@/features/map/domain/camera-flight';
 import type { LngLat } from '@/features/map/domain/entities/trail';
+import type { TrackCursor } from '@/features/map/domain/profile-cursor';
 
 import { markerImages } from './marker-images';
 import { BASE_STYLES } from './map-styles';
@@ -102,6 +105,11 @@ export type TourMapProps = {
   dimTrails?: boolean;
   /** The overlays are a tap away: those switched off load unseen (`tourMapLayers`). */
   warmOverlays?: boolean;
+  /**
+   * A dot on the open tour's track where a finger on its elevation profile points, in the
+   * activity's colour there. The map follows it, so it never leaves the view.
+   */
+  cursor?: TrackCursor | null;
   /** While drawing, tours take no taps and double-tap zoom is off (track-drawing). */
   drawing?: boolean;
   /** The area the chrome and sheets cover, so the camera frames what is left. */
@@ -124,6 +132,29 @@ export type TourMapProps = {
 export { CLUSTER_LAYER, MORE_LAYER, SKI_HALO_LAYER, TOUR_LAYERS } from './tour-map-layers';
 
 const EMPTY: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
+
+const cursorPoint = ({ point, color }: TrackCursor): GeoJSON.FeatureCollection => ({
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      properties: { color },
+      geometry: { type: 'Point', coordinates: point },
+    },
+  ],
+});
+/** The profile's cursor on the map: its dot in the activity's colour, ringed white above all else. */
+const CURSOR_LAYER: LayerSpecification = {
+  id: 'track-cursor',
+  source: 'cursor',
+  type: 'circle',
+  paint: {
+    'circle-radius': 7,
+    'circle-color': ['get', 'color'],
+    'circle-stroke-width': 3,
+    'circle-stroke-color': '#ffffff',
+  },
+};
 
 const mapLog = createLogger('Map');
 
@@ -156,6 +187,7 @@ export function TourMap({
   areas,
   dimTrails = false,
   warmOverlays = false,
+  cursor = null,
   drawing = false,
   padding,
   initialCenter,
@@ -179,6 +211,25 @@ export function TourMap({
   const reducedMotion = useReducedMotion();
   const move = (to: CameraView) =>
     reducedMotion ? { duration: 0, easing: undefined } : flight(view.current, to, size.current);
+
+  // The profile's dot stays in view (tour-info-extended): past the middle of the map beside the
+  // sheet, the map moves along with it at once, just so far. While a finger scrubs, the view is
+  // the one this last moved to: the map's own reports of it come a moment later.
+  const shown = useRef<Box | null>(null);
+  const followed = useRef<Box | null>(null);
+  useEffect(() => {
+    if (!cursor) {
+      followed.current = null;
+      return;
+    }
+    const from = followed.current ?? shown.current;
+    const pan = from && keptInFrame(from, size.current, padding, cursor.point);
+    if (!pan) return;
+    followed.current = pan.bounds;
+    cameraRef.current?.easeTo({ center: pan.center, padding, duration: 0 });
+    // The padding is the frame of the moment, not a reason to follow again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cursor]);
 
   useImperativeHandle(ref, () => ({
     flyTo: (center, zoom) => {
@@ -241,6 +292,7 @@ export function TourMap({
       }}
       onRegionDidChange={(event) => {
         view.current = { center: event.nativeEvent.center as LngLat, zoom: event.nativeEvent.zoom };
+        shown.current = event.nativeEvent.bounds as Box;
         // Panned or pinched past the base map's edge: back onto it, as a scroll view bounces.
         const back = event.nativeEvent.userInteraction
           ? keptOnMap(view.current, size.current)
@@ -332,6 +384,10 @@ export function TourMap({
         {layers.footprints.map((layer) => (
           <Layer key={layer.id} {...layer} />
         ))}
+      </GeoJSONSource>
+
+      <GeoJSONSource id="cursor" data={cursor ? cursorPoint(cursor) : EMPTY}>
+        <Layer {...CURSOR_LAYER} />
       </GeoJSONSource>
 
       {children}

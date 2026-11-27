@@ -9,6 +9,7 @@ import { classes } from '@/core/web/classes';
 import { useFormatter } from '@/core/web/use-formatter.web';
 import { SWISSTOPO_STYLES } from '@/features/map/data/swisstopo-styles';
 import { TRAIL_OVERLAYS } from '@/features/map/data/trail-overlays';
+import { keptInFrame } from '@/features/map/domain/camera-flight';
 import { toursOnMap } from '@/features/map/domain/tours-on-map';
 import { useTourLinksStore } from '@/features/tour-links/presentation/stores/tour-links-store';
 import type { Tour } from '@/features/tours/domain/entities/tour';
@@ -77,6 +78,7 @@ export function TourenbuddyMap({
   const previewStart = useMapStore((s) => s.previewStart);
   const previewEnd = useMapStore((s) => s.previewEnd);
   const previewTrack = useMapStore((s) => s.previewTrack);
+  const trackCursor = useMapStore((s) => s.trackCursor);
   const previewStages = useMapStore((s) => s.previewStages);
   const isDrawingTrack = useMapStore((s) => s.isDrawingTrack);
   const activeOverlays = useMapStore((s) => s.activeOverlays);
@@ -91,6 +93,7 @@ export function TourenbuddyMap({
     trailLayers: null as ReturnType<typeof createTrailLayers> | null,
     drawnScene: null as string | null,
     thumbnails: [] as HTMLImageElement[],
+    cursor: null as maplibregl.Marker | null,
   }).current;
 
   const linkedTourIds = useMemo(() => new Set(groupIdByTourId.keys()), [groupIdByTourId]);
@@ -433,6 +436,36 @@ export function TourenbuddyMap({
   useEffect(() => {
     if (!first.current) m.trailLayers?.setVisible(activeOverlays);
   }, [activeOverlays]);
+  // The open tour's profile points here (tour-info-extended): a dot on its track, kept in view.
+  useEffect(() => {
+    if (!m.map || !trackCursor) {
+      m.cursor?.remove();
+      m.cursor = null;
+      return;
+    }
+    if (!m.cursor) {
+      const element = document.createElement('div');
+      element.className = c('track-cursor');
+      element.setAttribute('aria-hidden', 'true');
+      m.cursor = new maplibregl.Marker({ element, anchor: 'center' });
+      m.cursor.setLngLat(trackCursor.point).addTo(m.map);
+    } else m.cursor.setLngLat(trackCursor.point);
+    // The activity's colour there, as on the profile.
+    m.cursor.getElement().style.background = trackCursor.color;
+    // Past the middle of the map beside the drawer or sheet, the map moves along with it at once,
+    // just so far (the same rule as the apps').
+    const map = m.map;
+    const { clientWidth: width, clientHeight: height } = map.getContainer();
+    const { top = 0, right = 0, bottom = 0, left = 0 } = latest.current.covered ?? {};
+    const shown = map.getBounds();
+    const pan = keptInFrame(
+      [shown.getWest(), shown.getSouth(), shown.getEast(), shown.getNorth()],
+      { width, height },
+      { top, right, bottom, left },
+      trackCursor.point,
+    );
+    if (pan) map.panBy(pan.by, { duration: 0 });
+  }, [trackCursor]);
   useEffect(() => {
     if (!first.current) m.trailLayers?.setHighlight(trailCard);
   }, [trailCard]);

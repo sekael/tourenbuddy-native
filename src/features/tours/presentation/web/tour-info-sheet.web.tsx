@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { newId } from '@/core/files';
@@ -33,7 +33,7 @@ import {
 } from '@/features/tour-links/presentation/web/link-edit-warning-dialog.web';
 import { LinkRequestBanner } from '@/features/tour-links/presentation/web/link-request-banner.web';
 import { LinkedWithSection } from '@/features/tour-links/presentation/web/linked-with-section.web';
-import type { TourType } from '@/features/tours/data/models/tour-type';
+import { TOUR_TYPE_COLORS, type TourType } from '@/features/tours/data/models/tour-type';
 import { shareOriginal } from '@/features/tours/data/services/gpx-storage-service';
 import { COLLISION_RADIUS_M, sharesActivity } from '@/features/tours/domain/collision';
 import { isSameGoal } from '@/features/tours/domain/distance';
@@ -41,7 +41,11 @@ import type { Tour, TourDraft } from '@/features/tours/domain/entities/tour';
 import type { TourAttachment } from '@/features/tours/domain/entities/tour-attachment';
 import { flight, routeOrder, type TourLegs } from '@/features/tours/domain/legs';
 import { outingKey, outingSegments } from '@/features/tours/domain/outing';
-import { tourMinutes } from '@/features/tours/domain/route-metrics';
+import { trackProfile } from '@/features/map/domain/profile-cursor';
+import { routeShares } from '@/features/map/domain/track-bands';
+import { ElevationProfile } from '@/features/map/presentation/web/elevation-profile.web';
+import { progressNearest, tourMinutes, trackLines } from '@/features/tours/domain/route-metrics';
+import { useRouteMetrics as useTourRoute } from '@/features/tours/presentation/use-route-metrics';
 import {
   buildSuggestionItems,
   pendingGoalFrom,
@@ -62,7 +66,6 @@ import styles from './tour-info-sheet.module.css';
 import { TourSuggestionHistorySheet } from './tour-suggestion-history-sheet.web';
 import { TourSuggestionReviewSheet } from './tour-suggestion-review-sheet.web';
 import { TourTypeBadge } from './tour-type-badge.web';
-import { useRouteMetrics } from './use-route-metrics.web';
 import type { PointPick } from './use-swisstopo-fill.web';
 
 const c = classes(styles);
@@ -586,8 +589,23 @@ export function TourInfoSheet({
   }
 
   const coordinates = `${tour.goal.lat.toFixed(4)}°N, ${tour.goal.lng.toFixed(4)}°E`;
-  // Climb · descent (or flight) · distance beside the date, as the outing hero has them.
-  const metrics = useRouteMetrics([tour]).get(tour.id)!;
+  // Climb · descent (or flight) · distance beside the date, as the outing hero has them; the
+  // track, with the heights it could get, draws the profile under them.
+  const { metrics, track } = useTourRoute(tour);
+  const profile = useMemo(() => {
+    if (!track) return null;
+    const lines = trackLines(track).filter((line) => line.length > 1);
+    const shape = trackProfile(lines);
+    if (!shape) return null;
+    const at = tour.legs && lines.length === 1 ? progressNearest(lines[0]!, tour.goal) : null;
+    // The cursor's dot in the activities' own colours: brighter than the line it sits on.
+    return {
+      ...shape,
+      bands: routeShares(tour, at),
+      marks: routeShares(tour, at, TOUR_TYPE_COLORS),
+    };
+  }, [tour, track]);
+  useEffect(() => () => useMapStore.setState({ trackCursor: null }), []);
   /** The time the drawing showed: the track at the user's pace. */
   const minutes = tourMinutes(metrics, tour, pace);
   const formattedElevation = tour.elevation == null ? null : formatElevation(tour.elevation);
@@ -748,6 +766,19 @@ export function TourInfoSheet({
             )}
           </div>
         </div>
+
+        {/* The track's profile at the top: a finger or the mouse on it shows the place on the map. */}
+        {profile && (
+          <div className={c('profile')} data-testid="tour-profile">
+            <ElevationProfile
+              line={profile.line}
+              heights={profile.heights}
+              bands={profile.bands}
+              marks={profile.marks}
+              onScrub={(spot) => useMapStore.setState({ trackCursor: spot })}
+            />
+          </div>
+        )}
 
         {/* Owner toggles: completion + visibility */}
         {isOwner && (

@@ -196,3 +196,47 @@ export function nextSegmentSeed(prev: TourDraft & { goal: LngLat }): TourDraft {
     visibility: prev.visibility,
   };
 }
+
+/** What a trip's days share while laid out before their first save (map-first-tour-creation D11). */
+const SHARED_KEYS = ['tourTypes', 'partnerIds', 'visibility'] as const;
+/** Lists compare as sets (partners picked in another order are the same partners). */
+const sameValue = (a: unknown, b: unknown) =>
+  JSON.stringify(Array.isArray(a) ? [...a].sort() : a) ===
+  JSON.stringify(Array.isArray(b) ? [...b].sort() : b);
+const sameDay = (a: Date | null, b: Date | null) =>
+  (a?.getTime() ?? null) === (b?.getTime() ?? null);
+
+/**
+ * Day `i` of a trip laid out before its first save changed from `before` to `days[i]` (D11, as the
+ * web's creation dialog): a later day that still held what it held takes the new activities,
+ * partners and visibility, and a later day undated, or still dated as many days after it as it
+ * comes, moves its date along. The later days' patches, by index (null: unchanged).
+ */
+export function carriedForward(
+  days: readonly TourDraft[],
+  i: number,
+  before: TourDraft,
+): (Partial<TourDraft> | null)[] {
+  const now = days[i]!;
+  const [was, date] = [before.plannedDate, now.plannedDate];
+  return days.map((day, j) => {
+    if (j <= i) return null;
+    const patch: Partial<TourDraft> = {};
+    for (const key of SHARED_KEYS) {
+      if (!sameValue(now[key], before[key]) && sameValue(day[key], before[key])) {
+        Object.assign(patch, { [key]: now[key] });
+      }
+    }
+    const followed =
+      day.plannedDate == null || (!!was && sameDay(day.plannedDate, daysAfter(was, j - i)));
+    const moved = date && daysAfter(date, j - i);
+    if (!sameDay(was, date) && followed && !sameDay(day.plannedDate, moved)) {
+      patch.plannedDate = moved;
+    }
+    return Object.keys(patch).length ? patch : null;
+  });
+}
+
+function daysAfter(date: Date, n: number): Date {
+  return new Date(date.getTime() + n * 86_400_000);
+}

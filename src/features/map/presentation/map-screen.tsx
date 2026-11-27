@@ -74,6 +74,7 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
   const styleIndex = useMapStore((s) => s.styleIndex);
   const overlays = useMapStore((s) => s.overlays);
   const layersOpen = useMapStore((s) => s.layersOpen);
+  const trackCursor = useMapStore((s) => s.trackCursor);
   const selectedTourId = useMapStore((s) => s.selectedTourId);
   const selectedOutingKey = useMapStore((s) => s.selectedOutingKey);
   const camera = useMapStore((s) => s.camera);
@@ -347,6 +348,7 @@ export function MapScreen({ children }: { children?: React.ReactNode }) {
         areas={areas}
         dimTrails={mode === 'draw'}
         warmOverlays={layersOpen || mode === 'route' || mode === 'draw'}
+        cursor={trackCursor}
         drawing={mode === 'draw'}
         padding={padding}
         initialCenter={SWITZERLAND_CENTER}

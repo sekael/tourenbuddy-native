@@ -1048,13 +1048,15 @@
         "next": "Tap along the way to add points. Drag a point to move it.",
         "profileLoading": "Loading the elevation profile…",
         "profileOffline": "The elevation profile needs a connection.",
-        "shape": "Tap a point to remove it, or hold and drag it to move it. Drag a line’s middle dot onto another way to send the line there."
+        "shape": "Tap a point or a line’s middle dot to select it, then drag it or tap the map where it should go.",
+        "add": "Tap along the way to add points."
       },
       "pace": {
         "open": "Set your pace"
       },
       "undo": "Undo",
       "redo": "Redo",
+      "delete": "Delete point",
       "done": "Done",
       "returnToStart": "To start",
       "returnToStartHint": "Back to the start the same way",
@@ -1070,7 +1072,11 @@
         "shape": "To change the way, tap a line’s middle dot (or a point), then the map – or hold and drag it.",
         "via": "Tap a point you pulled out to remove it again.",
         "pull": "Now tap the map where the way should go.",
-        "landing": "Where do you land? Tap the map or search – or continue without."
+        "landing": "Where do you land? Tap the map or search – or continue without.",
+        "select": "To change the way, tap a point or a line’s middle dot to select it.",
+        "selected": "Drag the selected point, or tap the map where it should go.",
+        "selectedLeg": "Drag the selected dot, or tap the map where the way should go.",
+        "remove": "The bin removes the selected point."
       },
       "required": "Required",
       "optional": "Optional",

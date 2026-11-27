@@ -1,6 +1,7 @@
 import type { Tour } from '@/features/tours/domain/entities/tour';
 import {
   appendedOuting,
+  carriedForward,
   movedSegment,
   nextSegmentSeed,
   outingChains,
@@ -273,5 +274,59 @@ describe('segmentFinishPlace', () => {
     });
     expect(segmentFinishPlace(day1, day2)).toEqual({ name: 'Cabane des Dix', elevation: 2928 });
     expect(segmentFinishPlace(day1)).toEqual({ name: 'Review Trek', elevation: 2928 });
+  });
+});
+
+describe('carriedForward', () => {
+  const day = (n: number, overrides: Partial<Tour> = {}) =>
+    tour({
+      plannedDate: new Date(Date.UTC(2027, 2, 12 + n)),
+      tourTypes: ['hiking'],
+      partnerIds: ['a'],
+      visibility: 'friends',
+      ...overrides,
+    });
+
+  it('should give a later day the new activities only while it held the old ones', () => {
+    const before = day(0);
+    const days = [
+      day(0, { tourTypes: ['hiking', 'paragliding'] }),
+      day(1),
+      day(2, { tourTypes: ['skitour'] }),
+    ];
+    const patches = carriedForward(days, 0, before);
+    expect(patches[1]).toEqual({ tourTypes: ['hiking', 'paragliding'] });
+    expect(patches[2]).toBeNull();
+  });
+
+  it('should compare partners as a set, not in the order picked', () => {
+    const before = day(0, { partnerIds: ['a', 'b'] });
+    const days = [day(0, { partnerIds: ['a', 'b', 'c'] }), day(1, { partnerIds: ['b', 'a'] })];
+    expect(carriedForward(days, 0, before)[1]).toEqual({ partnerIds: ['a', 'b', 'c'] });
+  });
+
+  it('should move a date that followed day by day, and date an undated later day', () => {
+    const before = day(0);
+    const days = [day(2), day(1), day(0, { plannedDate: null })];
+    const patches = carriedForward(days, 0, before);
+    expect(patches[1]?.plannedDate).toEqual(new Date(Date.UTC(2027, 2, 15)));
+    expect(patches[2]?.plannedDate).toEqual(new Date(Date.UTC(2027, 2, 16)));
+  });
+
+  it('should leave a later day dated on its own', () => {
+    const before = day(0);
+    const days = [day(2), day(5)];
+    expect(carriedForward(days, 0, before)[1]).toBeNull();
+  });
+
+  it('should clear the following dates when a day loses its date', () => {
+    const before = day(0);
+    const days = [day(0, { plannedDate: null }), day(1)];
+    expect(carriedForward(days, 0, before)[1]).toEqual({ plannedDate: null });
+  });
+
+  it('should change nothing before the day, or when nothing shared changed', () => {
+    const days = [day(0), day(1, { name: 'Renamed' }), day(2)];
+    expect(carriedForward(days, 1, day(1))).toEqual([null, null, null]);
   });
 });
