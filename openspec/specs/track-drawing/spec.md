@@ -61,18 +61,14 @@ straight, without a notice: a straight line reads as one, as on any map.
 ### Requirement: Moving points, loops and undo
 
 A point SHALL be draggable with a finger or the mouse, showing straight legs while held and
-following the network again when let go. A tap on the start of a line with two or more points SHALL
-close a loop back to it. Undo and redo SHALL step through every set, move, split and loop.
+following the network again when let go: on iOS and Android once selected by a tap, on the web from
+a press on it. Undo and redo SHALL step through every change to the line's points, as "Undo, redo
+and delete in every drawing step" (iOS and Android) and "Undo on the web" list them.
 
 #### Scenario: Drag a point
 
-- **WHEN** the user drags a point and lets go
+- **WHEN** the user drags a point (on iOS and Android, a selected one) and lets go
 - **THEN** both its legs SHALL follow the network to its new place, and undo SHALL put it back
-
-#### Scenario: Close a loop
-
-- **WHEN** the line has three points and the user taps its start
-- **THEN** a last leg SHALL run back to the start
 
 ### Requirement: Leg handles split a leg
 
@@ -299,11 +295,11 @@ A switch "Den Wegen folgen" SHALL turn following off, every leg straight, and on
 - **THEN** the ski overlay shows on the map, the step and its points stay as they were, and another tap hides it
 
 ### Requirement: The route step's line can be shaped
-In the route step, the user SHALL be able to hold and drag start, goal and end to move them (each is named and measured anew), drag the dot halfway along a leg to send the route through another point, and tap such a point to remove it. Points pulled out SHALL stay with the route when the user comes back to it from the form, and a saved route SHALL open in the step with its shape (its track cut at its points) until a point moves.
+In the route step, the user SHALL be able to move start, goal, end or a point between (each is named and measured anew), and the dot halfway along a leg to send the route through another point, with a drag that starts as soon as the finger moves on it, with no hold first and without panning the map. On iOS and Android a tap selects the point or dot first, and only a selected one drags, or moves to the next map tap; on the web a press on any of them drags it. Points pulled out SHALL stay with the route when the user comes back to it from the form, and a saved route SHALL open in the step with its shape (its track cut at its points) until a point moves.
 
 #### Scenario: The line follows the finger
-- **WHEN** the user holds a point (or a leg's dot) and drags it across the map
-- **THEN** the line runs straight through the finger the whole way, and on the drop it is routed along the ways
+- **WHEN** the user drags a point (or a leg's dot) across the map, on iOS and Android a selected one
+- **THEN** the point follows the finger from its first movement, the line runs straight through the finger the whole way, the map stays still, and on the drop it is routed along the ways
 
 #### Scenario: Send the route over another path
 - **WHEN** the route from start to goal follows one valley and the user drags the leg's middle dot onto a path in the next one
@@ -317,15 +313,19 @@ A tour's route and its track SHALL have exactly one start, one goal and one end:
 - **THEN** the tour's end is the last drawn point, named after its place, and the map shows one end flag where the track ends
 
 ### Requirement: A drawn point goes with a tap
-While drawing and in the route step, a quick tap on a point SHALL remove it, its neighbours joined along the ways; holding a point and dragging it SHALL move it. A tap on the goal SHALL pick it for the next map tap instead. While drawing, undo brings a point back; in the route step, the next map tap sets a removed start or end anew.
+On iOS and Android, while drawing and in the route step, a tap on a point or a leg's dot SHALL select it, however long the finger rested; a tap on the selected one SHALL release it (in the route step a start, goal or end stays the active point, which map taps set). A tap never removes a point. While one is selected, the next map tap SHALL move the point there (a leg's dot: send the leg through there) and release it; without a selection a map tap sets a point as before. The selected point SHALL be marked clearly on the map, and the sheet's hint SHALL say what to do next. A tap on the web: "The web shapes a line with the PWA's gestures".
 
-#### Scenario: Remove a point by tapping it
-- **WHEN** the user taps a point of the drawn line (start, end or a point between)
-- **THEN** the point goes, the line joins its neighbours, and the numbers update
+#### Scenario: Select a point by tapping it
+- **WHEN** the user taps a point of the drawn line
+- **THEN** the point is marked as selected, the line is unchanged, and no new point is set
 
-#### Scenario: Remove the start in the route step
-- **WHEN** the user taps the start's marker in the route step
-- **THEN** the start goes, the sheet's Start row is the active one, and the next map tap sets the start there
+#### Scenario: A slow tap
+- **WHEN** the user rests a finger on a point for a second and lifts it without moving
+- **THEN** the point is selected, as with a quick tap
+
+#### Scenario: Move by tapping the map
+- **WHEN** a point between start and goal is selected and the user taps elsewhere on the map
+- **THEN** the point moves there, its legs follow the ways, and it is no longer selected
 
 ### Requirement: The web draws a route in no activity's colour
 
@@ -338,6 +338,47 @@ colour that no activity and no trail layer wears. The PWA drew swisstopo's red, 
 - **WHEN** the user plans a ski tour from a ski route on the web map
 - **THEN** the route behind the form is drawn in the dark pen, apart from the blue ski routes and
   from the hiking red
+
+### Requirement: The web shapes a line with the PWA's gestures
+
+On the web, drawing and the route step SHALL keep the PWA's gestures, with no selection: a press on
+a point or a leg's dot SHALL drag it at once, the map held still, and a tap on a dot SHALL do
+nothing. While drawing, a tap on the start of a line with two or more points SHALL close a loop back
+to it, and a tap on another point SHALL do nothing. In the route step, a tap on start, goal or end
+SHALL make it the active point, which the next map tap sets, and a tap on a point between SHALL
+remove it.
+
+#### Scenario: Close a loop
+
+- **WHEN** on the web the line has three points and the user taps its start
+- **THEN** a last leg SHALL run back to the start
+
+#### Scenario: Drag without selecting
+
+- **WHEN** on the web the user presses a point and moves the pointer
+- **THEN** the point follows at once, the map stays still, and on the drop its legs follow the ways
+
+#### Scenario: Take out a point between in the route step
+
+- **WHEN** on the web the route runs through a point pulled out of a leg and the user taps it
+- **THEN** the point goes and the leg follows the ways without it
+
+### Requirement: Undo on the web
+
+On the web, drawing SHALL offer undo and redo beside "To start" and Done, through every set, move,
+split, loop and way back, disabled while a leg is still being routed; a drawn point SHALL go only by
+undo. The route step SHALL offer no undo, redo or delete: a point between goes with a tap, a start
+or end with the remove button on its row, together with the points between that led from it.
+
+#### Scenario: Undo a loop
+
+- **WHEN** on the web the user closes a loop and taps undo
+- **THEN** the leg back to the start goes, and redo brings it back
+
+#### Scenario: Remove the start in the route step
+
+- **WHEN** on the web the user taps the remove button on the start's row
+- **THEN** the start goes, together with the points between pulled out on the way up
 
 ### Requirement: A picked route wears the pen
 
@@ -366,3 +407,22 @@ the goal where the ways differ, banded where a way has several. Without an activ
 
 - **WHEN** ski touring goes both ways and paragliding down only
 - **THEN** the profile is ski-touring-coloured up to the goal and banded in both colours after it
+
+### Requirement: Undo, redo and delete in every drawing step
+On iOS and Android, the route step and drawing SHALL show undo, redo and delete as three buttons side by side in the sheet, in reach at the sheet's lowest height on a 6.1-inch phone, as the swisstopo app does; the bar's "Back" SHALL keep leaving the step. Undo and redo SHALL step through every change to the line's points: set by a tap or a search, moved, pulled out of a leg, removed, and (in the route step) the round trip switched on or off; a point brought back SHALL keep its name and height, and a new change SHALL clear redo. Delete SHALL remove the selected point, its neighbours joined along the ways; in the route step a removed start or end is set anew by the next map tap. Delete SHALL be disabled without a selection, for a leg's dot and for the goal. All three SHALL be disabled while a change is still being routed.
+
+#### Scenario: Delete a selected point
+- **WHEN** the user taps a point between start and goal and then the delete button
+- **THEN** the point goes, the line joins its neighbours, and the numbers update
+
+#### Scenario: Undo a deletion
+- **WHEN** the user deletes a selected point and taps undo
+- **THEN** the point is back where it was and the line runs through it again; redo removes it again
+
+#### Scenario: Undo a moved goal in the route step
+- **WHEN** the user moves the goal to another summit and then taps undo
+- **THEN** the goal is back on the first summit with its name and height
+
+#### Scenario: Nothing selected
+- **WHEN** no point is selected
+- **THEN** the delete button is disabled
