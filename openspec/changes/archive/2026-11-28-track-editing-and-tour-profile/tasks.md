@@ -23,7 +23,7 @@
 
 - [x] 4.1 `npm run check`
 - [x] 4.2 Persona review on the Simulator (route step, drawing, tour sheet profile) and the web build on desktop width
-- [ ] 4.3 Owner on the iPhone 15 after TestFlight: grab and drag, slow taps, scrubbing inside the sheet
+- [x] 4.3 Owner on the iPhone 15 after TestFlight: grab and drag, slow taps, scrubbing inside the sheet
 
 ## 5. Second simulator review (owner, 2026-11-26)
 

@@ -33,7 +33,7 @@ Views with no system counterpart (the map, the month grid, the seasons chart, th
 
 #### Scenario: Elevation profile in the tour detail
 - **WHEN** a tour with a track shows its elevation profile in the detail sheet
-- **THEN** the profile is drawn by the app inside a section of the system list
+- **THEN** the profile is drawn by the app at the top of the sheet, under the tour's overview and above the system list
 
 ### Requirement: Empty and loading states
 Lists SHALL show a system empty state (symbol, title, description, optional action) when they have no rows, and SHALL keep their last rows while refreshing instead of flashing empty.
